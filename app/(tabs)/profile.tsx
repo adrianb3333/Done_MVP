@@ -5,20 +5,16 @@ import {
   StyleSheet,
   TouchableOpacity,
   Modal,
-  TextInput,
   FlatList,
   ActivityIndicator,
-  Alert,
-  Platform,
   Animated,
   Image,
-  KeyboardAvoidingView,
   ScrollView,
+  Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Settings, Camera, X, User, Newspaper, TrendingUp } from 'lucide-react-native';
+import { Settings, X, User, Newspaper, TrendingUp } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { useProfile, UserProfile } from '@/contexts/ProfileContext';
 import { useSession } from '@/contexts/SessionContext';
@@ -33,9 +29,6 @@ export default function ProfileScreen() {
     following,
     followersCount,
     followingCount,
-    updateProfile,
-    isUpdating,
-    uploadAvatar,
     toggleFollow,
     isTogglingFollow,
     isFollowing,
@@ -45,12 +38,9 @@ export default function ProfileScreen() {
 
   const { lastRound } = useSession();
 
-  const [editModalVisible, setEditModalVisible] = useState<boolean>(false);
   const [followsModalVisible, setFollowsModalVisible] = useState<boolean>(false);
   const [followsTab, setFollowsTab] = useState<'hitta' | 'followers' | 'following'>('hitta');
-  const [editUsername, setEditUsername] = useState<string>('');
-  const [editDisplayName, setEditDisplayName] = useState<string>('');
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState<boolean>(false);
+  const [avatarPreviewVisible, setAvatarPreviewVisible] = useState<boolean>(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
@@ -71,62 +61,11 @@ export default function ProfileScreen() {
     ]).start();
   }, [fadeAnim, scaleAnim]);
 
-  const openEditModal = useCallback(() => {
-    console.log('[Profile] Opening edit modal');
-    setEditUsername(profile?.username ?? '');
-    setEditDisplayName(profile?.display_name ?? '');
-    setEditModalVisible(true);
+  const handleAvatarPress = useCallback(() => {
+    console.log('[Profile] Opening avatar preview');
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  }, [profile]);
-
-  const handleSaveProfile = useCallback(async () => {
-    console.log('[Profile] Saving profile:', editUsername, editDisplayName);
-    try {
-      await updateProfile({
-        username: editUsername.trim(),
-        display_name: editDisplayName.trim(),
-      });
-      setEditModalVisible(false);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (err: any) {
-      console.error('[Profile] Save error:', err.message);
-      Alert.alert('Fel', 'Kunde inte spara profilen. Försök igen.');
-    }
-  }, [editUsername, editDisplayName, updateProfile]);
-
-  const handlePickAvatar = useCallback(async () => {
-    console.log('[Profile] Picking avatar');
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-    if (Platform.OS !== 'web') {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Behörighet krävs', 'Vi behöver åtkomst till ditt bildbibliotek.');
-        return;
-      }
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      setIsUploadingAvatar(true);
-      try {
-        await uploadAvatar(result.assets[0].uri);
-        console.log('[Profile] Avatar uploaded successfully');
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      } catch (err: any) {
-        console.error('[Profile] Avatar upload error:', err.message);
-        Alert.alert('Fel', 'Kunde inte ladda upp bilden. Försök igen.');
-      } finally {
-        setIsUploadingAvatar(false);
-      }
-    }
-  }, [uploadAvatar]);
+    setAvatarPreviewVisible(true);
+  }, []);
 
   const openFollowsModal = useCallback((tab: 'hitta' | 'followers' | 'following') => {
     console.log('[Profile] Opening follows modal, tab:', tab);
@@ -230,7 +169,7 @@ export default function ProfileScreen() {
     <View style={styles.container}>
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.headerRow}>
-          <Text style={styles.headerUsername}>@{profile?.username ?? 'user'}</Text>
+          <Text style={styles.headerUsername}>{profile?.username ?? 'user'}</Text>
           <View style={styles.headerIcons}>
             <TouchableOpacity
               onPress={() => router.push('/modals/recap-modal' as any)}
@@ -264,7 +203,7 @@ export default function ProfileScreen() {
         <View style={styles.profileSection}>
           <View style={styles.profileRow}>
             <TouchableOpacity
-              onPress={handlePickAvatar}
+              onPress={handleAvatarPress}
               style={styles.avatarTouchable}
               activeOpacity={0.8}
               testID="avatar-button"
@@ -276,13 +215,6 @@ export default function ProfileScreen() {
                   <Text style={styles.avatarInitials}>{initials}</Text>
                 </View>
               )}
-              <View style={styles.cameraBadge}>
-                {isUploadingAvatar ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Camera size={14} color="#fff" />
-                )}
-              </View>
             </TouchableOpacity>
 
             <View style={styles.statsRow}>
@@ -307,18 +239,6 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <Text style={styles.displayName}>{profile?.display_name ?? 'Namn'}</Text>
-
-          <View style={styles.actionRow}>
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={openEditModal}
-              activeOpacity={0.7}
-              testID="edit-profile-button"
-            >
-              <Text style={styles.editButtonText}>Redigera</Text>
-            </TouchableOpacity>
-          </View>
         </View>
 
         <View style={styles.liveSection}>
@@ -361,63 +281,31 @@ export default function ProfileScreen() {
       </ScrollView>
 
       <Modal
-        visible={editModalVisible}
-        animationType="slide"
+        visible={avatarPreviewVisible}
+        animationType="fade"
         transparent
-        onRequestClose={() => setEditModalVisible(false)}
+        onRequestClose={() => setAvatarPreviewVisible(false)}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalOverlay}
-        >
-          <View style={styles.modalSheet}>
-            <View style={styles.modalHandle} />
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Redigera profil</Text>
-              <TouchableOpacity onPress={() => setEditModalVisible(false)} style={styles.modalCloseBtn}>
-                <X size={22} color="#999" />
-              </TouchableOpacity>
+        <View style={styles.avatarPreviewOverlay}>
+          <TouchableOpacity
+            style={styles.avatarPreviewClose}
+            onPress={() => setAvatarPreviewVisible(false)}
+            activeOpacity={0.7}
+          >
+            <X size={26} color="#fff" />
+          </TouchableOpacity>
+          {profile?.avatar_url ? (
+            <Image
+              source={{ uri: profile.avatar_url }}
+              style={styles.avatarPreviewImage}
+              resizeMode="contain"
+            />
+          ) : (
+            <View style={styles.avatarPreviewPlaceholder}>
+              <Text style={styles.avatarPreviewInitials}>{initials}</Text>
             </View>
-
-            <View style={styles.modalBody}>
-              <Text style={styles.inputLabel}>Användarnamn</Text>
-              <TextInput
-                style={styles.textInput}
-                value={editUsername}
-                onChangeText={setEditUsername}
-                placeholder="Användarnamn"
-                placeholderTextColor="#666"
-                autoCapitalize="none"
-                autoCorrect={false}
-                testID="edit-username-input"
-              />
-
-              <Text style={styles.inputLabel}>Visningsnamn</Text>
-              <TextInput
-                style={styles.textInput}
-                value={editDisplayName}
-                onChangeText={setEditDisplayName}
-                placeholder="Ditt namn"
-                placeholderTextColor="#666"
-                testID="edit-displayname-input"
-              />
-
-              <TouchableOpacity
-                style={[styles.saveButton, isUpdating && styles.saveButtonDisabled]}
-                onPress={handleSaveProfile}
-                disabled={isUpdating}
-                activeOpacity={0.8}
-                testID="save-profile-button"
-              >
-                {isUpdating ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <Text style={styles.saveButtonText}>Spara</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
+          )}
+        </View>
       </Modal>
 
       <Modal
@@ -567,19 +455,7 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: '#1DB954',
   },
-  cameraBadge: {
-    position: 'absolute' as const,
-    bottom: 0,
-    right: -2,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#1DB954',
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
-    borderWidth: 2,
-    borderColor: '#0A0A0A',
-  },
+
   statsRow: {
     flex: 1,
     flexDirection: 'row' as const,
@@ -600,30 +476,36 @@ const styles = StyleSheet.create({
     color: '#888',
     marginTop: 2,
   },
-  displayName: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: '#D0D0D0',
-    marginTop: 16,
-  },
-  actionRow: {
-    flexDirection: 'row' as const,
-    marginTop: 18,
-    gap: 10,
-  },
-  editButton: {
+  avatarPreviewOverlay: {
     flex: 1,
-    backgroundColor: '#1E1E1E',
-    borderRadius: 10,
-    paddingVertical: 10,
+    backgroundColor: 'rgba(0,0,0,0.92)',
+    justifyContent: 'center' as const,
     alignItems: 'center' as const,
-    borderWidth: 1,
-    borderColor: '#2A2A2A',
   },
-  editButtonText: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: '#EFEFEF',
+  avatarPreviewClose: {
+    position: 'absolute' as const,
+    top: 60,
+    right: 24,
+    zIndex: 10,
+    padding: 8,
+  },
+  avatarPreviewImage: {
+    width: Dimensions.get('window').width * 0.8,
+    height: Dimensions.get('window').width * 0.8,
+    borderRadius: Dimensions.get('window').width * 0.4,
+  },
+  avatarPreviewPlaceholder: {
+    width: Dimensions.get('window').width * 0.6,
+    height: Dimensions.get('window').width * 0.6,
+    borderRadius: Dimensions.get('window').width * 0.3,
+    backgroundColor: '#1E1E1E',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  avatarPreviewInitials: {
+    fontSize: 72,
+    fontWeight: '700' as const,
+    color: '#1DB954',
   },
   liveSection: {
     marginTop: 28,
@@ -729,13 +611,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'flex-end' as const,
   },
-  modalSheet: {
-    backgroundColor: '#141414',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingBottom: 40,
-    minHeight: 320,
-  },
+
   followsSheet: {
     backgroundColor: '#141414',
     borderTopLeftRadius: 24,
@@ -768,42 +644,7 @@ const styles = StyleSheet.create({
   modalCloseBtn: {
     padding: 4,
   },
-  modalBody: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-  },
-  inputLabel: {
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: '#888',
-    marginBottom: 6,
-    marginTop: 12,
-  },
-  textInput: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: '#EFEFEF',
-    borderWidth: 1,
-    borderColor: '#2A2A2A',
-  },
-  saveButton: {
-    backgroundColor: '#1DB954',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center' as const,
-    marginTop: 24,
-  },
-  saveButtonDisabled: {
-    opacity: 0.6,
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: '#fff',
-  },
+
   tabSwitcher: {
     flexDirection: 'row' as const,
     marginHorizontal: 20,
