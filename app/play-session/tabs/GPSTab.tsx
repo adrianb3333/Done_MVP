@@ -12,10 +12,12 @@ const DEFAULT_REGION = {
 
 function NativeMap() {
   const MapView = require('react-native-maps').default;
+  const { PROVIDER_GOOGLE } = require('react-native-maps');
   return (
     <View style={styles.container}>
       <MapView
         style={styles.map}
+        provider={PROVIDER_GOOGLE}
         initialRegion={DEFAULT_REGION}
         mapType="hybrid"
         showsUserLocation={true}
