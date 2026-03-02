@@ -16,14 +16,14 @@ export default function GPSTab() {
       <MapView
         style={styles.map}
         initialRegion={DEFAULT_REGION}
-        mapType="satellite"
+        mapType="hybrid"
         showsUserLocation={true}
         showsMyLocationButton={true}
         showsCompass={true}
         showsScale={true}
       />
       <View style={styles.overlay}>
-        <Text style={styles.overlayText}>SATELLITE</Text>
+        <Text style={styles.overlayText}>HYBRID</Text>
       </View>
     </View>
   );
