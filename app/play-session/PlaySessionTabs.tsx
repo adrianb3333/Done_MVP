@@ -34,7 +34,7 @@ function PlaySessionContent() {
   const insets = useSafeAreaInsets();
 
   const isScoreTab = activeTab === 'score';
-  const isFullScreenTab = activeTab === 'wind' || activeTab === 'mind';
+  const isFullScreenTab = activeTab === 'wind' || activeTab === 'mind' || activeTab === 'gps';
 
   const renderContent = () => {
     switch (activeTab) {
