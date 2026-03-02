@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import MapView from 'react-native-maps';
+import { View, Text, StyleSheet, Platform, Linking, TouchableOpacity } from 'react-native';
+import { MapPin } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 
 const DEFAULT_REGION = {
@@ -10,7 +10,8 @@ const DEFAULT_REGION = {
   longitudeDelta: 0.005,
 };
 
-export default function GPSTab() {
+function NativeMap() {
+  const MapView = require('react-native-maps').default;
   return (
     <View style={styles.container}>
       <MapView
@@ -27,6 +28,37 @@ export default function GPSTab() {
       </View>
     </View>
   );
+}
+
+function WebMapFallback() {
+  const openInMaps = () => {
+    Linking.openURL(
+      `https://www.google.com/maps/@${DEFAULT_REGION.latitude},${DEFAULT_REGION.longitude},17z/data=!3m1!1e1`
+    );
+  };
+
+  return (
+    <View style={styles.webFallback}>
+      <View style={styles.iconCircle}>
+        <MapPin size={40} color="#34C759" />
+      </View>
+      <Text style={styles.webTitle}>GPS Map</Text>
+      <Text style={styles.webSubtitle}>
+        The satellite map is available on your mobile device.{"\n"}
+        Open the app on your phone to view the full map.
+      </Text>
+      <TouchableOpacity style={styles.openBtn} onPress={openInMaps} activeOpacity={0.7}>
+        <Text style={styles.openBtnText}>Open in Google Maps</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+export default function GPSTab() {
+  if (Platform.OS === 'web') {
+    return <WebMapFallback />;
+  }
+  return <NativeMap />;
 }
 
 const styles = StyleSheet.create({
@@ -50,5 +82,45 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700' as const,
     letterSpacing: 1.2,
+  },
+  webFallback: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0a1a0a',
+    padding: 32,
+  },
+  iconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(52,199,89,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  webTitle: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: '700' as const,
+    marginBottom: 10,
+  },
+  webSubtitle: {
+    color: '#aaa',
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  openBtn: {
+    backgroundColor: '#34C759',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  openBtnText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600' as const,
   },
 });
