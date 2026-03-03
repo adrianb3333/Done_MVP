@@ -1,74 +1,167 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import Colors from '@/constants/colors';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
+
+interface StrokesGainedSection {
+  title: string;
+  abbrev: string;
+  color: string;
+}
+
+const SECTIONS: StrokesGainedSection[] = [
+  { title: 'Off-the-Tee', abbrev: 'OTT', color: '#4FC3F7' },
+  { title: 'Approach-the-Green', abbrev: 'APP', color: '#81C784' },
+  { title: 'Around-the-Green', abbrev: 'ARG', color: '#FFB74D' },
+  { title: 'Putting', abbrev: 'P', color: '#E57373' },
+];
 
 export default function Step1Page3() {
   return (
-    <View style={styles.pageContent}>
-      <Text style={styles.pageTitle}>Game Mode</Text>
-      <Text style={styles.pageSubtitle}>Select game type</Text>
-      <View style={styles.itemsContainer}>
-        {['Stroke Play', 'Match Play', 'Stableford', 'Skins'].map((item, index) => (
-          <View key={index} style={styles.itemCard}>
-            <View style={styles.itemNumber}>
-              <Text style={styles.itemNumberText}>{index + 1}</Text>
-            </View>
-            <Text style={styles.itemText}>{item}</Text>
-          </View>
-        ))}
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      <View style={styles.header}>
+        <Text style={styles.pageTitle}>Strokes Gained</Text>
+        <View style={styles.statusBadge}>
+          <View style={styles.pulseDot} />
+          <Text style={styles.statusText}>API PENDING</Text>
+        </View>
       </View>
-    </View>
+
+      {SECTIONS.map((section, index) => (
+        <View key={section.abbrev} style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <View style={[styles.sectionDot, { backgroundColor: section.color }]} />
+            <Text style={styles.sectionTitle}>{section.title}</Text>
+            <View style={[styles.abbrevBadge, { borderColor: section.color + '40' }]}>
+              <Text style={[styles.abbrevText, { color: section.color }]}>{section.abbrev}</Text>
+            </View>
+          </View>
+
+          <View style={styles.sectionBody}>
+            <View style={styles.valuePlaceholder}>
+              <Text style={styles.valueLabel}>Strokes Gained</Text>
+              <Text style={styles.valueDash}>—</Text>
+            </View>
+            <View style={styles.valuePlaceholder}>
+              <Text style={styles.valueLabel}>Avg per Round</Text>
+              <Text style={styles.valueDash}>—</Text>
+            </View>
+          </View>
+
+          {index < SECTIONS.length - 1 && <View style={styles.divider} />}
+        </View>
+      ))}
+
+      <View style={{ height: 40 }} />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  pageContent: {
+  container: {
     flex: 1,
-    padding: 24,
+    backgroundColor: '#0A0F0D',
+  },
+  scrollContent: {
+    padding: 20,
+    paddingTop: 20,
+  },
+  header: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    marginBottom: 28,
   },
   pageTitle: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '800' as const,
-    color: Colors.text,
+    color: '#F5F7F6',
+  },
+  statusBadge: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  pulseDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#FFB74D',
+    marginRight: 6,
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: '800' as const,
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: 1,
+  },
+  section: {
     marginBottom: 8,
   },
-  pageSubtitle: {
-    fontSize: 16,
-    color: Colors.textSecondary,
-    marginBottom: 32,
+  sectionHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 10,
+    marginBottom: 14,
   },
-  itemsContainer: {
-    gap: 12,
+  sectionDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
-  itemCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    padding: 16,
-    borderRadius: 12,
-    gap: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  itemNumber: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.primaryLight + '20',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  itemNumberText: {
-    fontSize: 16,
+  sectionTitle: {
+    fontSize: 18,
     fontWeight: '700' as const,
-    color: Colors.primary,
+    color: '#F5F7F6',
+    flex: 1,
   },
-  itemText: {
-    fontSize: 16,
-    fontWeight: '500' as const,
-    color: Colors.text,
+  abbrevBadge: {
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  abbrevText: {
+    fontSize: 12,
+    fontWeight: '800' as const,
+    letterSpacing: 0.5,
+  },
+  sectionBody: {
+    backgroundColor: '#141C18',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row' as const,
+    gap: 16,
+    borderWidth: 1,
+    borderColor: '#243028',
+  },
+  valuePlaceholder: {
+    flex: 1,
+    alignItems: 'center' as const,
+    gap: 6,
+  },
+  valueLabel: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#8A9B90',
+    letterSpacing: 0.3,
+  },
+  valueDash: {
+    fontSize: 24,
+    fontWeight: '700' as const,
+    color: '#5A6B60',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    marginTop: 16,
+    marginBottom: 8,
   },
 });
