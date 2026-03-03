@@ -13,7 +13,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Settings, X, User, Newspaper, TrendingUp } from 'lucide-react-native';
+import { Settings, X, User, Newspaper, TrendingUp, Bluetooth } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useProfile, UserProfile } from '@/contexts/ProfileContext';
@@ -169,8 +169,16 @@ export default function ProfileScreen() {
     <View style={styles.container}>
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.headerRow}>
-          <Text style={styles.headerUsername}>{profile?.username ?? 'user'}</Text>
+          <View style={styles.headerSpacer} />
           <View style={styles.headerIcons}>
+            <TouchableOpacity
+              onPress={() => router.push('/modals/pair-impact-modal' as any)}
+              style={styles.headerIconBtn}
+              activeOpacity={0.7}
+              testID="pair-impact-button"
+            >
+              <Bluetooth size={20} color="#B0B0B0" />
+            </TouchableOpacity>
             <TouchableOpacity
               onPress={() => router.push('/modals/recap-modal' as any)}
               style={styles.headerIconBtn}
@@ -202,20 +210,23 @@ export default function ProfileScreen() {
       <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
         <View style={styles.profileSection}>
           <View style={styles.profileRow}>
-            <TouchableOpacity
-              onPress={handleAvatarPress}
-              style={styles.avatarTouchable}
-              activeOpacity={0.8}
-              testID="avatar-button"
-            >
-              {profile?.avatar_url ? (
-                <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
-              ) : (
-                <View style={styles.avatarPlaceholder}>
-                  <Text style={styles.avatarInitials}>{initials}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
+            <View style={styles.avatarColumn}>
+              <TouchableOpacity
+                onPress={handleAvatarPress}
+                style={styles.avatarTouchable}
+                activeOpacity={0.8}
+                testID="avatar-button"
+              >
+                {profile?.avatar_url ? (
+                  <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
+                ) : (
+                  <View style={styles.avatarPlaceholder}>
+                    <Text style={styles.avatarInitials}>{initials}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+              <Text style={styles.usernameText}>{profile?.username ?? 'user'}</Text>
+            </View>
 
             <View style={styles.statsRow}>
               <TouchableOpacity
@@ -238,7 +249,6 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
           </View>
-
         </View>
 
         <View style={styles.liveSection}>
@@ -399,11 +409,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
   },
-  headerUsername: {
-    fontSize: 20,
-    fontWeight: '700' as const,
-    color: '#EFEFEF',
-    letterSpacing: 0.3,
+  headerSpacer: {
+    flex: 1,
   },
   headerIcons: {
     flexDirection: 'row' as const,
@@ -475,6 +482,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#888',
     marginTop: 2,
+  },
+  avatarColumn: {
+    alignItems: 'center' as const,
+  },
+  usernameText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#B0B0B0',
+    marginTop: 8,
+    letterSpacing: 0.2,
   },
   avatarPreviewOverlay: {
     flex: 1,
