@@ -13,15 +13,370 @@ import {
   Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Settings, X, User, Newspaper, TrendingUp, Bluetooth, Trophy, QrCode, Swords } from 'lucide-react-native';
+import { Settings, X, User, Newspaper, TrendingUp, Bluetooth, Trophy, QrCode, Swords, Clock, Target, Zap, Hash } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useProfile, UserProfile } from '@/contexts/ProfileContext';
 import { useSession } from '@/contexts/SessionContext';
 import UiTra from '@/components/probygg/UiTra';
 import ProfileCard from '@/components/ProfileCard';
+import { supabase } from '@/lib/supabase';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+interface DrillEntry {
+  id: string;
+  drill_name: string;
+  score: number | null;
+  created_at: string;
+  user_id: string;
+}
+
+function PracticePopupContent() {
+  const [loading, setLoading] = useState<boolean>(true);
+  const [drills, setDrills] = useState<DrillEntry[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        const { count, error: countErr } = await supabase
+          .from('golf_drills')
+          .select('*', { count: 'exact', head: true });
+        if (countErr) console.log('[PracticePopup] count error:', countErr.message);
+        setTotalCount(count || 0);
+
+        const { data, error } = await supabase
+          .from('golf_drills')
+          .select('id, drill_name, score, created_at, user_id')
+          .order('created_at', { ascending: false })
+          .limit(20);
+        if (error) {
+          console.log('[PracticePopup] fetch error:', error.message);
+        } else {
+          setDrills((data as DrillEntry[]) || []);
+        }
+      } catch (e: any) {
+        console.log('[PracticePopup] error:', e.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAll();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={practiceStyles.centered}>
+        <ActivityIndicator size="small" color="#1DB954" />
+      </View>
+    );
+  }
+
+  if (drills.length === 0) {
+    return (
+      <View style={practiceStyles.centered}>
+        <Text style={practiceStyles.emptyText}>No practice sessions recorded yet</Text>
+      </View>
+    );
+  }
+
+  const latestDrill = drills[0];
+  const latestDate = new Date(latestDrill.created_at);
+  const sessionDrills = drills.filter(
+    (d) => new Date(d.created_at).toDateString() === latestDate.toDateString()
+  );
+  const uniqueDrillNames = [...new Set(sessionDrills.map((d) => d.drill_name))];
+  const scores = sessionDrills.filter((d) => d.score !== null).map((d) => d.score as number);
+  const avgScore = scores.length > 0 ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : '-';
+  const bestScore = scores.length > 0 ? Math.max(...scores) : null;
+  const worstScore = scores.length > 0 ? Math.min(...scores) : null;
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('sv-SE', { year: 'numeric', month: 'short', day: 'numeric' });
+  };
+
+  const formatTime = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const firstDrillTime = sessionDrills.length > 0 ? new Date(sessionDrills[sessionDrills.length - 1].created_at) : null;
+  const lastDrillTime = sessionDrills.length > 0 ? new Date(sessionDrills[0].created_at) : null;
+  let durationStr = '-';
+  if (firstDrillTime && lastDrillTime) {
+    const diffMs = lastDrillTime.getTime() - firstDrillTime.getTime();
+    const mins = Math.round(diffMs / 60000);
+    if (mins < 60) {
+      durationStr = `${Math.max(mins, 1)} min`;
+    } else {
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      durationStr = `${h}h ${m}m`;
+    }
+  }
+
+  return (
+    <View style={practiceStyles.wrapper}>
+      <View style={practiceStyles.overviewCard}>
+        <Text style={practiceStyles.overviewDate}>{formatDate(latestDrill.created_at)}</Text>
+        <Text style={practiceStyles.overviewTime}>Started {formatTime(sessionDrills[sessionDrills.length - 1]?.created_at || latestDrill.created_at)}</Text>
+      </View>
+
+      <View style={practiceStyles.statsGrid}>
+        <View style={practiceStyles.statBox}>
+          <Clock size={16} color="#1DB954" />
+          <Text style={practiceStyles.statValue}>{durationStr}</Text>
+          <Text style={practiceStyles.statLabel}>Duration</Text>
+        </View>
+        <View style={practiceStyles.statBox}>
+          <Hash size={16} color="#4FC3F7" />
+          <Text style={practiceStyles.statValue}>{sessionDrills.length}</Text>
+          <Text style={practiceStyles.statLabel}>Drills</Text>
+        </View>
+        <View style={practiceStyles.statBox}>
+          <Target size={16} color="#FFB74D" />
+          <Text style={practiceStyles.statValue}>{avgScore}</Text>
+          <Text style={practiceStyles.statLabel}>Avg Score</Text>
+        </View>
+        <View style={practiceStyles.statBox}>
+          <Zap size={16} color="#E040FB" />
+          <Text style={practiceStyles.statValue}>{uniqueDrillNames.length}</Text>
+          <Text style={practiceStyles.statLabel}>Drill Types</Text>
+        </View>
+      </View>
+
+      {bestScore !== null && (
+        <View style={practiceStyles.highlightsRow}>
+          <View style={[practiceStyles.highlightBox, { borderColor: '#1DB95430' }]}>
+            <Text style={practiceStyles.highlightLabel}>Best</Text>
+            <Text style={[practiceStyles.highlightValue, { color: '#1DB954' }]}>{bestScore}</Text>
+          </View>
+          <View style={[practiceStyles.highlightBox, { borderColor: '#FF525230' }]}>
+            <Text style={practiceStyles.highlightLabel}>Worst</Text>
+            <Text style={[practiceStyles.highlightValue, { color: '#FF5252' }]}>{worstScore}</Text>
+          </View>
+        </View>
+      )}
+
+      <View style={practiceStyles.drillTypesSection}>
+        <Text style={practiceStyles.sectionTitle}>Drill Types Performed</Text>
+        {uniqueDrillNames.map((name, idx) => {
+          const drillsOfType = sessionDrills.filter((d) => d.drill_name === name);
+          const typeScores = drillsOfType.filter((d) => d.score !== null).map((d) => d.score as number);
+          const typeAvg = typeScores.length > 0 ? (typeScores.reduce((a, b) => a + b, 0) / typeScores.length).toFixed(1) : '-';
+          return (
+            <View key={idx} style={practiceStyles.drillTypeRow}>
+              <View style={practiceStyles.drillTypeDot} />
+              <View style={practiceStyles.drillTypeInfo}>
+                <Text style={practiceStyles.drillTypeName}>{name}</Text>
+                <Text style={practiceStyles.drillTypeMeta}>{drillsOfType.length} reps · avg {typeAvg}</Text>
+              </View>
+              {typeScores.length > 0 && (
+                <Text style={practiceStyles.drillTypeBest}>{Math.max(...typeScores)}</Text>
+              )}
+            </View>
+          );
+        })}
+      </View>
+
+      <View style={practiceStyles.allDrillsSection}>
+        <Text style={practiceStyles.sectionTitle}>All Drills ({sessionDrills.length})</Text>
+        {sessionDrills.map((drill, idx) => (
+          <View key={drill.id || idx} style={practiceStyles.drillRow}>
+            <View style={practiceStyles.drillRowLeft}>
+              <Text style={practiceStyles.drillRowName}>{drill.drill_name}</Text>
+              <Text style={practiceStyles.drillRowTime}>{formatTime(drill.created_at)}</Text>
+            </View>
+            <Text style={[
+              practiceStyles.drillRowScore,
+              drill.score !== null && drill.score === bestScore && { color: '#1DB954' },
+            ]}>
+              {drill.score ?? '-'}
+            </Text>
+          </View>
+        ))}
+      </View>
+
+      <View style={practiceStyles.totalSection}>
+        <Text style={practiceStyles.totalLabel}>Total Drills Recorded</Text>
+        <Text style={practiceStyles.totalValue}>{totalCount}</Text>
+      </View>
+    </View>
+  );
+}
+
+const practiceStyles = StyleSheet.create({
+  wrapper: {
+    paddingBottom: 30,
+  },
+  centered: {
+    paddingVertical: 40,
+    alignItems: 'center' as const,
+  },
+  emptyText: {
+    fontSize: 15,
+    color: '#555',
+  },
+  overviewCard: {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#222',
+  },
+  overviewDate: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: '#EFEFEF',
+  },
+  overviewTime: {
+    fontSize: 13,
+    color: '#666',
+    marginTop: 4,
+  },
+  statsGrid: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    gap: 10,
+    marginBottom: 16,
+  },
+  statBox: {
+    width: '47%' as any,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 14,
+    padding: 14,
+    alignItems: 'center' as const,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#222',
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: '800' as const,
+    color: '#EFEFEF',
+  },
+  statLabel: {
+    fontSize: 11,
+    color: '#666',
+  },
+  highlightsRow: {
+    flexDirection: 'row' as const,
+    gap: 10,
+    marginBottom: 16,
+  },
+  highlightBox: {
+    flex: 1,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 14,
+    padding: 14,
+    alignItems: 'center' as const,
+    borderWidth: 1,
+  },
+  highlightLabel: {
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 4,
+  },
+  highlightValue: {
+    fontSize: 24,
+    fontWeight: '900' as const,
+  },
+  drillTypesSection: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#EFEFEF',
+    marginBottom: 12,
+  },
+  drillTypeRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#222',
+  },
+  drillTypeDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#1DB954',
+    marginRight: 12,
+  },
+  drillTypeInfo: {
+    flex: 1,
+  },
+  drillTypeName: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: '#EFEFEF',
+  },
+  drillTypeMeta: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+  },
+  drillTypeBest: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: '#D4AF37',
+  },
+  allDrillsSection: {
+    marginBottom: 20,
+  },
+  drillRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1A1A1A',
+  },
+  drillRowLeft: {
+    flex: 1,
+  },
+  drillRowName: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#EFEFEF',
+  },
+  drillRowTime: {
+    fontSize: 11,
+    color: '#555',
+    marginTop: 2,
+  },
+  drillRowScore: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: '#EFEFEF',
+  },
+  totalSection: {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 14,
+    padding: 16,
+    alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: '#1DB95420',
+  },
+  totalLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+  },
+  totalValue: {
+    fontSize: 28,
+    fontWeight: '900' as const,
+    color: '#1DB954',
+  },
+});
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -229,25 +584,25 @@ export default function ProfileScreen() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
 
-          <View style={styles.avatarSection}>
-            <TouchableOpacity
-              onPress={handleAvatarPress}
-              style={styles.avatarTouchable}
-              activeOpacity={0.8}
-              testID="avatar-button"
-            >
-              {profile?.avatar_url ? (
-                <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
-              ) : (
-                <View style={styles.avatarPlaceholder}>
-                  <Text style={styles.avatarInitials}>{initials}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-            <Text style={styles.usernameText}>{profile?.username ?? 'user'}</Text>
-          </View>
+          <View style={styles.profileTopRow}>
+            <View style={styles.avatarAndName}>
+              <TouchableOpacity
+                onPress={handleAvatarPress}
+                style={styles.avatarTouchable}
+                activeOpacity={0.8}
+                testID="avatar-button"
+              >
+                {profile?.avatar_url ? (
+                  <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
+                ) : (
+                  <View style={styles.avatarPlaceholder}>
+                    <Text style={styles.avatarInitials}>{initials}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+              <Text style={styles.usernameText}>{profile?.username ?? 'user'}</Text>
+            </View>
 
-          <View style={styles.statsAndButtonsRow}>
             <View style={styles.statsColumn}>
               <TouchableOpacity
                 style={styles.statItem}
@@ -318,7 +673,7 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <View style={styles.cardsRow}>
+          <View style={styles.cardsColumn}>
             <TouchableOpacity
               style={styles.roundCard}
               onPress={() => {
@@ -327,17 +682,21 @@ export default function ProfileScreen() {
               }}
               activeOpacity={0.8}
             >
-              <Text style={styles.cardTitle}>Last Round</Text>
+              <View style={styles.cardHeaderRow}>
+                <Text style={styles.cardTitle}>Last Round</Text>
+                {lastRound ? (
+                  <Text style={[styles.cardToParBadge, { color: getToParColor() }]}>{getToParDisplay()}</Text>
+                ) : null}
+              </View>
               {lastRound ? (
-                <>
-                  <Text style={styles.cardCourse} numberOfLines={1}>{lastRound.courseName}</Text>
-                  <Text style={styles.cardDate}>{lastRound.roundDate}</Text>
-                  <View style={styles.cardScoreRow}>
-                    <Text style={styles.cardScore}>{lastRound.totalScore}</Text>
-                    <Text style={[styles.cardToPar, { color: getToParColor() }]}>{getToParDisplay()}</Text>
+                <View style={styles.cardInnerRow}>
+                  <View style={styles.cardLeft}>
+                    <Text style={styles.cardCourse} numberOfLines={1}>{lastRound.courseName}</Text>
+                    <Text style={styles.cardDate}>{lastRound.roundDate}</Text>
+                    <Text style={styles.cardHoles}>{lastRound.holesPlayed} holes</Text>
                   </View>
-                  <Text style={styles.cardHoles}>{lastRound.holesPlayed} holes</Text>
-                </>
+                  <Text style={styles.cardScore}>{lastRound.totalScore}</Text>
+                </View>
               ) : (
                 <Text style={styles.cardEmpty}>No rounds yet</Text>
               )}
@@ -565,9 +924,7 @@ export default function ProfileScreen() {
               <View style={styles.popupHeaderSpacer} />
             </View>
             <ScrollView style={styles.popupScroll} showsVerticalScrollIndicator={false}>
-              <View style={styles.popupPracticeWrap}>
-                <UiTra />
-              </View>
+              <PracticePopupContent />
             </ScrollView>
           </View>
         </View>
@@ -625,9 +982,14 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
 
-  avatarSection: {
+  profileTopRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start' as const,
+    marginBottom: 24,
+    gap: 12,
+  },
+  avatarAndName: {
     alignItems: 'center' as const,
-    marginBottom: 20,
   },
   avatarTouchable: {
     position: 'relative' as const,
@@ -655,60 +1017,55 @@ const styles = StyleSheet.create({
     color: '#1DB954',
   },
   usernameText: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '600' as const,
     color: '#B0B0B0',
-    marginTop: 8,
+    marginTop: 6,
     letterSpacing: 0.2,
-  },
-
-  statsAndButtonsRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'flex-start' as const,
-    marginBottom: 24,
-    gap: 16,
+    maxWidth: 90,
+    textAlign: 'center' as const,
   },
   statsColumn: {
-    flex: 1,
-    gap: 12,
+    gap: 8,
+    justifyContent: 'center' as const,
   },
   statItem: {
     backgroundColor: '#141414',
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
     borderWidth: 1,
     borderColor: '#1A1A1A',
   },
   statNumber: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '800' as const,
     color: '#EFEFEF',
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#666',
-    marginTop: 2,
+    marginTop: 1,
   },
 
   actionButtons: {
-    gap: 8,
+    flex: 1,
+    gap: 6,
     alignItems: 'stretch' as const,
-    width: 130,
   },
   goldBtn: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     gap: 8,
     backgroundColor: '#141414',
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
     borderWidth: 1,
     borderColor: '#D4AF3740',
   },
   goldBtnText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '800' as const,
     color: '#D4AF37',
   },
@@ -716,8 +1073,8 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     backgroundColor: '#141414',
-    borderRadius: 14,
-    paddingVertical: 14,
+    borderRadius: 12,
+    paddingVertical: 10,
     borderWidth: 1,
     borderColor: '#1A1A1A',
   },
@@ -727,8 +1084,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center' as const,
     gap: 6,
     backgroundColor: '#FF444420',
-    borderRadius: 14,
-    paddingVertical: 14,
+    borderRadius: 12,
+    paddingVertical: 10,
     borderWidth: 1,
     borderColor: '#FF444440',
   },
@@ -770,34 +1127,46 @@ const styles = StyleSheet.create({
     fontWeight: '500' as const,
   },
 
-  cardsRow: {
-    flexDirection: 'row' as const,
-    gap: 10,
+  cardsColumn: {
+    gap: 12,
   },
   roundCard: {
-    flex: 1,
     backgroundColor: '#141414',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
     borderColor: '#1B5E2040',
-    minHeight: 140,
   },
   practiceCard: {
-    flex: 1,
     backgroundColor: '#141414',
     borderRadius: 16,
     padding: 4,
     borderWidth: 1,
     borderColor: '#2e7d3240',
-    minHeight: 140,
     overflow: 'hidden' as const,
   },
   cardTitle: {
     fontSize: 14,
     fontWeight: '700' as const,
     color: '#888',
-    marginBottom: 8,
+  },
+  cardHeaderRow: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    marginBottom: 10,
+  },
+  cardToParBadge: {
+    fontSize: 15,
+    fontWeight: '800' as const,
+  },
+  cardInnerRow: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+  },
+  cardLeft: {
+    flex: 1,
   },
   cardCourse: {
     fontSize: 14,
@@ -809,20 +1178,10 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 2,
   },
-  cardScoreRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'baseline' as const,
-    gap: 6,
-    marginTop: 8,
-  },
   cardScore: {
-    fontSize: 28,
-    fontWeight: '800' as const,
+    fontSize: 36,
+    fontWeight: '900' as const,
     color: '#1DB954',
-  },
-  cardToPar: {
-    fontSize: 14,
-    fontWeight: '700' as const,
   },
   cardHoles: {
     fontSize: 11,
