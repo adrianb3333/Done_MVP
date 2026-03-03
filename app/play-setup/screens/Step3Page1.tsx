@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TextInput, Pressable, Switch, Platform } from 'react-native';
-import { Lock, Clock, Thermometer, Timer } from 'lucide-react-native';
+import { Lock, Clock, Thermometer, Timer, Radio, Smartphone } from 'lucide-react-native';
 import { fetchGolfWeather } from '@/services/weatherApi';
 
 interface Step3Page1Props {
@@ -13,6 +13,8 @@ export default function Step3Page1({ onRoundNameChange, roundDate, onPrivateChan
   const [isEditingName, setIsEditingName] = useState(false);
   const [roundName, setRoundName] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
+  const [sensorsEnabled, setSensorsEnabled] = useState<boolean>(false);
+  const [deviceEnabled, setDeviceEnabled] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [temperature, setTemperature] = useState<number | null>(null);
   const [tempLoading, setTempLoading] = useState(true);
@@ -132,6 +134,38 @@ export default function Step3Page1({ onRoundNameChange, roundDate, onPrivateChan
           ios_backgroundColor="#2A3A2E"
         />
       </View>
+
+      <View style={styles.privateCard}>
+        <View style={styles.privateLeft}>
+          <View style={styles.lockIcon}>
+            <Radio size={20} color={sensorsEnabled ? '#00E676' : '#8A9B90'} strokeWidth={2} />
+          </View>
+          <Text style={styles.privateText}>SENSORS</Text>
+        </View>
+        <Switch
+          value={sensorsEnabled}
+          onValueChange={setSensorsEnabled}
+          trackColor={{ false: '#2A3A2E', true: '#1B5E20' }}
+          thumbColor={sensorsEnabled ? '#00E676' : '#666'}
+          ios_backgroundColor="#2A3A2E"
+        />
+      </View>
+
+      <View style={styles.privateCard}>
+        <View style={styles.privateLeft}>
+          <View style={styles.lockIcon}>
+            <Smartphone size={20} color={deviceEnabled ? '#00E676' : '#8A9B90'} strokeWidth={2} />
+          </View>
+          <Text style={styles.privateText}>DEVICE</Text>
+        </View>
+        <Switch
+          value={deviceEnabled}
+          onValueChange={setDeviceEnabled}
+          trackColor={{ false: '#2A3A2E', true: '#1B5E20' }}
+          thumbColor={deviceEnabled ? '#00E676' : '#666'}
+          ios_backgroundColor="#2A3A2E"
+        />
+      </View>
     </View>
   );
 }
@@ -221,6 +255,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between' as const,
     borderWidth: 1,
     borderColor: '#243028',
+    marginBottom: 12,
   },
   privateLeft: {
     flexDirection: 'row' as const,

@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
-import { Clock, Thermometer, Timer } from 'lucide-react-native';
+import { View, Text, StyleSheet, Platform, Switch } from 'react-native';
+import { Clock, Thermometer, Timer, Radio, Smartphone } from 'lucide-react-native';
 import { fetchGolfWeather } from '@/services/weatherApi';
 
 export default function Step3Page1() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [temperature, setTemperature] = useState<number | null>(null);
   const [tempLoading, setTempLoading] = useState(true);
+  const [sensorsEnabled, setSensorsEnabled] = useState<boolean>(false);
+  const [deviceEnabled, setDeviceEnabled] = useState<boolean>(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -74,6 +76,38 @@ export default function Step3Page1() {
           <Text style={styles.miniStatValue}>0:00</Text>
         </View>
       </View>
+
+      <View style={styles.toggleCard}>
+        <View style={styles.toggleLeft}>
+          <View style={styles.toggleIcon}>
+            <Radio size={20} color={sensorsEnabled ? '#00E676' : '#8A9B90'} strokeWidth={2} />
+          </View>
+          <Text style={styles.toggleText}>SENSORS</Text>
+        </View>
+        <Switch
+          value={sensorsEnabled}
+          onValueChange={setSensorsEnabled}
+          trackColor={{ false: '#2A3A2E', true: '#1B5E20' }}
+          thumbColor={sensorsEnabled ? '#00E676' : '#666'}
+          ios_backgroundColor="#2A3A2E"
+        />
+      </View>
+
+      <View style={styles.toggleCard}>
+        <View style={styles.toggleLeft}>
+          <View style={styles.toggleIcon}>
+            <Smartphone size={20} color={deviceEnabled ? '#00E676' : '#8A9B90'} strokeWidth={2} />
+          </View>
+          <Text style={styles.toggleText}>DEVICE</Text>
+        </View>
+        <Switch
+          value={deviceEnabled}
+          onValueChange={setDeviceEnabled}
+          trackColor={{ false: '#2A3A2E', true: '#1B5E20' }}
+          thumbColor={deviceEnabled ? '#00E676' : '#666'}
+          ios_backgroundColor="#2A3A2E"
+        />
+      </View>
     </View>
   );
 }
@@ -118,5 +152,37 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700' as const,
     color: '#F5F7F6',
+  },
+  toggleCard: {
+    backgroundColor: '#141C18',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    borderWidth: 1,
+    borderColor: '#243028',
+    marginTop: 12,
+  },
+  toggleLeft: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 12,
+  },
+  toggleIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#243028',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  toggleText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#F5F7F6',
+    letterSpacing: 0.5,
   },
 });
