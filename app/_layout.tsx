@@ -6,9 +6,13 @@ import { View, StyleSheet, Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SessionProvider, useSession } from "@/contexts/SessionContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
+import { AppNavigationProvider, useAppNavigation } from "@/contexts/AppNavigationContext";
 import PlaySessionTabs from "@/app/play-session/PlaySessionTabs";
 import PracticeSessionTabs from "@/app/practice-session/PracticeSessionTabs";
 import MiniSessionModal from "@/components/MiniSessionModal";
+import Sidebar from "@/components/Sidebar";
+import DataOverviewScreen from "@/components/DataOverviewScreen";
+import CommunityScreen from "@/components/CommunityScreen";
 import ProfileScreen from "@/app/(tabs)/profile";
 import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
@@ -21,6 +25,7 @@ const queryClient = new QueryClient();
 
 function AppContent() {
   const { sessionState, sessionType } = useSession();
+  const { currentSection } = useAppNavigation();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
@@ -88,6 +93,25 @@ function AppContent() {
           <ProfileScreen />
         </View>
         <MiniSessionModal />
+        <Sidebar />
+      </View>
+    );
+  }
+
+  if (currentSection === 'data-overview') {
+    return (
+      <View style={styles.container}>
+        <DataOverviewScreen />
+        <Sidebar />
+      </View>
+    );
+  }
+
+  if (currentSection === 'community') {
+    return (
+      <View style={styles.container}>
+        <CommunityScreen />
+        <Sidebar />
       </View>
     );
   }
@@ -96,8 +120,8 @@ function AppContent() {
     <View style={styles.container}>
       <Stack 
         screenOptions={{ 
-          headerShown: false, // Default to hidden for all
-          contentStyle: { backgroundColor: '#020d12' } // Set background color for the whole stack
+          headerShown: false,
+          contentStyle: { backgroundColor: '#020d12' }
         }}
       >
         <Stack.Screen name="auth" options={{ headerShown: false }} />
@@ -234,6 +258,7 @@ function AppContent() {
         />
         <Stack.Screen name="+not-found" />
       </Stack>
+      <Sidebar />
     </View>
   );
 }
@@ -254,7 +279,9 @@ export default function RootLayout() {
       <GestureHandlerRootView style={styles.container}>
         <SessionProvider>
           <ProfileProvider>
-            <RootLayoutNav />
+            <AppNavigationProvider>
+              <RootLayoutNav />
+            </AppNavigationProvider>
           </ProfileProvider>
         </SessionProvider>
       </GestureHandlerRootView>

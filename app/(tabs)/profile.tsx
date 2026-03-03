@@ -13,11 +13,12 @@ import {
   Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Settings, X, User, Newspaper, TrendingUp, Bluetooth, Trophy, QrCode, Swords, Clock, Target, Zap, Hash } from 'lucide-react-native';
+import { Settings, X, User, Newspaper, TrendingUp, Bluetooth, Trophy, QrCode, Swords, Clock, Target, Zap, Hash, Menu } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useProfile, UserProfile } from '@/contexts/ProfileContext';
 import { useSession } from '@/contexts/SessionContext';
+import { useAppNavigation } from '@/contexts/AppNavigationContext';
 import UiTra from '@/components/probygg/UiTra';
 import ProfileCard from '@/components/ProfileCard';
 import { supabase } from '@/lib/supabase';
@@ -395,6 +396,7 @@ export default function ProfileScreen() {
   } = useProfile();
 
   const { lastRound } = useSession();
+  const { openSidebar } = useAppNavigation();
 
   const [followsModalVisible, setFollowsModalVisible] = useState<boolean>(false);
   const [followsTab, setFollowsTab] = useState<'hitta' | 'followers' | 'following'>('hitta');
@@ -544,7 +546,14 @@ export default function ProfileScreen() {
     <View style={styles.container}>
       <SafeAreaView edges={['top']} style={styles.safeArea}>
         <View style={styles.headerRow}>
-          <View style={styles.headerSpacer} />
+          <TouchableOpacity
+            onPress={openSidebar}
+            style={styles.hamburgerBtn}
+            activeOpacity={0.7}
+            testID="hamburger-menu"
+          >
+            <Menu size={24} color="#F5F7F6" />
+          </TouchableOpacity>
           <View style={styles.headerIcons}>
             <TouchableOpacity
               onPress={() => router.push('/modals/pair-impact-modal' as any)}
@@ -962,8 +971,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 6,
   },
-  headerSpacer: {
-    flex: 1,
+  hamburgerBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
   },
   headerIcons: {
     flexDirection: 'row' as const,

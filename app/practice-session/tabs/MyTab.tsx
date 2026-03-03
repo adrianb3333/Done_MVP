@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, Switch } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Switch, Modal } from 'react-native';
 import { Clock, Thermometer, Timer, Wifi, Smartphone } from 'lucide-react-native';
 import { useSession } from '@/contexts/SessionContext';
 import { fetchGolfWeather } from '@/services/weatherApi';
@@ -76,6 +76,7 @@ export default function MyTab() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const [sensorsEnabled, setSensorsEnabled] = useState(false);
   const [deviceEnabled, setDeviceEnabled] = useState(false);
 
@@ -132,10 +133,43 @@ export default function MyTab() {
       </View>
 
       <View style={styles.bottomSection}>
-        <TouchableOpacity style={styles.quitButton} onPress={quitSession} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.quitButton} onPress={() => setShowQuitConfirm(true)} activeOpacity={0.8}>
           <Text style={styles.quitText}>Quit Practice</Text>
         </TouchableOpacity>
       </View>
+
+      <Modal
+        visible={showQuitConfirm}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowQuitConfirm(false)}
+      >
+        <View style={styles.confirmOverlay}>
+          <View style={styles.confirmBox}>
+            <Text style={styles.confirmTitle}>End Practice?</Text>
+            <Text style={styles.confirmMessage}>Are you sure you want to quit this practice session?</Text>
+            <View style={styles.confirmButtons}>
+              <TouchableOpacity
+                style={styles.confirmNo}
+                onPress={() => setShowQuitConfirm(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.confirmNoText}>No</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.confirmYes}
+                onPress={() => {
+                  setShowQuitConfirm(false);
+                  quitSession();
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.confirmYesText}>Yes</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -225,5 +259,62 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 17,
     fontWeight: '700' as const,
+  },
+  confirmOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  confirmBox: {
+    backgroundColor: '#1A2520',
+    borderRadius: 20,
+    padding: 28,
+    width: '80%' as unknown as number,
+    alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: '#2E4038',
+  },
+  confirmTitle: {
+    fontSize: 20,
+    fontWeight: '800' as const,
+    color: '#F5F7F6',
+    marginBottom: 8,
+  },
+  confirmMessage: {
+    fontSize: 15,
+    color: '#8A9B90',
+    textAlign: 'center' as const,
+    marginBottom: 24,
+    lineHeight: 21,
+  },
+  confirmButtons: {
+    flexDirection: 'row' as const,
+    gap: 12,
+    width: '100%' as unknown as number,
+  },
+  confirmNo: {
+    flex: 1,
+    backgroundColor: '#243028',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center' as const,
+  },
+  confirmNoText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#F5F7F6',
+  },
+  confirmYes: {
+    flex: 1,
+    backgroundColor: '#FF5252',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center' as const,
+  },
+  confirmYesText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
   },
 });
