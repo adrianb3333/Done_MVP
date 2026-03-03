@@ -182,6 +182,30 @@ function AppContent() {
             animation: "slide_from_bottom"
           }} 
         />
+        <Stack.Screen 
+          name="modals/handicap-modal" 
+          options={{ 
+            presentation: "fullScreenModal",
+            headerShown: false,
+            animation: "slide_from_bottom"
+          }} 
+        />
+        <Stack.Screen 
+          name="modals/qr-modal" 
+          options={{ 
+            presentation: "fullScreenModal",
+            headerShown: false,
+            animation: "slide_from_bottom"
+          }} 
+        />
+        <Stack.Screen 
+          name="modals/compare-modal" 
+          options={{ 
+            presentation: "fullScreenModal",
+            headerShown: false,
+            animation: "slide_from_bottom"
+          }} 
+        />
         {/* End Modals */}
 
         <Stack.Screen 

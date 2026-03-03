@@ -13,12 +13,15 @@ import {
   Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Settings, X, User, Newspaper, TrendingUp, Bluetooth } from 'lucide-react-native';
+import { Settings, X, User, Newspaper, TrendingUp, Bluetooth, Trophy, QrCode, Swords } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useProfile, UserProfile } from '@/contexts/ProfileContext';
 import { useSession } from '@/contexts/SessionContext';
 import UiTra from '@/components/probygg/UiTra';
+import ProfileCard from '@/components/ProfileCard';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -41,9 +44,15 @@ export default function ProfileScreen() {
   const [followsModalVisible, setFollowsModalVisible] = useState<boolean>(false);
   const [followsTab, setFollowsTab] = useState<'hitta' | 'followers' | 'following'>('hitta');
   const [avatarPreviewVisible, setAvatarPreviewVisible] = useState<boolean>(false);
+  const [lastRoundPopupVisible, setLastRoundPopupVisible] = useState<boolean>(false);
+  const [lastPracticePopupVisible, setLastPracticePopupVisible] = useState<boolean>(false);
+  const [profileCardUser, setProfileCardUser] = useState<UserProfile | null>(null);
+  const [profileCardVisible, setProfileCardVisible] = useState<boolean>(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
+
+  const randomHcp = useRef((Math.random() * 20 + 5).toFixed(1)).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -84,11 +93,22 @@ export default function ProfileScreen() {
     }
   }, [toggleFollow]);
 
+  const openProfileCard = useCallback((user: UserProfile) => {
+    console.log('[Profile] Opening profile card for:', user.username);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setProfileCardUser(user);
+    setProfileCardVisible(true);
+  }, []);
+
   const renderFollowUser = useCallback(({ item }: { item: UserProfile }) => {
     const amFollowing = isFollowing(item.id);
     return (
       <View style={styles.followUserRow}>
-        <View style={styles.followUserLeft}>
+        <TouchableOpacity
+          style={styles.followUserLeft}
+          onPress={() => openProfileCard(item)}
+          activeOpacity={0.7}
+        >
           {item.avatar_url ? (
             <Image source={{ uri: item.avatar_url }} style={styles.followUserAvatar} />
           ) : (
@@ -100,7 +120,7 @@ export default function ProfileScreen() {
             <Text style={styles.followUserName} numberOfLines={1}>{item.display_name || item.username || 'Användare'}</Text>
             <Text style={styles.followUserUsername} numberOfLines={1}>@{item.username}</Text>
           </View>
-        </View>
+        </TouchableOpacity>
         <TouchableOpacity
           style={[styles.followBtn, amFollowing && styles.followBtnFollowing]}
           onPress={() => handleToggleFollow(item.id)}
@@ -113,7 +133,7 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
     );
-  }, [isFollowing, handleToggleFollow, isTogglingFollow]);
+  }, [isFollowing, handleToggleFollow, isTogglingFollow, openProfileCard]);
 
   const getModalTitle = useCallback(() => {
     if (followsTab === 'hitta') return 'Hitta';
@@ -207,28 +227,28 @@ export default function ProfileScreen() {
       </SafeAreaView>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-      <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
-        <View style={styles.profileSection}>
-          <View style={styles.profileRow}>
-            <View style={styles.avatarColumn}>
-              <TouchableOpacity
-                onPress={handleAvatarPress}
-                style={styles.avatarTouchable}
-                activeOpacity={0.8}
-                testID="avatar-button"
-              >
-                {profile?.avatar_url ? (
-                  <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
-                ) : (
-                  <View style={styles.avatarPlaceholder}>
-                    <Text style={styles.avatarInitials}>{initials}</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-              <Text style={styles.usernameText}>{profile?.username ?? 'user'}</Text>
-            </View>
+        <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
 
-            <View style={styles.statsRow}>
+          <View style={styles.avatarSection}>
+            <TouchableOpacity
+              onPress={handleAvatarPress}
+              style={styles.avatarTouchable}
+              activeOpacity={0.8}
+              testID="avatar-button"
+            >
+              {profile?.avatar_url ? (
+                <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <Text style={styles.avatarInitials}>{initials}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            <Text style={styles.usernameText}>{profile?.username ?? 'user'}</Text>
+          </View>
+
+          <View style={styles.statsAndButtonsRow}>
+            <View style={styles.statsColumn}>
               <TouchableOpacity
                 style={styles.statItem}
                 onPress={() => openFollowsModal('followers')}
@@ -248,48 +268,98 @@ export default function ProfileScreen() {
                 <Text style={styles.statLabel}>följer</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
 
-        <View style={styles.liveSection}>
-          <Text style={styles.liveSectionTitle}>LIVE</Text>
-          <View style={styles.liveEmptyState}>
-            <View style={styles.liveDot} />
-            <Text style={styles.liveEmptyText}>No friends playing right now</Text>
-          </View>
-        </View>
+            <View style={styles.actionButtons}>
+              <TouchableOpacity
+                style={styles.goldBtn}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push('/modals/handicap-modal' as any);
+                }}
+                activeOpacity={0.8}
+                testID="handicap-button"
+              >
+                <Trophy size={18} color="#D4AF37" />
+                <Text style={styles.goldBtnText}>{randomHcp}</Text>
+              </TouchableOpacity>
 
-        {lastRound && (
-          <View style={styles.lastRoundSection}>
-            <View style={styles.lastRoundHeader}>
-              <Text style={styles.lastRoundTitle}>Last Round</Text>
+              <TouchableOpacity
+                style={styles.qrBtn}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push('/modals/qr-modal' as any);
+                }}
+                activeOpacity={0.8}
+                testID="qr-button"
+              >
+                <QrCode size={18} color="#EFEFEF" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.compareBtn}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push('/modals/compare-modal' as any);
+                }}
+                activeOpacity={0.8}
+                testID="compare-button"
+              >
+                <Swords size={16} color="#fff" />
+                <Text style={styles.compareBtnText}>Compare</Text>
+              </TouchableOpacity>
             </View>
-            <View style={styles.lastRoundCard}>
-              <View style={styles.lastRoundLeft}>
-                <Text style={styles.lastRoundCourse}>{lastRound.courseName}</Text>
-                <Text style={styles.lastRoundDate}>{lastRound.roundDate}</Text>
-                {lastRound.duration ? (
-                  <Text style={styles.lastRoundDuration}>{lastRound.duration}</Text>
-                ) : null}
-                <View style={styles.lastRoundPlayersRow}>
-                  {lastRound.players.map((p, i) => (
-                    <Text key={i} style={styles.lastRoundPlayer}>{p}{i < lastRound.players.length - 1 ? ', ' : ''}</Text>
-                  ))}
-                </View>
-              </View>
-              <View style={styles.lastRoundRight}>
-                <Text style={styles.lastRoundScore}>{lastRound.totalScore}</Text>
-                <Text style={[styles.lastRoundToPar, { color: getToParColor() }]}>{getToParDisplay()}</Text>
-                <Text style={styles.lastRoundHoles}>{lastRound.holesPlayed} holes</Text>
-              </View>
+          </View>
+
+          <View style={styles.liveSection}>
+            <Text style={styles.liveSectionTitle}>LIVE</Text>
+            <View style={styles.liveEmptyState}>
+              <View style={styles.liveDot} />
+              <Text style={styles.liveEmptyText}>No friends playing right now</Text>
             </View>
           </View>
-        )}
 
-        <UiTra />
-      </Animated.View>
+          <View style={styles.cardsRow}>
+            <TouchableOpacity
+              style={styles.roundCard}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setLastRoundPopupVisible(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.cardTitle}>Last Round</Text>
+              {lastRound ? (
+                <>
+                  <Text style={styles.cardCourse} numberOfLines={1}>{lastRound.courseName}</Text>
+                  <Text style={styles.cardDate}>{lastRound.roundDate}</Text>
+                  <View style={styles.cardScoreRow}>
+                    <Text style={styles.cardScore}>{lastRound.totalScore}</Text>
+                    <Text style={[styles.cardToPar, { color: getToParColor() }]}>{getToParDisplay()}</Text>
+                  </View>
+                  <Text style={styles.cardHoles}>{lastRound.holesPlayed} holes</Text>
+                </>
+              ) : (
+                <Text style={styles.cardEmpty}>No rounds yet</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.practiceCard}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setLastPracticePopupVisible(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.cardTitle}>Last Practice</Text>
+              <UiTra />
+            </TouchableOpacity>
+          </View>
+
+        </Animated.View>
       </ScrollView>
 
+      {/* Avatar Preview Modal */}
       <Modal
         visible={avatarPreviewVisible}
         animationType="fade"
@@ -318,6 +388,7 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
+      {/* Follows Modal - almost full screen */}
       <Modal
         visible={followsModalVisible}
         animationType="slide"
@@ -385,6 +456,131 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Last Round Popup */}
+      <Modal
+        visible={lastRoundPopupVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setLastRoundPopupVisible(false)}
+      >
+        <View style={styles.popupOverlay}>
+          <View style={styles.popupSheet}>
+            <View style={styles.popupHeader}>
+              <TouchableOpacity
+                onPress={() => setLastRoundPopupVisible(false)}
+                style={styles.popupCloseBtn}
+                activeOpacity={0.7}
+              >
+                <X size={22} color="#999" />
+              </TouchableOpacity>
+              <Text style={styles.popupTitle}>Last Round</Text>
+              <View style={styles.popupHeaderSpacer} />
+            </View>
+            <ScrollView style={styles.popupScroll} showsVerticalScrollIndicator={false}>
+              {lastRound ? (
+                <>
+                  <View style={styles.popupRoundInfo}>
+                    <Text style={styles.popupCourseName}>{lastRound.courseName}</Text>
+                    <Text style={styles.popupDate}>{lastRound.roundDate}</Text>
+                    {lastRound.duration ? (
+                      <Text style={styles.popupDuration}>Duration: {lastRound.duration}</Text>
+                    ) : null}
+                  </View>
+
+                  <View style={styles.popupScoreSection}>
+                    <View style={styles.popupScoreBig}>
+                      <Text style={styles.popupScoreValue}>{lastRound.totalScore}</Text>
+                      <Text style={[styles.popupToPar, { color: getToParColor() }]}>{getToParDisplay()}</Text>
+                    </View>
+                    <View style={styles.popupScoreDetails}>
+                      <View style={styles.popupDetailItem}>
+                        <Text style={styles.popupDetailValue}>{lastRound.holesPlayed}</Text>
+                        <Text style={styles.popupDetailLabel}>Holes</Text>
+                      </View>
+                      <View style={styles.popupDetailItem}>
+                        <Text style={styles.popupDetailValue}>{lastRound.totalPar}</Text>
+                        <Text style={styles.popupDetailLabel}>Par</Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View style={styles.popupPlayersSection}>
+                    <Text style={styles.popupSectionTitle}>Players</Text>
+                    {lastRound.players.map((p, i) => (
+                      <View key={i} style={styles.popupPlayerRow}>
+                        <View style={styles.popupPlayerAvatar}>
+                          <User size={16} color="#888" />
+                        </View>
+                        <Text style={styles.popupPlayerName}>{p}</Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  <View style={styles.popupSummarySection}>
+                    <Text style={styles.popupSectionTitle}>Summary</Text>
+                    <View style={styles.popupSummaryGrid}>
+                      {[
+                        { label: 'Score', value: `${lastRound.totalScore}` },
+                        { label: 'To Par', value: getToParDisplay() },
+                        { label: 'Holes', value: `${lastRound.holesPlayed}` },
+                        { label: 'Course Par', value: `${lastRound.totalPar}` },
+                      ].map((item, idx) => (
+                        <View key={idx} style={styles.popupSummaryItem}>
+                          <Text style={styles.popupSummaryValue}>{item.value}</Text>
+                          <Text style={styles.popupSummaryLabel}>{item.label}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                </>
+              ) : (
+                <View style={styles.popupEmpty}>
+                  <Text style={styles.popupEmptyText}>No round data available yet</Text>
+                </View>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Last Practice Popup */}
+      <Modal
+        visible={lastPracticePopupVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setLastPracticePopupVisible(false)}
+      >
+        <View style={styles.popupOverlay}>
+          <View style={styles.popupSheet}>
+            <View style={styles.popupHeader}>
+              <TouchableOpacity
+                onPress={() => setLastPracticePopupVisible(false)}
+                style={styles.popupCloseBtn}
+                activeOpacity={0.7}
+              >
+                <X size={22} color="#999" />
+              </TouchableOpacity>
+              <Text style={styles.popupTitle}>Last Practice</Text>
+              <View style={styles.popupHeaderSpacer} />
+            </View>
+            <ScrollView style={styles.popupScroll} showsVerticalScrollIndicator={false}>
+              <View style={styles.popupPracticeWrap}>
+                <UiTra />
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Profile Card for viewing other users */}
+      <ProfileCard
+        visible={profileCardVisible}
+        onClose={() => setProfileCardVisible(false)}
+        user={profileCardUser}
+        isFollowingUser={profileCardUser ? isFollowing(profileCardUser.id) : false}
+        onToggleFollow={profileCardUser ? () => handleToggleFollow(profileCardUser.id) : undefined}
+      />
     </View>
   );
 }
@@ -396,8 +592,8 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
   },
   safeArea: {
     zIndex: 10,
@@ -407,7 +603,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between' as const,
     alignItems: 'center' as const,
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 6,
   },
   headerSpacer: {
     flex: 1,
@@ -420,79 +616,225 @@ const styles = StyleSheet.create({
   headerIconBtn: {
     padding: 6,
   },
-  settingsButton: {
-    padding: 6,
-  },
   scrollView: {
     flex: 1,
   },
   content: {
     paddingHorizontal: 20,
-    paddingTop: 8,
+    paddingTop: 4,
     paddingBottom: 30,
   },
-  profileSection: {},
-  profileRow: {
-    flexDirection: 'row' as const,
+
+  avatarSection: {
     alignItems: 'center' as const,
-    gap: 24,
+    marginBottom: 20,
   },
   avatarTouchable: {
     position: 'relative' as const,
   },
   avatar: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    borderWidth: 2,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    borderWidth: 3,
     borderColor: '#2A2A2A',
   },
   avatarPlaceholder: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     backgroundColor: '#1E1E1E',
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: '#2A2A2A',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
   },
   avatarInitials: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: '700' as const,
     color: '#1DB954',
   },
-
-  statsRow: {
-    flex: 1,
-    flexDirection: 'row' as const,
-    justifyContent: 'space-around' as const,
-    alignItems: 'center' as const,
-  },
-  statItem: {
-    alignItems: 'center' as const,
-    paddingHorizontal: 12,
-  },
-  statNumber: {
-    fontSize: 20,
-    fontWeight: '800' as const,
-    color: '#EFEFEF',
-  },
-  statLabel: {
-    fontSize: 13,
-    color: '#888',
-    marginTop: 2,
-  },
-  avatarColumn: {
-    alignItems: 'center' as const,
-  },
   usernameText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600' as const,
     color: '#B0B0B0',
     marginTop: 8,
     letterSpacing: 0.2,
   },
+
+  statsAndButtonsRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start' as const,
+    marginBottom: 24,
+    gap: 16,
+  },
+  statsColumn: {
+    flex: 1,
+    gap: 12,
+  },
+  statItem: {
+    backgroundColor: '#141414',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#1A1A1A',
+  },
+  statNumber: {
+    fontSize: 22,
+    fontWeight: '800' as const,
+    color: '#EFEFEF',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+  },
+
+  actionButtons: {
+    gap: 8,
+    alignItems: 'stretch' as const,
+    width: 130,
+  },
+  goldBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+    backgroundColor: '#141414',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#D4AF3740',
+  },
+  goldBtnText: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: '#D4AF37',
+  },
+  qrBtn: {
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: '#141414',
+    borderRadius: 14,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: '#1A1A1A',
+  },
+  compareBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 6,
+    backgroundColor: '#FF444420',
+    borderRadius: 14,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: '#FF444440',
+  },
+  compareBtnText: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: '#FF6666',
+  },
+
+  liveSection: {
+    marginBottom: 20,
+  },
+  liveSectionTitle: {
+    fontSize: 16,
+    fontWeight: '800' as const,
+    color: '#FF3B30',
+    letterSpacing: 1,
+    marginBottom: 10,
+  },
+  liveEmptyState: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: '#141414',
+    borderRadius: 12,
+    padding: 14,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#1A1A1A',
+  },
+  liveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#444',
+  },
+  liveEmptyText: {
+    fontSize: 13,
+    color: '#555',
+    fontWeight: '500' as const,
+  },
+
+  cardsRow: {
+    flexDirection: 'row' as const,
+    gap: 10,
+  },
+  roundCard: {
+    flex: 1,
+    backgroundColor: '#141414',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#1B5E2040',
+    minHeight: 140,
+  },
+  practiceCard: {
+    flex: 1,
+    backgroundColor: '#141414',
+    borderRadius: 16,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: '#2e7d3240',
+    minHeight: 140,
+    overflow: 'hidden' as const,
+  },
+  cardTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: '#888',
+    marginBottom: 8,
+  },
+  cardCourse: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: '#EFEFEF',
+  },
+  cardDate: {
+    fontSize: 11,
+    color: '#666',
+    marginTop: 2,
+  },
+  cardScoreRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'baseline' as const,
+    gap: 6,
+    marginTop: 8,
+  },
+  cardScore: {
+    fontSize: 28,
+    fontWeight: '800' as const,
+    color: '#1DB954',
+  },
+  cardToPar: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+  },
+  cardHoles: {
+    fontSize: 11,
+    color: '#555',
+    marginTop: 2,
+  },
+  cardEmpty: {
+    fontSize: 13,
+    color: '#444',
+    marginTop: 12,
+  },
+
   avatarPreviewOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.92)',
@@ -507,14 +849,14 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   avatarPreviewImage: {
-    width: Dimensions.get('window').width * 0.8,
-    height: Dimensions.get('window').width * 0.8,
-    borderRadius: Dimensions.get('window').width * 0.4,
+    width: SCREEN_WIDTH * 0.8,
+    height: SCREEN_WIDTH * 0.8,
+    borderRadius: SCREEN_WIDTH * 0.4,
   },
   avatarPreviewPlaceholder: {
-    width: Dimensions.get('window').width * 0.6,
-    height: Dimensions.get('window').width * 0.6,
-    borderRadius: Dimensions.get('window').width * 0.3,
+    width: SCREEN_WIDTH * 0.6,
+    height: SCREEN_WIDTH * 0.6,
+    borderRadius: SCREEN_WIDTH * 0.3,
     backgroundColor: '#1E1E1E',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
@@ -524,118 +866,18 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: '#1DB954',
   },
-  liveSection: {
-    marginTop: 28,
-  },
-  liveSectionTitle: {
-    fontSize: 18,
-    fontWeight: '800' as const,
-    color: '#FF3B30',
-    letterSpacing: 1,
-    marginBottom: 12,
-  },
-  liveEmptyState: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    backgroundColor: '#1A1A1A',
-    borderRadius: 12,
-    padding: 16,
-    gap: 10,
-    borderWidth: 1,
-    borderColor: '#2A2A2A',
-  },
-  liveDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#444',
-  },
-  liveEmptyText: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '500' as const,
-  },
-  lastRoundSection: {
-    marginTop: 24,
-  },
-  lastRoundHeader: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    marginBottom: 12,
-  },
-  lastRoundTitle: {
-    fontSize: 22,
-    fontWeight: '700' as const,
-    color: '#fff',
-  },
-  lastRoundCard: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 16,
-    padding: 20,
-    flexDirection: 'row' as const,
-    borderWidth: 2,
-    borderColor: '#1B5E20',
-  },
-  lastRoundLeft: {
-    flex: 1,
-  },
-  lastRoundCourse: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: '#fff',
-  },
-  lastRoundDate: {
-    fontSize: 13,
-    color: '#888',
-    marginTop: 4,
-  },
-  lastRoundPlayersRow: {
-    flexDirection: 'row' as const,
-    flexWrap: 'wrap' as const,
-    marginTop: 8,
-  },
-  lastRoundPlayer: {
-    fontSize: 12,
-    color: '#aaa',
-  },
-  lastRoundRight: {
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
-  lastRoundScore: {
-    fontSize: 36,
-    fontWeight: '800' as const,
-    color: '#1DB954',
-  },
-  lastRoundToPar: {
-    fontSize: 14,
-    fontWeight: '700' as const,
-    color: '#888',
-    marginTop: 2,
-  },
-  lastRoundDuration: {
-    fontSize: 12,
-    color: '#777',
-    marginTop: 3,
-  },
-  lastRoundHoles: {
-    fontSize: 11,
-    color: '#666',
-    marginTop: 2,
-  },
+
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.7)',
     justifyContent: 'flex-end' as const,
   },
-
   followsSheet: {
     backgroundColor: '#141414',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingBottom: 40,
-    maxHeight: '80%' as const,
-    minHeight: 400,
+    height: SCREEN_HEIGHT * 0.88,
   },
   modalHandle: {
     width: 40,
@@ -661,7 +903,6 @@ const styles = StyleSheet.create({
   modalCloseBtn: {
     padding: 4,
   },
-
   tabSwitcher: {
     flexDirection: 'row' as const,
     marginHorizontal: 20,
@@ -679,7 +920,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#2A2A2A',
   },
   tabBtnText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600' as const,
     color: '#666',
   },
@@ -761,5 +1002,177 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 15,
     color: '#666',
+  },
+
+  popupOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 16,
+    paddingVertical: 40,
+  },
+  popupSheet: {
+    backgroundColor: '#141414',
+    borderRadius: 24,
+    width: '100%' as const,
+    maxHeight: SCREEN_HEIGHT * 0.82,
+    overflow: 'hidden' as const,
+  },
+  popupHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1A1A1A',
+  },
+  popupCloseBtn: {
+    padding: 4,
+    width: 32,
+  },
+  popupTitle: {
+    fontSize: 17,
+    fontWeight: '700' as const,
+    color: '#EFEFEF',
+  },
+  popupHeaderSpacer: {
+    width: 32,
+  },
+  popupScroll: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 20,
+  },
+
+  popupRoundInfo: {
+    marginBottom: 20,
+  },
+  popupCourseName: {
+    fontSize: 20,
+    fontWeight: '800' as const,
+    color: '#EFEFEF',
+  },
+  popupDate: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  },
+  popupDuration: {
+    fontSize: 13,
+    color: '#555',
+    marginTop: 4,
+  },
+
+  popupScoreSection: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#1B5E2040',
+  },
+  popupScoreBig: {
+    flex: 1,
+    alignItems: 'center' as const,
+  },
+  popupScoreValue: {
+    fontSize: 48,
+    fontWeight: '900' as const,
+    color: '#1DB954',
+  },
+  popupToPar: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    marginTop: 2,
+  },
+  popupScoreDetails: {
+    flex: 1,
+    gap: 12,
+  },
+  popupDetailItem: {
+    alignItems: 'center' as const,
+  },
+  popupDetailValue: {
+    fontSize: 22,
+    fontWeight: '800' as const,
+    color: '#EFEFEF',
+  },
+  popupDetailLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 2,
+  },
+
+  popupPlayersSection: {
+    marginBottom: 20,
+  },
+  popupSectionTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#EFEFEF',
+    marginBottom: 12,
+  },
+  popupPlayerRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 10,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1A1A1A',
+  },
+  popupPlayerAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#1E1E1E',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  popupPlayerName: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: '#EFEFEF',
+  },
+
+  popupSummarySection: {
+    marginBottom: 30,
+  },
+  popupSummaryGrid: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    gap: 10,
+  },
+  popupSummaryItem: {
+    width: '47%' as any,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center' as const,
+  },
+  popupSummaryValue: {
+    fontSize: 20,
+    fontWeight: '800' as const,
+    color: '#EFEFEF',
+  },
+  popupSummaryLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+  },
+
+  popupEmpty: {
+    paddingVertical: 60,
+    alignItems: 'center' as const,
+  },
+  popupEmptyText: {
+    fontSize: 15,
+    color: '#555',
+  },
+  popupPracticeWrap: {
+    paddingBottom: 20,
   },
 });
