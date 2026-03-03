@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-import { Clock, Thermometer, Timer } from 'lucide-react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Switch } from 'react-native';
+import { Clock, Thermometer, Timer, Wifi, Smartphone } from 'lucide-react-native';
 import { useSession } from '@/contexts/SessionContext';
 import { fetchGolfWeather } from '@/services/weatherApi';
 
@@ -76,25 +76,58 @@ export default function MyTab() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const [sensorsEnabled, setSensorsEnabled] = useState(false);
+  const [deviceEnabled, setDeviceEnabled] = useState(false);
+
   return (
     <View style={styles.container}>
-      <View style={styles.miniStatsRow}>
-        <View style={styles.miniStat}>
-          <Clock size={16} color="#00E676" />
-          <Text style={styles.miniStatLabel}>Time</Text>
-          <Text style={styles.miniStatValue}>{formatTime(currentTime)}</Text>
+      <View style={styles.topContent}>
+        <View style={styles.miniStatsRow}>
+          <View style={styles.miniStat}>
+            <Clock size={16} color="#00E676" />
+            <Text style={styles.miniStatLabel}>Time</Text>
+            <Text style={styles.miniStatValue}>{formatTime(currentTime)}</Text>
+          </View>
+          <View style={styles.miniStat}>
+            <Thermometer size={16} color="#00E676" />
+            <Text style={styles.miniStatLabel}>Temp</Text>
+            <Text style={styles.miniStatValue}>
+              {tempLoading ? '...' : temperature !== null ? `${temperature}°C` : '--°C'}
+            </Text>
+          </View>
+          <View style={[styles.miniStat, styles.timerStat]}>
+            <Timer size={16} color="#00E676" />
+            <Text style={styles.miniStatLabel}>Duration</Text>
+            <Text style={[styles.miniStatValue, styles.timerValue]}>{formatElapsed(elapsed)}</Text>
+          </View>
         </View>
-        <View style={styles.miniStat}>
-          <Thermometer size={16} color="#00E676" />
-          <Text style={styles.miniStatLabel}>Temp</Text>
-          <Text style={styles.miniStatValue}>
-            {tempLoading ? '...' : temperature !== null ? `${temperature}°C` : '--°C'}
-          </Text>
-        </View>
-        <View style={[styles.miniStat, styles.timerStat]}>
-          <Timer size={16} color="#00E676" />
-          <Text style={styles.miniStatLabel}>Duration</Text>
-          <Text style={[styles.miniStatValue, styles.timerValue]}>{formatElapsed(elapsed)}</Text>
+
+        <View style={styles.toggleSection}>
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleLeft}>
+              <Wifi size={18} color="#8A9B90" />
+              <Text style={styles.toggleLabel}>Sensors</Text>
+            </View>
+            <Switch
+              value={sensorsEnabled}
+              onValueChange={setSensorsEnabled}
+              trackColor={{ false: '#2A3530', true: 'rgba(0, 230, 118, 0.35)' }}
+              thumbColor={sensorsEnabled ? '#00E676' : '#6B7B70'}
+            />
+          </View>
+          <View style={styles.toggleDivider} />
+          <View style={styles.toggleRow}>
+            <View style={styles.toggleLeft}>
+              <Smartphone size={18} color="#8A9B90" />
+              <Text style={styles.toggleLabel}>Device</Text>
+            </View>
+            <Switch
+              value={deviceEnabled}
+              onValueChange={setDeviceEnabled}
+              trackColor={{ false: '#2A3530', true: 'rgba(0, 230, 118, 0.35)' }}
+              thumbColor={deviceEnabled ? '#00E676' : '#6B7B70'}
+            />
+          </View>
         </View>
       </View>
 
@@ -110,7 +143,9 @@ export default function MyTab() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'space-between' as const,
+  },
+  topContent: {
+    flex: 1,
   },
   miniStatsRow: {
     flexDirection: 'row' as const,
@@ -145,9 +180,40 @@ const styles = StyleSheet.create({
   timerValue: {
     color: '#00E676',
   },
+  toggleSection: {
+    marginTop: 16,
+    marginHorizontal: 16,
+    backgroundColor: '#141C18',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#243028',
+    overflow: 'hidden' as const,
+  },
+  toggleRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  toggleLeft: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 10,
+  },
+  toggleLabel: {
+    fontSize: 15,
+    fontWeight: '500' as const,
+    color: '#F5F7F6',
+  },
+  toggleDivider: {
+    height: 1,
+    backgroundColor: '#243028',
+    marginHorizontal: 16,
+  },
   bottomSection: {
     paddingHorizontal: 24,
-    paddingBottom: 24,
+    paddingBottom: 32,
   },
   quitButton: {
     backgroundColor: '#FF5252',
