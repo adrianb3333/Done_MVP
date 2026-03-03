@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -225,7 +225,14 @@ function VideoContent() {
 
 export default function DataOverviewScreen() {
   const [activeTab, setActiveTab] = useState<DataTab>('stats');
-  const { openSidebar } = useAppNavigation();
+  const { openSidebar, dataOverviewInitialTab, clearDataOverviewInitialTab } = useAppNavigation();
+
+  useEffect(() => {
+    if (dataOverviewInitialTab && ['stats', 'sg', 'shots', 'details', 'video'].includes(dataOverviewInitialTab)) {
+      setActiveTab(dataOverviewInitialTab as DataTab);
+      clearDataOverviewInitialTab();
+    }
+  }, [dataOverviewInitialTab, clearDataOverviewInitialTab]);
 
   const renderContent = () => {
     switch (activeTab) {

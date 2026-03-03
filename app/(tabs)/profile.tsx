@@ -13,7 +13,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Settings, X, User, Newspaper, TrendingUp, Bluetooth, Trophy, QrCode, Swords, Clock, Target, Zap, Hash, Menu } from 'lucide-react-native';
+import { Settings, X, User, Newspaper, TrendingUp, Bluetooth, Trophy, QrCode, Swords, Clock, Target, Zap, Hash, Menu, Video } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useProfile, UserProfile } from '@/contexts/ProfileContext';
@@ -396,7 +396,7 @@ export default function ProfileScreen() {
   } = useProfile();
 
   const { lastRound } = useSession();
-  const { openSidebar } = useAppNavigation();
+  const { openSidebar, navigateTo } = useAppNavigation();
 
   const [followsModalVisible, setFollowsModalVisible] = useState<boolean>(false);
   const [followsTab, setFollowsTab] = useState<'hitta' | 'followers' | 'following'>('hitta');
@@ -614,22 +614,33 @@ export default function ProfileScreen() {
 
             <View style={styles.statsColumn}>
               <TouchableOpacity
-                style={styles.statItem}
+                style={styles.statItemSmall}
                 onPress={() => openFollowsModal('followers')}
                 activeOpacity={0.7}
                 testID="followers-button"
               >
-                <Text style={styles.statNumber}>{followersCount}</Text>
-                <Text style={styles.statLabel}>följare</Text>
+                <Text style={styles.statNumberSmall}>{followersCount}</Text>
+                <Text style={styles.statLabelSmall}>följare</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.statItem}
+                style={styles.statItemSmall}
                 onPress={() => openFollowsModal('following')}
                 activeOpacity={0.7}
                 testID="following-button"
               >
-                <Text style={styles.statNumber}>{followingCount}</Text>
-                <Text style={styles.statLabel}>följer</Text>
+                <Text style={styles.statNumberSmall}>{followingCount}</Text>
+                <Text style={styles.statLabelSmall}>följer</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.videoNavBtn}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  navigateTo('data-overview', { initialTab: 'video' });
+                }}
+                activeOpacity={0.8}
+                testID="video-nav-button"
+              >
+                <Video size={18} color="#4FC3F7" />
               </TouchableOpacity>
             </View>
 
@@ -1041,23 +1052,32 @@ const styles = StyleSheet.create({
     gap: 8,
     justifyContent: 'center' as const,
   },
-  statItem: {
+  statItemSmall: {
     backgroundColor: '#141414',
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+    borderRadius: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
     borderWidth: 1,
     borderColor: '#1A1A1A',
   },
-  statNumber: {
-    fontSize: 18,
+  statNumberSmall: {
+    fontSize: 14,
     fontWeight: '800' as const,
     color: '#EFEFEF',
   },
-  statLabel: {
-    fontSize: 11,
+  statLabelSmall: {
+    fontSize: 9,
     color: '#666',
     marginTop: 1,
+  },
+  videoNavBtn: {
+    backgroundColor: '#141414',
+    borderRadius: 10,
+    paddingVertical: 8,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    borderWidth: 1,
+    borderColor: '#4FC3F720',
   },
 
   actionButtons: {
