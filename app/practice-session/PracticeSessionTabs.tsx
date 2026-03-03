@@ -7,20 +7,20 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronDown, User, Activity, Plane, FileText, Dumbbell } from 'lucide-react-native';
+import { ChevronDown, User, Navigation, Plane, FileText, Dumbbell } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useSession } from '@/contexts/SessionContext';
 import MyTab from './tabs/MyTab';
-import SwingTab from './tabs/SwingTab';
+import PositionTab from './tabs/PositionTab';
 import FlightTab from './tabs/FlightTab';
 import NotesTab from './tabs/NotesTab';
 import DrillsTab from './tabs/DrillsTab';
 
-type PracticeTab = 'my' | 'swing' | 'flight' | 'notes' | 'drills';
+type PracticeTab = 'my' | 'position' | 'flight' | 'notes' | 'drills';
 
 const tabsConfig: { key: PracticeTab; label: string; icon: React.ReactNode }[] = [
   { key: 'my', label: 'My', icon: <User size={20} /> },
-  { key: 'swing', label: 'Swing', icon: <Activity size={20} /> },
+  { key: 'position', label: 'Position', icon: <Navigation size={20} /> },
   { key: 'flight', label: 'Flight', icon: <Plane size={20} /> },
   { key: 'notes', label: 'Notes', icon: <FileText size={20} /> },
   { key: 'drills', label: 'Drills', icon: <Dumbbell size={20} /> },
@@ -39,13 +39,14 @@ export default function PracticeSessionTabs() {
   const renderNonDrillContent = () => {
     switch (activeTab) {
       case 'my': return <MyTab />;
-      case 'swing': return <SwingTab />;
+      case 'position': return <PositionTab />;
       case 'notes': return <NotesTab />;
       default: return null;
     }
   };
 
   const isFlightTab = activeTab === 'flight';
+  const isPositionTab = activeTab === 'position';
 
   const isDrillFullScreen = isDrillActive && activeTab === 'drills';
 
@@ -60,7 +61,7 @@ export default function PracticeSessionTabs() {
         </TouchableOpacity>
       )}
 
-      {activeTab !== 'drills' && !isFlightTab && !isDrillFullScreen && (
+      {activeTab !== 'drills' && !isFlightTab && !isPositionTab && !isDrillFullScreen && (
         <ScrollView 
           style={styles.content} 
           contentContainerStyle={[
@@ -72,9 +73,9 @@ export default function PracticeSessionTabs() {
         </ScrollView>
       )}
 
-      {isFlightTab && !isDrillFullScreen && (
+      {(isFlightTab || isPositionTab) && !isDrillFullScreen && (
         <View style={styles.content}>
-          <FlightTab />
+          {isFlightTab ? <FlightTab /> : <PositionTab />}
         </View>
       )}
 
