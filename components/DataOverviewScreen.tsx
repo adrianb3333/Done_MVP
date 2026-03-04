@@ -9,10 +9,11 @@ import {
   Alert,
   Platform,
   FlatList,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Menu, BarChart2, TrendingUp, Crosshair, List, Video, Plus, Columns2, Trash2 } from 'lucide-react-native';
-import { Image } from 'react-native';
+import { Menu, BarChart2, TrendingUp, Crosshair, List, Video, Plus, Columns2, Trash2, Flag, Target, Dumbbell } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
@@ -20,6 +21,10 @@ import { useAppNavigation } from '@/contexts/AppNavigationContext';
 import { useSessions } from '@/store/sessionStore';
 import { useSwingStore } from '@/store/swingStore';
 import { AnalysisSession } from '@/Types';
+import { useQuery } from '@tanstack/react-query';
+import { fetchAllTimeStats } from '@/services/roundStatsService';
+import { fetchPracticeStats, DrillCategoryStats } from '@/services/practiceStatsService';
+import RoundStatsDisplay from '@/components/PlaSta/RoundStatsDisplay';
 
 type DataTab = 'stats' | 'sg' | 'shots' | 'details' | 'video';
 
@@ -37,25 +42,322 @@ const tabs: TabConfig[] = [
   { key: 'video', label: 'Video', icon: <Video size={18} /> },
 ];
 
-function StatsContent() {
+type StatsSegment = 'round' | 'practice';
+
+const CATEGORY_COLORS: Record<string, string> = {
+  Putting: '#4CAF50',
+  Wedges: '#FF9800',
+  Irons: '#42A5F5',
+  Woods: '#AB47BC',
+};
+
+const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  Putting: <Target size={18} color="#4CAF50" />,
+  Wedges: <Flag size={18} color="#FF9800" />,
+  Irons: <Crosshair size={18} color="#42A5F5" />,
+  Woods: <Dumbbell size={18} color="#AB47BC" />,
+};
+
+function PracticeCategoryCard({ category }: { category: DrillCategoryStats }) {
+  const color = CATEGORY_COLORS[category.category] || '#4FC3F7';
+  const icon = CATEGORY_ICONS[category.category];
+
   return (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-      <View style={styles.placeholderCard}>
-        <BarChart2 size={32} color="#4FC3F7" />
-        <Text style={styles.placeholderTitle}>Statistics Overview</Text>
-        <Text style={styles.placeholderSub}>Your round and practice statistics will appear here</Text>
-      </View>
-      <View style={styles.statGrid}>
-        {['Rounds Played', 'Avg Score', 'Best Round', 'Practice Hours'].map((label, i) => (
-          <View key={i} style={styles.statCard}>
-            <Text style={styles.statCardValue}>--</Text>
-            <Text style={styles.statCardLabel}>{label}</Text>
+    <View style={statsStyles.categoryCard}>
+      <View style={statsStyles.categoryHeader}>
+        <View style={statsStyles.categoryHeaderLeft}>
+          <View style={[statsStyles.categoryIconWrap, { backgroundColor: `${color}15` }]}>
+            {icon}
           </View>
-        ))}
+          <Text style={statsStyles.categoryName}>{category.category}</Text>
+        </View>
+        <View style={statsStyles.categoryBadge}>
+          <Text style={[statsStyles.categoryBadgeText, { color }]}>
+            {category.totalAttempts} sessions
+          </Text>
+        </View>
       </View>
-    </ScrollView>
+
+      {category.overallAvg > 0 && (
+        <View style={statsStyles.categoryAvgRow}>
+          <Text style={statsStyles.categoryAvgLabel}>Category Avg</Text>
+          <View style={statsStyles.categoryAvgBarWrap}>
+            <View style={[statsStyles.categoryAvgBar, { width: `${Math.min(category.overallAvg, 100)}%`, backgroundColor: color }]} />
+          </View>
+          <Text style={[statsStyles.categoryAvgValue, { color }]}>{category.overallAvg}%</Text>
+        </View>
+      )}
+
+      {category.drills.map((drill) => (
+        <View key={drill.name} style={statsStyles.drillRow}>
+          <View style={statsStyles.drillNameWrap}>
+            <Text style={statsStyles.drillName}>{drill.name}</Text>
+            <Text style={statsStyles.drillAttempts}>
+              {drill.totalAttempts > 0 ? `${drill.totalAttempts} attempts` : 'No data'}
+            </Text>
+          </View>
+          {drill.totalAttempts > 0 ? (
+            <View style={statsStyles.drillScores}>
+              <View style={statsStyles.drillScoreItem}>
+                <Text style={statsStyles.drillScoreLabel}>Avg</Text>
+                <Text style={statsStyles.drillScoreValue}>{drill.avgScore}%</Text>
+              </View>
+              <View style={statsStyles.drillScoreDivider} />
+              <View style={statsStyles.drillScoreItem}>
+                <Text style={statsStyles.drillScoreLabel}>Best</Text>
+                <Text style={[statsStyles.drillScoreValue, { color }]}>{drill.bestScore}%</Text>
+              </View>
+            </View>
+          ) : (
+            <Text style={statsStyles.drillNoData}>--</Text>
+          )}
+        </View>
+      ))}
+    </View>
   );
 }
+
+function StatsContent() {
+  const [segment, setSegment] = useState<StatsSegment>('round');
+
+  const roundQuery = useQuery({
+    queryKey: ['allTimeRoundStats'],
+    queryFn: fetchAllTimeStats,
+  });
+
+  const practiceQuery = useQuery({
+    queryKey: ['practiceStats'],
+    queryFn: fetchPracticeStats,
+  });
+
+  return (
+    <View style={{ flex: 1 }}>
+      <View style={statsStyles.segmentWrap}>
+        <View style={statsStyles.segmentControl}>
+          <TouchableOpacity
+            style={[statsStyles.segmentButton, segment === 'round' && statsStyles.segmentButtonActive]}
+            onPress={() => setSegment('round')}
+            activeOpacity={0.7}
+          >
+            <Text style={[statsStyles.segmentText, segment === 'round' && statsStyles.segmentTextActive]}>Round</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[statsStyles.segmentButton, segment === 'practice' && statsStyles.segmentButtonActive]}
+            onPress={() => setSegment('practice')}
+            activeOpacity={0.7}
+          >
+            <Text style={[statsStyles.segmentText, segment === 'practice' && statsStyles.segmentTextActive]}>Practice</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {segment === 'round' ? (
+        <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }}>
+          {roundQuery.isLoading ? (
+            <View style={statsStyles.loadingWrap}>
+              <ActivityIndicator size="large" color="#4FC3F7" />
+              <Text style={statsStyles.loadingText}>Loading round stats...</Text>
+            </View>
+          ) : roundQuery.data ? (
+            <RoundStatsDisplay stats={roundQuery.data} headerLabel="All-Time Round Stats" />
+          ) : (
+            <View style={styles.placeholderCard}>
+              <BarChart2 size={32} color="#4FC3F7" />
+              <Text style={styles.placeholderTitle}>No Round Data</Text>
+              <Text style={styles.placeholderSub}>Complete a round to see your statistics here</Text>
+            </View>
+          )}
+        </ScrollView>
+      ) : (
+        <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }}>
+          {practiceQuery.isLoading ? (
+            <View style={statsStyles.loadingWrap}>
+              <ActivityIndicator size="large" color="#4FC3F7" />
+              <Text style={statsStyles.loadingText}>Loading practice stats...</Text>
+            </View>
+          ) : practiceQuery.data && practiceQuery.data.length > 0 ? (
+            practiceQuery.data.map((cat) => (
+              <PracticeCategoryCard key={cat.category} category={cat} />
+            ))
+          ) : (
+            <View style={styles.placeholderCard}>
+              <Dumbbell size={32} color="#4FC3F7" />
+              <Text style={styles.placeholderTitle}>No Practice Data</Text>
+              <Text style={styles.placeholderSub}>Complete drills during practice to see your statistics here</Text>
+            </View>
+          )}
+        </ScrollView>
+      )}
+    </View>
+  );
+}
+
+const statsStyles = StyleSheet.create({
+  segmentWrap: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  segmentControl: {
+    flexDirection: 'row' as const,
+    backgroundColor: '#141C18',
+    borderRadius: 10,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: '#243028',
+  },
+  segmentButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center' as const,
+    borderRadius: 8,
+  },
+  segmentButtonActive: {
+    backgroundColor: '#4FC3F7',
+  },
+  segmentText: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: '#5A6B60',
+  },
+  segmentTextActive: {
+    color: '#000',
+  },
+  loadingWrap: {
+    paddingVertical: 60,
+    alignItems: 'center' as const,
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: '#5A6B60',
+    fontWeight: '500' as const,
+  },
+  categoryCard: {
+    backgroundColor: '#141C18',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#243028',
+  },
+  categoryHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    marginBottom: 14,
+  },
+  categoryHeaderLeft: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 10,
+  },
+  categoryIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  categoryName: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: '#F5F7F6',
+  },
+  categoryBadge: {
+    backgroundColor: '#0F1714',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: '#1C2922',
+  },
+  categoryBadgeText: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+  },
+  categoryAvgRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    marginBottom: 14,
+    gap: 10,
+  },
+  categoryAvgLabel: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#8A9B90',
+    width: 80,
+  },
+  categoryAvgBarWrap: {
+    flex: 1,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#0F1714',
+  },
+  categoryAvgBar: {
+    height: 8,
+    borderRadius: 4,
+  },
+  categoryAvgValue: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    width: 42,
+    textAlign: 'right' as const,
+  },
+  drillRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#1C2922',
+  },
+  drillNameWrap: {
+    flex: 1,
+  },
+  drillName: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#F5F7F6',
+  },
+  drillAttempts: {
+    fontSize: 11,
+    fontWeight: '500' as const,
+    color: '#5A6B60',
+    marginTop: 2,
+  },
+  drillScores: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 12,
+  },
+  drillScoreItem: {
+    alignItems: 'center' as const,
+  },
+  drillScoreLabel: {
+    fontSize: 10,
+    fontWeight: '600' as const,
+    color: '#5A6B60',
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+  },
+  drillScoreValue: {
+    fontSize: 16,
+    fontWeight: '800' as const,
+    color: '#F5F7F6',
+    marginTop: 2,
+  },
+  drillScoreDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: '#243028',
+  },
+  drillNoData: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#2E4038',
+  },
+});
 
 function SGContent() {
   return (
