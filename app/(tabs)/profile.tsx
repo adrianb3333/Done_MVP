@@ -1374,9 +1374,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center' as const,
   },
   followBtnFollowing: {
-    backgroundColor: '#fff',
+    backgroundColor: '#2A2A2A',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#3A3A3A',
   },
   followBtnText: {
     fontSize: 13,
@@ -1384,7 +1384,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   followBtnTextFollowing: {
-    color: '#333',
+    color: '#EFEFEF',
   },
   emptyState: {
     paddingVertical: 40,

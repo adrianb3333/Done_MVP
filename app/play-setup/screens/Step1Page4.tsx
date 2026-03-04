@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 26,
     fontWeight: '800' as const,
-    color: '#fff',
+    color: '#F5F7F6',
   },
   statusBadge: {
     flexDirection: 'row' as const,
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 20,
     fontWeight: '800' as const,
-    color: '#fff',
+    color: '#F5F7F6',
     letterSpacing: -0.3,
   },
 });

@@ -10,6 +10,7 @@ import {
 import { router, useFocusEffect } from 'expo-router';
 import { Plus, ChevronRight, Search, X } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Colors from '@/constants/colors';
 import CourseBuild, { HoleOption } from '@/components/PlaSta/CourseBuild';
 import { useProfile } from '@/contexts/ProfileContext';
 

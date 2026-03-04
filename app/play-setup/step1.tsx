@@ -4,10 +4,10 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
 } from 'react-native';
 import { ChevronLeft } from 'lucide-react-native';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '@/constants/colors';
 import HorizontalPager from '@/components/HorizontalPager';
 import Step1Page1 from './screens/Step1Page1';
@@ -18,6 +18,7 @@ import { useSession } from '@/contexts/SessionContext';
 
 export default function PlayStep1Screen() {
   const { finishSession } = useSession();
+  const insets = useSafeAreaInsets();
 
   const pages = [
     <Step1Page1 key="1" />,
@@ -35,8 +36,8 @@ export default function PlayStep1Screen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <View style={styles.container}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity onPress={handleBack} style={styles.headerButton}>
           <ChevronLeft size={28} color="#FFFFFF" />
         </TouchableOpacity>
@@ -50,7 +51,7 @@ export default function PlayStep1Screen() {
         <HorizontalPager pages={pages} />
       </View>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom > 0 ? insets.bottom : 24 }]}>
         <TouchableOpacity
           style={styles.nextButton}
           onPress={handleNext}
@@ -59,24 +60,21 @@ export default function PlayStep1Screen() {
           <Text style={styles.nextButtonText}>Next</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: '#0A0F0D',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    backgroundColor: Colors.background,
+    paddingBottom: 12,
   },
   headerButton: {
     width: 40,
@@ -87,7 +85,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: '#FFFFFF',
   },
   stepIndicator: {
     backgroundColor: Colors.primary,
@@ -96,7 +94,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   stepText: {
-    color: Colors.textLight,
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '600' as const,
   },
@@ -104,20 +102,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   footer: {
-    padding: 24,
-    paddingBottom: 32,
-    backgroundColor: Colors.background,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    paddingHorizontal: 24,
+    backgroundColor: '#0A0F0D',
   },
   nextButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: '#1B5E20',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
   },
   nextButtonText: {
-    color: Colors.textLight,
+    color: '#FFFFFF',
     fontSize: 17,
     fontWeight: '700' as const,
   },

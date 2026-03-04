@@ -55,7 +55,7 @@ export default function PlayStep2Screen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: '#0A0F0D',
   },
   header: {
     flexDirection: 'row',
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: Colors.textPrimary,
+    color: '#FFFFFF',
   },
   stepIndicator: {
     backgroundColor: Colors.primary,
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   stepText: {
-    color: Colors.textLight,
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '600' as const,
   },
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 12,
     paddingBottom: 8,
-    backgroundColor: Colors.background,
+    backgroundColor: '#0A0F0D',
   },
   nextButton: {
     backgroundColor: '#1B5E20',
