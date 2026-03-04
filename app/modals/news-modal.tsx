@@ -284,12 +284,12 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   onboardingContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
+    paddingHorizontal: 32,
+    paddingTop: 12,
     paddingBottom: 40,
   },
   cardWrapper: {
-    marginBottom: 16,
+    marginBottom: 28,
   },
   cardHeader: {
     fontSize: 14,
@@ -298,7 +298,8 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   cardTouchable: {
-    width: '100%' as const,
+    width: '85%' as const,
+    alignSelf: 'center' as const,
     aspectRatio: 9 / 13,
     borderRadius: 16,
     overflow: 'hidden' as const,
