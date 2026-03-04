@@ -8,21 +8,40 @@ import {
   Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  Platform,
+  Alert,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, QrCode, Share2, Users, Calendar, Target, BarChart3, Trophy } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+import * as Sharing from 'expo-sharing';
+import { File, Paths } from 'expo-file-system';
 import { useProfile } from '@/contexts/ProfileContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+const QR_SIZE = 220;
+
+function getQrImageUrl(value: string, size: number = 400): string {
+  const encoded = encodeURIComponent(value);
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encoded}&bgcolor=1A1A1A&color=EFEFEF&format=png&margin=8`;
+}
 
 export default function QrModal() {
   const router = useRouter();
   const { profile } = useProfile();
   const username = profile?.display_name || profile?.username || 'User';
+  const userHandle = profile?.username || 'user';
   const scrollRef = useRef<ScrollView>(null);
   const [currentPage, setCurrentPage] = useState<number>(0);
+  const [qrLoaded, setQrLoaded] = useState<boolean>(false);
+  const [isSharing, setIsSharing] = useState<boolean>(false);
+
+  const qrValue = `golfapp://profile/${userHandle}`;
+  const qrImageUrl = getQrImageUrl(qrValue, 400);
 
   const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetX = e.nativeEvent.contentOffset.x;
@@ -39,9 +58,63 @@ export default function QrModal() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }, []);
 
-  const handleShare = useCallback(() => {
+  const handleShare = useCallback(async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  }, []);
+    console.log('[QR] Share button pressed');
+
+    if (Platform.OS === 'web') {
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: `${username}'s Golf Profile`,
+            text: `Check out @${userHandle} on Golf App!`,
+            url: qrValue,
+          });
+          console.log('[QR] Web share completed');
+        } else {
+          await navigator.clipboard.writeText(qrValue);
+          Alert.alert('Copied!', 'Profile link copied to clipboard');
+          console.log('[QR] Copied to clipboard (web)');
+        }
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.log('[QR] Web share error:', err.message);
+        }
+      }
+      return;
+    }
+
+    setIsSharing(true);
+    try {
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (!isAvailable) {
+        Alert.alert('Sharing not available', 'Sharing is not supported on this device.');
+        console.log('[QR] Sharing not available');
+        setIsSharing(false);
+        return;
+      }
+
+      console.log('[QR] Downloading QR image for sharing');
+      const output = await File.downloadFileAsync(qrImageUrl, new File(Paths.cache, `qr_${userHandle}.png`));
+      console.log('[QR] Download complete, exists:', output.exists);
+
+      if (output.exists) {
+        await Sharing.shareAsync(output.uri, {
+          mimeType: 'image/png',
+          dialogTitle: `Share @${userHandle}'s QR Code`,
+        });
+        console.log('[QR] Share dialog opened');
+      } else {
+        Alert.alert('Error', 'Could not download QR code for sharing.');
+        console.log('[QR] Download failed');
+      }
+    } catch (err: any) {
+      console.log('[QR] Share error:', err.message);
+      Alert.alert('Error', 'Something went wrong while sharing.');
+    } finally {
+      setIsSharing(false);
+    }
+  }, [username, userHandle, qrValue, qrImageUrl]);
 
   return (
     <View style={styles.container}>
@@ -61,9 +134,14 @@ export default function QrModal() {
               onPress={handleShare}
               style={styles.headerIconBtn}
               activeOpacity={0.7}
+              disabled={isSharing}
               testID="qr-header-share"
             >
-              <Share2 size={18} color="#EFEFEF" />
+              {isSharing ? (
+                <ActivityIndicator size="small" color="#EFEFEF" />
+              ) : (
+                <Share2 size={18} color="#EFEFEF" />
+              )}
             </TouchableOpacity>
             <TouchableOpacity
               onPress={scrollToQR}
@@ -93,18 +171,31 @@ export default function QrModal() {
       >
         <View style={styles.page}>
           <View style={styles.qrCard}>
-            <View style={styles.qrPlaceholder}>
-              <QrCode size={120} color="#EFEFEF" />
+            <View style={styles.qrImageWrapper}>
+              {!qrLoaded && (
+                <View style={styles.qrLoadingOverlay}>
+                  <ActivityIndicator size="large" color="#1DB954" />
+                </View>
+              )}
+              <Image
+                source={{ uri: qrImageUrl }}
+                style={styles.qrImage}
+                onLoad={() => {
+                  console.log('[QR] QR image loaded');
+                  setQrLoaded(true);
+                }}
+                onError={() => {
+                  console.log('[QR] QR image failed to load');
+                  setQrLoaded(true);
+                }}
+                resizeMode="contain"
+              />
             </View>
-            <Text style={styles.qrUsername}>@{profile?.username || 'user'}</Text>
+            <Text style={styles.qrUsername}>@{userHandle}</Text>
             <Text style={styles.qrHint}>Scan to add as friend</Text>
           </View>
 
           <View style={styles.actionsRow}>
-            <TouchableOpacity style={styles.actionBtn} activeOpacity={0.7} testID="qr-share-btn">
-              <Share2 size={20} color="#1DB954" />
-              <Text style={styles.actionText}>Share</Text>
-            </TouchableOpacity>
             <TouchableOpacity style={styles.actionBtn} activeOpacity={0.7} testID="qr-affiliate-btn">
               <Users size={20} color="#1DB954" />
               <Text style={styles.actionText}>Affiliate</Text>
@@ -238,16 +329,26 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#222',
   },
-  qrPlaceholder: {
-    width: 200,
-    height: 200,
+  qrImageWrapper: {
+    width: QR_SIZE,
+    height: QR_SIZE,
     borderRadius: 20,
+    overflow: 'hidden' as const,
     backgroundColor: '#1A1A1A',
+    marginBottom: 20,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#2A2A2A',
+  },
+  qrImage: {
+    width: QR_SIZE,
+    height: QR_SIZE,
+  },
+  qrLoadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    zIndex: 1,
+    backgroundColor: '#1A1A1A',
   },
   qrUsername: {
     fontSize: 18,
