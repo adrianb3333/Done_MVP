@@ -165,7 +165,7 @@ export default function Step2Page1() {
                   onPress={handleOpenFriendsModal}
                   activeOpacity={0.7}
                 >
-                  <Plus size={20} color="#1B5E20" />
+                  <Plus size={20} color={Colors.accent} />
                   <Text style={styles.addSlotText}>Lägg till spelare</Text>
                 </TouchableOpacity>
               )}
@@ -185,7 +185,7 @@ export default function Step2Page1() {
               <Text style={styles.courseBannerName}>{selectedCourse.name}</Text>
             ) : (
               <View style={styles.courseSearchRow}>
-                <Search size={18} color="#1B5E20" />
+                <Search size={18} color={Colors.accent} />
                 <Text style={styles.courseSearchText}>Sök banor</Text>
               </View>
             )}
@@ -206,19 +206,16 @@ export default function Step2Page1() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.background,
   },
   friendsSection: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     marginHorizontal: 16,
     marginTop: 16,
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   friendsHeader: {
     backgroundColor: '#1B5E20',
@@ -254,11 +251,11 @@ const styles = StyleSheet.create({
   playerSlot: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f8f8',
+    backgroundColor: Colors.surfaceLight,
     borderRadius: 12,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#e8e8e8',
+    borderColor: Colors.border,
     minHeight: 80,
     position: 'relative' as const,
   },
@@ -272,14 +269,14 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#c8d8cc',
+    backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarInitial: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#1B5E20',
+    color: '#fff',
   },
   playerInfo: {
     marginLeft: 8,
@@ -288,11 +285,11 @@ const styles = StyleSheet.create({
   playerName: {
     fontSize: 13,
     fontWeight: '700' as const,
-    color: '#1a1a1a',
+    color: Colors.textPrimary,
   },
   playerDetail: {
     fontSize: 11,
-    color: '#777',
+    color: Colors.textSecondary,
     fontWeight: '500' as const,
   },
   removeBtn: {
@@ -308,18 +305,18 @@ const styles = StyleSheet.create({
   },
   addSlot: {
     borderWidth: 1.5,
-    borderColor: '#c8c8c8',
+    borderColor: Colors.border,
     borderStyle: 'dashed' as const,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 80,
     gap: 4,
-    backgroundColor: '#fafafa',
+    backgroundColor: Colors.surfaceLight,
   },
   addSlotText: {
     fontSize: 12,
-    color: '#1B5E20',
+    color: Colors.accent,
     fontWeight: '600' as const,
   },
   courseSection: {
@@ -351,7 +348,7 @@ const styles = StyleSheet.create({
   courseSearchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surfaceLight,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 24,
@@ -361,7 +358,7 @@ const styles = StyleSheet.create({
   },
   courseSearchText: {
     fontSize: 15,
-    color: '#1B5E20',
+    color: Colors.accent,
     fontWeight: '500' as const,
   },
   courseArrowCircle: {

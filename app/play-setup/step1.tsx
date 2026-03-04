@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.background,
   },
   headerButton: {
     width: 40,
@@ -106,12 +106,12 @@ const styles = StyleSheet.create({
   footer: {
     padding: 24,
     paddingBottom: 32,
-    backgroundColor: Colors.surface,
+    backgroundColor: Colors.background,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
   },
   nextButton: {
-    backgroundColor: Colors.secondary,
+    backgroundColor: Colors.primary,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',

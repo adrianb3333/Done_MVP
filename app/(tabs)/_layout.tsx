@@ -16,7 +16,7 @@ export default function TabLayout() {
         // Hiding the header globally so your custom UI can take over
         headerShown: false, 
         tabBarStyle: {
-          backgroundColor: Colors.surface,
+          backgroundColor: Colors.background,
           borderTopColor: Colors.border,
           paddingTop: 8,
           height: 85,

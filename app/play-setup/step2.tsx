@@ -27,7 +27,7 @@ export default function PlayStep2Screen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} style={styles.headerButton}>
-          <ChevronLeft size={28} color={Colors.textPrimary} />
+          <ChevronLeft size={28} color="#FFFFFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Setup Round</Text>
         <View style={styles.stepIndicator}>
@@ -55,7 +55,7 @@ export default function PlayStep2Screen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#1a1a1a',
+    color: Colors.textPrimary,
   },
   stepIndicator: {
     backgroundColor: Colors.primary,
@@ -93,6 +93,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 12,
     paddingBottom: 8,
+    backgroundColor: Colors.background,
   },
   nextButton: {
     backgroundColor: '#1B5E20',

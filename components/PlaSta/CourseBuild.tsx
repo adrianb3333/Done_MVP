@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { CircleCheck } from 'lucide-react-native';
+import Colors from '@/constants/colors';
 
 export type HoleOption = '18' | '9_first' | '9_back';
 
@@ -51,22 +52,22 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 15,
     fontWeight: '700' as const,
-    color: '#1a1a1a',
+    color: Colors.textPrimary,
     marginBottom: 4,
     letterSpacing: 0.5,
   },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1.5,
-    borderColor: '#e0e0e0',
+    borderColor: Colors.border,
   },
   cardActive: {
-    borderColor: '#1B5E20',
-    backgroundColor: '#f0faf1',
+    borderColor: Colors.primary,
+    backgroundColor: Colors.surfaceLight,
   },
   cardContent: {
     flex: 1,
@@ -74,14 +75,14 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 17,
     fontWeight: '700' as const,
-    color: '#1a1a1a',
+    color: Colors.textPrimary,
   },
   cardTitleActive: {
-    color: '#1B5E20',
+    color: Colors.accent,
   },
   cardSubtitle: {
     fontSize: 13,
-    color: '#777',
+    color: Colors.textSecondary,
     marginTop: 2,
   },
 });
