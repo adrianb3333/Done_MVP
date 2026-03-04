@@ -289,17 +289,17 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   cardWrapper: {
-    marginBottom: 24,
+    marginBottom: 16,
   },
   cardHeader: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700' as const,
     color: '#FFFFFF',
-    marginBottom: 10,
+    marginBottom: 6,
   },
   cardTouchable: {
     width: '100%' as const,
-    aspectRatio: 9 / 19.5,
+    aspectRatio: 9 / 13,
     borderRadius: 16,
     overflow: 'hidden' as const,
   },
