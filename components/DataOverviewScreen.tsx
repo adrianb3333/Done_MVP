@@ -38,6 +38,7 @@ import { AnalysisSession } from '@/Types';
 import { useQuery } from '@tanstack/react-query';
 import { fetchAllTimeStats } from '@/services/roundStatsService';
 import { fetchPracticeStats, DrillCategoryStats } from '@/services/practiceStatsService';
+import { fetchRoundShotCount, fetchPracticeShotCount } from '@/services/shotCountService';
 import RoundStatsDisplay from '@/components/PlaSta/RoundStatsDisplay';
 
 type DataTab = 'stats' | 'sg' | 'shots' | 'details' | 'video';
@@ -1029,22 +1030,12 @@ function ShotsContent() {
 
   const roundShotsQuery = useQuery({
     queryKey: ['totalRoundShots'],
-    queryFn: async () => {
-      const stats = await fetchAllTimeStats();
-      return stats?.totalShots ?? 0;
-    },
+    queryFn: fetchRoundShotCount,
   });
 
   const practiceShotsQuery = useQuery({
     queryKey: ['totalPracticeShots'],
-    queryFn: async () => {
-      const categories = await fetchPracticeStats();
-      let total = 0;
-      for (const cat of categories) {
-        total += cat.totalAttempts;
-      }
-      return total;
-    },
+    queryFn: fetchPracticeShotCount,
   });
 
   const isLoading = segment === 'round' ? roundShotsQuery.isLoading : practiceShotsQuery.isLoading;
