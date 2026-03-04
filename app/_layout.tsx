@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { View, StyleSheet, Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SessionProvider, useSession } from "@/contexts/SessionContext";
@@ -16,6 +16,7 @@ import CommunityScreen from "@/components/CommunityScreen";
 import ProfileScreen from "@/app/(tabs)/profile";
 import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
+import OnboardingOverlay from "@/components/OnboardingOverlay";
 
 if (Platform.OS !== 'web') {
   SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -28,6 +29,8 @@ function AppContent() {
   const { currentSection } = useAppNavigation();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
+  const prevSessionRef = useRef<Session | null>(null);
   const router = useRouter();
   const segments = useSegments();
 
@@ -41,6 +44,10 @@ function AppContent() {
       .then(({ data: { session } }) => {
         console.log('Supabase session loaded:', !!session);
         clearTimeout(timeout);
+        if (session) {
+          prevSessionRef.current = session;
+          setShowOnboarding(true);
+        }
         setSession(session);
         setLoading(false);
       })
@@ -52,6 +59,11 @@ function AppContent() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       console.log('Auth state changed:', !!session);
+      if (session && !prevSessionRef.current) {
+        console.log('User just logged in, showing onboarding');
+        setShowOnboarding(true);
+      }
+      prevSessionRef.current = session;
       setSession(session);
     });
 
@@ -259,6 +271,10 @@ function AppContent() {
         <Stack.Screen name="+not-found" />
       </Stack>
       <Sidebar />
+      <OnboardingOverlay
+        visible={showOnboarding}
+        onDismiss={() => setShowOnboarding(false)}
+      />
     </View>
   );
 }

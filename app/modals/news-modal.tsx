@@ -1,11 +1,10 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, Image } from 'react-native';
-import { ChevronLeft, Newspaper, BookOpen, Play } from 'lucide-react-native';
+import { ChevronLeft, Newspaper, Play } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const SEGMENTS = ['News', 'Onboarding', 'Tutorials'] as const;
-type Segment = typeof SEGMENTS[number];
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -21,15 +20,15 @@ function NewsContent() {
   );
 }
 
-const ONBOARDING_CARDS = [
-  { header: 'Profile', number: 1, image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/btkoot8ufsc99ndex0kdw' },
-  { header: 'Start Round', number: 2, image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/xoqkqtvi1ncpx3aaftb0c' },
-  { header: 'Start Practice', number: 3, image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/8e36cs2dl821sjnm6tscu' },
-  { header: 'Drill Yourself', number: 4, image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/13xpd0v8icbcvby3o6e55' },
-  { header: 'See results', number: 5, image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/23331tcxrx7fmhsouy8yu' },
-  { header: 'Wind data', number: 6, image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/trh9wg0765xkpj238r4wg' },
-  { header: 'GPS Analysis', number: 7, image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/tv25zeknpu4m9bo6i7o9n' },
-  { header: 'Advanced Data', number: 8, image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/9w1isv9nxldjv978ip23x' },
+export const ONBOARDING_CARDS = [
+  { header: 'Profile', number: 1, image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/btkoot8ufsc99ndex0kdw', description: 'Home screen, where you can access or start any part of the app.' },
+  { header: 'Start Round', number: 2, image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/xoqkqtvi1ncpx3aaftb0c', description: 'Play rounds with friends. 40k Golf courses, invite buddies and take some course records!' },
+  { header: 'Start Practice', number: 3, image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/8e36cs2dl821sjnm6tscu', description: 'Get better at the game, track your data on the training field and make it translate over to the course' },
+  { header: 'Drill Yourself', number: 4, image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/13xpd0v8icbcvby3o6e55', description: 'Do practice drills, use your sensors for automatic data detailed and a professional way of tracking.' },
+  { header: 'See results', number: 5, image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/23331tcxrx7fmhsouy8yu', description: 'See how you perform at the practice facilities over time, learn your strengths and weaknesses.' },
+  { header: 'Wind data', number: 6, image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/trh9wg0765xkpj238r4wg', description: 'Understand how the wind and weather effects your ball flight' },
+  { header: 'GPS Analysis', number: 7, image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/tv25zeknpu4m9bo6i7o9n', description: 'Get a birdsview at the course to know how to navigate yourself and see your patterns.' },
+  { header: 'Advanced Data', number: 8, image: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/9w1isv9nxldjv978ip23x', description: 'Learn your stats for each round, bring to the practice facilities to work on Weaknesses and get better at your strengths' },
 ];
 
 function FlippableCard({ card }: { card: typeof ONBOARDING_CARDS[number] }) {
@@ -86,7 +85,11 @@ function FlippableCard({ card }: { card: typeof ONBOARDING_CARDS[number] }) {
             { transform: [{ rotateY: backInterpolate }], opacity: backOpacity },
           ]}
         >
-          <Text style={styles.cardNumber}>{card.number}</Text>
+          <Text style={styles.cardNumberTopLeft}>{card.number}</Text>
+          <View style={styles.cardBackContent}>
+            <Text style={styles.cardBackHeader}>{card.header}</Text>
+            <Text style={styles.cardBackDescription}>{card.description}</Text>
+          </View>
         </Animated.View>
       </TouchableOpacity>
     </View>
@@ -316,20 +319,43 @@ const styles = StyleSheet.create({
     overflow: 'hidden' as const,
   },
   cardBack: {
-    backgroundColor: '#1A1A1A',
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    borderWidth: 1,
-    borderColor: '#2D5A27',
+    backgroundColor: '#000000',
+    borderWidth: 2,
+    borderColor: '#22c55e',
   },
   cardImage: {
     width: '100%' as const,
     height: '100%' as const,
     borderRadius: 16,
   },
-  cardNumber: {
-    fontSize: 72,
+  cardNumberTopLeft: {
+    position: 'absolute' as const,
+    top: 16,
+    left: 18,
+    fontSize: 28,
+    fontWeight: '900' as const,
+    color: '#22c55e',
+    zIndex: 2,
+  },
+  cardBackContent: {
+    flex: 1,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 28,
+    paddingTop: 40,
+  },
+  cardBackHeader: {
+    fontSize: 22,
     fontWeight: '800' as const,
-    color: '#2D5A27',
+    color: '#FFFFFF',
+    marginBottom: 16,
+    textAlign: 'center' as const,
+  },
+  cardBackDescription: {
+    fontSize: 15,
+    fontWeight: '400' as const,
+    color: '#B0B0B0',
+    textAlign: 'center' as const,
+    lineHeight: 22,
   },
 });
