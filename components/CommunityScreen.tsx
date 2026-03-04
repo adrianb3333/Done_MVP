@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Menu, Trophy, Share2, Tv } from 'lucide-react-native';
@@ -83,7 +84,7 @@ function EntertainmentContent() {
 
 export default function CommunityScreen() {
   const [activeTab, setActiveTab] = useState<CommunityTab>('tour');
-  const { openSidebar } = useAppNavigation();
+  const { openSidebar, navigateTo } = useAppNavigation();
 
   const renderContent = () => {
     switch (activeTab) {
@@ -101,7 +102,9 @@ export default function CommunityScreen() {
             <Menu size={24} color="#F5F7F6" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Community</Text>
-          <View style={styles.menuBtn} />
+          <TouchableOpacity onPress={() => navigateTo('mygame')} style={styles.menuBtn} activeOpacity={0.7}>
+            <Image source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/d92ywde7ucn1q2si6dbb7' }} style={styles.golferIcon} />
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
 
@@ -159,6 +162,11 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
+  },
+  golferIcon: {
+    width: 28,
+    height: 28,
+    tintColor: '#F5F7F6',
   },
   headerTitle: {
     fontSize: 18,

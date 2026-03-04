@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Menu, BarChart2, TrendingUp, Crosshair, List, Video, Plus, Columns2, Trash2 } from 'lucide-react-native';
+import { Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
@@ -225,7 +226,7 @@ function VideoContent() {
 
 export default function DataOverviewScreen() {
   const [activeTab, setActiveTab] = useState<DataTab>('stats');
-  const { openSidebar, dataOverviewInitialTab, clearDataOverviewInitialTab } = useAppNavigation();
+  const { openSidebar, navigateTo, dataOverviewInitialTab, clearDataOverviewInitialTab } = useAppNavigation();
 
   useEffect(() => {
     if (dataOverviewInitialTab && ['stats', 'sg', 'shots', 'details', 'video'].includes(dataOverviewInitialTab)) {
@@ -252,7 +253,9 @@ export default function DataOverviewScreen() {
             <Menu size={24} color="#F5F7F6" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Data Overview</Text>
-          <View style={styles.menuBtn} />
+          <TouchableOpacity onPress={() => navigateTo('mygame')} style={styles.menuBtn} activeOpacity={0.7}>
+            <Image source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/d92ywde7ucn1q2si6dbb7' }} style={styles.golferIcon} />
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
 
@@ -310,6 +313,11 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
+  },
+  golferIcon: {
+    width: 28,
+    height: 28,
+    tintColor: '#F5F7F6',
   },
   headerTitle: {
     fontSize: 18,
