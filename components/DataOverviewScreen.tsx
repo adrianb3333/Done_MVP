@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,9 +11,23 @@ import {
   FlatList,
   ActivityIndicator,
   Image,
+  TextInput,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Menu, BarChart2, TrendingUp, Crosshair, List, Video, Plus, Columns2, Trash2, Flag, Target, Dumbbell, ChevronDown, HelpCircle, Filter, ChevronRight } from 'lucide-react-native';
+import { Menu, BarChart2, TrendingUp, Crosshair, List, Video, Plus, Columns2, Trash2, Flag, Target, Dumbbell, ChevronDown, HelpCircle, Filter, ChevronRight, MapPin, Search, Star } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import TabCourse, { CourseTab } from '@/components/PlaSta/TabCourse';
+import LiquidGlassCard from '@/components/reusables/LiquidGlassCard';
+import SwingThoughtsModal from '@/app/modals/swing-thoughts-modal';
+import ClubModal from '@/app/modals/club-modal';
+import MentalGameModal from '@/app/modals/mental-game-modal';
+import GolfIQModal from '@/app/modals/golf-iq-modal';
+import GeneralModal from '@/app/modals/general-modal';
+import PreRoundModal from '@/app/modals/pre-round-modal';
+import DistancesModal from '@/app/modals/distances-modal';
+import StrokesGainedModal from '@/app/modals/strokesgained-modal';
+import ShortGameModal from '@/app/modals/shortgame-modal';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
@@ -1020,17 +1034,693 @@ function ShotsContent() {
   );
 }
 
-function DetailsContent() {
-  return (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-      <View style={styles.placeholderCard}>
-        <List size={32} color="#E040FB" />
-        <Text style={styles.placeholderTitle}>Round Details</Text>
-        <Text style={styles.placeholderSub}>Detailed breakdown of each round played</Text>
+type DetailsSegment = 'courses' | 'notes' | 'thegame';
+
+interface GolfCourse {
+  id: string;
+  name: string;
+  clubName: string;
+  holes: number;
+  par: number;
+  city: string;
+  country: string;
+  rating: number;
+  distance: number;
+  played: boolean;
+}
+
+const DETAILS_STORAGE_KEY_FAVORITES = 'play_setup_favorite_courses';
+
+const DETAILS_MOCK_COURSES: GolfCourse[] = [
+  { id: 'c1', name: 'Hulta Golfklubb', clubName: 'Hulta GK', holes: 18, par: 72, city: 'Bollebygd', country: 'Sweden', rating: 4.0, distance: 2.0, played: true },
+  { id: 'c2', name: 'Chalmers Golfklubb', clubName: 'Chalmers Golfklubb', holes: 18, par: 71, city: 'Landvetter', country: 'Sweden', rating: 4.0, distance: 18.7, played: true },
+  { id: 'c3', name: 'Borås Golfklubb', clubName: 'Norra Banan', holes: 18, par: 72, city: 'Borås', country: 'Sweden', rating: 4.5, distance: 21.2, played: true },
+  { id: 'c4', name: 'Borås Golfklubb', clubName: 'Södra Banan', holes: 18, par: 69, city: 'Borås', country: 'Sweden', rating: 3.5, distance: 21.3, played: false },
+  { id: 'c5', name: 'Marks Golfklubb', clubName: 'Kinnaborg', holes: 18, par: 70, city: 'Kinna', country: 'Sweden', rating: 4.0, distance: 21.3, played: false },
+  { id: 'c6', name: 'Göteborg Golfklubb', clubName: 'Hovås', holes: 18, par: 72, city: 'Göteborg', country: 'Sweden', rating: 4.5, distance: 35.1, played: true },
+  { id: 'c7', name: 'Kungsbacka Golfklubb', clubName: 'Hamra', holes: 18, par: 71, city: 'Kungsbacka', country: 'Sweden', rating: 3.5, distance: 42.0, played: false },
+  { id: 'c8', name: 'Varberg Golfklubb', clubName: 'Varberg GK', holes: 18, par: 72, city: 'Varberg', country: 'Sweden', rating: 4.0, distance: 55.8, played: true },
+  { id: 'c9', name: 'Falsterbo Golfklubb', clubName: 'Falsterbo GK', holes: 18, par: 71, city: 'Falsterbo', country: 'Sweden', rating: 5.0, distance: 280.0, played: false },
+  { id: 'c10', name: 'Barsebäck Golf & CC', clubName: 'Masters Course', holes: 18, par: 73, city: 'Barsebäck', country: 'Sweden', rating: 4.5, distance: 260.0, played: true },
+  { id: 'c11', name: 'Quinta do Lago', clubName: 'South Course', holes: 18, par: 72, city: 'Almancil', country: 'Portugal', rating: 4.5, distance: 3100.0, played: false },
+  { id: 'c12', name: 'Valderrama Golf Club', clubName: 'Valderrama', holes: 18, par: 71, city: 'Sotogrande', country: 'Spain', rating: 5.0, distance: 3400.0, played: false },
+];
+
+const DETAILS_COUNTRIES = ['Alla länder', 'Sweden', 'Portugal', 'Spain'];
+
+type NotesModalKey = 'swing-thoughts' | 'club' | 'mental-game' | 'golf-iq' | 'general' | 'pre-round' | 'distances' | 'strokesgained' | 'shortgame' | null;
+
+const NOTES_DATA: { title: string; description: string; modalKey: NotesModalKey }[] = [
+  { title: 'Swing Thoughts', description: 'Describe Every Detail Of Your Swing', modalKey: 'swing-thoughts' },
+  { title: 'Club', description: 'Learn your Club Difference', modalKey: 'club' },
+  { title: 'Mental Game', description: '"Golf is 90% mental and 10% physical."', modalKey: 'mental-game' },
+  { title: 'Golf IQ', description: 'Manage Yourself On The Course', modalKey: 'golf-iq' },
+  { title: 'General', description: 'Your Own Focus', modalKey: 'general' },
+];
+
+const PREPARATION_DATA = {
+  title: 'Pre Round',
+  description: 'Create routines to perform better!',
+  modalKey: 'pre-round' as NotesModalKey,
+};
+
+const CLUB_DATA_BUTTONS: { title: string; modalKey: NotesModalKey }[] = [
+  { title: 'Distances', modalKey: 'distances' },
+  { title: 'Strokes Gained', modalKey: 'strokesgained' },
+  { title: 'Short Game', modalKey: 'shortgame' },
+];
+
+const THE_GAME_SECTIONS = [
+  'The Fundamentals (The "Setup")',
+  'The Full Swing',
+  'The Short Game (Scoring)',
+  'Course Management & Mental Game',
+  'Rules and Etiquette',
+  'Equipment & Fit',
+  'Environmental & Weather Factors',
+  'Turf & Terrain Variables',
+  'Green Anatomy & Physics',
+  'The Psychology of "Rub of the Green"',
+];
+
+function DetailsCoursesList() {
+  const [activeTab, setActiveTab] = useState<CourseTab>('nearby');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState('Alla länder');
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(DETAILS_STORAGE_KEY_FAVORITES);
+        if (stored) setFavorites(JSON.parse(stored));
+      } catch (e) {
+        console.log('[DetailsCourses] Error loading favorites:', e);
+      }
+    };
+    load();
+  }, []);
+
+  const toggleFavorite = useCallback(async (courseId: string) => {
+    setFavorites((prev) => {
+      const updated = prev.includes(courseId)
+        ? prev.filter((id) => id !== courseId)
+        : [...prev, courseId];
+      AsyncStorage.setItem(DETAILS_STORAGE_KEY_FAVORITES, JSON.stringify(updated)).catch(() => {});
+      return updated;
+    });
+  }, []);
+
+  const playedCount = useMemo(
+    () => DETAILS_MOCK_COURSES.filter((c) => c.played).length,
+    []
+  );
+
+  const filteredCourses = useMemo(() => {
+    let list = [...DETAILS_MOCK_COURSES];
+    if (selectedCountry !== 'Alla länder') {
+      list = list.filter((c) => c.country === selectedCountry);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.clubName.toLowerCase().includes(q) ||
+          c.city.toLowerCase().includes(q)
+      );
+    }
+    if (activeTab === 'played') {
+      list = list.filter((c) => c.played);
+    } else if (activeTab === 'favorite') {
+      list = list.filter((c) => favorites.includes(c.id));
+    } else {
+      list.sort((a, b) => a.distance - b.distance);
+    }
+    return list;
+  }, [activeTab, searchQuery, selectedCountry, favorites]);
+
+  const renderStars = (rating: number) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <Star
+          key={i}
+          size={14}
+          color={i <= Math.floor(rating) ? '#1B5E20' : '#5A6B60'}
+          fill={i <= Math.floor(rating) ? '#1B5E20' : 'transparent'}
+        />
+      );
+    }
+    return <View style={detailsStyles.starsRow}>{stars}</View>;
+  };
+
+  const renderCourseItem = ({ item }: { item: GolfCourse }) => {
+    const isFav = favorites.includes(item.id);
+    return (
+      <View style={detailsStyles.courseRow}>
+        <View style={detailsStyles.courseInfo}>
+          <Text style={detailsStyles.courseName}>{item.name}</Text>
+          <View style={detailsStyles.courseSubRow}>
+            <Text style={detailsStyles.courseClub}>
+              {item.clubName}, {item.holes}/{item.par}
+            </Text>
+            <MapPin size={12} color="#5A6B60" />
+          </View>
+          <Text style={detailsStyles.courseCity}>{item.city}, {item.country}</Text>
+          <View style={detailsStyles.courseBottom}>
+            {renderStars(item.rating)}
+            <Text style={detailsStyles.courseDistance}>{item.distance.toFixed(1)} km</Text>
+          </View>
+        </View>
+        <TouchableOpacity
+          style={detailsStyles.favBtn}
+          onPress={() => toggleFavorite(item.id)}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Star
+            size={20}
+            color={isFav ? '#FFB74D' : '#5A6B60'}
+            fill={isFav ? '#FFB74D' : 'transparent'}
+          />
+        </TouchableOpacity>
       </View>
+    );
+  };
+
+  return (
+    <View style={{ flex: 1 }}>
+      <View style={detailsStyles.searchSection}>
+        <View style={detailsStyles.searchBar}>
+          <Search size={16} color="#5A6B60" />
+          <TextInput
+            style={detailsStyles.searchInput}
+            placeholder="Sök"
+            placeholderTextColor="#5A6B60"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+
+        <View style={detailsStyles.filterRow}>
+          <Text style={detailsStyles.filterLabel}>Filter:</Text>
+          <TouchableOpacity
+            style={detailsStyles.countryPicker}
+            onPress={() => setShowCountryPicker(!showCountryPicker)}
+          >
+            <Text style={detailsStyles.countryText}>{selectedCountry}</Text>
+            <Text style={detailsStyles.countryChevron}>▼</Text>
+          </TouchableOpacity>
+        </View>
+
+        {showCountryPicker && (
+          <View style={detailsStyles.countryDropdown}>
+            {DETAILS_COUNTRIES.map((country) => (
+              <TouchableOpacity
+                key={country}
+                style={[
+                  detailsStyles.countryOption,
+                  selectedCountry === country && detailsStyles.countryOptionActive,
+                ]}
+                onPress={() => {
+                  setSelectedCountry(country);
+                  setShowCountryPicker(false);
+                }}
+              >
+                <Text
+                  style={[
+                    detailsStyles.countryOptionText,
+                    selectedCountry === country && detailsStyles.countryOptionTextActive,
+                  ]}
+                >
+                  {country}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        <View style={detailsStyles.tabRow}>
+          <TabCourse
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            playedCount={playedCount}
+          />
+        </View>
+      </View>
+
+      <FlatList
+        data={filteredCourses}
+        keyExtractor={(item) => item.id}
+        renderItem={renderCourseItem}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={detailsStyles.listContent}
+        ListEmptyComponent={
+          <View style={detailsStyles.emptyState}>
+            <Text style={detailsStyles.emptyText}>
+              {activeTab === 'favorite'
+                ? 'Inga favoritbanor ännu'
+                : 'Inga banor hittades'}
+            </Text>
+          </View>
+        }
+      />
+    </View>
+  );
+}
+
+function DetailsNotesContent() {
+  const [activeModal, setActiveModal] = useState<NotesModalKey>(null);
+
+  const closeModal = () => setActiveModal(null);
+
+  const renderModal = () => {
+    switch (activeModal) {
+      case 'swing-thoughts': return <SwingThoughtsModal onClose={closeModal} />;
+      case 'club': return <ClubModal onClose={closeModal} />;
+      case 'mental-game': return <MentalGameModal onClose={closeModal} />;
+      case 'golf-iq': return <GolfIQModal onClose={closeModal} />;
+      case 'general': return <GeneralModal onClose={closeModal} />;
+      case 'pre-round': return <PreRoundModal onClose={closeModal} />;
+      case 'distances': return <DistancesModal onClose={closeModal} />;
+      case 'strokesgained': return <StrokesGainedModal onClose={closeModal} />;
+      case 'shortgame': return <ShortGameModal onClose={closeModal} />;
+      default: return null;
+    }
+  };
+
+  return (
+    <View style={{ flex: 1 }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={detailsStyles.notesScrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={detailsStyles.clubDataSection}>
+          <View style={detailsStyles.clubDataHeaderRow}>
+            <Text style={detailsStyles.clubDataHeader}>Club DATA</Text>
+            <Text style={detailsStyles.clubDataSubtext}>(Sensors Needed)</Text>
+          </View>
+          <View style={detailsStyles.clubDataButtons}>
+            {CLUB_DATA_BUTTONS.map((btn, index) => (
+              <Pressable
+                key={index}
+                style={detailsStyles.clubDataButton}
+                onPress={() => setActiveModal(btn.modalKey)}
+              >
+                <Text style={detailsStyles.clubDataButtonTitle}>{btn.title}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
+        {NOTES_DATA.map((note, index) => (
+          <Pressable
+            key={index}
+            onPress={() => setActiveModal(note.modalKey)}
+            style={detailsStyles.noteCardContainer}
+          >
+            <LiquidGlassCard containerStyle={detailsStyles.noteCard}>
+              <View style={detailsStyles.noteCardContent}>
+                <View style={detailsStyles.noteTextContainer}>
+                  <Text style={detailsStyles.noteCardTitle}>{note.title}</Text>
+                  <Text style={detailsStyles.noteCardDescription}>{note.description}</Text>
+                </View>
+              </View>
+            </LiquidGlassCard>
+          </Pressable>
+        ))}
+
+        <Text style={detailsStyles.notesSectionTitle}>Preparation!</Text>
+
+        <Pressable
+          onPress={() => setActiveModal(PREPARATION_DATA.modalKey)}
+          style={detailsStyles.noteCardContainer}
+        >
+          <LiquidGlassCard containerStyle={detailsStyles.noteCard}>
+            <View style={detailsStyles.noteCardContent}>
+              <View style={detailsStyles.noteTextContainer}>
+                <Text style={detailsStyles.noteCardTitle}>{PREPARATION_DATA.title}</Text>
+                <Text style={detailsStyles.noteCardDescription}>{PREPARATION_DATA.description}</Text>
+              </View>
+            </View>
+          </LiquidGlassCard>
+        </Pressable>
+      </ScrollView>
+
+      <Modal
+        visible={activeModal !== null}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={closeModal}
+      >
+        {renderModal()}
+      </Modal>
+    </View>
+  );
+}
+
+function TheGameContent() {
+  return (
+    <ScrollView
+      style={{ flex: 1 }}
+      contentContainerStyle={detailsStyles.gameScrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+      {THE_GAME_SECTIONS.map((section, index) => (
+        <View key={index} style={detailsStyles.gameSectionCard}>
+          <View style={detailsStyles.gameSectionNumberWrap}>
+            <Text style={detailsStyles.gameSectionNumber}>{index + 1}</Text>
+          </View>
+          <Text style={detailsStyles.gameSectionTitle}>{section}</Text>
+          <ChevronRight size={18} color="#5A6B60" />
+        </View>
+      ))}
     </ScrollView>
   );
 }
+
+function DetailsContent() {
+  const [detailsSegment, setDetailsSegment] = useState<DetailsSegment>('courses');
+
+  const DETAIL_SEGMENTS: { key: DetailsSegment; label: string }[] = [
+    { key: 'courses', label: 'Courses' },
+    { key: 'notes', label: 'Notes' },
+    { key: 'thegame', label: 'The Game' },
+  ];
+
+  return (
+    <View style={{ flex: 1 }}>
+      <View style={detailsStyles.segmentWrap}>
+        <View style={detailsStyles.segmentControl}>
+          {DETAIL_SEGMENTS.map((seg) => (
+            <TouchableOpacity
+              key={seg.key}
+              style={[detailsStyles.segmentButton, detailsSegment === seg.key && detailsStyles.segmentButtonActive]}
+              onPress={() => setDetailsSegment(seg.key)}
+              activeOpacity={0.7}
+            >
+              <Text style={[detailsStyles.segmentText, detailsSegment === seg.key && detailsStyles.segmentTextActive]}>
+                {seg.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {detailsSegment === 'courses' && <DetailsCoursesList />}
+      {detailsSegment === 'notes' && <DetailsNotesContent />}
+      {detailsSegment === 'thegame' && <TheGameContent />}
+    </View>
+  );
+}
+
+const detailsStyles = StyleSheet.create({
+  segmentWrap: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  segmentControl: {
+    flexDirection: 'row' as const,
+    backgroundColor: '#141C18',
+    borderRadius: 10,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: '#243028',
+  },
+  segmentButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center' as const,
+    borderRadius: 8,
+  },
+  segmentButtonActive: {
+    backgroundColor: '#4FC3F7',
+  },
+  segmentText: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: '#5A6B60',
+  },
+  segmentTextActive: {
+    color: '#000',
+  },
+  searchSection: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  searchBar: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    borderWidth: 1.5,
+    borderColor: '#1B5E20',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+    marginBottom: 10,
+    backgroundColor: '#141C18',
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: '#FFFFFF',
+    padding: 0,
+  },
+  filterRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    marginBottom: 12,
+    gap: 8,
+  },
+  filterLabel: {
+    fontSize: 14,
+    color: '#8A9B90',
+    fontWeight: '600' as const,
+  },
+  countryPicker: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: '#1B5E20',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    gap: 6,
+    flex: 1,
+    backgroundColor: '#141C18',
+  },
+  countryText: {
+    fontSize: 14,
+    color: '#1B5E20',
+    fontWeight: '500' as const,
+    flex: 1,
+  },
+  countryChevron: {
+    fontSize: 10,
+    color: '#1B5E20',
+  },
+  countryDropdown: {
+    backgroundColor: '#141C18',
+    borderWidth: 1,
+    borderColor: '#243028',
+    borderRadius: 10,
+    marginBottom: 10,
+    overflow: 'hidden' as const,
+  },
+  countryOption: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#243028',
+  },
+  countryOptionActive: {
+    backgroundColor: '#1B5E20',
+  },
+  countryOptionText: {
+    fontSize: 15,
+    color: '#8A9B90',
+  },
+  countryOptionTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '600' as const,
+  },
+  tabRow: {
+    marginBottom: 8,
+  },
+  courseRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#243028',
+  },
+  courseInfo: {
+    flex: 1,
+  },
+  courseName: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+  },
+  courseSubRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 4,
+    marginTop: 2,
+  },
+  courseClub: {
+    fontSize: 13,
+    color: '#8A9B90',
+  },
+  courseCity: {
+    fontSize: 12,
+    color: '#5A6B60',
+    marginTop: 1,
+  },
+  courseBottom: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    marginTop: 4,
+  },
+  starsRow: {
+    flexDirection: 'row' as const,
+    gap: 2,
+  },
+  courseDistance: {
+    fontSize: 13,
+    color: '#8A9B90',
+    fontWeight: '500' as const,
+  },
+  favBtn: {
+    padding: 8,
+  },
+  listContent: {
+    paddingBottom: 40,
+  },
+  emptyState: {
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    paddingTop: 60,
+  },
+  emptyText: {
+    fontSize: 15,
+    color: '#5A6B60',
+  },
+  notesScrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 100,
+  },
+  clubDataSection: {
+    marginBottom: 20,
+  },
+  clubDataHeaderRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'baseline' as const,
+    marginBottom: 10,
+    gap: 6,
+  },
+  clubDataHeader: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: '#F5F7F6',
+  },
+  clubDataSubtext: {
+    fontSize: 11,
+    color: '#8A9B90',
+    fontWeight: '500' as const,
+  },
+  clubDataButtons: {
+    flexDirection: 'row' as const,
+    gap: 8,
+  },
+  clubDataButton: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 10,
+  },
+  clubDataButtonTitle: {
+    fontSize: 13,
+    fontWeight: '800' as const,
+    color: '#8B1A1A',
+  },
+  noteCardContainer: {
+    marginBottom: 12,
+  },
+  noteCard: {
+    width: '100%' as const,
+  },
+  noteCardContent: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    padding: 16,
+  },
+  noteTextContainer: {
+    flex: 1,
+    gap: 4,
+  },
+  noteCardTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: '#FFCC00',
+  },
+  noteCardDescription: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    lineHeight: 18,
+  },
+  notesSectionTitle: {
+    fontSize: 28,
+    fontWeight: '700' as const,
+    color: '#006735',
+    marginBottom: 16,
+    marginTop: 32,
+    textAlign: 'center' as const,
+  },
+  gameScrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 100,
+  },
+  gameSectionCard: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: '#141C18',
+    borderRadius: 14,
+    padding: 18,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#243028',
+    gap: 14,
+  },
+  gameSectionNumberWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#1B5E20',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  gameSectionNumber: {
+    fontSize: 15,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+  },
+  gameSectionTitle: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: '#F5F7F6',
+    lineHeight: 20,
+  },
+});
 
 function formatSessionDate(iso: string): string {
   try {
