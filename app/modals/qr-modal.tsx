@@ -10,7 +10,7 @@ import {
   NativeScrollEvent,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, QrCode, Share2, Download, Users } from 'lucide-react-native';
+import { ChevronLeft, QrCode, Share2, Users, Calendar, Target, BarChart3, Trophy } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -33,6 +33,16 @@ export default function QrModal() {
     }
   }, [currentPage]);
 
+  const scrollToQR = useCallback(() => {
+    scrollRef.current?.scrollTo({ x: 0, animated: true });
+    setCurrentPage(0);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }, []);
+
+  const handleShare = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }, []);
+
   return (
     <View style={styles.container}>
       <SafeAreaView edges={['top']} style={styles.safeTop}>
@@ -46,7 +56,24 @@ export default function QrModal() {
             <ChevronLeft size={24} color="#EFEFEF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{username}</Text>
-          <View style={styles.headerSpacer} />
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              onPress={handleShare}
+              style={styles.headerIconBtn}
+              activeOpacity={0.7}
+              testID="qr-header-share"
+            >
+              <Share2 size={18} color="#EFEFEF" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={scrollToQR}
+              style={styles.headerIconBtn}
+              activeOpacity={0.7}
+              testID="qr-header-mini-qr"
+            >
+              <QrCode size={18} color="#EFEFEF" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <View style={styles.dotsRow}>
@@ -74,15 +101,41 @@ export default function QrModal() {
           </View>
 
           <View style={styles.actionsRow}>
-            <TouchableOpacity style={styles.actionBtn} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.actionBtn} activeOpacity={0.7} testID="qr-share-btn">
               <Share2 size={20} color="#1DB954" />
               <Text style={styles.actionText}>Share</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionBtn} activeOpacity={0.7}>
-              <Download size={20} color="#1DB954" />
-              <Text style={styles.actionText}>Save</Text>
+            <TouchableOpacity style={styles.actionBtn} activeOpacity={0.7} testID="qr-affiliate-btn">
+              <Users size={20} color="#1DB954" />
+              <Text style={styles.actionText}>Affiliate</Text>
             </TouchableOpacity>
           </View>
+
+          <View style={styles.gridRow}>
+            <TouchableOpacity style={styles.gridBtn} activeOpacity={0.7} testID="qr-last-round">
+              <BarChart3 size={22} color="#1DB954" />
+              <Text style={styles.gridBtnText}>Last Round</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.gridBtn} activeOpacity={0.7} testID="qr-last-practice">
+              <Target size={22} color="#1DB954" />
+              <Text style={styles.gridBtnText}>Last Practice</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.gridRow}>
+            <TouchableOpacity style={styles.gridBtn} activeOpacity={0.7} testID="qr-shot-overview">
+              <BarChart3 size={22} color="#1DB954" />
+              <Text style={styles.gridBtnText}>Shot Overview</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.gridBtn} activeOpacity={0.7} testID="qr-tournament">
+              <Trophy size={22} color="#1DB954" />
+              <Text style={styles.gridBtnText}>Tournament</Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity style={styles.eventBtn} activeOpacity={0.8} testID="qr-event-btn">
+            <Calendar size={20} color="#fff" />
+            <Text style={styles.eventBtnText}>EVENT</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.page}>
@@ -136,8 +189,20 @@ const styles = StyleSheet.create({
     color: '#EFEFEF',
     letterSpacing: 0.3,
   },
-  headerSpacer: {
-    width: 40,
+  headerRight: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 6,
+  },
+  headerIconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#1A1A1A',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
   },
   dotsRow: {
     flexDirection: 'row' as const,
@@ -197,15 +262,16 @@ const styles = StyleSheet.create({
   actionsRow: {
     flexDirection: 'row' as const,
     justifyContent: 'center' as const,
-    gap: 16,
-    marginTop: 24,
+    gap: 12,
+    marginTop: 20,
   },
   actionBtn: {
+    flex: 1,
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
+    justifyContent: 'center' as const,
     gap: 8,
     backgroundColor: '#1A1A1A',
-    paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 14,
     borderWidth: 1,
@@ -215,6 +281,43 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600' as const,
     color: '#EFEFEF',
+  },
+  gridRow: {
+    flexDirection: 'row' as const,
+    gap: 12,
+    marginTop: 12,
+  },
+  gridBtn: {
+    flex: 1,
+    backgroundColor: '#141414',
+    borderRadius: 14,
+    paddingVertical: 18,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#1E1E1E',
+  },
+  gridBtnText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: '#EFEFEF',
+  },
+  eventBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 10,
+    backgroundColor: '#1DB954',
+    paddingVertical: 16,
+    borderRadius: 14,
+    marginTop: 16,
+  },
+  eventBtnText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#fff',
+    letterSpacing: 1,
   },
   scanCard: {
     backgroundColor: '#141414',
