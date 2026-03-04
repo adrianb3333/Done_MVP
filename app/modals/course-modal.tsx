@@ -185,7 +185,7 @@ export default function CourseModal() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <ChevronLeft size={26} color="#1a1a1a" />
+          <ChevronLeft size={26} color="#FFFFFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>BANOR</Text>
         <View style={styles.headerIcons}>
@@ -275,7 +275,7 @@ export default function CourseModal() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#0A0F0D',
   },
   header: {
     flexDirection: 'row',
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#243028',
   },
   backBtn: {
     width: 40,
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#1a1a1a',
+    color: '#FFFFFF',
     letterSpacing: 0.5,
   },
   headerIcons: {
@@ -314,10 +314,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: Platform.OS === 'ios' ? 10 : 6,
     marginBottom: 10,
+    backgroundColor: '#141C18',
   },
   searchInput: {
     fontSize: 15,
-    color: '#1a1a1a',
+    color: '#FFFFFF',
     padding: 0,
     textAlign: 'center' as const,
   },
@@ -329,7 +330,7 @@ const styles = StyleSheet.create({
   },
   filterLabel: {
     fontSize: 14,
-    color: '#1B5E20',
+    color: '#8A9B90',
     fontWeight: '600' as const,
   },
   countryPicker: {
@@ -342,6 +343,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     gap: 6,
     flex: 1,
+    backgroundColor: '#141C18',
   },
   countryText: {
     fontSize: 14,
@@ -354,15 +356,15 @@ const styles = StyleSheet.create({
     color: '#1B5E20',
   },
   countryDropdown: {
-    backgroundColor: '#fff',
+    backgroundColor: '#141C18',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#243028',
     borderRadius: 10,
     marginBottom: 10,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 4,
   },
@@ -370,17 +372,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#243028',
   },
   countryOptionActive: {
-    backgroundColor: '#e8f5e9',
+    backgroundColor: '#1B5E20',
   },
   countryOptionText: {
     fontSize: 15,
-    color: '#333',
+    color: '#8A9B90',
   },
   countryOptionTextActive: {
-    color: '#1B5E20',
+    color: '#FFFFFF',
     fontWeight: '600' as const,
   },
   tabRow: {
@@ -392,7 +394,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#243028',
   },
   courseInfo: {
     flex: 1,
@@ -400,7 +402,7 @@ const styles = StyleSheet.create({
   courseName: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#1a1a1a',
+    color: '#FFFFFF',
   },
   courseSubRow: {
     flexDirection: 'row',
@@ -410,11 +412,11 @@ const styles = StyleSheet.create({
   },
   courseClub: {
     fontSize: 13,
-    color: '#666',
+    color: '#8A9B90',
   },
   courseCity: {
     fontSize: 12,
-    color: '#999',
+    color: '#5A6B60',
     marginTop: 1,
   },
   courseBottom: {
@@ -429,7 +431,7 @@ const styles = StyleSheet.create({
   },
   courseDistance: {
     fontSize: 13,
-    color: '#777',
+    color: '#8A9B90',
     fontWeight: '500' as const,
   },
   favBtn: {
@@ -445,6 +447,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 15,
-    color: '#999',
+    color: '#5A6B60',
   },
 });

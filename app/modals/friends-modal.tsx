@@ -291,7 +291,7 @@ export default function FriendsModal() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#0A0F0D',
   },
   header: {
     flexDirection: 'row',
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#243028',
   },
   headerSpacer: {
     width: 60,
@@ -311,12 +311,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17,
     fontWeight: '700' as const,
-    color: '#1a1a1a',
+    color: '#FFFFFF',
     letterSpacing: 0.5,
   },
   headerCount: {
     fontSize: 13,
-    color: '#888',
+    color: '#8A9B90',
     marginTop: 2,
   },
   doneBtn: {
@@ -334,18 +334,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     margin: 16,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#141C18',
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: '#e8e8e8',
+    borderColor: '#243028',
     gap: 8,
   },
   searchInput: {
     flex: 1,
     fontSize: 15,
-    color: '#1a1a1a',
+    color: '#FFFFFF',
     padding: 0,
   },
   slotsRow: {
@@ -368,12 +368,12 @@ const styles = StyleSheet.create({
   slotAvatarPlaceholder: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#c8d8cc',
+    backgroundColor: '#1B5E20',
   },
   slotInitial: {
     fontSize: 20,
     fontWeight: '700' as const,
-    color: '#1B5E20',
+    color: '#FFFFFF',
   },
   slotAvatarWrap: {
     position: 'relative' as const,
@@ -394,20 +394,20 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: 26,
     borderWidth: 1.5,
-    borderColor: '#ccc',
+    borderColor: '#3a4a40',
     borderStyle: 'dashed' as const,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fafafa',
+    backgroundColor: '#141C18',
   },
   slotEmptyNum: {
     fontSize: 16,
-    color: '#bbb',
+    color: '#5A6B60',
     fontWeight: '600' as const,
   },
   slotName: {
     fontSize: 12,
-    color: '#555',
+    color: '#8A9B90',
     marginTop: 4,
     textAlign: 'center' as const,
   },
@@ -422,24 +422,24 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#e8f5e9',
+    backgroundColor: '#1B5E20',
     alignItems: 'center',
     justifyContent: 'center',
   },
   createText: {
     fontSize: 15,
     fontWeight: '500' as const,
-    color: '#1a1a1a',
+    color: '#FFFFFF',
   },
   divider: {
     height: 1,
-    backgroundColor: '#eee',
+    backgroundColor: '#243028',
     marginHorizontal: 16,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#1a1a1a',
+    color: '#FFFFFF',
     paddingHorizontal: 20,
     paddingTop: 18,
     paddingBottom: 8,
@@ -460,12 +460,12 @@ const styles = StyleSheet.create({
   playerAvatarPlaceholder: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#e0e0e0',
+    backgroundColor: '#243028',
   },
   playerAvatarInitial: {
     fontSize: 17,
     fontWeight: '700' as const,
-    color: '#555',
+    color: '#8A9B90',
   },
   playerMeta: {
     flex: 1,
@@ -473,11 +473,11 @@ const styles = StyleSheet.create({
   playerName: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: '#1a1a1a',
+    color: '#FFFFFF',
   },
   playerClub: {
     fontSize: 13,
-    color: '#888',
+    color: '#8A9B90',
     marginTop: 1,
   },
   radio: {
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#ccc',
+    borderColor: '#3a4a40',
     alignItems: 'center',
     justifyContent: 'center',
   },
