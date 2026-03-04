@@ -13,7 +13,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Menu, BarChart2, TrendingUp, Crosshair, List, Video, Plus, Columns2, Trash2, Flag, Target, Dumbbell } from 'lucide-react-native';
+import { Menu, BarChart2, TrendingUp, Crosshair, List, Video, Plus, Columns2, Trash2, Flag, Target, Dumbbell, ChevronDown, HelpCircle, Filter, ChevronRight } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
@@ -359,26 +359,654 @@ const statsStyles = StyleSheet.create({
   },
 });
 
-function SGContent() {
+type SGSegment = 'ovve' | 'ott' | 'app' | 'arg' | 'p';
+
+const SG_SEGMENTS: { key: SGSegment; label: string }[] = [
+  { key: 'ovve', label: 'Ovve' },
+  { key: 'ott', label: 'OTT' },
+  { key: 'app', label: 'APP' },
+  { key: 'arg', label: 'ARG' },
+  { key: 'p', label: 'P' },
+];
+
+const SG_CONFIG: Record<SGSegment, {
+  title: string;
+  subtitle: string;
+  value: number;
+  trend: number;
+  color: string;
+  description: string;
+  trendDescription: string;
+  trendDirection: 'up' | 'down';
+  chartData: number[];
+}> = {
+  ovve: {
+    title: 'Overall Game',
+    subtitle: 'SG / Round',
+    value: -1.3,
+    trend: 1.1,
+    color: '#5A6B60',
+    description: '',
+    trendDescription: '',
+    trendDirection: 'up',
+    chartData: [],
+  },
+  ott: {
+    title: 'Driving Game',
+    subtitle: 'SG Driving / Round',
+    value: -2.6,
+    trend: -1.2,
+    color: '#64B5F6',
+    description: "You're losing 2.6 strokes on your drives compared to your overall -1.3 strokes gained.",
+    trendDescription: 'Okay, time to reset. Your driving game is trending down by -1.2 SG compared to your last 10 round average.',
+    trendDirection: 'down',
+    chartData: [-1.0, -0.5, -0.8, 0.5, -0.2, 0.3, -0.5, -1.5, -2.0, -2.6],
+  },
+  app: {
+    title: 'Approach Game',
+    subtitle: 'SG Approach / Round',
+    value: 1.2,
+    trend: 1.0,
+    color: '#7E57C2',
+    description: "You're gaining 1.2 strokes on your approach shots compared to your overall -1.3 strokes gained.",
+    trendDescription: 'Way to go! Your approach game is trending up by +1.0 SG compared to your last 10 round average.',
+    trendDirection: 'up',
+    chartData: [-1.5, -1.0, -0.5, 0.0, -0.8, -1.2, 0.2, 0.5, 1.0, 1.2],
+  },
+  arg: {
+    title: 'Short Game',
+    subtitle: 'SG Short / Round',
+    value: 1.0,
+    trend: 2.3,
+    color: '#E91E8C',
+    description: "You're gaining 1.0 strokes on your short shots compared to your overall -1.3 strokes gained.",
+    trendDescription: 'Way to go! Your short game is trending up by +2.3 SG compared to your last 10 round average.',
+    trendDirection: 'up',
+    chartData: [-2.0, -1.5, -0.5, -0.8, 0.0, -0.3, 0.2, 0.5, 0.8, 1.0],
+  },
+  p: {
+    title: 'Putting Game',
+    subtitle: 'SG Putting / Round',
+    value: -0.9,
+    trend: 1.6,
+    color: '#F4A261',
+    description: "You're losing 0.9 strokes on your putts compared to your overall -1.3 strokes gained.",
+    trendDescription: 'Way to go! Your putting game is trending up by +1.6 SG compared to your last 10 round average.',
+    trendDirection: 'up',
+    chartData: [-1.5, -1.0, 1.0, 0.5, -0.2, 0.0, -0.5, 0.2, 0.5, -0.9],
+  },
+};
+
+const OVERALL_CATEGORIES = [
+  { label: 'Driving', value: -2.6, color: '#E57373', barWidth: 45 },
+  { label: 'Approach', value: 1.2, color: '#4CAF50', barWidth: 60 },
+  { label: 'Short', value: 1.0, color: '#90A4AE', barWidth: 50 },
+  { label: 'Putting', value: -0.9, color: '#B0BEC5', barWidth: 35 },
+];
+
+function MiniChart({ data, color, height = 120 }: { data: number[]; color: string; height?: number }) {
+  if (data.length === 0) return null;
+  const maxVal = Math.max(...data.map(Math.abs), 3);
+  const chartWidth = 280;
+  const barAreaHeight = height;
+  const midY = barAreaHeight / 2;
+  const stepX = chartWidth / (data.length - 1 || 1);
+
   return (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-      <View style={styles.placeholderCard}>
-        <TrendingUp size={32} color="#00E676" />
-        <Text style={styles.placeholderTitle}>Strokes Gained</Text>
-        <Text style={styles.placeholderSub}>Detailed strokes gained analysis across all categories</Text>
+    <View style={sgStyles.chartContainer}>
+      <View style={sgStyles.chartYAxis}>
+        <Text style={sgStyles.chartYLabel}>3</Text>
+        <Text style={sgStyles.chartYLabel}>1.5</Text>
+        <Text style={sgStyles.chartYLabel}>0</Text>
+        <Text style={sgStyles.chartYLabel}>-1.5</Text>
+        <Text style={sgStyles.chartYLabel}>3</Text>
       </View>
-      {['Off-the-Tee (OTT)', 'Approach-the-Green (APP)', 'Around-the-Green (ARG)', 'Putting (P)'].map((cat, i) => (
-        <View key={i} style={styles.sgRow}>
-          <Text style={styles.sgLabel}>{cat}</Text>
-          <View style={styles.sgBarWrap}>
-            <View style={[styles.sgBar, { width: '0%' }]} />
+      <View style={[sgStyles.chartArea, { height: barAreaHeight }]}>
+        {data.map((val, i) => {
+          const barH = (Math.abs(val) / maxVal) * (barAreaHeight / 2 - 4);
+          const isNeg = val < 0;
+          return (
+            <View
+              key={i}
+              style={[
+                sgStyles.chartBar,
+                {
+                  left: i * stepX - 8,
+                  height: barH,
+                  top: isNeg ? midY : midY - barH,
+                  backgroundColor: '#243028',
+                  width: 16,
+                },
+              ]}
+            />
+          );
+        })}
+        <View style={[sgStyles.chartMidLine, { top: midY }]} />
+        {data.map((val, i) => {
+          const y = midY - (val / maxVal) * (barAreaHeight / 2 - 4);
+          return (
+            <View
+              key={`dot-${i}`}
+              style={[
+                sgStyles.chartDot,
+                {
+                  left: i * stepX - 4,
+                  top: y - 4,
+                  backgroundColor: i === data.length - 1 ? color : 'transparent',
+                  borderColor: color,
+                  borderWidth: 2,
+                },
+              ]}
+            />
+          );
+        })}
+        {data.length > 1 && (
+          <View style={sgStyles.chartLineContainer}>
+            {data.slice(0, -1).map((val, i) => {
+              const y1 = midY - (val / maxVal) * (barAreaHeight / 2 - 4);
+              const nextVal = data[i + 1];
+              const y2 = midY - (nextVal / maxVal) * (barAreaHeight / 2 - 4);
+              const x1 = i * stepX;
+              const x2 = (i + 1) * stepX;
+              const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+              const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+              return (
+                <View
+                  key={`line-${i}`}
+                  style={[
+                    sgStyles.chartLine,
+                    {
+                      left: x1,
+                      top: y1,
+                      width: length,
+                      backgroundColor: color,
+                      transform: [{ rotate: `${angle}deg` }],
+                      transformOrigin: 'left center',
+                    },
+                  ]}
+                />
+              );
+            })}
           </View>
-          <Text style={styles.sgValue}>--</Text>
+        )}
+        <View style={sgStyles.chartRightLabel}>
+          <Text style={sgStyles.chartLatestText}>Latest</Text>
+          <Text style={sgStyles.chartLatestText}>Round</Text>
         </View>
-      ))}
+      </View>
+    </View>
+  );
+}
+
+function SGOverallView() {
+  return (
+    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+      <View style={sgStyles.compareBar}>
+        <Text style={sgStyles.compareText}>
+          Compared to a <Text style={sgStyles.compareBold}>0 HCP</Text> using <Text style={sgStyles.compareBold}>10 Round Avg</Text>
+          <Text style={sgStyles.compareChevron}> ▾</Text>
+        </Text>
+        <TouchableOpacity activeOpacity={0.7}>
+          <Filter size={18} color="#8A9B90" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={sgStyles.titleRow}>
+        <View style={sgStyles.titleLeft}>
+          <Text style={sgStyles.gameTitle}>Overall Game</Text>
+          <ChevronDown size={16} color="#F5F7F6" />
+        </View>
+        <TouchableOpacity activeOpacity={0.7}>
+          <HelpCircle size={20} color="#8A9B90" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={sgStyles.mainCard}>
+        <Text style={sgStyles.cardHeader}>Your Strokes Gained (SG) Breakdown</Text>
+        <View style={sgStyles.bigValueRow}>
+          <Text style={sgStyles.bigValue}>-1.3</Text>
+          <View style={sgStyles.trendBadge}>
+            <Text style={sgStyles.trendArrow}>▲</Text>
+            <Text style={sgStyles.trendValue}>1.1</Text>
+          </View>
+        </View>
+        <Text style={sgStyles.bigSubtitle}>SG / Round</Text>
+
+        <Text style={sgStyles.cardDescription}>
+          You lose 1.3 strokes per round compared to a 0 HCP. Your{' '}
+          <Text style={sgStyles.descHighlightGreen}>overall game has improved by 1.1 strokes</Text>{' '}
+          over your last 10 rounds.
+        </Text>
+
+        <View style={sgStyles.categoryGrid}>
+          {OVERALL_CATEGORIES.map((cat) => (
+            <View key={cat.label} style={sgStyles.categoryItem}>
+              <View style={sgStyles.categoryBarContainer}>
+                <View style={[sgStyles.categoryBar, { width: cat.barWidth, backgroundColor: cat.color }]} />
+              </View>
+              <Text style={sgStyles.categoryLabel}>{cat.label}</Text>
+              <Text style={[sgStyles.categoryValue, { color: cat.value >= 0 ? '#4CAF50' : '#E57373' }]}>
+                {cat.value >= 0 ? '+' : ''}{cat.value.toFixed(1)}
+              </Text>
+              <TouchableOpacity style={sgStyles.categorySgLink} activeOpacity={0.7}>
+                <Text style={sgStyles.categorySgText}>SG</Text>
+                <ChevronRight size={12} color="#8A9B90" />
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+
+        <TouchableOpacity style={sgStyles.handicapLink} activeOpacity={0.7}>
+          <Text style={sgStyles.handicapLinkText}>Show Handicap Breakdown</Text>
+          <ChevronRight size={14} color="#8A9B90" />
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 }
+
+function SGCategoryView({ segment }: { segment: SGSegment }) {
+  const config = SG_CONFIG[segment];
+  const isPositive = config.value >= 0;
+  const valueStr = (isPositive ? '+' : '') + config.value.toFixed(1);
+
+  return (
+    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+      <View style={sgStyles.compareBar}>
+        <Text style={sgStyles.compareText}>
+          Compared to a <Text style={sgStyles.compareBold}>0 HCP</Text> using <Text style={sgStyles.compareBold}>10 Round Avg</Text>
+          <Text style={sgStyles.compareChevron}> ▾</Text>
+        </Text>
+        <TouchableOpacity activeOpacity={0.7}>
+          <Filter size={18} color="#8A9B90" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={sgStyles.titleRow}>
+        <View style={sgStyles.titleLeft}>
+          <Text style={sgStyles.gameTitle}>{config.title}</Text>
+          <ChevronDown size={16} color="#F5F7F6" />
+        </View>
+        <TouchableOpacity activeOpacity={0.7}>
+          <HelpCircle size={20} color="#8A9B90" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={sgStyles.circleWrap}>
+        <View style={[sgStyles.circleOuter, { borderColor: config.color }]}>
+          <Text style={[sgStyles.circleValue, { color: config.color }]}>{valueStr}</Text>
+        </View>
+        <Text style={sgStyles.circleSubtitle}>{config.subtitle}</Text>
+      </View>
+
+      <Text style={sgStyles.catDescription}>
+        {config.description.split(isPositive ? 'gaining' : 'losing').map((part, i) => {
+          if (i === 0) return <Text key={i}>{part}</Text>;
+          return (
+            <Text key={i}>
+              <Text style={{ color: config.color, fontWeight: '700' as const }}>
+                {isPositive ? 'gaining' : 'losing'}
+              </Text>
+              {part}
+            </Text>
+          );
+        })}
+      </Text>
+
+      <MiniChart data={config.chartData} color={config.color} />
+
+      <View style={sgStyles.trendCard}>
+        <Text style={sgStyles.trendDescription}>
+          {config.trendDirection === 'up' ? 'Way to go! ' : 'Okay, time to reset. '}
+          Your {config.title.toLowerCase().replace(' game', '')} game is{' '}
+          <Text style={{ color: config.trendDirection === 'up' ? '#4CAF50' : '#E57373', fontWeight: '700' as const }}>
+            trending {config.trendDirection} by {config.trend >= 0 ? '+' : ''}{config.trend.toFixed(1)} SG
+          </Text>{' '}
+          compared to your last 10 round average.
+        </Text>
+      </View>
+    </ScrollView>
+  );
+}
+
+function SGContent() {
+  const [sgSegment, setSgSegment] = useState<SGSegment>('ovve');
+
+  return (
+    <View style={{ flex: 1 }}>
+      <Text style={sgStyles.sectionHeader}>Strokes Gained</Text>
+      <View style={sgStyles.segmentWrap}>
+        <View style={sgStyles.segmentControl}>
+          {SG_SEGMENTS.map((seg) => (
+            <TouchableOpacity
+              key={seg.key}
+              style={[sgStyles.segmentButton, sgSegment === seg.key && sgStyles.segmentButtonActive]}
+              onPress={() => setSgSegment(seg.key)}
+              activeOpacity={0.7}
+            >
+              <Text style={[sgStyles.segmentText, sgSegment === seg.key && sgStyles.segmentTextActive]}>
+                {seg.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {sgSegment === 'ovve' ? (
+        <SGOverallView />
+      ) : (
+        <SGCategoryView segment={sgSegment} />
+      )}
+    </View>
+  );
+}
+
+const sgStyles = StyleSheet.create({
+  sectionHeader: {
+    fontSize: 22,
+    fontWeight: '800' as const,
+    color: '#F5F7F6',
+    textAlign: 'center' as const,
+    paddingTop: 14,
+    paddingBottom: 6,
+  },
+  segmentWrap: {
+    paddingHorizontal: 16,
+    paddingTop: 6,
+    paddingBottom: 8,
+  },
+  segmentControl: {
+    flexDirection: 'row' as const,
+    backgroundColor: '#141C18',
+    borderRadius: 10,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: '#243028',
+  },
+  segmentButton: {
+    flex: 1,
+    paddingVertical: 9,
+    alignItems: 'center' as const,
+    borderRadius: 8,
+  },
+  segmentButtonActive: {
+    backgroundColor: '#4FC3F7',
+  },
+  segmentText: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: '#5A6B60',
+  },
+  segmentTextActive: {
+    color: '#000',
+  },
+  compareBar: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    backgroundColor: '#141C18',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#243028',
+  },
+  compareText: {
+    fontSize: 12,
+    color: '#8A9B90',
+    fontWeight: '500' as const,
+  },
+  compareBold: {
+    fontWeight: '800' as const,
+    color: '#F5F7F6',
+  },
+  compareChevron: {
+    color: '#5A6B60',
+  },
+  titleRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginBottom: 20,
+    gap: 6,
+  },
+  titleLeft: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 4,
+    flex: 1,
+    justifyContent: 'center' as const,
+  },
+  gameTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: '#F5F7F6',
+  },
+  mainCard: {
+    backgroundColor: '#141C18',
+    borderRadius: 16,
+    padding: 22,
+    borderWidth: 1,
+    borderColor: '#243028',
+    alignItems: 'center' as const,
+  },
+  cardHeader: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: '#4CAF50',
+    marginBottom: 16,
+    letterSpacing: 0.3,
+  },
+  bigValueRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start' as const,
+    gap: 6,
+  },
+  bigValue: {
+    fontSize: 52,
+    fontWeight: '800' as const,
+    color: '#F5F7F6',
+    letterSpacing: -2,
+  },
+  trendBadge: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    marginTop: 10,
+    gap: 2,
+  },
+  trendArrow: {
+    fontSize: 12,
+    color: '#4CAF50',
+    fontWeight: '700' as const,
+  },
+  trendValue: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: '#4CAF50',
+  },
+  bigSubtitle: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: '#8A9B90',
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  cardDescription: {
+    fontSize: 14,
+    color: '#8A9B90',
+    textAlign: 'center' as const,
+    lineHeight: 20,
+    marginBottom: 22,
+    paddingHorizontal: 8,
+  },
+  descHighlightGreen: {
+    color: '#4CAF50',
+    fontWeight: '700' as const,
+  },
+  categoryGrid: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    width: '100%' as const,
+    marginBottom: 20,
+    paddingHorizontal: 4,
+  },
+  categoryItem: {
+    alignItems: 'center' as const,
+    flex: 1,
+  },
+  categoryBarContainer: {
+    height: 32,
+    justifyContent: 'flex-end' as const,
+    alignItems: 'center' as const,
+    marginBottom: 8,
+  },
+  categoryBar: {
+    height: 24,
+    borderRadius: 3,
+    minWidth: 20,
+  },
+  categoryLabel: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: '#8A9B90',
+    marginBottom: 4,
+  },
+  categoryValue: {
+    fontSize: 16,
+    fontWeight: '800' as const,
+    marginBottom: 4,
+  },
+  categorySgLink: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+  },
+  categorySgText: {
+    fontSize: 11,
+    color: '#8A9B90',
+    fontWeight: '600' as const,
+  },
+  handicapLink: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 4,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#243028',
+    width: '100%' as const,
+    justifyContent: 'center' as const,
+  },
+  handicapLinkText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: '#8A9B90',
+  },
+  circleWrap: {
+    alignItems: 'center' as const,
+    marginBottom: 20,
+  },
+  circleOuter: {
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    borderWidth: 4,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginBottom: 8,
+  },
+  circleValue: {
+    fontSize: 40,
+    fontWeight: '800' as const,
+    letterSpacing: -1,
+  },
+  circleSubtitle: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#8A9B90',
+  },
+  catDescription: {
+    fontSize: 14,
+    color: '#8A9B90',
+    textAlign: 'center' as const,
+    lineHeight: 21,
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  chartContainer: {
+    flexDirection: 'row' as const,
+    marginBottom: 20,
+    paddingRight: 16,
+  },
+  chartYAxis: {
+    width: 28,
+    justifyContent: 'space-between' as const,
+    alignItems: 'flex-end' as const,
+    paddingRight: 6,
+  },
+  chartYLabel: {
+    fontSize: 10,
+    color: '#5A6B60',
+    fontWeight: '500' as const,
+  },
+  chartArea: {
+    flex: 1,
+    position: 'relative' as const,
+    overflow: 'hidden' as const,
+  },
+  chartBar: {
+    position: 'absolute' as const,
+    borderRadius: 3,
+  },
+  chartMidLine: {
+    position: 'absolute' as const,
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: '#2E4038',
+  },
+  chartDot: {
+    position: 'absolute' as const,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  chartLineContainer: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  chartLine: {
+    position: 'absolute' as const,
+    height: 2,
+    transformOrigin: 'left center',
+  },
+  chartRightLabel: {
+    position: 'absolute' as const,
+    right: -8,
+    top: 4,
+    alignItems: 'flex-end' as const,
+  },
+  chartLatestText: {
+    fontSize: 9,
+    color: '#5A6B60',
+    fontWeight: '500' as const,
+  },
+  trendCard: {
+    backgroundColor: '#141C18',
+    borderRadius: 14,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#243028',
+  },
+  trendDescription: {
+    fontSize: 14,
+    color: '#8A9B90',
+    textAlign: 'center' as const,
+    lineHeight: 21,
+  },
+});
 
 function ShotsContent() {
   return (
