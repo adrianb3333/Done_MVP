@@ -1022,17 +1022,121 @@ const sgStyles = StyleSheet.create({
   },
 });
 
+type ShotsSegment = 'round' | 'practice';
+
 function ShotsContent() {
+  const [segment, setSegment] = useState<ShotsSegment>('round');
+
+  const roundShotsQuery = useQuery({
+    queryKey: ['totalRoundShots'],
+    queryFn: async () => {
+      const stats = await fetchAllTimeStats();
+      return stats?.totalShots ?? 0;
+    },
+  });
+
+  const practiceShotsQuery = useQuery({
+    queryKey: ['totalPracticeShots'],
+    queryFn: async () => {
+      const categories = await fetchPracticeStats();
+      let total = 0;
+      for (const cat of categories) {
+        total += cat.totalAttempts;
+      }
+      return total;
+    },
+  });
+
+  const isLoading = segment === 'round' ? roundShotsQuery.isLoading : practiceShotsQuery.isLoading;
+  const totalShots = segment === 'round' ? (roundShotsQuery.data ?? 0) : (practiceShotsQuery.data ?? 0);
+
   return (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-      <View style={styles.placeholderCard}>
-        <Crosshair size={32} color="#FFB74D" />
-        <Text style={styles.placeholderTitle}>Shot Tracking</Text>
-        <Text style={styles.placeholderSub}>Shot-by-shot data and dispersion patterns</Text>
+    <View style={{ flex: 1 }}>
+      <View style={shotsStyles.segmentWrap}>
+        <View style={shotsStyles.segmentControl}>
+          <TouchableOpacity
+            style={[shotsStyles.segmentButton, segment === 'round' && shotsStyles.segmentButtonActive]}
+            onPress={() => setSegment('round')}
+            activeOpacity={0.7}
+          >
+            <Text style={[shotsStyles.segmentText, segment === 'round' && shotsStyles.segmentTextActive]}>Round</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[shotsStyles.segmentButton, segment === 'practice' && shotsStyles.segmentButtonActive]}
+            onPress={() => setSegment('practice')}
+            activeOpacity={0.7}
+          >
+            <Text style={[shotsStyles.segmentText, segment === 'practice' && shotsStyles.segmentTextActive]}>Practice</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </ScrollView>
+
+      <View style={shotsStyles.totalContainer}>
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#4FC3F7" />
+        ) : (
+          <View style={shotsStyles.totalValueWrap}>
+            <Text style={shotsStyles.totalValue}>{totalShots}</Text>
+            <Text style={shotsStyles.totalLabel}>Total Shots</Text>
+          </View>
+        )}
+      </View>
+    </View>
   );
 }
+
+const shotsStyles = StyleSheet.create({
+  segmentWrap: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  segmentControl: {
+    flexDirection: 'row' as const,
+    backgroundColor: '#141C18',
+    borderRadius: 10,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: '#243028',
+  },
+  segmentButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center' as const,
+    borderRadius: 8,
+  },
+  segmentButtonActive: {
+    backgroundColor: '#4FC3F7',
+  },
+  segmentText: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: '#5A6B60',
+  },
+  segmentTextActive: {
+    color: '#000',
+  },
+  totalContainer: {
+    alignItems: 'flex-end' as const,
+    paddingRight: 24,
+    paddingTop: 20,
+  },
+  totalValueWrap: {
+    alignItems: 'flex-end' as const,
+  },
+  totalValue: {
+    fontSize: 48,
+    fontWeight: '900' as const,
+    color: '#F5F7F6',
+    letterSpacing: -1,
+  },
+  totalLabel: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#5A6B60',
+    marginTop: 2,
+  },
+});
 
 type DetailsSegment = 'courses' | 'notes' | 'thegame';
 
