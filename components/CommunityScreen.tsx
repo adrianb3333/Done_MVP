@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  Share,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -23,6 +25,12 @@ import {
   Award,
   Gift,
   ChevronRight,
+  Copy,
+  Target,
+  ImageIcon,
+  Tag,
+  Handshake,
+  X,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useAppNavigation } from '@/contexts/AppNavigationContext';
@@ -666,24 +674,482 @@ const tourStyles = StyleSheet.create({
   },
 });
 
-function AffiliateContent() {
+type GoalOption = 25 | 50 | 75 | 100;
+
+const PERKS_MAP: Record<GoalOption, string> = {
+  25: '3 Free Sensors',
+  50: 'Titleist Bag',
+  75: 'Free Set of Clubs',
+  100: '5 Rounds at Bro Hof',
+};
+
+interface AffiliateCategory {
+  key: string;
+  label: string;
+  icon: React.ReactNode;
+  items: { id: string; title: string }[];
+}
+
+const AFFILIATE_CATEGORIES: AffiliateCategory[] = [
+  {
+    key: 'giveaways',
+    label: 'Giveaways',
+    icon: <Gift size={18} color="#FFB74D" />,
+    items: [{ id: 'g1', title: 'Monthly Giveaway Draw' }],
+  },
+  {
+    key: 'brand_image',
+    label: 'Brand Image',
+    icon: <ImageIcon size={18} color="#64B5F6" />,
+    items: [{ id: 'bi1', title: 'Ambassador Kit' }],
+  },
+  {
+    key: 'challenges',
+    label: 'Challenges',
+    icon: <Target size={18} color="#EF5350" />,
+    items: [{ id: 'c1', title: 'Referral Sprint' }],
+  },
+  {
+    key: 'special_offers',
+    label: 'Special Offers',
+    icon: <Tag size={18} color="#AB47BC" />,
+    items: [{ id: 'so1', title: 'Pro Membership Deal' }],
+  },
+  {
+    key: 'partnership_deals',
+    label: 'Partnership Deals',
+    icon: <Handshake size={18} color="#26A69A" />,
+    items: [{ id: 'pd1', title: 'TrackMan Collab' }],
+  },
+];
+
+interface AffiliateItemDetail {
+  itemTitle: string;
+  categoryLabel: string;
+}
+
+function AffiliateItemScreen({ item, onClose }: { item: AffiliateItemDetail; onClose: () => void }) {
   return (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-      <View style={styles.placeholderCard}>
-        <Share2 size={32} color="#00E676" />
-        <Text style={styles.placeholderTitle}>Affiliate</Text>
-        <Text style={styles.placeholderSub}>Partner deals, referrals and affiliate programs</Text>
-      </View>
-      {['My Referrals', 'Partner Brands', 'Earnings'].map((label, i) => (
-        <View key={i} style={styles.listItem}>
-          <View style={[styles.listDot, { backgroundColor: '#00E676' }]} />
-          <Text style={styles.listLabel}>{label}</Text>
-          <Text style={styles.listArrow}>›</Text>
+    <View style={affStyles.detailContainer}>
+      <SafeAreaView edges={['top']} style={affStyles.detailSafeTop}>
+        <View style={affStyles.detailHeader}>
+          <TouchableOpacity onPress={onClose} style={affStyles.detailBack} activeOpacity={0.7}>
+            <ChevronLeft size={24} color="#F5F7F6" />
+          </TouchableOpacity>
+          <View style={affStyles.detailHeaderCenter}>
+            <Text style={affStyles.detailHeaderTitle} numberOfLines={1}>{item.itemTitle}</Text>
+            <Text style={affStyles.detailHeaderSub}>{item.categoryLabel}</Text>
+          </View>
         </View>
-      ))}
-    </ScrollView>
+      </SafeAreaView>
+      <View style={affStyles.detailBody} />
+    </View>
   );
 }
+
+function GoalPickerModal({
+  visible,
+  onClose,
+  onSelect,
+  current,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  onSelect: (v: GoalOption) => void;
+  current: GoalOption;
+}) {
+  const options: GoalOption[] = [25, 50, 75, 100];
+  return (
+    <Modal visible={visible} transparent animationType="fade">
+      <TouchableOpacity style={affStyles.modalOverlay} activeOpacity={1} onPress={onClose}>
+        <View style={affStyles.modalCard}>
+          <View style={affStyles.modalHeader}>
+            <Text style={affStyles.modalTitle}>Choose Goal</Text>
+            <TouchableOpacity onPress={onClose}>
+              <X size={20} color="#8A9B90" />
+            </TouchableOpacity>
+          </View>
+          {options.map((opt) => (
+            <TouchableOpacity
+              key={opt}
+              style={[
+                affStyles.modalOption,
+                current === opt && affStyles.modalOptionActive,
+              ]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                onSelect(opt);
+                onClose();
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={[
+                affStyles.modalOptionNum,
+                current === opt && affStyles.modalOptionNumActive,
+              ]}>{opt}</Text>
+              <Text style={affStyles.modalOptionPerk}>{PERKS_MAP[opt]}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </TouchableOpacity>
+    </Modal>
+  );
+}
+
+function AffiliateContent() {
+  const [goal, setGoal] = useState<GoalOption>(100);
+  const [pickerVisible, setPickerVisible] = useState<boolean>(false);
+
+  const [selectedItem, setSelectedItem] = useState<AffiliateItemDetail | null>(null);
+  const currentCount = 19;
+  const discountCode = 'GOLF2026PRO';
+
+  const handleOpenPicker = useCallback((source: 'count' | 'perks') => {
+    console.log('[Affiliate] Opening picker from:', source);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    setPickerVisible(true);
+  }, []);
+
+  const handleShare = useCallback(async () => {
+    console.log('[Affiliate] Sharing discount code:', discountCode);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      await Share.share({ message: `Use my discount code: ${discountCode}` });
+    } catch (e) {
+      console.log('[Affiliate] Share error:', e);
+    }
+  }, [discountCode]);
+
+  const handleItemPress = useCallback((itemTitle: string, categoryLabel: string) => {
+    console.log('[Affiliate] Item pressed:', itemTitle, 'category:', categoryLabel);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedItem({ itemTitle, categoryLabel });
+  }, []);
+
+  if (selectedItem) {
+    return (
+      <AffiliateItemScreen
+        item={selectedItem}
+        onClose={() => setSelectedItem(null)}
+      />
+    );
+  }
+
+  return (
+    <>
+      <ScrollView
+        style={styles.tabContent}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 30 }}
+      >
+        <Text style={affStyles.pageTitle}>Affiliate</Text>
+
+        <View style={affStyles.topBoxRow}>
+          <TouchableOpacity
+            style={affStyles.countBox}
+            activeOpacity={0.7}
+            onPress={() => handleOpenPicker('count')}
+          >
+            <Text style={affStyles.goalLabel}>{goal}</Text>
+            <View style={affStyles.countCenter}>
+              <Text style={affStyles.countBig}>{currentCount}</Text>
+              <Text style={affStyles.countOf}>out of {goal}</Text>
+            </View>
+            <View style={affStyles.progressBarBg}>
+              <View
+                style={[
+                  affStyles.progressBarFill,
+                  { width: `${Math.min((currentCount / goal) * 100, 100)}%` },
+                ]}
+              />
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={affStyles.perksBox}
+            activeOpacity={0.7}
+            onPress={() => handleOpenPicker('perks')}
+          >
+            <Text style={affStyles.goalLabel}>{goal}</Text>
+            <Award size={28} color="#FFB74D" />
+            <Text style={affStyles.perksHeader}>Perks and Prizes</Text>
+            <Text style={affStyles.perksValue}>{PERKS_MAP[goal]}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          style={affStyles.discountButton}
+          activeOpacity={0.7}
+          onPress={handleShare}
+        >
+          <Copy size={14} color="#FFFFFF" />
+          <View>
+            <Text style={affStyles.discountLabel}>Discount Code</Text>
+            <Text style={affStyles.discountCode}>{discountCode}</Text>
+          </View>
+        </TouchableOpacity>
+
+        {AFFILIATE_CATEGORIES.map((cat) => (
+          <View key={cat.key} style={affStyles.categorySection}>
+            <View style={affStyles.categoryHeaderRow}>
+              {cat.icon}
+              <Text style={affStyles.categoryTitle}>{cat.label}</Text>
+            </View>
+            {cat.items.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={affStyles.categoryCard}
+                activeOpacity={0.7}
+                onPress={() => handleItemPress(item.title, cat.label)}
+              >
+                <Text style={affStyles.categoryCardTitle}>{item.title}</Text>
+                <ChevronRight size={16} color="#5A6B60" />
+              </TouchableOpacity>
+            ))}
+          </View>
+        ))}
+      </ScrollView>
+
+      <GoalPickerModal
+        visible={pickerVisible}
+        onClose={() => setPickerVisible(false)}
+        onSelect={setGoal}
+        current={goal}
+      />
+    </>
+  );
+}
+
+const affStyles = StyleSheet.create({
+  pageTitle: {
+    fontSize: 22,
+    fontWeight: '800' as const,
+    color: '#F5F7F6',
+    marginBottom: 16,
+  },
+  topBoxRow: {
+    flexDirection: 'row' as const,
+    gap: 10,
+    marginBottom: 20,
+  },
+  countBox: {
+    flex: 1,
+    backgroundColor: '#141C18',
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#243028',
+    alignItems: 'center' as const,
+    gap: 6,
+  },
+  countCenter: {
+    alignItems: 'center' as const,
+  },
+  countBig: {
+    fontSize: 32,
+    fontWeight: '900' as const,
+    color: '#00E676',
+  },
+  countOf: {
+    fontSize: 12,
+    color: '#5A6B60',
+    fontWeight: '600' as const,
+  },
+  progressBarBg: {
+    width: '100%',
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: '#1C2922',
+    marginTop: 4,
+    overflow: 'hidden' as const,
+  },
+  progressBarFill: {
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: '#00E676',
+  },
+  perksBox: {
+    flex: 1,
+    backgroundColor: '#141C18',
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#243028',
+    alignItems: 'center' as const,
+    gap: 6,
+  },
+  goalLabel: {
+    fontSize: 10,
+    fontWeight: '700' as const,
+    color: '#FFB74D',
+    alignSelf: 'flex-end' as const,
+    backgroundColor: '#1C2922',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    overflow: 'hidden' as const,
+  },
+  perksHeader: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: '#F5F7F6',
+    textAlign: 'center' as const,
+  },
+  perksValue: {
+    fontSize: 11,
+    color: '#8A9B90',
+    textAlign: 'center' as const,
+  },
+  discountButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    alignSelf: 'center' as const,
+    backgroundColor: '#1B5E20',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    gap: 10,
+    marginBottom: 24,
+  },
+  discountLabel: {
+    fontSize: 10,
+    color: '#A5D6A7',
+    fontWeight: '600' as const,
+  },
+  discountCode: {
+    fontSize: 14,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+    letterSpacing: 1,
+  },
+  categorySection: {
+    marginBottom: 20,
+  },
+  categoryHeaderRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+    marginBottom: 10,
+  },
+  categoryTitle: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: '#F5F7F6',
+  },
+  categoryCard: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    backgroundColor: '#141C18',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#243028',
+  },
+  categoryCardTitle: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#F5F7F6',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    padding: 30,
+  },
+  modalCard: {
+    backgroundColor: '#141C18',
+    borderRadius: 18,
+    padding: 20,
+    width: '100%',
+    maxWidth: 320,
+    borderWidth: 1,
+    borderColor: '#243028',
+  },
+  modalHeader: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: '700' as const,
+    color: '#F5F7F6',
+  },
+  modalOption: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    marginBottom: 6,
+    backgroundColor: '#0D1410',
+    borderWidth: 1,
+    borderColor: '#1C2922',
+    gap: 14,
+  },
+  modalOptionActive: {
+    borderColor: '#00E676',
+    backgroundColor: '#0F1D14',
+  },
+  modalOptionNum: {
+    fontSize: 20,
+    fontWeight: '900' as const,
+    color: '#5A6B60',
+    width: 40,
+    textAlign: 'center' as const,
+  },
+  modalOptionNumActive: {
+    color: '#00E676',
+  },
+  modalOptionPerk: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#F5F7F6',
+    flex: 1,
+  },
+  detailContainer: {
+    flex: 1,
+    backgroundColor: '#0A0F0D',
+  },
+  detailSafeTop: {
+    backgroundColor: '#0D1410',
+    borderBottomWidth: 1,
+    borderBottomColor: '#1C2922',
+  },
+  detailHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8,
+  },
+  detailBack: {
+    width: 36,
+    height: 36,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  detailHeaderCenter: {
+    flex: 1,
+  },
+  detailHeaderTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#F5F7F6',
+  },
+  detailHeaderSub: {
+    fontSize: 11,
+    color: '#5A6B60',
+    marginTop: 2,
+  },
+  detailBody: {
+    flex: 1,
+  },
+});
 
 function EntertainmentContent() {
   return (
