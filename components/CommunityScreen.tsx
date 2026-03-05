@@ -31,7 +31,13 @@ import {
   Tag,
   Handshake,
   X,
+  Mic,
+  MessageSquare,
+  FileText,
+  Film,
+  ExternalLink,
 } from 'lucide-react-native';
+import { Linking, Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useAppNavigation } from '@/contexts/AppNavigationContext';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -1151,24 +1157,241 @@ const affStyles = StyleSheet.create({
   },
 });
 
-function EntertainmentContent() {
+type EntertainmentSection = 'Podcasts' | 'Interviews' | 'Articles' | 'Series';
+
+const ENTERTAINMENT_SECTIONS: { key: EntertainmentSection; icon: React.ReactNode }[] = [
+  { key: 'Podcasts', icon: <Mic size={20} color="#FFB74D" /> },
+  { key: 'Interviews', icon: <MessageSquare size={20} color="#64B5F6" /> },
+  { key: 'Articles', icon: <FileText size={20} color="#81C784" /> },
+  { key: 'Series', icon: <Film size={20} color="#E040FB" /> },
+];
+
+const SOCIAL_LINKS = [
+  {
+    key: 'instagram',
+    label: 'Instagram',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/600px-Instagram_icon.png',
+    url: 'https://instagram.com',
+    nativeUrl: 'instagram://',
+  },
+  {
+    key: 'tiktok',
+    label: 'TikTok',
+    logo: 'https://upload.wikimedia.org/wikipedia/en/thumb/a/a9/TikTok_logo.svg/800px-TikTok_logo.svg.png',
+    url: 'https://tiktok.com',
+    nativeUrl: 'snssdk1233://',
+  },
+  {
+    key: 'youtube',
+    label: 'YouTube',
+    logo: 'https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg',
+    url: 'https://youtube.com',
+    nativeUrl: 'youtube://',
+  },
+];
+
+function EntertainmentDetailScreen({ section, onClose }: { section: EntertainmentSection; onClose: () => void }) {
   return (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
-      <View style={styles.placeholderCard}>
-        <Tv size={32} color="#E040FB" />
-        <Text style={styles.placeholderTitle}>Entertainment</Text>
-        <Text style={styles.placeholderSub}>Golf content, challenges and social features</Text>
-      </View>
-      {['Challenges', 'Golf Feed', 'Mini Games'].map((label, i) => (
-        <View key={i} style={styles.listItem}>
-          <View style={[styles.listDot, { backgroundColor: '#E040FB' }]} />
-          <Text style={styles.listLabel}>{label}</Text>
-          <Text style={styles.listArrow}>›</Text>
+    <View style={entStyles.detailContainer}>
+      <SafeAreaView edges={['top']} style={entStyles.detailSafeTop}>
+        <View style={entStyles.detailHeader}>
+          <TouchableOpacity onPress={onClose} style={entStyles.detailBack} activeOpacity={0.7}>
+            <ChevronLeft size={24} color="#F5F7F6" />
+          </TouchableOpacity>
+          <Text style={entStyles.detailHeaderTitle}>{section}</Text>
+          <View style={{ width: 36 }} />
         </View>
+      </SafeAreaView>
+      <View style={entStyles.detailBody} />
+    </View>
+  );
+}
+
+function EntertainmentContent() {
+  const [openSection, setOpenSection] = useState<EntertainmentSection | null>(null);
+
+  const handleSocialPress = useCallback(async (nativeUrl: string, webUrl: string) => {
+    console.log('[Entertainment] Opening social:', webUrl);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      if (Platform.OS !== 'web') {
+        const supported = await Linking.canOpenURL(nativeUrl);
+        if (supported) {
+          await Linking.openURL(nativeUrl);
+          return;
+        }
+      }
+      await Linking.openURL(webUrl);
+    } catch (e) {
+      console.log('[Entertainment] Failed to open link:', e);
+      await Linking.openURL(webUrl);
+    }
+  }, []);
+
+  const handleSectionPress = useCallback((section: EntertainmentSection) => {
+    console.log('[Entertainment] Opening section:', section);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setOpenSection(section);
+  }, []);
+
+  if (openSection) {
+    return <EntertainmentDetailScreen section={openSection} onClose={() => setOpenSection(null)} />;
+  }
+
+  return (
+    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }}>
+      <Text style={entStyles.pageTitle}>Entertainment</Text>
+
+      <Text style={entStyles.sectionLabel}>Social Media</Text>
+      <View style={entStyles.socialRow}>
+        {SOCIAL_LINKS.map((social) => (
+          <TouchableOpacity
+            key={social.key}
+            style={entStyles.socialBox}
+            activeOpacity={0.7}
+            onPress={() => handleSocialPress(social.nativeUrl, social.url)}
+          >
+            <Image source={{ uri: social.logo }} style={entStyles.socialLogo} resizeMode="contain" />
+            <Text style={entStyles.socialLabel}>{social.label}</Text>
+            <ExternalLink size={12} color="#5A6B60" />
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <View style={entStyles.divider} />
+
+      <Text style={entStyles.sectionLabel}>Latest</Text>
+      <View style={entStyles.latestPlaceholder}>
+        <Text style={entStyles.latestPlaceholderText}>Content coming soon</Text>
+      </View>
+
+      <View style={entStyles.divider} />
+
+      {ENTERTAINMENT_SECTIONS.map((section) => (
+        <TouchableOpacity
+          key={section.key}
+          style={entStyles.sectionCard}
+          activeOpacity={0.7}
+          onPress={() => handleSectionPress(section.key)}
+        >
+          <View style={entStyles.sectionCardLeft}>
+            {section.icon}
+            <Text style={entStyles.sectionCardTitle}>{section.key}</Text>
+          </View>
+          <ChevronRight size={18} color="#5A6B60" />
+        </TouchableOpacity>
       ))}
     </ScrollView>
   );
 }
+
+const entStyles = StyleSheet.create({
+  pageTitle: {
+    fontSize: 22,
+    fontWeight: '800' as const,
+    color: '#F5F7F6',
+    marginBottom: 16,
+  },
+  sectionLabel: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#F5F7F6',
+    marginBottom: 12,
+  },
+  socialRow: {
+    flexDirection: 'row' as const,
+    gap: 10,
+    marginBottom: 4,
+  },
+  socialBox: {
+    flex: 1,
+    backgroundColor: '#141C18',
+    borderRadius: 14,
+    paddingVertical: 18,
+    paddingHorizontal: 8,
+    alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: '#243028',
+    gap: 8,
+  },
+  socialLogo: {
+    width: 36,
+    height: 36,
+  },
+  socialLabel: {
+    fontSize: 12,
+    fontWeight: '700' as const,
+    color: '#F5F7F6',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#243028',
+    marginVertical: 20,
+  },
+  latestPlaceholder: {
+    minHeight: 80,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  latestPlaceholderText: {
+    fontSize: 13,
+    color: '#3A4B40',
+    fontStyle: 'italic' as const,
+  },
+  sectionCard: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    backgroundColor: '#141C18',
+    borderRadius: 14,
+    padding: 18,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#243028',
+  },
+  sectionCardLeft: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 14,
+  },
+  sectionCardTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#F5F7F6',
+  },
+  detailContainer: {
+    flex: 1,
+    backgroundColor: '#0A0F0D',
+  },
+  detailSafeTop: {
+    backgroundColor: '#0D1410',
+    borderBottomWidth: 1,
+    borderBottomColor: '#1C2922',
+  },
+  detailHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    gap: 8,
+  },
+  detailBack: {
+    width: 36,
+    height: 36,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  detailHeaderTitle: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: '#F5F7F6',
+    textAlign: 'center' as const,
+  },
+  detailBody: {
+    flex: 1,
+  },
+});
 
 export default function CommunityScreen() {
   const [activeTab, setActiveTab] = useState<CommunityTab>('tour');
