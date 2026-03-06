@@ -176,9 +176,14 @@ export default function Settings1Screen() {
 
   const handleGoBack = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (router.canGoBack()) {
-      router.back();
-    } else {
+    try {
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/(tabs)');
+      }
+    } catch (e) {
+      console.log('[Settings] Navigation error, forcing replace:', e);
       router.replace('/(tabs)');
     }
   }, [router]);
