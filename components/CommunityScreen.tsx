@@ -374,19 +374,17 @@ const edStyles = StyleSheet.create({
     lineHeight: 20,
   },
   tabBarSafe: {
-    backgroundColor: '#0D1410',
-    borderTopWidth: 1,
-    borderTopColor: '#1C2922',
+    backgroundColor: '#000000',
   },
   tabBar: {
     flexDirection: 'row' as const,
-    paddingTop: 8,
-    paddingBottom: 4,
+    paddingTop: 4,
+    paddingBottom: 2,
   },
   tab: {
     flex: 1,
     alignItems: 'center' as const,
-    paddingVertical: 6,
+    paddingVertical: 4,
   },
   iconActive: {},
   iconInactive: {
@@ -1556,19 +1554,17 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
   },
   tabBarSafe: {
-    backgroundColor: '#0D1410',
-    borderTopWidth: 1,
-    borderTopColor: '#1C2922',
+    backgroundColor: '#000000',
   },
   tabBar: {
     flexDirection: 'row' as const,
-    paddingTop: 8,
-    paddingBottom: 4,
+    paddingTop: 4,
+    paddingBottom: 2,
   },
   tab: {
     flex: 1,
     alignItems: 'center' as const,
-    paddingVertical: 6,
+    paddingVertical: 4,
   },
   iconActive: {},
   iconInactive: {

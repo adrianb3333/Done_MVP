@@ -1975,7 +1975,7 @@ export default function DataOverviewScreen() {
           <TouchableOpacity onPress={openSidebar} style={styles.menuBtn} activeOpacity={0.7}>
             <Menu size={24} color="#F5F7F6" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Data Overview</Text>
+          <Text style={styles.headerTitle}>{tabs.find(t => t.key === activeTab)?.label ?? 'Stats'}</Text>
           <TouchableOpacity onPress={() => navigateTo('mygame')} style={styles.menuBtn} activeOpacity={0.7}>
             <Image source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/d92ywde7ucn1q2si6dbb7' }} style={styles.golferIcon} />
           </TouchableOpacity>
@@ -2020,16 +2020,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#0A0F0D',
   },
   safeTop: {
-    backgroundColor: '#0D1410',
-    borderBottomWidth: 1,
-    borderBottomColor: '#1C2922',
+    backgroundColor: '#000000',
   },
   header: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'space-between' as const,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 6,
   },
   menuBtn: {
     width: 40,
@@ -2224,19 +2222,17 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   tabBarSafe: {
-    backgroundColor: '#0D1410',
-    borderTopWidth: 1,
-    borderTopColor: '#1C2922',
+    backgroundColor: '#000000',
   },
   tabBar: {
     flexDirection: 'row' as const,
-    paddingTop: 8,
-    paddingBottom: 4,
+    paddingTop: 4,
+    paddingBottom: 2,
   },
   tab: {
     flex: 1,
     alignItems: 'center' as const,
-    paddingVertical: 6,
+    paddingVertical: 4,
   },
   iconActive: {},
   iconInactive: {

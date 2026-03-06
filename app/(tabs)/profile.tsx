@@ -654,7 +654,7 @@ export default function ProfileScreen() {
                 activeOpacity={0.8}
                 testID="handicap-button"
               >
-                <Trophy size={18} color="#D4AF37" />
+                <Trophy size={14} color="#D4AF37" />
                 <Text style={styles.goldBtnText}>{randomHcp}</Text>
               </TouchableOpacity>
 
@@ -667,7 +667,7 @@ export default function ProfileScreen() {
                 activeOpacity={0.8}
                 testID="qr-button"
               >
-                <QrCode size={18} color="#EFEFEF" />
+                <QrCode size={14} color="#EFEFEF" />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -679,8 +679,7 @@ export default function ProfileScreen() {
                 activeOpacity={0.8}
                 testID="compare-button"
               >
-                <Swords size={16} color="#fff" />
-                <Text style={styles.compareBtnText}>Compare</Text>
+                <Swords size={14} color="#fff" />
               </TouchableOpacity>
             </View>
           </View>
@@ -1167,23 +1166,26 @@ const styles = StyleSheet.create({
   },
 
   actionButtons: {
-    flex: 1,
+    flexDirection: 'row' as const,
     gap: 6,
-    alignItems: 'stretch' as const,
+    alignItems: 'flex-start' as const,
+    justifyContent: 'flex-end' as const,
+    flex: 1,
   },
   goldBtn: {
-    flexDirection: 'row' as const,
+    flexDirection: 'column' as const,
     alignItems: 'center' as const,
-    gap: 8,
+    justifyContent: 'center' as const,
+    gap: 3,
     backgroundColor: '#141414',
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+    borderRadius: 10,
+    width: 44,
+    height: 44,
     borderWidth: 1,
     borderColor: '#D4AF3740',
   },
   goldBtnText: {
-    fontSize: 16,
+    fontSize: 10,
     fontWeight: '800' as const,
     color: '#D4AF37',
   },
@@ -1191,26 +1193,21 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     backgroundColor: '#141414',
-    borderRadius: 12,
-    paddingVertical: 10,
+    borderRadius: 10,
+    width: 44,
+    height: 44,
     borderWidth: 1,
     borderColor: '#1A1A1A',
   },
   compareBtn: {
-    flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    gap: 6,
     backgroundColor: '#FF444420',
-    borderRadius: 12,
-    paddingVertical: 10,
+    borderRadius: 10,
+    width: 44,
+    height: 44,
     borderWidth: 1,
     borderColor: '#FF444440',
-  },
-  compareBtnText: {
-    fontSize: 13,
-    fontWeight: '700' as const,
-    color: '#FF6666',
   },
 
   liveSection: {
