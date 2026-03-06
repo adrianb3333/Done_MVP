@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SessionProvider, useSession } from "@/contexts/SessionContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
 import { AppNavigationProvider, useAppNavigation } from "@/contexts/AppNavigationContext";
+import { UserDataProvider } from "@/hooks/useUserData";
 import PlaySessionTabs from "@/app/play-session/PlaySessionTabs";
 import PracticeSessionTabs from "@/app/practice-session/PracticeSessionTabs";
 import MiniSessionModal from "@/components/MiniSessionModal";
@@ -83,7 +84,7 @@ function AppContent() {
     } else if (session && inAuthGroup) {
       router.replace('/(tabs)');
     }
-  }, [session, segments, loading]);
+  }, [session, segments, loading, router]);
 
   if (loading) {
     return <View style={styles.container} />;
@@ -296,7 +297,9 @@ export default function RootLayout() {
         <SessionProvider>
           <ProfileProvider>
             <AppNavigationProvider>
-              <RootLayoutNav />
+              <UserDataProvider>
+                <RootLayoutNav />
+              </UserDataProvider>
             </AppNavigationProvider>
           </ProfileProvider>
         </SessionProvider>
