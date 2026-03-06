@@ -13,7 +13,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Settings, X, User, Newspaper, TrendingUp, Bluetooth, Trophy, QrCode, Swords, Clock, Target, Zap, Hash, Menu, Video, BarChart2 } from 'lucide-react-native';
+import { Settings, X, User, Newspaper, TrendingUp, Bluetooth, Trophy, QrCode, Swords, Clock, Target, Zap, Hash, Menu, Video, BarChart2, MapPin, Award, Calendar, ChevronRight } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useProfile, UserProfile } from '@/contexts/ProfileContext';
@@ -733,6 +733,68 @@ export default function ProfileScreen() {
               <Text style={styles.cardTitle}>Last Practice</Text>
               <UiTra />
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.tourCard}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                navigateTo('community');
+              }}
+              activeOpacity={0.8}
+              testID="tour-card"
+            >
+              <View style={styles.tourCardHeader}>
+                <View style={styles.tourCardTitleRow}>
+                  <Trophy size={16} color="#FFB74D" />
+                  <Text style={styles.tourCardTitle}>Tour</Text>
+                </View>
+                <ChevronRight size={16} color="#555" />
+              </View>
+              <View style={styles.tourDataGrid}>
+                <View style={styles.tourDataItem}>
+                  <View style={styles.tourDataIconWrap}>
+                    <Calendar size={13} color="#4FC3F7" />
+                  </View>
+                  <Text style={styles.tourDataValue}>4</Text>
+                  <Text style={styles.tourDataLabel}>Events Played</Text>
+                </View>
+                <View style={styles.tourDataItem}>
+                  <View style={styles.tourDataIconWrap}>
+                    <Award size={13} color="#FFB74D" />
+                  </View>
+                  <Text style={styles.tourDataValue}>2</Text>
+                  <Text style={styles.tourDataLabel}>Placements</Text>
+                </View>
+                <View style={styles.tourDataItem}>
+                  <View style={styles.tourDataIconWrap}>
+                    <Text style={styles.tourDataIconText}>$</Text>
+                  </View>
+                  <Text style={styles.tourDataValue}>8,500</Text>
+                  <Text style={styles.tourDataLabel}>Earnings</Text>
+                </View>
+                <View style={styles.tourDataItem}>
+                  <View style={styles.tourDataIconWrap}>
+                    <TrendingUp size={13} color="#1DB954" />
+                  </View>
+                  <Text style={styles.tourDataValue}>#12</Text>
+                  <Text style={styles.tourDataLabel}>Rank</Text>
+                </View>
+                <View style={styles.tourDataItem}>
+                  <View style={styles.tourDataIconWrap}>
+                    <MapPin size={13} color="#E040FB" />
+                  </View>
+                  <Text style={styles.tourDataValue} numberOfLines={1}>Bro Hof</Text>
+                  <Text style={styles.tourDataLabel}>Home Course</Text>
+                </View>
+                <View style={styles.tourDataItem}>
+                  <View style={styles.tourDataIconWrap}>
+                    <User size={13} color="#FF5252" />
+                  </View>
+                  <Text style={styles.tourDataValue}>24</Text>
+                  <Text style={styles.tourDataLabel}>Age</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
           </View>
 
         </Animated.View>
@@ -1248,6 +1310,70 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#444',
     marginTop: 12,
+  },
+
+  tourCard: {
+    backgroundColor: '#141414',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#FFB74D20',
+  },
+  tourCardHeader: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    marginBottom: 14,
+  },
+  tourCardTitleRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 7,
+  },
+  tourCardTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: '#FFB74D',
+  },
+  tourDataGrid: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    gap: 8,
+  },
+  tourDataItem: {
+    width: '30%' as any,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
+    alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: '#222',
+  },
+  tourDataIconWrap: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#0A0A0A',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginBottom: 5,
+  },
+  tourDataIconText: {
+    fontSize: 12,
+    fontWeight: '800' as const,
+    color: '#1DB954',
+  },
+  tourDataValue: {
+    fontSize: 14,
+    fontWeight: '800' as const,
+    color: '#EFEFEF',
+  },
+  tourDataLabel: {
+    fontSize: 9,
+    color: '#666',
+    marginTop: 2,
+    textAlign: 'center' as const,
   },
 
   avatarPreviewOverlay: {
