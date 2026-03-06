@@ -13,7 +13,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Settings, X, User, Newspaper, TrendingUp, Bluetooth, Trophy, QrCode, Swords, Clock, Target, Zap, Hash, Menu, Video } from 'lucide-react-native';
+import { Settings, X, User, Newspaper, TrendingUp, Bluetooth, Trophy, QrCode, Swords, Clock, Target, Zap, Hash, Menu, Video, BarChart2 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useProfile, UserProfile } from '@/contexts/ProfileContext';
@@ -854,7 +854,19 @@ export default function ProfileScreen() {
                 <X size={22} color="#999" />
               </TouchableOpacity>
               <Text style={styles.popupTitle}>Last Round</Text>
-              <View style={styles.popupHeaderSpacer} />
+              <TouchableOpacity
+                style={styles.popupStatsBtn}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setLastRoundPopupVisible(false);
+                  navigateTo('data-overview', { initialTab: 'stats', initialStatsSegment: 'round' });
+                }}
+                activeOpacity={0.7}
+                testID="round-stats-button"
+              >
+                <BarChart2 size={14} color="#4FC3F7" />
+                <Text style={styles.popupStatsBtnText}>Round Stats</Text>
+              </TouchableOpacity>
             </View>
             <ScrollView style={styles.popupScroll} showsVerticalScrollIndicator={false}>
               {lastRound ? (
@@ -941,7 +953,19 @@ export default function ProfileScreen() {
                 <X size={22} color="#999" />
               </TouchableOpacity>
               <Text style={styles.popupTitle}>Last Practice</Text>
-              <View style={styles.popupHeaderSpacer} />
+              <TouchableOpacity
+                style={styles.popupStatsBtn}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setLastPracticePopupVisible(false);
+                  navigateTo('data-overview', { initialTab: 'stats', initialStatsSegment: 'practice' });
+                }}
+                activeOpacity={0.7}
+                testID="practice-stats-button"
+              >
+                <BarChart2 size={14} color="#4FC3F7" />
+                <Text style={styles.popupStatsBtnText}>Practice Stats</Text>
+              </TouchableOpacity>
             </View>
             <ScrollView style={styles.popupScroll} showsVerticalScrollIndicator={false}>
               <PracticePopupContent />
@@ -1430,6 +1454,22 @@ const styles = StyleSheet.create({
   },
   popupHeaderSpacer: {
     width: 32,
+  },
+  popupStatsBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 5,
+    backgroundColor: '#4FC3F715',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#4FC3F730',
+  },
+  popupStatsBtnText: {
+    fontSize: 11,
+    fontWeight: '700' as const,
+    color: '#4FC3F7',
   },
   popupScroll: {
     paddingHorizontal: 20,

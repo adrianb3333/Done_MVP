@@ -133,7 +133,15 @@ function PracticeCategoryCard({ category }: { category: DrillCategoryStats }) {
 }
 
 function StatsContent() {
-  const [segment, setSegment] = useState<StatsSegment>('round');
+  const { dataOverviewInitialStatsSegment, clearDataOverviewInitialStatsSegment } = useAppNavigation();
+  const [segment, setSegment] = useState<StatsSegment>(dataOverviewInitialStatsSegment || 'round');
+
+  useEffect(() => {
+    if (dataOverviewInitialStatsSegment) {
+      setSegment(dataOverviewInitialStatsSegment);
+      clearDataOverviewInitialStatsSegment();
+    }
+  }, [dataOverviewInitialStatsSegment, clearDataOverviewInitialStatsSegment]);
 
   const roundQuery = useQuery({
     queryKey: ['allTimeRoundStats'],
