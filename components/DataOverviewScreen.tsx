@@ -15,7 +15,7 @@ import {
   Modal,
   Animated,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Menu, BarChart2, TrendingUp, Crosshair, List, Video, Plus, Columns2, Trash2, Flag, Target, Dumbbell, ChevronDown, HelpCircle, Filter, ChevronRight, MapPin, Search, Star } from 'lucide-react-native';
 import { useScrollHeader, ScrollHeaderProvider, useScrollHeaderContext } from '@/hooks/useScrollHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -1228,7 +1228,7 @@ function DetailsCoursesList() {
         console.log('[DetailsCourses] Error loading favorites:', e);
       }
     };
-    load();
+    void load();
   }, []);
 
   const toggleFavorite = useCallback(async (courseId: string) => {
@@ -1895,9 +1895,9 @@ function VideoContent() {
       setComparisonMode(finalComparisonMode);
       addSession(finalUris);
 
-      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.push('/modals/vid-modal');
-    } catch (err) {
+    } catch {
       Alert.alert('Error', 'Failed to pick video.');
     }
   }, [clearAll, setVideoUri, setComparisonMode, addSession, router]);
@@ -1964,9 +1964,12 @@ function VideoContent() {
   );
 }
 
+const HEADER_BAR_HEIGHT = 52;
+
 export default function DataOverviewScreen() {
   const [activeTab, setActiveTab] = useState<DataTab>('stats');
   const { openSidebar, navigateTo, dataOverviewInitialTab, clearDataOverviewInitialTab } = useAppNavigation();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (dataOverviewInitialTab && ['stats', 'sg', 'shots', 'details', 'video'].includes(dataOverviewInitialTab)) {
@@ -2004,7 +2007,7 @@ export default function DataOverviewScreen() {
         </SafeAreaView>
       </Animated.View>
 
-      <View style={styles.body}>
+      <View style={[styles.body, { paddingTop: insets.top + HEADER_BAR_HEIGHT }]}>
         <ScrollHeaderProvider value={scrollHeaderValue}>
           {renderContent()}
         </ScrollHeaderProvider>

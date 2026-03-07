@@ -14,7 +14,9 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Settings, X, User, Newspaper, TrendingUp, Bluetooth, Trophy, QrCode, Swords, Clock, Target, Zap, Hash, Menu, Video, BarChart2, MapPin, Award, Calendar, ChevronRight, Share2, Gift, Users, DollarSign, Star, Percent } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const PROFILE_HEADER_HEIGHT = 56;
 import * as Haptics from 'expo-haptics';
 import { useProfile, UserProfile } from '@/contexts/ProfileContext';
 import { useSession } from '@/contexts/SessionContext';
@@ -64,7 +66,7 @@ function PracticePopupContent() {
         setLoading(false);
       }
     };
-    fetchAll();
+    void fetchAll();
   }, []);
 
   if (loading) {
@@ -398,6 +400,7 @@ export default function ProfileScreen() {
 
   const { lastRound } = useSession();
   const { openSidebar, navigateTo } = useAppNavigation();
+  const insets = useSafeAreaInsets();
 
   const [followsModalVisible, setFollowsModalVisible] = useState<boolean>(false);
   const [followsTab, setFollowsTab] = useState<'hitta' | 'followers' | 'following'>('hitta');
@@ -430,7 +433,7 @@ export default function ProfileScreen() {
 
   const handleAvatarPress = useCallback(() => {
     console.log('[Profile] Opening avatar preview');
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setAvatarPreviewVisible(true);
   }, []);
 
@@ -438,12 +441,12 @@ export default function ProfileScreen() {
     console.log('[Profile] Opening follows modal, tab:', tab);
     setFollowsTab(tab);
     setFollowsModalVisible(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }, []);
 
   const handleToggleFollow = useCallback(async (targetUserId: string) => {
     console.log('[Profile] Toggle follow:', targetUserId);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
       await toggleFollow(targetUserId);
     } catch (err: any) {
@@ -453,7 +456,7 @@ export default function ProfileScreen() {
 
   const openProfileCard = useCallback((user: UserProfile) => {
     console.log('[Profile] Opening profile card for:', user.username);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setProfileCardUser(user);
     setProfileCardVisible(true);
   }, []);
@@ -595,7 +598,7 @@ export default function ProfileScreen() {
         </SafeAreaView>
       </Animated.View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} onScroll={onHeaderScroll} scrollEventThrottle={16}>
+      <ScrollView style={[styles.scrollView, { paddingTop: insets.top + PROFILE_HEADER_HEIGHT }]} showsVerticalScrollIndicator={false} onScroll={onHeaderScroll} scrollEventThrottle={16}>
         <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
 
           <View style={styles.profileTopRow}>
@@ -639,7 +642,7 @@ export default function ProfileScreen() {
               <TouchableOpacity
                 style={styles.videoNavBtn}
                 onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   navigateTo('data-overview', { initialTab: 'video' });
                 }}
                 activeOpacity={0.8}
@@ -653,7 +656,7 @@ export default function ProfileScreen() {
               <TouchableOpacity
                 style={styles.goldBtn}
                 onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   router.push('/modals/handicap-modal' as any);
                 }}
                 activeOpacity={0.8}
@@ -666,7 +669,7 @@ export default function ProfileScreen() {
               <TouchableOpacity
                 style={styles.qrBtn}
                 onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   router.push('/modals/qr-modal' as any);
                 }}
                 activeOpacity={0.8}
@@ -678,7 +681,7 @@ export default function ProfileScreen() {
               <TouchableOpacity
                 style={styles.compareBtn}
                 onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   router.push('/modals/compare-modal' as any);
                 }}
                 activeOpacity={0.8}
@@ -701,7 +704,7 @@ export default function ProfileScreen() {
             <TouchableOpacity
               style={styles.roundCard}
               onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 setLastRoundPopupVisible(true);
               }}
               activeOpacity={0.8}
@@ -729,7 +732,7 @@ export default function ProfileScreen() {
             <TouchableOpacity
               style={styles.practiceCard}
               onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 setLastPracticePopupVisible(true);
               }}
               activeOpacity={0.8}
@@ -741,7 +744,7 @@ export default function ProfileScreen() {
             <TouchableOpacity
               style={styles.tourCard}
               onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 navigateTo('community');
               }}
               activeOpacity={0.8}
@@ -803,7 +806,7 @@ export default function ProfileScreen() {
             <TouchableOpacity
               style={styles.affiliateCard}
               onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 navigateTo('community', { communityTab: 'affiliate' });
               }}
               activeOpacity={0.8}
@@ -985,7 +988,7 @@ export default function ProfileScreen() {
               <TouchableOpacity
                 style={styles.popupStatsBtn}
                 onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setLastRoundPopupVisible(false);
                   navigateTo('data-overview', { initialTab: 'stats', initialStatsSegment: 'round' });
                 }}
@@ -1084,7 +1087,7 @@ export default function ProfileScreen() {
               <TouchableOpacity
                 style={styles.popupStatsBtn}
                 onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setLastPracticePopupVisible(false);
                   navigateTo('data-overview', { initialTab: 'stats', initialStatsSegment: 'practice' });
                 }}

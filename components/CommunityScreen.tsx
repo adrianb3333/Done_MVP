@@ -9,7 +9,7 @@ import {
   Share,
   Modal,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Menu,
   Trophy,
@@ -1396,10 +1396,13 @@ const entStyles = StyleSheet.create({
   },
 });
 
+const HEADER_BAR_HEIGHT = 52;
+
 export default function CommunityScreen() {
   const [activeTab, setActiveTab] = useState<CommunityTab>('tour');
   const [selectedEvent, setSelectedEvent] = useState<TourEvent | null>(null);
   const { openSidebar, navigateTo, communityInitialTab, clearCommunityInitialTab } = useAppNavigation();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (communityInitialTab && (communityInitialTab === 'tour' || communityInitialTab === 'affiliate' || communityInitialTab === 'entertainment')) {
@@ -1448,7 +1451,7 @@ export default function CommunityScreen() {
         </SafeAreaView>
       </Animated.View>
 
-      <View style={styles.body}>
+      <View style={[styles.body, { paddingTop: insets.top + HEADER_BAR_HEIGHT }]}>
         <ScrollHeaderProvider value={scrollHeaderValue}>
           {renderContent()}
         </ScrollHeaderProvider>
