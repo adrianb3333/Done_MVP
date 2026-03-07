@@ -13,7 +13,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Settings, X, User, Newspaper, TrendingUp, Bluetooth, Trophy, QrCode, Swords, Clock, Target, Zap, Hash, Menu, Video, BarChart2, MapPin, Award, Calendar, ChevronRight, Share2, Gift, Users, DollarSign, Star, Percent } from 'lucide-react-native';
+import { HelpCircle, X, User, Newspaper, TrendingUp, Bluetooth, Trophy, QrCode, Swords, Clock, Target, Zap, Hash, Menu, BarChart2, MapPin, Award, Calendar, ChevronRight, Share2, Gift, Users, DollarSign, Star, Percent, Settings, Camera } from 'lucide-react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const PROFILE_HEADER_HEIGHT = 56;
@@ -409,6 +409,8 @@ export default function ProfileScreen() {
   const [lastPracticePopupVisible, setLastPracticePopupVisible] = useState<boolean>(false);
   const [profileCardUser, setProfileCardUser] = useState<UserProfile | null>(null);
   const [profileCardVisible, setProfileCardVisible] = useState<boolean>(false);
+  const [helpMenuVisible, setHelpMenuVisible] = useState<boolean>(false);
+  const helpMenuAnim = useRef(new Animated.Value(0)).current;
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
@@ -536,6 +538,18 @@ export default function ProfileScreen() {
     return '#FF5252';
   };
 
+  const toggleHelpMenu = useCallback(() => {
+    const toValue = helpMenuVisible ? 0 : 1;
+    Animated.spring(helpMenuAnim, {
+      toValue,
+      friction: 12,
+      tension: 60,
+      useNativeDriver: true,
+    }).start();
+    setHelpMenuVisible(!helpMenuVisible);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }, [helpMenuVisible, helpMenuAnim]);
+
   const { headerTranslateY, onScroll: onHeaderScroll } = useScrollHeader(56);
 
   if (isLoading) {
@@ -563,46 +577,66 @@ export default function ProfileScreen() {
           </TouchableOpacity>
           <View style={styles.headerIcons}>
             <TouchableOpacity
-              onPress={() => router.push('/modals/pair-impact-modal' as any)}
+              onPress={toggleHelpMenu}
               style={styles.headerIconBtn}
               activeOpacity={0.7}
-              testID="pair-impact-button"
+              testID="help-menu-button"
             >
-              <Bluetooth size={20} color="#B0B0B0" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => router.push('/modals/recap-modal' as any)}
-              style={styles.headerIconBtn}
-              activeOpacity={0.7}
-              testID="recap-button"
-            >
-              <TrendingUp size={20} color="#B0B0B0" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => router.push('/modals/news-modal' as any)}
-              style={styles.headerIconBtn}
-              activeOpacity={0.7}
-              testID="news-button"
-            >
-              <Newspaper size={20} color="#B0B0B0" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => router.push('/settings/settings1' as any)}
-              style={styles.headerIconBtn}
-              testID="settings-button"
-            >
-              <Settings size={22} color="#B0B0B0" />
+              <HelpCircle size={22} color="#B0B0B0" />
             </TouchableOpacity>
           </View>
         </View>
         </SafeAreaView>
       </Animated.View>
 
+      {helpMenuVisible && (
+        <Animated.View style={[
+          styles.helpMenuOverlay,
+          { paddingTop: insets.top + PROFILE_HEADER_HEIGHT + 4, opacity: helpMenuAnim, transform: [{ scale: helpMenuAnim.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1] }) }] },
+        ]}>
+          <TouchableOpacity style={styles.helpMenuBackdrop} activeOpacity={1} onPress={toggleHelpMenu} />
+          <View style={styles.helpMenu}>
+            <TouchableOpacity
+              style={styles.helpMenuItem}
+              onPress={() => { toggleHelpMenu(); router.push('/settings/settings1' as any); }}
+              activeOpacity={0.7}
+            >
+              <Settings size={18} color="#B0B0B0" />
+              <Text style={styles.helpMenuText}>Settings</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.helpMenuItem}
+              onPress={() => { toggleHelpMenu(); router.push('/modals/news-modal' as any); }}
+              activeOpacity={0.7}
+            >
+              <Newspaper size={18} color="#B0B0B0" />
+              <Text style={styles.helpMenuText}>News</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.helpMenuItem}
+              onPress={() => { toggleHelpMenu(); router.push('/modals/recap-modal' as any); }}
+              activeOpacity={0.7}
+            >
+              <TrendingUp size={18} color="#B0B0B0" />
+              <Text style={styles.helpMenuText}>Weekly Summary</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.helpMenuItem}
+              onPress={() => { toggleHelpMenu(); router.push('/modals/pair-impact-modal' as any); }}
+              activeOpacity={0.7}
+            >
+              <Bluetooth size={18} color="#B0B0B0" />
+              <Text style={styles.helpMenuText}>Pair Impact</Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      )}
+
       <ScrollView style={[styles.scrollView, { paddingTop: insets.top + PROFILE_HEADER_HEIGHT }]} showsVerticalScrollIndicator={false} onScroll={onHeaderScroll} scrollEventThrottle={16}>
         <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
 
-          <View style={styles.profileTopRow}>
-            <View style={styles.avatarAndName}>
+          <View style={styles.profileTopSection}>
+            <View style={styles.avatarSection}>
               <TouchableOpacity
                 onPress={handleAvatarPress}
                 style={styles.avatarTouchable}
@@ -617,78 +651,83 @@ export default function ProfileScreen() {
                   </View>
                 )}
               </TouchableOpacity>
-              <Text style={styles.usernameText}>{profile?.username ?? 'user'}</Text>
+              <View style={styles.followRow}>
+                <TouchableOpacity
+                  style={styles.followStatBtn}
+                  onPress={() => openFollowsModal('followers')}
+                  activeOpacity={0.7}
+                  testID="followers-button"
+                >
+                  <Text style={styles.followStatNumber}>{followersCount}</Text>
+                  <Text style={styles.followStatLabel}>följare</Text>
+                </TouchableOpacity>
+                <View style={styles.followDivider} />
+                <TouchableOpacity
+                  style={styles.followStatBtn}
+                  onPress={() => openFollowsModal('following')}
+                  activeOpacity={0.7}
+                  testID="following-button"
+                >
+                  <Text style={styles.followStatNumber}>{followingCount}</Text>
+                  <Text style={styles.followStatLabel}>följer</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
-            <View style={styles.statsColumn}>
-              <TouchableOpacity
-                style={styles.statItemSmall}
-                onPress={() => openFollowsModal('followers')}
-                activeOpacity={0.7}
-                testID="followers-button"
-              >
-                <Text style={styles.statNumberSmall}>{followersCount}</Text>
-                <Text style={styles.statLabelSmall}>följare</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.statItemSmall}
-                onPress={() => openFollowsModal('following')}
-                activeOpacity={0.7}
-                testID="following-button"
-              >
-                <Text style={styles.statNumberSmall}>{followingCount}</Text>
-                <Text style={styles.statLabelSmall}>följer</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.videoNavBtn}
-                onPress={() => {
-                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  navigateTo('data-overview', { initialTab: 'video' });
-                }}
-                activeOpacity={0.8}
-                testID="video-nav-button"
-              >
-                <Video size={18} color="#4FC3F7" />
-              </TouchableOpacity>
-            </View>
+            <View style={styles.actionGrid}>
+              <View style={styles.actionGridRow}>
+                <TouchableOpacity
+                  style={styles.gridBtn}
+                  onPress={() => {
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    router.push('/modals/handicap-modal' as any);
+                  }}
+                  activeOpacity={0.8}
+                  testID="handicap-button"
+                >
+                  <Trophy size={16} color="#D4AF37" />
+                  <Text style={styles.gridBtnText}>{randomHcp}</Text>
+                </TouchableOpacity>
 
-            <View style={styles.actionButtons}>
-              <TouchableOpacity
-                style={styles.goldBtn}
-                onPress={() => {
-                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push('/modals/handicap-modal' as any);
-                }}
-                activeOpacity={0.8}
-                testID="handicap-button"
-              >
-                <Trophy size={14} color="#D4AF37" />
-                <Text style={styles.goldBtnText}>{randomHcp}</Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.gridBtn}
+                  onPress={() => {
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    router.push('/modals/qr-modal' as any);
+                  }}
+                  activeOpacity={0.8}
+                  testID="qr-button"
+                >
+                  <QrCode size={16} color="#EFEFEF" />
+                  <Text style={styles.gridBtnLabel}>QR</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.actionGridRow}>
+                <TouchableOpacity
+                  style={styles.gridBtn}
+                  onPress={() => {
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    navigateTo('data-overview', { initialTab: 'video' });
+                  }}
+                  activeOpacity={0.8}
+                  testID="camera-button"
+                >
+                  <Camera size={16} color="#4FC3F7" />
+                  <Text style={styles.gridBtnLabel}>Video</Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.qrBtn}
-                onPress={() => {
-                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push('/modals/qr-modal' as any);
-                }}
-                activeOpacity={0.8}
-                testID="qr-button"
-              >
-                <QrCode size={14} color="#EFEFEF" />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.compareBtn}
-                onPress={() => {
-                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push('/modals/compare-modal' as any);
-                }}
-                activeOpacity={0.8}
-                testID="compare-button"
-              >
-                <Swords size={14} color="#fff" />
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.gridBtn, styles.gridBtnCompare]}
+                  onPress={() => {
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    router.push('/modals/compare-modal' as any);
+                  }}
+                  activeOpacity={0.8}
+                  testID="compare-button"
+                >
+                  <Swords size={16} color="#FF5252" />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
 
@@ -1168,13 +1207,13 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
 
-  profileTopRow: {
+  profileTopSection: {
     flexDirection: 'row' as const,
     alignItems: 'flex-start' as const,
     marginBottom: 24,
-    gap: 12,
+    gap: 16,
   },
-  avatarAndName: {
+  avatarSection: {
     alignItems: 'center' as const,
   },
   avatarTouchable: {
@@ -1202,90 +1241,98 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: '#1DB954',
   },
-  usernameText: {
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: '#B0B0B0',
-    marginTop: 6,
-    letterSpacing: 0.2,
-    maxWidth: 90,
-    textAlign: 'center' as const,
+  followRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    marginTop: 10,
+    gap: 0,
   },
-  statsColumn: {
-    gap: 8,
-    justifyContent: 'center' as const,
-  },
-  statItemSmall: {
-    backgroundColor: '#141414',
-    borderRadius: 10,
-    paddingVertical: 6,
+  followStatBtn: {
+    alignItems: 'center' as const,
     paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: '#1A1A1A',
   },
-  statNumberSmall: {
-    fontSize: 14,
+  followStatNumber: {
+    fontSize: 15,
     fontWeight: '800' as const,
     color: '#EFEFEF',
   },
-  statLabelSmall: {
-    fontSize: 9,
+  followStatLabel: {
+    fontSize: 10,
     color: '#666',
     marginTop: 1,
   },
-  videoNavBtn: {
-    backgroundColor: '#141414',
-    borderRadius: 10,
-    paddingVertical: 8,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    borderWidth: 1,
-    borderColor: '#4FC3F720',
+  followDivider: {
+    width: 1,
+    height: 20,
+    backgroundColor: '#333',
   },
-
-  actionButtons: {
-    flexDirection: 'row' as const,
-    gap: 6,
-    alignItems: 'flex-start' as const,
-    justifyContent: 'flex-end' as const,
+  actionGrid: {
     flex: 1,
+    gap: 10,
+    justifyContent: 'flex-start' as const,
   },
-  goldBtn: {
-    flexDirection: 'column' as const,
+  actionGridRow: {
+    flexDirection: 'row' as const,
+    gap: 10,
+  },
+  gridBtn: {
+    flex: 1,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    gap: 3,
+    gap: 4,
     backgroundColor: '#141414',
-    borderRadius: 10,
-    width: 44,
-    height: 44,
-    borderWidth: 1,
-    borderColor: '#D4AF3740',
-  },
-  goldBtnText: {
-    fontSize: 10,
-    fontWeight: '800' as const,
-    color: '#D4AF37',
-  },
-  qrBtn: {
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    backgroundColor: '#141414',
-    borderRadius: 10,
-    width: 44,
-    height: 44,
+    borderRadius: 12,
+    paddingVertical: 14,
     borderWidth: 1,
     borderColor: '#1A1A1A',
   },
-  compareBtn: {
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    backgroundColor: '#FF444420',
-    borderRadius: 10,
-    width: 44,
-    height: 44,
+  gridBtnCompare: {
+    backgroundColor: '#FF444415',
+    borderColor: '#FF444430',
+  },
+  gridBtnText: {
+    fontSize: 11,
+    fontWeight: '800' as const,
+    color: '#D4AF37',
+  },
+  gridBtnLabel: {
+    fontSize: 10,
+    fontWeight: '600' as const,
+    color: '#888',
+  },
+  helpMenuOverlay: {
+    position: 'absolute' as const,
+    top: 0,
+    right: 20,
+    zIndex: 200,
+  },
+  helpMenuBackdrop: {
+    position: 'absolute' as const,
+    top: -200,
+    left: -400,
+    right: -400,
+    bottom: -2000,
+  },
+  helpMenu: {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 14,
+    padding: 6,
+    width: 200,
     borderWidth: 1,
-    borderColor: '#FF444440',
+    borderColor: '#2A2A2A',
+  },
+  helpMenuItem: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+  },
+  helpMenuText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#EFEFEF',
   },
 
   liveSection: {

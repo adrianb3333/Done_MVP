@@ -151,8 +151,8 @@ export default function OnboardingOverlay({ visible, onDismiss }: OnboardingOver
     >
       <View style={styles.overlay}>
         <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-          <View style={styles.topBarLeft} />
-          <Text style={styles.overlayTitle}>Welcome to MyGame</Text>
+          <Image source={require('@/assets/images/golferscrib-logo.png')} style={styles.topBarLogo} resizeMode="contain" />
+          <View style={{ flex: 1 }} />
           <TouchableOpacity onPress={onDismiss} style={styles.skipBtn} activeOpacity={0.7}>
             <Text style={styles.skipText}>Skip</Text>
             <X size={18} color="#999" />
@@ -218,14 +218,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 8,
   },
-  topBarLeft: {
-    width: 70,
-  },
-  overlayTitle: {
-    fontSize: 17,
-    fontWeight: '700' as const,
-    color: '#FFFFFF',
-    letterSpacing: 0.3,
+  topBarLogo: {
+    width: 140,
+    height: 36,
   },
   skipBtn: {
     flexDirection: 'row' as const,

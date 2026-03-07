@@ -260,12 +260,12 @@ const statsStyles = StyleSheet.create({
     fontWeight: '500' as const,
   },
   categoryCard: {
-    backgroundColor: '#141C18',
+    backgroundColor: '#111111',
     borderRadius: 14,
     padding: 16,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#243028',
+    borderColor: '#1A1A1A',
   },
   categoryHeader: {
     flexDirection: 'row' as const,
@@ -291,12 +291,12 @@ const statsStyles = StyleSheet.create({
     color: '#F5F7F6',
   },
   categoryBadge: {
-    backgroundColor: '#0F1714',
+    backgroundColor: '#0A0A0A',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderWidth: 1,
-    borderColor: '#1C2922',
+    borderColor: '#1A1A1A',
   },
   categoryBadgeText: {
     fontSize: 11,
@@ -318,7 +318,7 @@ const statsStyles = StyleSheet.create({
     flex: 1,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#0F1714',
+    backgroundColor: '#0A0A0A',
   },
   categoryAvgBar: {
     height: 8,
@@ -336,7 +336,7 @@ const statsStyles = StyleSheet.create({
     justifyContent: 'space-between' as const,
     paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: '#1C2922',
+    borderTopColor: '#1A1A1A',
   },
   drillNameWrap: {
     flex: 1,
@@ -376,7 +376,7 @@ const statsStyles = StyleSheet.create({
   drillScoreDivider: {
     width: 1,
     height: 28,
-    backgroundColor: '#243028',
+    backgroundColor: '#1A1A1A',
   },
   drillNoData: {
     fontSize: 16,
@@ -2001,7 +2001,7 @@ export default function DataOverviewScreen() {
             </TouchableOpacity>
             <Text style={styles.headerTitle}>{tabs.find(t => t.key === activeTab)?.label ?? 'Stats'}</Text>
             <TouchableOpacity onPress={() => navigateTo('mygame')} style={styles.menuBtn} activeOpacity={0.7}>
-              <Image source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/d92ywde7ucn1q2si6dbb7' }} style={styles.golferIcon} />
+              <Image source={require('@/assets/images/golferscrib-logo.png')} style={styles.logoIcon} resizeMode="contain" />
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -2070,10 +2070,9 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
-  golferIcon: {
-    width: 28,
-    height: 28,
-    tintColor: '#F5F7F6',
+  logoIcon: {
+    width: 32,
+    height: 20,
   },
   headerTitle: {
     fontSize: 18,

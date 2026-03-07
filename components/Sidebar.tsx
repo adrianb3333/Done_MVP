@@ -7,8 +7,9 @@ import {
   Modal,
   Animated,
   Dimensions,
+  Image,
 } from 'react-native';
-import { X, Gamepad2, BarChart3, Users } from 'lucide-react-native';
+import { X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppNavigation, AppSection } from '@/contexts/AppNavigationContext';
 
@@ -26,19 +27,19 @@ const sections: SidebarItem[] = [
   {
     key: 'mygame',
     label: 'MyGame',
-    icon: <Gamepad2 size={20} color="#00E676" />,
+    icon: null,
     subItems: ['Profile', 'PLAY', 'PRACTICE'],
   },
   {
     key: 'data-overview',
     label: 'Data Overview',
-    icon: <BarChart3 size={20} color="#4FC3F7" />,
+    icon: null,
     subItems: ['Stats', 'SG', 'Shots', 'Details', 'Video'],
   },
   {
     key: 'community',
     label: 'Community',
-    icon: <Users size={20} color="#FFB74D" />,
+    icon: null,
     subItems: ['Tour', 'Affiliate', 'Entertainment'],
   },
 ];
@@ -113,7 +114,7 @@ export default function Sidebar() {
           ]}
         >
           <View style={styles.sidebarHeader}>
-            <Text style={styles.sidebarTitle}>Navigation</Text>
+            <Image source={require('@/assets/images/golferscrib-logo.png')} style={styles.sidebarLogo} resizeMode="contain" />
             <TouchableOpacity onPress={closeSidebar} style={styles.closeBtn} activeOpacity={0.7}>
               <X size={22} color="#8A9B90" />
             </TouchableOpacity>
@@ -130,18 +131,10 @@ export default function Sidebar() {
                   activeOpacity={0.7}
                 >
                   <View style={styles.sectionRow}>
-                    <View style={[styles.sectionIconWrap, isActive && styles.sectionIconWrapActive]}>
-                      {section.icon}
-                    </View>
                     <View style={styles.sectionInfo}>
                       <Text style={[styles.sectionLabel, isActive && styles.sectionLabelActive]}>
                         {section.label}
                       </Text>
-                      {section.subItems && (
-                        <Text style={styles.sectionSubs}>
-                          {section.subItems.join(' · ')}
-                        </Text>
-                      )}
                     </View>
                   </View>
                   {isActive && <View style={styles.activeIndicator} />}
@@ -185,11 +178,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 32,
   },
-  sidebarTitle: {
-    fontSize: 22,
-    fontWeight: '800' as const,
-    color: '#F5F7F6',
-    letterSpacing: 0.3,
+  sidebarLogo: {
+    width: 140,
+    height: 36,
   },
   closeBtn: {
     padding: 6,
@@ -217,20 +208,7 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 14,
   },
-  sectionIconWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: '#141C18',
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    borderWidth: 1,
-    borderColor: '#243028',
-  },
-  sectionIconWrapActive: {
-    backgroundColor: '#1A2520',
-    borderColor: '#00E67630',
-  },
+
   sectionInfo: {
     flex: 1,
   },
@@ -242,11 +220,7 @@ const styles = StyleSheet.create({
   sectionLabelActive: {
     color: '#F5F7F6',
   },
-  sectionSubs: {
-    fontSize: 12,
-    color: '#5A6B60',
-    marginTop: 3,
-  },
+
   activeIndicator: {
     width: 6,
     height: 6,

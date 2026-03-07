@@ -1445,7 +1445,7 @@ export default function CommunityScreen() {
             </TouchableOpacity>
             <Text style={styles.headerTitle}>{tabs.find(t => t.key === activeTab)?.label ?? 'Community'}</Text>
             <TouchableOpacity onPress={() => navigateTo('mygame')} style={styles.menuBtn} activeOpacity={0.7}>
-              <Image source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/d92ywde7ucn1q2si6dbb7' }} style={styles.golferIcon} />
+              <Image source={require('@/assets/images/golferscrib-logo.png')} style={styles.logoIcon} resizeMode="contain" />
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -1516,10 +1516,9 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
-  golferIcon: {
-    width: 28,
-    height: 28,
-    tintColor: '#F5F7F6',
+  logoIcon: {
+    width: 32,
+    height: 20,
   },
   headerTitle: {
     fontSize: 18,

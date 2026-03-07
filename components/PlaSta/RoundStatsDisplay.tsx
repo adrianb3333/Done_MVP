@@ -255,14 +255,14 @@ const styles = StyleSheet.create({
   },
   heroRow: {
     flexDirection: 'row' as const,
-    backgroundColor: '#141C18',
+    backgroundColor: '#111111',
     borderRadius: 14,
     padding: 20,
     marginBottom: 16,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     borderWidth: 1,
-    borderColor: '#243028',
+    borderColor: '#1A1A1A',
   },
   heroItem: {
     flex: 1,
@@ -290,15 +290,15 @@ const styles = StyleSheet.create({
   heroDivider: {
     width: 1,
     height: 50,
-    backgroundColor: '#2E4038',
+    backgroundColor: '#333',
   },
   sectionCard: {
-    backgroundColor: '#141C18',
+    backgroundColor: '#111111',
     borderRadius: 14,
     padding: 16,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#243028',
+    borderColor: '#1A1A1A',
   },
   sectionTitle: {
     fontSize: 18,
@@ -511,12 +511,12 @@ const styles = StyleSheet.create({
   },
   statBox: {
     flex: 1,
-    backgroundColor: '#0F1714',
+    backgroundColor: '#0A0A0A',
     borderRadius: 12,
     padding: 14,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#1C2922',
+    borderColor: '#1A1A1A',
   },
   statBoxWide: {
     flex: 1,
