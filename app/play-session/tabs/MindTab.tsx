@@ -11,9 +11,8 @@ import GeneralModal from "@/app/modals/general-modal";
 import PreRoundModal from "@/app/modals/pre-round-modal";
 import DistancesModal from "@/app/modals/distances-modal";
 import StrokesGainedModal from "@/app/modals/strokesgained-modal";
-import ShortGameModal from "@/app/modals/shortgame-modal";
 
-type ModalKey = 'swing-thoughts' | 'club' | 'mental-game' | 'golf-iq' | 'general' | 'pre-round' | 'distances' | 'strokesgained' | 'shortgame' | null;
+type ModalKey = 'swing-thoughts' | 'club' | 'mental-game' | 'golf-iq' | 'general' | 'pre-round' | 'distances' | 'strokesgained' | null;
 
 const NOTES_DATA: { title: string; description: string; modalKey: ModalKey }[] = [
   { title: "Swing Thoughts", description: "Describe Every Detail Of Your Swing", modalKey: "swing-thoughts" },
@@ -32,7 +31,6 @@ const PREPARATION_DATA = {
 const CLUB_DATA_BUTTONS: { title: string; modalKey: ModalKey }[] = [
   { title: "Distances", modalKey: "distances" },
   { title: "Strokes Gained", modalKey: "strokesgained" },
-  { title: "Short Game", modalKey: "shortgame" },
 ];
 
 export default function MindTab() {
@@ -50,7 +48,6 @@ export default function MindTab() {
       case 'pre-round': return <PreRoundModal onClose={closeModal} />;
       case 'distances': return <DistancesModal onClose={closeModal} />;
       case 'strokesgained': return <StrokesGainedModal onClose={closeModal} />;
-      case 'shortgame': return <ShortGameModal onClose={closeModal} />;
       default: return null;
     }
   };
@@ -141,7 +138,7 @@ const styles = StyleSheet.create({
   clubDataHeader: {
     fontSize: 18,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#1DB954',
   },
   clubDataSubtext: {
     fontSize: 11,
@@ -154,7 +151,7 @@ const styles = StyleSheet.create({
   },
   clubDataButton: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#111111',
     borderRadius: 10,
     paddingVertical: 14,
     paddingHorizontal: 10,
@@ -162,12 +159,12 @@ const styles = StyleSheet.create({
   clubDataButtonTitle: {
     fontSize: 13,
     fontWeight: '800' as const,
-    color: '#8B1A1A',
+    color: '#7CFC7C',
   },
   cardContainer: { marginBottom: 12 },
   card: { width: '100%' },
   cardContent: { flexDirection: 'row' as const, alignItems: 'center' as const, padding: 16 },
   textContainer: { flex: 1, gap: 4 },
-  cardTitle: { fontSize: 18, fontWeight: "700" as const, color: '#FFCC00' },
+  cardTitle: { fontSize: 18, fontWeight: "700" as const, color: '#7CFC7C' },
   cardDescription: { fontSize: 14, color: '#FFFFFF', lineHeight: 18 },
 });

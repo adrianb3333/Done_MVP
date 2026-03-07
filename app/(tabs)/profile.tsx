@@ -732,8 +732,6 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <View style={styles.liveDivider} />
-
           <View style={styles.liveSection}>
             <Text style={styles.liveSectionTitle}>LIVE</Text>
             <View style={styles.liveEmptyState}>
