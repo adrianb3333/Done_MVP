@@ -214,7 +214,7 @@ function EventDetailScreen({
                 key={tab.key}
                 style={edStyles.tab}
                 onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setActiveTab(tab.key);
                 }}
                 activeOpacity={0.7}
@@ -431,7 +431,7 @@ function TourContent({ onOpenEvent }: { onOpenEvent: (event: TourEvent) => void 
 
   const handleEventPress = useCallback((event: TourEvent) => {
     console.log('[Tour] Opening event:', event.eventName);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onOpenEvent(event);
   }, [onOpenEvent]);
 
@@ -493,7 +493,7 @@ function TourContent({ onOpenEvent }: { onOpenEvent: (event: TourEvent) => void 
         activeOpacity={0.8}
         onPress={() => {
           console.log('[Tour] JOIN Tour pressed');
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }}
       >
         <Text style={tourStyles.joinButtonText}>JOIN Tour</Text>
@@ -781,7 +781,7 @@ function GoalPickerModal({
                 current === opt && affStyles.modalOptionActive,
               ]}
               onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 onSelect(opt);
                 onClose();
               }}
@@ -810,14 +810,13 @@ function AffiliateContent() {
 
   const handleOpenPicker = useCallback((source: 'count' | 'perks') => {
     console.log('[Affiliate] Opening picker from:', source);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setPickerVisible(true);
   }, []);
 
   const handleShare = useCallback(async () => {
     console.log('[Affiliate] Sharing discount code:', discountCode);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
       await Share.share({ message: `Use my discount code: ${discountCode}` });
     } catch (e) {
@@ -827,7 +826,7 @@ function AffiliateContent() {
 
   const handleItemPress = useCallback((itemTitle: string, categoryLabel: string) => {
     console.log('[Affiliate] Item pressed:', itemTitle, 'category:', categoryLabel);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedItem({ itemTitle, categoryLabel });
   }, []);
 
@@ -1210,7 +1209,7 @@ function EntertainmentContent() {
 
   const handleSocialPress = useCallback(async (nativeUrl: string, webUrl: string) => {
     console.log('[Entertainment] Opening social:', webUrl);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
       if (Platform.OS !== 'web') {
         const supported = await Linking.canOpenURL(nativeUrl);
@@ -1228,7 +1227,7 @@ function EntertainmentContent() {
 
   const handleSectionPress = useCallback((section: EntertainmentSection) => {
     console.log('[Entertainment] Opening section:', section);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setOpenSection(section);
   }, []);
 
@@ -1423,7 +1422,7 @@ export default function CommunityScreen() {
           <TouchableOpacity onPress={openSidebar} style={styles.menuBtn} activeOpacity={0.7}>
             <Menu size={24} color="#F5F7F6" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Community</Text>
+          <Text style={styles.headerTitle}>{tabs.find(t => t.key === activeTab)?.label ?? 'Community'}</Text>
           <TouchableOpacity onPress={() => navigateTo('mygame')} style={styles.menuBtn} activeOpacity={0.7}>
             <Image source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/d92ywde7ucn1q2si6dbb7' }} style={styles.golferIcon} />
           </TouchableOpacity>

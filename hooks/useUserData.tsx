@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
@@ -93,7 +93,13 @@ export const [UserDataProvider, useUserData] = createContextHook(() => {
         }
 
         // 2. Load from Supabase (Source of truth)
-        const { data: { session } } = await supabase.auth.getSession();
+        let session = null;
+        try {
+          const sessionResult = await supabase.auth.getSession();
+          session = sessionResult.data?.session;
+        } catch (sessionErr) {
+          console.warn('[useUserData] Could not get session:', sessionErr);
+        }
         if (session?.user) {
           console.log('[useUserData] Fetching from Supabase for user:', session.user.id);
           const { data, error } = await supabase
@@ -102,8 +108,8 @@ export const [UserDataProvider, useUserData] = createContextHook(() => {
             .eq('user_id', session.user.id)
             .single();
 
-          if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows found", which is fine
-            console.error('[useUserData] Supabase fetch error:', error);
+          if (error && error.code !== 'PGRST116') {
+            console.warn('[useUserData] Supabase fetch error (non-critical):', error?.message || JSON.stringify(error));
           }
 
           if (data?.full_data) {
@@ -120,7 +126,7 @@ export const [UserDataProvider, useUserData] = createContextHook(() => {
       }
     };
 
-    loadData();
+    void loadData();
   }, []);
 
   // --- Internal Sync Pipeline ---
@@ -131,7 +137,13 @@ export const [UserDataProvider, useUserData] = createContextHook(() => {
       console.log('[useUserData] Saved to local storage');
 
       // Attempt to sync to Supabase if logged in
-      const { data: { session } } = await supabase.auth.getSession();
+      let session = null;
+      try {
+        const sessionResult = await supabase.auth.getSession();
+        session = sessionResult.data?.session;
+      } catch (sessionErr) {
+        console.warn('[useUserData] Could not get session for sync:', sessionErr);
+      }
       if (session?.user) {
         const { error } = await supabase
           .from('user_profiles')
@@ -141,8 +153,11 @@ export const [UserDataProvider, useUserData] = createContextHook(() => {
             updated_at: new Date().toISOString(),
           });
 
-        if (error) throw error;
-        console.log('[useUserData] Synced to Supabase');
+        if (error) {
+          console.warn('[useUserData] Supabase sync error (non-critical):', error?.message || JSON.stringify(error));
+        } else {
+          console.log('[useUserData] Synced to Supabase');
+        }
       }
     } catch (error) {
       console.error('[useUserData] Sync error:', error);
@@ -158,7 +173,7 @@ export const [UserDataProvider, useUserData] = createContextHook(() => {
         ...prev,
         profile: { ...prev.profile, ...updates },
       };
-      persistData(newData);
+      void persistData(newData);
       return newData;
     });
   }, [persistData]);
@@ -167,7 +182,7 @@ export const [UserDataProvider, useUserData] = createContextHook(() => {
     console.log('[useUserData] Updating swing thoughts');
     setUserData(prev => {
       const newData = { ...prev, swingThoughts: thoughts };
-      persistData(newData);
+      void persistData(newData);
       return newData;
     });
   }, [persistData]);
@@ -179,7 +194,7 @@ export const [UserDataProvider, useUserData] = createContextHook(() => {
         ...prev,
         clubNotes: { ...prev.clubNotes, [club]: notes },
       };
-      persistData(newData);
+      void persistData(newData);
       return newData;
     });
   }, [persistData]);
@@ -188,7 +203,7 @@ export const [UserDataProvider, useUserData] = createContextHook(() => {
     console.log('[useUserData] Updating mental game');
     setUserData(prev => {
       const newData = { ...prev, mentalGame: { preShotRoutine } };
-      persistData(newData);
+      void persistData(newData);
       return newData;
     });
   }, [persistData]);
@@ -200,7 +215,7 @@ export const [UserDataProvider, useUserData] = createContextHook(() => {
         ...prev,
         golfIQ: { ...prev.golfIQ, [key]: value },
       };
-      persistData(newData);
+      void persistData(newData);
       return newData;
     });
   }, [persistData]);
@@ -209,7 +224,7 @@ export const [UserDataProvider, useUserData] = createContextHook(() => {
     console.log('[useUserData] Updating general focuses:', focuses.length);
     setUserData(prev => {
       const newData = { ...prev, general: { focuses } };
-      persistData(newData);
+      void persistData(newData);
       return newData;
     });
   }, [persistData]);
@@ -218,12 +233,12 @@ export const [UserDataProvider, useUserData] = createContextHook(() => {
     console.log('[useUserData] Updating pre-round routine');
     setUserData(prev => {
       const newData = { ...prev, preRound: { routine } };
-      persistData(newData);
+      void persistData(newData);
       return newData;
     });
   }, [persistData]);
 
-  return {
+  return useMemo(() => ({
     userData,
     isLoading,
     updateProfile,
@@ -233,5 +248,5 @@ export const [UserDataProvider, useUserData] = createContextHook(() => {
     updateGolfIQ,
     updateGeneral,
     updatePreRound,
-  };
+  }), [userData, isLoading, updateProfile, updateSwingThoughts, updateClubNotes, updateMentalGame, updateGolfIQ, updateGeneral, updatePreRound]);
 });
