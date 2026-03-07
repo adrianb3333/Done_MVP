@@ -8,6 +8,7 @@ export const [AppNavigationProvider, useAppNavigation] = createContextHook(() =>
   const [sidebarVisible, setSidebarVisible] = useState<boolean>(false);
   const [dataOverviewInitialTab, setDataOverviewInitialTab] = useState<string | null>(null);
   const [dataOverviewInitialStatsSegment, setDataOverviewInitialStatsSegment] = useState<'round' | 'practice' | null>(null);
+  const [communityInitialTab, setCommunityInitialTab] = useState<string | null>(null);
 
   const openSidebar = useCallback(() => {
     setSidebarVisible(true);
@@ -17,13 +18,16 @@ export const [AppNavigationProvider, useAppNavigation] = createContextHook(() =>
     setSidebarVisible(false);
   }, []);
 
-  const navigateTo = useCallback((section: AppSection, options?: { initialTab?: string; initialStatsSegment?: 'round' | 'practice' }) => {
+  const navigateTo = useCallback((section: AppSection, options?: { initialTab?: string; initialStatsSegment?: 'round' | 'practice'; communityTab?: string }) => {
     console.log('[AppNav] Navigating to:', section, options);
     if (options?.initialTab) {
       setDataOverviewInitialTab(options.initialTab);
     }
     if (options?.initialStatsSegment) {
       setDataOverviewInitialStatsSegment(options.initialStatsSegment);
+    }
+    if (options?.communityTab) {
+      setCommunityInitialTab(options.communityTab);
     }
     setCurrentSection(section);
     setSidebarVisible(false);
@@ -37,6 +41,10 @@ export const [AppNavigationProvider, useAppNavigation] = createContextHook(() =>
     setDataOverviewInitialStatsSegment(null);
   }, []);
 
+  const clearCommunityInitialTab = useCallback(() => {
+    setCommunityInitialTab(null);
+  }, []);
+
   return useMemo(() => ({
     currentSection,
     sidebarVisible,
@@ -47,6 +55,8 @@ export const [AppNavigationProvider, useAppNavigation] = createContextHook(() =>
     clearDataOverviewInitialTab,
     dataOverviewInitialStatsSegment,
     clearDataOverviewInitialStatsSegment,
+    communityInitialTab,
+    clearCommunityInitialTab,
   }), [
     currentSection,
     sidebarVisible,
@@ -57,5 +67,7 @@ export const [AppNavigationProvider, useAppNavigation] = createContextHook(() =>
     clearDataOverviewInitialTab,
     dataOverviewInitialStatsSegment,
     clearDataOverviewInitialStatsSegment,
+    communityInitialTab,
+    clearCommunityInitialTab,
   ]);
 });

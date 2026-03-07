@@ -13,7 +13,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Settings, X, User, Newspaper, TrendingUp, Bluetooth, Trophy, QrCode, Swords, Clock, Target, Zap, Hash, Menu, Video, BarChart2, MapPin, Award, Calendar, ChevronRight } from 'lucide-react-native';
+import { Settings, X, User, Newspaper, TrendingUp, Bluetooth, Trophy, QrCode, Swords, Clock, Target, Zap, Hash, Menu, Video, BarChart2, MapPin, Award, Calendar, ChevronRight, Share2, Gift, Users, DollarSign, Star, Percent } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useProfile, UserProfile } from '@/contexts/ProfileContext';
@@ -794,6 +794,68 @@ export default function ProfileScreen() {
                 </View>
               </View>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.affiliateCard}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                navigateTo('community', { communityTab: 'affiliate' });
+              }}
+              activeOpacity={0.8}
+              testID="affiliate-card"
+            >
+              <View style={styles.affiliateCardHeader}>
+                <View style={styles.affiliateCardTitleRow}>
+                  <Share2 size={16} color="#4FC3F7" />
+                  <Text style={styles.affiliateCardTitle}>Affiliate</Text>
+                </View>
+                <ChevronRight size={16} color="#555" />
+              </View>
+              <View style={styles.tourDataGrid}>
+                <View style={styles.tourDataItem}>
+                  <View style={styles.tourDataIconWrap}>
+                    <Users size={13} color="#4FC3F7" />
+                  </View>
+                  <Text style={styles.tourDataValue}>19</Text>
+                  <Text style={styles.tourDataLabel}>Referrals</Text>
+                </View>
+                <View style={styles.tourDataItem}>
+                  <View style={styles.tourDataIconWrap}>
+                    <Target size={13} color="#FFB74D" />
+                  </View>
+                  <Text style={styles.tourDataValue}>100</Text>
+                  <Text style={styles.tourDataLabel}>Goal</Text>
+                </View>
+                <View style={styles.tourDataItem}>
+                  <View style={styles.tourDataIconWrap}>
+                    <Gift size={13} color="#E040FB" />
+                  </View>
+                  <Text style={styles.tourDataValue} numberOfLines={1}>5 Rounds</Text>
+                  <Text style={styles.tourDataLabel}>Next Perk</Text>
+                </View>
+                <View style={styles.tourDataItem}>
+                  <View style={styles.tourDataIconWrap}>
+                    <DollarSign size={13} color="#1DB954" />
+                  </View>
+                  <Text style={styles.tourDataValue}>2,400</Text>
+                  <Text style={styles.tourDataLabel}>Earnings</Text>
+                </View>
+                <View style={styles.tourDataItem}>
+                  <View style={styles.tourDataIconWrap}>
+                    <Star size={13} color="#D4AF37" />
+                  </View>
+                  <Text style={styles.tourDataValue}>3</Text>
+                  <Text style={styles.tourDataLabel}>Perks Won</Text>
+                </View>
+                <View style={styles.tourDataItem}>
+                  <View style={styles.tourDataIconWrap}>
+                    <Percent size={13} color="#FF5252" />
+                  </View>
+                  <Text style={styles.tourDataValue}>19%</Text>
+                  <Text style={styles.tourDataLabel}>Progress</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
           </View>
 
         </Animated.View>
@@ -1371,6 +1433,30 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 2,
     textAlign: 'center' as const,
+  },
+
+  affiliateCard: {
+    backgroundColor: '#141414',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#4FC3F720',
+  },
+  affiliateCardHeader: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    marginBottom: 14,
+  },
+  affiliateCardTitleRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 7,
+  },
+  affiliateCardTitle: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: '#4FC3F7',
   },
 
   avatarPreviewOverlay: {

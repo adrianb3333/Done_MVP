@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -1393,7 +1393,15 @@ const entStyles = StyleSheet.create({
 export default function CommunityScreen() {
   const [activeTab, setActiveTab] = useState<CommunityTab>('tour');
   const [selectedEvent, setSelectedEvent] = useState<TourEvent | null>(null);
-  const { openSidebar, navigateTo } = useAppNavigation();
+  const { openSidebar, navigateTo, communityInitialTab, clearCommunityInitialTab } = useAppNavigation();
+
+  useEffect(() => {
+    if (communityInitialTab && (communityInitialTab === 'tour' || communityInitialTab === 'affiliate' || communityInitialTab === 'entertainment')) {
+      console.log('[Community] Setting initial tab from nav context:', communityInitialTab);
+      setActiveTab(communityInitialTab as CommunityTab);
+      clearCommunityInitialTab();
+    }
+  }, [communityInitialTab, clearCommunityInitialTab]);
 
   if (selectedEvent) {
     return (
