@@ -11,6 +11,7 @@ import {
   Image,
   ScrollView,
   Dimensions,
+  ImageBackground,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { HelpCircle, X, User, Newspaper, TrendingUp, Bluetooth, Trophy, QrCode, Swords, Clock, Target, Zap, Hash, Menu, BarChart2, MapPin, Award, Calendar, ChevronRight, Share2, Gift, Users, DollarSign, Star, Percent, Settings, Camera } from 'lucide-react-native';
@@ -635,7 +636,14 @@ export default function ProfileScreen() {
       <ScrollView style={[styles.scrollView, { paddingTop: insets.top + PROFILE_HEADER_HEIGHT }]} showsVerticalScrollIndicator={false} onScroll={onHeaderScroll} scrollEventThrottle={16}>
         <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
 
-          <View style={styles.profileTopSection}>
+          <ImageBackground
+            source={require('@/assets/images/profile-bg.png')}
+            style={styles.profileBgImage}
+            imageStyle={styles.profileBgImageStyle}
+            resizeMode="cover"
+          >
+            <View style={styles.profileBgOverlay} />
+            <View style={styles.profileTopSection}>
             <View style={styles.avatarSection}>
               <TouchableOpacity
                 onPress={handleAvatarPress}
@@ -730,6 +738,9 @@ export default function ProfileScreen() {
               </View>
             </View>
           </View>
+          </ImageBackground>
+
+          <View style={styles.liveDivider} />
 
           <View style={styles.liveSection}>
             <Text style={styles.liveSectionTitle}>LIVE</Text>
@@ -1207,10 +1218,31 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
 
+  profileBgImage: {
+    marginHorizontal: -20,
+    marginTop: -4,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 20,
+    overflow: 'hidden' as const,
+  },
+  profileBgImageStyle: {
+    borderRadius: 0,
+  },
+  profileBgOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+  },
+  liveDivider: {
+    height: 2,
+    backgroundColor: '#1A1A1A',
+    marginHorizontal: -20,
+    marginBottom: 4,
+  },
   profileTopSection: {
     flexDirection: 'row' as const,
     alignItems: 'flex-start' as const,
-    marginBottom: 24,
+    marginBottom: 0,
     gap: 16,
   },
   avatarSection: {
