@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -37,10 +37,11 @@ import {
   Film,
   ExternalLink,
 } from 'lucide-react-native';
-import { Linking, Platform } from 'react-native';
+import { Linking, Platform, Animated } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useAppNavigation } from '@/contexts/AppNavigationContext';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useScrollHeader, ScrollHeaderProvider, useScrollHeaderContext } from '@/hooks/useScrollHeader';
 
 type CommunityTab = 'tour' | 'affiliate' | 'entertainment';
 
@@ -427,6 +428,7 @@ function EventCard({
 }
 
 function TourContent({ onOpenEvent }: { onOpenEvent: (event: TourEvent) => void }) {
+  const scrollHandler = useScrollHeaderContext();
   const { profile } = useProfile();
 
   const handleEventPress = useCallback((event: TourEvent) => {
@@ -443,7 +445,7 @@ function TourContent({ onOpenEvent }: { onOpenEvent: (event: TourEvent) => void 
     .slice(0, 2);
 
   return (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }}>
+    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }} onScroll={scrollHandler} scrollEventThrottle={16}>
       <Text style={tourStyles.pageTitle}>Tour</Text>
 
       <View style={tourStyles.profileSection}>
@@ -801,6 +803,7 @@ function GoalPickerModal({
 }
 
 function AffiliateContent() {
+  const scrollHandler = useScrollHeaderContext();
   const [goal, setGoal] = useState<GoalOption>(100);
   const [pickerVisible, setPickerVisible] = useState<boolean>(false);
 
@@ -845,6 +848,8 @@ function AffiliateContent() {
         style={styles.tabContent}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 30 }}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
       >
         <Text style={affStyles.pageTitle}>Affiliate</Text>
 
@@ -1205,6 +1210,7 @@ function EntertainmentDetailScreen({ section, onClose }: { section: Entertainmen
 }
 
 function EntertainmentContent() {
+  const scrollHandler = useScrollHeaderContext();
   const [openSection, setOpenSection] = useState<EntertainmentSection | null>(null);
 
   const handleSocialPress = useCallback(async (nativeUrl: string, webUrl: string) => {
@@ -1236,7 +1242,7 @@ function EntertainmentContent() {
   }
 
   return (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }}>
+    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }} onScroll={scrollHandler} scrollEventThrottle={16}>
       <Text style={entStyles.pageTitle}>Entertainment</Text>
 
       <Text style={entStyles.sectionLabel}>Social Media</Text>
@@ -1412,6 +1418,9 @@ export default function CommunityScreen() {
     );
   }
 
+  const { headerTranslateY, onScroll: onHeaderScroll } = useScrollHeader(52);
+  const scrollHeaderValue = useMemo(() => ({ onScroll: onHeaderScroll }), [onHeaderScroll]);
+
   const renderContent = () => {
     switch (activeTab) {
       case 'tour':
@@ -1425,20 +1434,24 @@ export default function CommunityScreen() {
 
   return (
     <View style={styles.container}>
-      <SafeAreaView edges={['top']} style={styles.safeTop}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={openSidebar} style={styles.menuBtn} activeOpacity={0.7}>
-            <Menu size={24} color="#F5F7F6" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{tabs.find(t => t.key === activeTab)?.label ?? 'Community'}</Text>
-          <TouchableOpacity onPress={() => navigateTo('mygame')} style={styles.menuBtn} activeOpacity={0.7}>
-            <Image source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/d92ywde7ucn1q2si6dbb7' }} style={styles.golferIcon} />
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+      <Animated.View style={[styles.headerAbsolute, { transform: [{ translateY: headerTranslateY }] }]}>
+        <SafeAreaView edges={['top']} style={styles.safeTop}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={openSidebar} style={styles.menuBtn} activeOpacity={0.7}>
+              <Menu size={24} color="#F5F7F6" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>{tabs.find(t => t.key === activeTab)?.label ?? 'Community'}</Text>
+            <TouchableOpacity onPress={() => navigateTo('mygame')} style={styles.menuBtn} activeOpacity={0.7}>
+              <Image source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/d92ywde7ucn1q2si6dbb7' }} style={styles.golferIcon} />
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </Animated.View>
 
       <View style={styles.body}>
-        {renderContent()}
+        <ScrollHeaderProvider value={scrollHeaderValue}>
+          {renderContent()}
+        </ScrollHeaderProvider>
       </View>
 
       <SafeAreaView edges={['bottom']} style={styles.tabBarSafe}>
@@ -1473,6 +1486,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0A0F0D',
+  },
+  headerAbsolute: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    backgroundColor: '#0D1410',
   },
   safeTop: {
     backgroundColor: '#0D1410',

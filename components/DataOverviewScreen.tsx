@@ -13,9 +13,11 @@ import {
   Image,
   TextInput,
   Modal,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Menu, BarChart2, TrendingUp, Crosshair, List, Video, Plus, Columns2, Trash2, Flag, Target, Dumbbell, ChevronDown, HelpCircle, Filter, ChevronRight, MapPin, Search, Star } from 'lucide-react-native';
+import { useScrollHeader, ScrollHeaderProvider, useScrollHeaderContext } from '@/hooks/useScrollHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TabCourse, { CourseTab } from '@/components/PlaSta/TabCourse';
 import LiquidGlassCard from '@/components/reusables/LiquidGlassCard';
@@ -133,6 +135,7 @@ function PracticeCategoryCard({ category }: { category: DrillCategoryStats }) {
 }
 
 function StatsContent() {
+  const scrollHandler = useScrollHeaderContext();
   const { dataOverviewInitialStatsSegment, clearDataOverviewInitialStatsSegment } = useAppNavigation();
   const [segment, setSegment] = useState<StatsSegment>(dataOverviewInitialStatsSegment || 'round');
 
@@ -175,7 +178,7 @@ function StatsContent() {
       </View>
 
       {segment === 'round' ? (
-        <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }}>
+        <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }} onScroll={scrollHandler} scrollEventThrottle={16}>
           {roundQuery.isLoading ? (
             <View style={statsStyles.loadingWrap}>
               <ActivityIndicator size="large" color="#4FC3F7" />
@@ -192,7 +195,7 @@ function StatsContent() {
           )}
         </ScrollView>
       ) : (
-        <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }}>
+        <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }} onScroll={scrollHandler} scrollEventThrottle={16}>
           {practiceQuery.isLoading ? (
             <View style={statsStyles.loadingWrap}>
               <ActivityIndicator size="large" color="#4FC3F7" />
@@ -562,8 +565,9 @@ function MiniChart({ data, color, height = 120 }: { data: number[]; color: strin
 }
 
 function SGOverallView() {
+  const scrollHandler = useScrollHeaderContext();
   return (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }} onScroll={scrollHandler} scrollEventThrottle={16}>
       <View style={sgStyles.compareBar}>
         <Text style={sgStyles.compareText}>
           Compared to a <Text style={sgStyles.compareBold}>0 HCP</Text> using <Text style={sgStyles.compareBold}>10 Round Avg</Text>
@@ -629,12 +633,13 @@ function SGOverallView() {
 }
 
 function SGCategoryView({ segment }: { segment: SGSegment }) {
+  const scrollHandler = useScrollHeaderContext();
   const config = SG_CONFIG[segment];
   const isPositive = config.value >= 0;
   const valueStr = (isPositive ? '+' : '') + config.value.toFixed(1);
 
   return (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }} onScroll={scrollHandler} scrollEventThrottle={16}>
       <View style={sgStyles.compareBar}>
         <Text style={sgStyles.compareText}>
           Compared to a <Text style={sgStyles.compareBold}>0 HCP</Text> using <Text style={sgStyles.compareBold}>10 Round Avg</Text>
@@ -1207,6 +1212,7 @@ const THE_GAME_SECTIONS = [
 ];
 
 function DetailsCoursesList() {
+  const scrollHandler = useScrollHeaderContext();
   const [activeTab, setActiveTab] = useState<CourseTab>('nearby');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('Alla länder');
@@ -1379,6 +1385,8 @@ function DetailsCoursesList() {
         renderItem={renderCourseItem}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={detailsStyles.listContent}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
         ListEmptyComponent={
           <View style={detailsStyles.emptyState}>
             <Text style={detailsStyles.emptyText}>
@@ -1394,6 +1402,7 @@ function DetailsCoursesList() {
 }
 
 function DetailsNotesContent() {
+  const scrollHandler = useScrollHeaderContext();
   const [activeModal, setActiveModal] = useState<NotesModalKey>(null);
 
   const closeModal = () => setActiveModal(null);
@@ -1419,6 +1428,8 @@ function DetailsNotesContent() {
         style={{ flex: 1 }}
         contentContainerStyle={detailsStyles.notesScrollContent}
         showsVerticalScrollIndicator={false}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
       >
         <View style={detailsStyles.clubDataSection}>
           <View style={detailsStyles.clubDataHeaderRow}>
@@ -1485,11 +1496,14 @@ function DetailsNotesContent() {
 }
 
 function TheGameContent() {
+  const scrollHandler = useScrollHeaderContext();
   return (
     <ScrollView
       style={{ flex: 1 }}
       contentContainerStyle={detailsStyles.gameScrollContent}
       showsVerticalScrollIndicator={false}
+      onScroll={scrollHandler}
+      scrollEventThrottle={16}
     >
       {THE_GAME_SECTIONS.map((section, index) => (
         <View key={index} style={detailsStyles.gameSectionCard}>
@@ -1841,6 +1855,7 @@ function formatSessionDate(iso: string): string {
 }
 
 function VideoContent() {
+  const scrollHandler = useScrollHeaderContext();
   const router = useRouter();
   const { sessions = [], addSession, removeSession } = useSessions();
   const { setVideoUri, setComparisonMode, clearAll } = useSwingStore();
@@ -1929,6 +1944,8 @@ function VideoContent() {
       renderItem={renderSession}
       style={styles.tabContent}
       contentContainerStyle={styles.videoListContent}
+      onScroll={scrollHandler}
+      scrollEventThrottle={16}
       ListHeaderComponent={
         <View style={styles.videoActionsSection}>
           <Text style={styles.videoHeaderTitle}>Swing Analyzer</Text>
@@ -1968,22 +1985,29 @@ export default function DataOverviewScreen() {
     }
   };
 
+  const { headerTranslateY, onScroll: onHeaderScroll } = useScrollHeader(52);
+  const scrollHeaderValue = useMemo(() => ({ onScroll: onHeaderScroll }), [onHeaderScroll]);
+
   return (
     <View style={styles.container}>
-      <SafeAreaView edges={['top']} style={styles.safeTop}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={openSidebar} style={styles.menuBtn} activeOpacity={0.7}>
-            <Menu size={24} color="#F5F7F6" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>{tabs.find(t => t.key === activeTab)?.label ?? 'Stats'}</Text>
-          <TouchableOpacity onPress={() => navigateTo('mygame')} style={styles.menuBtn} activeOpacity={0.7}>
-            <Image source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/d92ywde7ucn1q2si6dbb7' }} style={styles.golferIcon} />
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+      <Animated.View style={[styles.headerAbsolute, { transform: [{ translateY: headerTranslateY }] }]}>
+        <SafeAreaView edges={['top']} style={styles.safeTop}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={openSidebar} style={styles.menuBtn} activeOpacity={0.7}>
+              <Menu size={24} color="#F5F7F6" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>{tabs.find(t => t.key === activeTab)?.label ?? 'Stats'}</Text>
+            <TouchableOpacity onPress={() => navigateTo('mygame')} style={styles.menuBtn} activeOpacity={0.7}>
+              <Image source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/d92ywde7ucn1q2si6dbb7' }} style={styles.golferIcon} />
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </Animated.View>
 
       <View style={styles.body}>
-        {renderContent()}
+        <ScrollHeaderProvider value={scrollHeaderValue}>
+          {renderContent()}
+        </ScrollHeaderProvider>
       </View>
 
       <SafeAreaView edges={['bottom']} style={styles.tabBarSafe}>
@@ -2018,6 +2042,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0A0F0D',
+  },
+  headerAbsolute: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    backgroundColor: '#000000',
   },
   safeTop: {
     backgroundColor: '#000000',

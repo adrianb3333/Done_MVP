@@ -22,6 +22,7 @@ import { useAppNavigation } from '@/contexts/AppNavigationContext';
 import UiTra from '@/components/probygg/UiTra';
 import ProfileCard from '@/components/ProfileCard';
 import { supabase } from '@/lib/supabase';
+import { useScrollHeader } from '@/hooks/useScrollHeader';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -532,6 +533,8 @@ export default function ProfileScreen() {
     return '#FF5252';
   };
 
+  const { headerTranslateY, onScroll: onHeaderScroll } = useScrollHeader(56);
+
   if (isLoading) {
     return (
       <View style={styles.container}>
@@ -544,8 +547,9 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <SafeAreaView edges={['top']} style={styles.safeArea}>
-        <View style={styles.headerRow}>
+      <Animated.View style={[styles.headerAbsolute, { transform: [{ translateY: headerTranslateY }] }]}>
+        <SafeAreaView edges={['top']} style={styles.safeArea}>
+          <View style={styles.headerRow}>
           <TouchableOpacity
             onPress={openSidebar}
             style={styles.hamburgerBtn}
@@ -588,9 +592,10 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </SafeAreaView>
+        </SafeAreaView>
+      </Animated.View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} onScroll={onHeaderScroll} scrollEventThrottle={16}>
         <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
 
           <View style={styles.profileTopRow}>
@@ -1118,6 +1123,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
+  },
+  headerAbsolute: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    backgroundColor: '#0A0A0A',
   },
   safeArea: {
     zIndex: 10,
