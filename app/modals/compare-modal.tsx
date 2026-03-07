@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   vsCard: {
-    backgroundColor: '#141414',
+    backgroundColor: 'transparent',
     borderRadius: 20,
     padding: 24,
     flexDirection: 'row' as const,
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   friendRow: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: '#141414',
+    backgroundColor: 'transparent',
     borderRadius: 14,
     padding: 14,
     marginBottom: 8,
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   emptyState: {
-    backgroundColor: '#141414',
+    backgroundColor: 'transparent',
     borderRadius: 14,
     padding: 24,
     alignItems: 'center' as const,

@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   doneBtn: {
-    backgroundColor: '#333333',
+    backgroundColor: '#222222',
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 8,
@@ -334,12 +334,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     margin: 16,
-    backgroundColor: '#141C18',
+    backgroundColor: 'transparent',
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: '#243028',
+    borderColor: '#222222',
     gap: 8,
   },
   searchInput: {
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
   slotAvatarPlaceholder: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#333333',
+    backgroundColor: '#222222',
   },
   slotInitial: {
     fontSize: 20,
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed' as const,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#141C18',
+    backgroundColor: 'transparent',
   },
   slotEmptyNum: {
     fontSize: 16,
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#333333',
+    backgroundColor: '#222222',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: '#243028',
+    backgroundColor: '#222222',
     marginHorizontal: 16,
   },
   sectionTitle: {
@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
   playerAvatarPlaceholder: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#243028',
+    backgroundColor: '#222222',
   },
   playerAvatarInitial: {
     fontSize: 17,

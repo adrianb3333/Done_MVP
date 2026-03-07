@@ -48,18 +48,18 @@ export default function QrModal() {
     const page = Math.round(offsetX / SCREEN_WIDTH);
     if (page !== currentPage && page >= 0 && page < 2) {
       setCurrentPage(page);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   }, [currentPage]);
 
   const scrollToQR = useCallback(() => {
     scrollRef.current?.scrollTo({ x: 0, animated: true });
     setCurrentPage(0);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }, []);
 
   const handleShare = useCallback(async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     console.log('[QR] Share button pressed');
 
     if (Platform.OS === 'web') {
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   qrCard: {
-    backgroundColor: '#141414',
+    backgroundColor: 'transparent',
     borderRadius: 24,
     padding: 32,
     alignItems: 'center' as const,
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
   },
   gridBtn: {
     flex: 1,
-    backgroundColor: '#141414',
+    backgroundColor: 'transparent',
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center' as const,
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   scanCard: {
-    backgroundColor: '#141414',
+    backgroundColor: 'transparent',
     borderRadius: 24,
     padding: 32,
     alignItems: 'center' as const,
@@ -474,7 +474,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   emptyScans: {
-    backgroundColor: '#141414',
+    backgroundColor: 'transparent',
     borderRadius: 14,
     padding: 20,
     alignItems: 'center' as const,

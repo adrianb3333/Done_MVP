@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   handicapCard: {
-    backgroundColor: '#141414',
+    backgroundColor: 'transparent',
     borderRadius: 20,
     padding: 28,
     alignItems: 'center' as const,

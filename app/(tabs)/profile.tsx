@@ -1280,7 +1280,7 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     gap: 4,
-    backgroundColor: '#141414',
+    backgroundColor: 'transparent',
     borderRadius: 12,
     paddingVertical: 14,
     borderWidth: 1,
@@ -1348,7 +1348,7 @@ const styles = StyleSheet.create({
   liveEmptyState: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: '#141414',
+    backgroundColor: 'transparent',
     borderRadius: 12,
     padding: 14,
     gap: 10,
@@ -1371,14 +1371,14 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   roundCard: {
-    backgroundColor: '#141414',
+    backgroundColor: 'transparent',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
     borderColor: '#33333340',
   },
   practiceCard: {
-    backgroundColor: '#141414',
+    backgroundColor: 'transparent',
     borderRadius: 16,
     padding: 4,
     borderWidth: 1,
@@ -1435,7 +1435,7 @@ const styles = StyleSheet.create({
   },
 
   tourCard: {
-    backgroundColor: '#141414',
+    backgroundColor: 'transparent',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
@@ -1499,7 +1499,7 @@ const styles = StyleSheet.create({
   },
 
   affiliateCard: {
-    backgroundColor: '#141414',
+    backgroundColor: 'transparent',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
@@ -1560,7 +1560,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end' as const,
   },
   followsSheet: {
-    backgroundColor: '#141414',
+    backgroundColor: 'transparent',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingBottom: 40,
@@ -1700,7 +1700,7 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   popupSheet: {
-    backgroundColor: '#141414',
+    backgroundColor: 'transparent',
     borderRadius: 24,
     width: '100%' as const,
     maxHeight: SCREEN_HEIGHT * 0.82,

@@ -54,7 +54,7 @@ export default function DataTab() {
         if (result) setTemperature(result.temp);
       }
     };
-    loadTemp();
+    void loadTemp();
   }, []);
 
   const formatTime = (date: Date) => {
@@ -424,11 +424,11 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     gap: 5,
-    backgroundColor: '#141C18',
+    backgroundColor: 'transparent',
     borderRadius: 8,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#243028',
+    borderColor: '#222222',
   },
   miniStatValue: {
     fontSize: 12,
@@ -458,14 +458,14 @@ const styles = StyleSheet.create({
   },
   heroRow: {
     flexDirection: 'row' as const,
-    backgroundColor: '#141C18',
+    backgroundColor: 'transparent',
     borderRadius: 14,
     padding: 20,
     marginBottom: 16,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     borderWidth: 1,
-    borderColor: '#243028',
+    borderColor: '#222222',
   },
   heroItem: {
     flex: 1,
@@ -493,15 +493,15 @@ const styles = StyleSheet.create({
   heroDivider: {
     width: 1,
     height: 50,
-    backgroundColor: '#2E4038',
+    backgroundColor: '#222222',
   },
   sectionCard: {
-    backgroundColor: '#141C18',
+    backgroundColor: 'transparent',
     borderRadius: 14,
     padding: 16,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#243028',
+    borderColor: '#222222',
   },
   sectionTitle: {
     fontSize: 18,
@@ -640,7 +640,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 60,
     borderRadius: 40,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: 'transparent',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
@@ -651,7 +651,7 @@ const styles = StyleSheet.create({
     height: 30,
     borderBottomLeftRadius: 40,
     borderBottomRightRadius: 40,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'transparent',
   },
   girBottom: {
     alignItems: 'center' as const,
@@ -714,12 +714,12 @@ const styles = StyleSheet.create({
   },
   statBox: {
     flex: 1,
-    backgroundColor: '#0F1714',
+    backgroundColor: 'transparent',
     borderRadius: 12,
     padding: 14,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#1C2922',
+    borderColor: '#222222',
   },
   statBoxWide: {
     flex: 1,
@@ -761,13 +761,13 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
   },
   confirmBox: {
-    backgroundColor: '#1A2520',
+    backgroundColor: 'transparent',
     borderRadius: 20,
     padding: 28,
     width: '80%' as unknown as number,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#2E4038',
+    borderColor: '#222222',
   },
   confirmTitle: {
     fontSize: 20,
@@ -789,7 +789,7 @@ const styles = StyleSheet.create({
   },
   confirmNo: {
     flex: 1,
-    backgroundColor: '#243028',
+    backgroundColor: '#222222',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center' as const,

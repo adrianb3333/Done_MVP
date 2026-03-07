@@ -134,13 +134,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   sectionBody: {
-    backgroundColor: '#141C18',
+    backgroundColor: 'transparent',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row' as const,
     gap: 16,
     borderWidth: 1,
-    borderColor: '#243028',
+    borderColor: '#222222',
   },
   valuePlaceholder: {
     flex: 1,

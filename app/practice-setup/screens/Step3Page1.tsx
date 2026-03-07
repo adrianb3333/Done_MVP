@@ -43,7 +43,7 @@ export default function Step3Page1() {
         setTempLoading(false);
       }
     };
-    loadTemp();
+    void loadTemp();
   }, []);
 
   const formatTime = (date: Date) => {
@@ -134,12 +134,12 @@ const styles = StyleSheet.create({
   },
   miniStat: {
     flex: 1,
-    backgroundColor: '#141C18',
+    backgroundColor: 'transparent',
     borderRadius: 12,
     padding: 14,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#243028',
+    borderColor: '#222222',
     gap: 4,
   },
   miniStatLabel: {
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     color: '#F5F7F6',
   },
   toggleCard: {
-    backgroundColor: '#141C18',
+    backgroundColor: 'transparent',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     justifyContent: 'space-between' as const,
     borderWidth: 1,
-    borderColor: '#243028',
+    borderColor: '#222222',
     marginTop: 12,
   },
   toggleLeft: {
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: '#243028',
+    borderColor: '#222222',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },

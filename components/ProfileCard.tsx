@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
-    backgroundColor: '#141414',
+    backgroundColor: 'transparent',
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   handicapCard: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: '#141414',
+    backgroundColor: 'transparent',
     borderRadius: 16,
     padding: 18,
     marginBottom: 16,
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   infoCard: {
-    backgroundColor: '#141414',
+    backgroundColor: 'transparent',
     borderRadius: 14,
     padding: 20,
     borderWidth: 1,

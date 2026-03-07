@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
   },
   heroRow: {
     flexDirection: 'row' as const,
-    backgroundColor: '#111111',
+    backgroundColor: 'transparent',
     borderRadius: 14,
     padding: 20,
     marginBottom: 16,
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#333',
   },
   sectionCard: {
-    backgroundColor: '#111111',
+    backgroundColor: 'transparent',
     borderRadius: 14,
     padding: 16,
     marginBottom: 14,

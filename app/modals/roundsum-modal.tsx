@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Flag } from 'lucide-react-native';
 import { useSession } from '@/contexts/SessionContext';
 import { useScoring } from '@/contexts/ScoringContext';
-import { computeRoundStats, getToParString, pctOf } from '@/services/statsHelper';
+import { computeRoundStats, pctOf } from '@/services/statsHelper';
 
 interface RoundSumModalProps {
   onClose: () => void;
@@ -312,10 +312,10 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   toParUnder: {
-    backgroundColor: '#333333',
+    backgroundColor: '#222222',
   },
   toParEven: {
-    backgroundColor: '#333333',
+    backgroundColor: '#222222',
   },
   toParText: {
     fontSize: 18,
@@ -331,12 +331,12 @@ const styles = StyleSheet.create({
   statGridBox: {
     flex: 1,
     minWidth: '45%' as unknown as number,
-    backgroundColor: '#141C18',
+    backgroundColor: 'transparent',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#243028',
+    borderColor: '#222222',
   },
   statLabel: {
     fontSize: 12,
@@ -382,12 +382,12 @@ const styles = StyleSheet.create({
   playerRow: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: '#141C18',
+    backgroundColor: 'transparent',
     padding: 14,
     borderRadius: 10,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#243028',
+    borderColor: '#222222',
   },
   playerPosition: {
     width: 28,
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: '#243028',
+    backgroundColor: '#222222',
     marginBottom: 20,
   },
   detailedTitle: {
@@ -428,12 +428,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionCard: {
-    backgroundColor: '#141C18',
+    backgroundColor: 'transparent',
     borderRadius: 14,
     padding: 16,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#243028',
+    borderColor: '#222222',
   },
   sectionTitle: {
     fontSize: 16,
@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 45,
     borderRadius: 30,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: 'transparent',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
@@ -616,21 +616,21 @@ const styles = StyleSheet.create({
   },
   miniBox: {
     flex: 1,
-    backgroundColor: '#0F1714',
+    backgroundColor: 'transparent',
     borderRadius: 10,
     padding: 12,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#1C2922',
+    borderColor: '#222222',
   },
   miniBoxWide: {
     flex: 1,
-    backgroundColor: '#0F1714',
+    backgroundColor: 'transparent',
     borderRadius: 10,
     padding: 12,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#1C2922',
+    borderColor: '#222222',
   },
   miniBoxValue: {
     fontSize: 18,
@@ -651,7 +651,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#243028',
   },
   finishButton: {
-    backgroundColor: '#333333',
+    backgroundColor: '#222222',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center' as const,

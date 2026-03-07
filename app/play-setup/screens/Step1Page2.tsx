@@ -10,7 +10,7 @@ export default function Step1Page2() {
   const [stats, setStats] = useState<RoundStats | null>(null);
 
   useEffect(() => {
-    loadData();
+    void loadData();
   }, []);
 
   const loadData = async () => {
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     gap: 5,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'transparent',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 20,

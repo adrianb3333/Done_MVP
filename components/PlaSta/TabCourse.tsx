@@ -50,9 +50,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#141C18',
+    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#243028',
+    borderColor: '#222222',
   },
   tabActive: {
     backgroundColor: '#333333',

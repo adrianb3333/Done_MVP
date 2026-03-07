@@ -57,7 +57,7 @@ export default function MyTab() {
         setTempLoading(false);
       }
     };
-    loadTemp();
+    void loadTemp();
   }, []);
 
   const formatTime = (date: Date) => {
@@ -189,12 +189,12 @@ const styles = StyleSheet.create({
   },
   miniStat: {
     flex: 1,
-    backgroundColor: '#141C18',
+    backgroundColor: 'transparent',
     borderRadius: 12,
     padding: 14,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#243028',
+    borderColor: '#222222',
     gap: 4,
   },
   timerStat: {
@@ -217,10 +217,10 @@ const styles = StyleSheet.create({
   toggleSection: {
     marginTop: 16,
     marginHorizontal: 16,
-    backgroundColor: '#141C18',
+    backgroundColor: 'transparent',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#243028',
+    borderColor: '#222222',
     overflow: 'hidden' as const,
   },
   toggleRow: {
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   },
   toggleDivider: {
     height: 1,
-    backgroundColor: '#243028',
+    backgroundColor: '#222222',
     marginHorizontal: 16,
   },
   bottomSection: {
@@ -267,13 +267,13 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
   },
   confirmBox: {
-    backgroundColor: '#1A2520',
+    backgroundColor: 'transparent',
     borderRadius: 20,
     padding: 28,
     width: '80%' as unknown as number,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#2E4038',
+    borderColor: '#222222',
   },
   confirmTitle: {
     fontSize: 20,
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
   },
   confirmNo: {
     flex: 1,
-    backgroundColor: '#243028',
+    backgroundColor: '#222222',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center' as const,

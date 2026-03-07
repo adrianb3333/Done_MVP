@@ -55,7 +55,7 @@ export default function CourseModal() {
   const [showCountryPicker, setShowCountryPicker] = useState(false);
 
   React.useEffect(() => {
-    loadFavorites();
+    void loadFavorites();
   }, []);
 
   const loadFavorites = async () => {
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: Platform.OS === 'ios' ? 10 : 6,
     marginBottom: 10,
-    backgroundColor: '#141C18',
+    backgroundColor: 'transparent',
   },
   searchInput: {
     fontSize: 15,
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     gap: 6,
     flex: 1,
-    backgroundColor: '#141C18',
+    backgroundColor: 'transparent',
   },
   countryText: {
     fontSize: 14,
@@ -356,9 +356,9 @@ const styles = StyleSheet.create({
     color: '#CCCCCC',
   },
   countryDropdown: {
-    backgroundColor: '#141C18',
+    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#243028',
+    borderColor: '#222222',
     borderRadius: 10,
     marginBottom: 10,
     overflow: 'hidden',
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#243028',
   },
   countryOptionActive: {
-    backgroundColor: '#333333',
+    backgroundColor: '#222222',
   },
   countryOptionText: {
     fontSize: 15,

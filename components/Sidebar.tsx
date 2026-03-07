@@ -198,9 +198,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between' as const,
   },
   sectionItemActive: {
-    backgroundColor: '#141C18',
+    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#243028',
+    borderColor: '#222222',
   },
   sectionRow: {
     flexDirection: 'row' as const,
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   },
   footerDivider: {
     height: 1,
-    backgroundColor: '#1C2922',
+    backgroundColor: '#222222',
     marginBottom: 16,
   },
   footerText: {
