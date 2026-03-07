@@ -54,7 +54,7 @@ export default function ExtraShot({
             <Switch
               value={sandSave}
               onValueChange={setSandSave}
-              trackColor={{ false: '#3a3a3a', true: '#4caf50' }}
+              trackColor={{ false: '#3a3a3a', true: '#444444' }}
               thumbColor={sandSave ? '#fff' : '#888'}
             />
           </View>
@@ -63,7 +63,7 @@ export default function ExtraShot({
             <Switch
               value={upAndDown}
               onValueChange={setUpAndDown}
-              trackColor={{ false: '#3a3a3a', true: '#4caf50' }}
+              trackColor={{ false: '#3a3a3a', true: '#444444' }}
               thumbColor={upAndDown ? '#fff' : '#888'}
             />
           </View>
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
     alignItems: 'center',
   },
   doneBtnText: {

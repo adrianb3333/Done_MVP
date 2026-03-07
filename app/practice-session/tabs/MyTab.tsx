@@ -85,19 +85,19 @@ export default function MyTab() {
       <View style={styles.topContent}>
         <View style={styles.miniStatsRow}>
           <View style={styles.miniStat}>
-            <Clock size={16} color="#00E676" />
+            <Clock size={16} color="#FFFFFF" />
             <Text style={styles.miniStatLabel}>Time</Text>
             <Text style={styles.miniStatValue}>{formatTime(currentTime)}</Text>
           </View>
           <View style={styles.miniStat}>
-            <Thermometer size={16} color="#00E676" />
+            <Thermometer size={16} color="#FFFFFF" />
             <Text style={styles.miniStatLabel}>Temp</Text>
             <Text style={styles.miniStatValue}>
               {tempLoading ? '...' : temperature !== null ? `${temperature}°C` : '--°C'}
             </Text>
           </View>
           <View style={[styles.miniStat, styles.timerStat]}>
-            <Timer size={16} color="#00E676" />
+            <Timer size={16} color="#FFFFFF" />
             <Text style={styles.miniStatLabel}>Duration</Text>
             <Text style={[styles.miniStatValue, styles.timerValue]}>{formatElapsed(elapsed)}</Text>
           </View>
@@ -112,8 +112,8 @@ export default function MyTab() {
             <Switch
               value={sensorsEnabled}
               onValueChange={setSensorsEnabled}
-              trackColor={{ false: '#2A3530', true: 'rgba(0, 230, 118, 0.35)' }}
-              thumbColor={sensorsEnabled ? '#00E676' : '#6B7B70'}
+              trackColor={{ false: '#2A3530', true: 'rgba(255, 255, 255, 0.35)' }}
+              thumbColor={sensorsEnabled ? '#FFFFFF' : '#6B7B70'}
             />
           </View>
           <View style={styles.toggleDivider} />
@@ -125,8 +125,8 @@ export default function MyTab() {
             <Switch
               value={deviceEnabled}
               onValueChange={setDeviceEnabled}
-              trackColor={{ false: '#2A3530', true: 'rgba(0, 230, 118, 0.35)' }}
-              thumbColor={deviceEnabled ? '#00E676' : '#6B7B70'}
+              trackColor={{ false: '#2A3530', true: 'rgba(255, 255, 255, 0.35)' }}
+              thumbColor={deviceEnabled ? '#FFFFFF' : '#6B7B70'}
             />
           </View>
         </View>
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     color: '#F5F7F6',
   },
   timerValue: {
-    color: '#00E676',
+    color: '#FFFFFF',
   },
   toggleSection: {
     marginTop: 16,

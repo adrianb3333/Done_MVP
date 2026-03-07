@@ -156,8 +156,8 @@ function GIRSection({ made, missShort, missLong, missLeft, missRight, total }: {
 
 function PuttingSection({ p1, p2, p3, p4, totalPutts, avgPutts, holesPlayed }: { p1: number; p2: number; p3: number; p4: number; totalPutts: number; avgPutts: number; holesPlayed: number }) {
   const puttData: { label: string; count: number; color: string }[] = [];
-  if (p1 > 0) puttData.push({ label: '1-Putt', count: p1, color: '#4CAF50' });
-  if (p2 > 0) puttData.push({ label: '2-Putt', count: p2, color: '#81C784' });
+  if (p1 > 0) puttData.push({ label: '1-Putt', count: p1, color: '#FFFFFF' });
+  if (p2 > 0) puttData.push({ label: '2-Putt', count: p2, color: '#888888' });
   if (p3 > 0) puttData.push({ label: '3-Putt', count: p3, color: '#e53935' });
   if (p4 > 0) puttData.push({ label: '4+ Putt', count: p4, color: '#B71C1C' });
 
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   heroUnder: {
-    color: '#4CAF50',
+    color: '#FFFFFF',
   },
   heroOver: {
     color: '#FF5252',
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
   },
   fairwaySegCenter: {
     flex: 1,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#FFFFFF',
   },
   fairwaySegRight: {
     flex: 1,
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
     color: '#e53935',
   },
   fairwayHitPct: {
-    color: '#4CAF50',
+    color: '#FFFFFF',
   },
   fairwayStatLabel: {
     fontSize: 12,
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   fairwayHitLabel: {
-    color: '#4CAF50',
+    color: '#FFFFFF',
   },
   fairwayStatCount: {
     fontSize: 13,
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 60,
     borderRadius: 40,
-    backgroundColor: '#2E7D32',
+    backgroundColor: '#2A2A2A',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
@@ -448,7 +448,7 @@ const styles = StyleSheet.create({
     height: 30,
     borderBottomLeftRadius: 40,
     borderBottomRightRadius: 40,
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#1A1A1A',
   },
   girBottom: {
     alignItems: 'center' as const,

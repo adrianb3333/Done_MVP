@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   friendsHeader: {
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
     alignItems: 'center',
     justifyContent: 'center',
   },

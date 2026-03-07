@@ -141,8 +141,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   directionBtnActive: {
-    backgroundColor: '#1B5E20',
-    borderColor: '#2e7d32',
+    backgroundColor: '#333333',
+    borderColor: '#444444',
   },
   topBtn: {},
   bottomBtn: {},
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#4caf50',
+    backgroundColor: '#444444',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#66bb6a',
+    backgroundColor: '#555555',
     position: 'absolute',
     bottom: 8,
   },
@@ -200,8 +200,8 @@ const styles = StyleSheet.create({
     borderColor: '#3a4a3e',
   },
   hitBtnActive: {
-    backgroundColor: '#1B5E20',
-    borderColor: '#2e7d32',
+    backgroundColor: '#333333',
+    borderColor: '#444444',
   },
   hitBtnText: {
     fontSize: 15,
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
     alignItems: 'center',
   },
   nextBtnDisabled: {

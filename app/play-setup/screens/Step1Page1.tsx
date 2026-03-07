@@ -34,7 +34,7 @@ export default function Step1Page1() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator color="#00E676" size="large" />
+        <ActivityIndicator color="#FFFFFF" size="large" />
       </View>
     );
   }
@@ -59,7 +59,7 @@ export default function Step1Page1() {
         <Text style={styles.pageTitle}>Last Round</Text>
         <View style={styles.metaRow}>
           <View style={styles.metaBadge}>
-            <Calendar size={12} color="#00E676" />
+            <Calendar size={12} color="#FFFFFF" />
             <Text style={styles.metaText}>{roundDate}</Text>
           </View>
           {courseName ? (

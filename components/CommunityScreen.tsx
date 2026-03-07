@@ -511,7 +511,7 @@ function TourContent({ onOpenEvent }: { onOpenEvent: (event: TourEvent) => void 
           <Text style={tourStyles.statsBoxSub}>Rankings & standings</Text>
         </TouchableOpacity>
         <TouchableOpacity style={tourStyles.statsBox} activeOpacity={0.7}>
-          <Gift size={24} color="#00E676" />
+          <Gift size={24} color="#FFFFFF" />
           <Text style={tourStyles.statsBoxTitle}>Prizes & Benefits</Text>
           <Text style={tourStyles.statsBoxSub}>Rewards & perks</Text>
         </TouchableOpacity>
@@ -566,7 +566,7 @@ const tourStyles = StyleSheet.create({
   profileInitials: {
     fontSize: 22,
     fontWeight: '700' as const,
-    color: '#00E676',
+    color: '#FFFFFF',
   },
   profileRight: {
     flex: 1,
@@ -598,7 +598,7 @@ const tourStyles = StyleSheet.create({
     textAlign: 'center' as const,
   },
   joinButton: {
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center' as const,
@@ -957,7 +957,7 @@ const affStyles = StyleSheet.create({
   countBig: {
     fontSize: 32,
     fontWeight: '900' as const,
-    color: '#00E676',
+    color: '#FFFFFF',
   },
   countOf: {
     fontSize: 12,
@@ -975,7 +975,7 @@ const affStyles = StyleSheet.create({
   progressBarFill: {
     height: 5,
     borderRadius: 3,
-    backgroundColor: '#00E676',
+    backgroundColor: '#FFFFFF',
   },
   perksBox: {
     flex: 1,
@@ -1013,7 +1013,7 @@ const affStyles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     alignSelf: 'center' as const,
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 20,
@@ -1022,7 +1022,7 @@ const affStyles = StyleSheet.create({
   },
   discountLabel: {
     fontSize: 10,
-    color: '#A5D6A7',
+    color: '#AAAAAA',
     fontWeight: '600' as const,
   },
   discountCode: {
@@ -1100,7 +1100,7 @@ const affStyles = StyleSheet.create({
     gap: 14,
   },
   modalOptionActive: {
-    borderColor: '#00E676',
+    borderColor: '#FFFFFF',
     backgroundColor: '#0F1D14',
   },
   modalOptionNum: {
@@ -1111,7 +1111,7 @@ const affStyles = StyleSheet.create({
     textAlign: 'center' as const,
   },
   modalOptionNumActive: {
-    color: '#00E676',
+    color: '#FFFFFF',
   },
   modalOptionPerk: {
     fontSize: 14,
@@ -1164,7 +1164,7 @@ type EntertainmentSection = 'Podcasts' | 'Interviews' | 'Articles' | 'Series';
 const ENTERTAINMENT_SECTIONS: { key: EntertainmentSection; icon: React.ReactNode }[] = [
   { key: 'Podcasts', icon: <Mic size={20} color="#FFB74D" /> },
   { key: 'Interviews', icon: <MessageSquare size={20} color="#64B5F6" /> },
-  { key: 'Articles', icon: <FileText size={20} color="#81C784" /> },
+  { key: 'Articles', icon: <FileText size={20} color="#90A4AE" /> },
   { key: 'Series', icon: <Film size={20} color="#E040FB" /> },
 ];
 

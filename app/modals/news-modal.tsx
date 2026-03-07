@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
   cardBack: {
     backgroundColor: '#000000',
     borderWidth: 2,
-    borderColor: '#22c55e',
+    borderColor: '#FFFFFF',
   },
   cardImage: {
     width: '100%' as const,
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
     left: 18,
     fontSize: 28,
     fontWeight: '900' as const,
-    color: '#22c55e',
+    color: '#FFFFFF',
     zIndex: 2,
   },
   cardBackContent: {

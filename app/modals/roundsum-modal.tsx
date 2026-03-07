@@ -199,8 +199,8 @@ export default function RoundSumModal({ onClose, roundData }: RoundSumModalProps
               </View>
               <View style={styles.barChart}>
                 {[
-                  { label: '1-Putt', count: stats.putts1, color: '#4CAF50' },
-                  { label: '2-Putt', count: stats.putts2, color: '#81C784' },
+                  { label: '1-Putt', count: stats.putts1, color: '#FFFFFF' },
+                  { label: '2-Putt', count: stats.putts2, color: '#888888' },
                   { label: '3-Putt', count: stats.putts3, color: '#e53935' },
                   { label: '4+', count: stats.putts4Plus, color: '#B71C1C' },
                 ].filter((d) => d.count > 0).map((item) => {
@@ -312,10 +312,10 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   toParUnder: {
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
   },
   toParEven: {
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
   },
   toParText: {
     fontSize: 18,
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     width: 50,
     fontSize: 14,
     fontWeight: '800' as const,
-    color: '#00E676',
+    color: '#FFFFFF',
     textAlign: 'center' as const,
   },
   divider: {
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
   },
   fairwaySegCenter: {
     flex: 1,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#FFFFFF',
   },
   fairwaySegRight: {
     flex: 1,
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
   fairwayPctGreen: {
     fontSize: 18,
     fontWeight: '800' as const,
-    color: '#4CAF50',
+    color: '#FFFFFF',
   },
   fairwayStatLabel: {
     fontSize: 11,
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
   fairwayStatLabelGreen: {
     fontSize: 11,
     fontWeight: '600' as const,
-    color: '#4CAF50',
+    color: '#FFFFFF',
     marginTop: 2,
   },
   fairwayStatCount: {
@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 45,
     borderRadius: 30,
-    backgroundColor: '#2E7D32',
+    backgroundColor: '#2A2A2A',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
@@ -651,7 +651,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#243028',
   },
   finishButton: {
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center' as const,

@@ -62,14 +62,14 @@ const tabs: TabConfig[] = [
 type StatsSegment = 'round' | 'practice';
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Putting: '#4CAF50',
+  Putting: '#FFFFFF',
   Wedges: '#FF9800',
   Irons: '#42A5F5',
   Woods: '#AB47BC',
 };
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
-  Putting: <Target size={18} color="#4CAF50" />,
+  Putting: <Target size={18} color="#FFFFFF" />,
   Wedges: <Flag size={18} color="#FF9800" />,
   Irons: <Crosshair size={18} color="#42A5F5" />,
   Woods: <Dumbbell size={18} color="#AB47BC" />,
@@ -465,7 +465,7 @@ const SG_CONFIG: Record<SGSegment, {
 
 const OVERALL_CATEGORIES = [
   { label: 'Driving', value: -2.6, color: '#E57373', barWidth: 45 },
-  { label: 'Approach', value: 1.2, color: '#4CAF50', barWidth: 60 },
+  { label: 'Approach', value: 1.2, color: '#FFFFFF', barWidth: 60 },
   { label: 'Short', value: 1.0, color: '#90A4AE', barWidth: 50 },
   { label: 'Putting', value: -0.9, color: '#B0BEC5', barWidth: 35 },
 ];
@@ -612,7 +612,7 @@ function SGOverallView() {
                 <View style={[sgStyles.categoryBar, { width: cat.barWidth, backgroundColor: cat.color }]} />
               </View>
               <Text style={sgStyles.categoryLabel}>{cat.label}</Text>
-              <Text style={[sgStyles.categoryValue, { color: cat.value >= 0 ? '#4CAF50' : '#E57373' }]}>
+              <Text style={[sgStyles.categoryValue, { color: cat.value >= 0 ? '#FFFFFF' : '#E57373' }]}>
                 {cat.value >= 0 ? '+' : ''}{cat.value.toFixed(1)}
               </Text>
               <TouchableOpacity style={sgStyles.categorySgLink} activeOpacity={0.7}>
@@ -687,7 +687,7 @@ function SGCategoryView({ segment }: { segment: SGSegment }) {
         <Text style={sgStyles.trendDescription}>
           {config.trendDirection === 'up' ? 'Way to go! ' : 'Okay, time to reset. '}
           Your {config.title.toLowerCase().replace(' game', '')} game is{' '}
-          <Text style={{ color: config.trendDirection === 'up' ? '#4CAF50' : '#E57373', fontWeight: '700' as const }}>
+          <Text style={{ color: config.trendDirection === 'up' ? '#FFFFFF' : '#E57373', fontWeight: '700' as const }}>
             trending {config.trendDirection} by {config.trend >= 0 ? '+' : ''}{config.trend.toFixed(1)} SG
           </Text>{' '}
           compared to your last 10 round average.
@@ -822,7 +822,7 @@ const sgStyles = StyleSheet.create({
   cardHeader: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: '#4CAF50',
+    color: '#FFFFFF',
     marginBottom: 16,
     letterSpacing: 0.3,
   },
@@ -845,13 +845,13 @@ const sgStyles = StyleSheet.create({
   },
   trendArrow: {
     fontSize: 12,
-    color: '#4CAF50',
+    color: '#FFFFFF',
     fontWeight: '700' as const,
   },
   trendValue: {
     fontSize: 14,
     fontWeight: '700' as const,
-    color: '#4CAF50',
+    color: '#FFFFFF',
   },
   bigSubtitle: {
     fontSize: 13,
@@ -869,7 +869,7 @@ const sgStyles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   descHighlightGreen: {
-    color: '#4CAF50',
+    color: '#FFFFFF',
     fontWeight: '700' as const,
   },
   categoryGrid: {
@@ -1277,8 +1277,8 @@ function DetailsCoursesList() {
         <Star
           key={i}
           size={14}
-          color={i <= Math.floor(rating) ? '#1B5E20' : '#5A6B60'}
-          fill={i <= Math.floor(rating) ? '#1B5E20' : 'transparent'}
+          color={i <= Math.floor(rating) ? '#FFB74D' : '#5A6B60'}
+          fill={i <= Math.floor(rating) ? '#FFB74D' : 'transparent'}
         />
       );
     }
@@ -1592,7 +1592,7 @@ const detailsStyles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     borderWidth: 1.5,
-    borderColor: '#1B5E20',
+    borderColor: '#333333',
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: Platform.OS === 'ios' ? 10 : 6,
@@ -1621,7 +1621,7 @@ const detailsStyles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#1B5E20',
+    borderColor: '#333333',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -1631,13 +1631,13 @@ const detailsStyles = StyleSheet.create({
   },
   countryText: {
     fontSize: 14,
-    color: '#1B5E20',
+    color: '#CCCCCC',
     fontWeight: '500' as const,
     flex: 1,
   },
   countryChevron: {
     fontSize: 10,
-    color: '#1B5E20',
+    color: '#CCCCCC',
   },
   countryDropdown: {
     backgroundColor: '#141C18',
@@ -1654,7 +1654,7 @@ const detailsStyles = StyleSheet.create({
     borderBottomColor: '#243028',
   },
   countryOptionActive: {
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
   },
   countryOptionText: {
     fontSize: 15,
@@ -1796,7 +1796,7 @@ const detailsStyles = StyleSheet.create({
   notesSectionTitle: {
     fontSize: 28,
     fontWeight: '700' as const,
-    color: '#006735',
+    color: '#FFFFFF',
     marginBottom: 16,
     marginTop: 32,
     textAlign: 'center' as const,
@@ -1821,7 +1821,7 @@ const detailsStyles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
@@ -2161,7 +2161,7 @@ const styles = StyleSheet.create({
   sgBar: {
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#00E676',
+    backgroundColor: '#FFFFFF',
   },
   sgValue: {
     fontSize: 15,

@@ -160,7 +160,7 @@ export default function OnboardingOverlay({ visible, onDismiss }: OnboardingOver
         </View>
 
         <Animated.View style={[styles.hintContainer, { opacity: hintOpacity, transform: [{ translateY: hintBounce }] }]}>
-          <Hand size={20} color="#22c55e" />
+          <Hand size={20} color="#FFFFFF" />
           <Text style={styles.hintText}>Tap a card to see details</Text>
         </Animated.View>
 
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   hintText: {
     fontSize: 14,
     fontWeight: '500' as const,
-    color: '#22c55e',
+    color: '#FFFFFF',
   },
   carouselContainer: {
     flex: 1,
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
   slideCardBack: {
     backgroundColor: '#000000',
     borderWidth: 2,
-    borderColor: '#22c55e',
+    borderColor: '#FFFFFF',
   },
   slideCardImage: {
     width: '100%' as const,
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     left: 18,
     fontSize: 28,
     fontWeight: '900' as const,
-    color: '#22c55e',
+    color: '#FFFFFF',
     zIndex: 2,
   },
   slideCardBackContent: {
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#333',
   },
   dotActive: {
-    backgroundColor: '#22c55e',
+    backgroundColor: '#FFFFFF',
     width: 20,
     borderRadius: 4,
   },

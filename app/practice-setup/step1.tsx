@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000', // Matches the rest of the screen
   },
   nextButton: {
-    backgroundColor: '#006735', // Your green color
+    backgroundColor: '#333333',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',

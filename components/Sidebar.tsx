@@ -166,9 +166,9 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     bottom: 0,
-    backgroundColor: '#0D1410',
+    backgroundColor: '#0A0A0A',
     borderRightWidth: 1,
-    borderRightColor: '#1C2922',
+    borderRightColor: '#1C1C1C',
     justifyContent: 'space-between' as const,
   },
   sidebarHeader: {
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#00E676',
+    backgroundColor: '#FFFFFF',
   },
   sidebarFooter: {
     paddingHorizontal: 20,

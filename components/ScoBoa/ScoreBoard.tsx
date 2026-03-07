@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
     borderLeftWidth: 4,
-    borderLeftColor: '#1B5E20',
+    borderLeftColor: '#333333',
   },
   playerRowExpanded: {
     borderBottomWidth: 0,
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
     color: '#e53935',
   },
   evenPar: {
-    color: '#1B5E20',
+    color: '#333333',
   },
   scorecardContainer: {
     backgroundColor: '#fff',
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
     borderLeftWidth: 4,
-    borderLeftColor: '#1B5E20',
+    borderLeftColor: '#333333',
   },
   halfSection: {
     marginBottom: 8,
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scorecardHeaderRow: {
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
     borderRadius: 4,
     marginBottom: 1,
   },

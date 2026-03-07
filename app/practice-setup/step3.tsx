@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
   },
   startButton: {
-    backgroundColor: '#006735', // Your primary green
+    backgroundColor: '#333333',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',

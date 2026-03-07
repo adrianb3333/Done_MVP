@@ -29,7 +29,7 @@ export default function Step2Page2() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator color="#00E676" size="large" />
+        <ActivityIndicator color="#FFFFFF" size="large" />
       </View>
     );
   }
@@ -54,7 +54,7 @@ export default function Step2Page2() {
         <Text style={styles.pageTitle}>All-Time Stats</Text>
         <View style={styles.metaRow}>
           <View style={styles.metaBadge}>
-            <TrendingUp size={12} color="#00E676" />
+            <TrendingUp size={12} color="#FFFFFF" />
             <Text style={styles.metaText}>{stats.holesPlayed} holes played</Text>
           </View>
         </View>

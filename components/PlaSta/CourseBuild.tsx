@@ -36,7 +36,7 @@ export default function CourseBuild({ selected, onSelect }: CourseBuildProps) {
               <Text style={styles.cardSubtitle}>{opt.subtitle}</Text>
             </View>
             {isActive && (
-              <CircleCheck size={24} color="#1B5E20" fill="#1B5E20" stroke="#fff" />
+              <CircleCheck size={24} color="#FFFFFF" fill="#FFFFFF" stroke="#000" />
             )}
           </TouchableOpacity>
         );

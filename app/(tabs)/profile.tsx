@@ -533,7 +533,7 @@ export default function ProfileScreen() {
   const getToParColor = () => {
     if (!lastRound) return '#888';
     const diff = lastRound.totalScore - lastRound.totalPar;
-    if (diff < 0) return '#4CAF50';
+    if (diff < 0) return '#FFFFFF';
     if (diff === 0) return '#1DB954';
     return '#FF5252';
   };
@@ -1375,14 +1375,14 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#1B5E2040',
+    borderColor: '#33333340',
   },
   practiceCard: {
     backgroundColor: '#141414',
     borderRadius: 16,
     padding: 4,
     borderWidth: 1,
-    borderColor: '#2e7d3240',
+    borderColor: '#33333340',
     overflow: 'hidden' as const,
   },
   cardTitle: {
@@ -1776,7 +1776,7 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#1B5E2040',
+    borderColor: '#33333340',
   },
   popupScoreBig: {
     flex: 1,

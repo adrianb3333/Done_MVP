@@ -262,7 +262,7 @@ export default function FriendsModal() {
 
       <TouchableOpacity style={styles.createRow} activeOpacity={0.7}>
         <View style={styles.createIcon}>
-          <Plus size={18} color="#1B5E20" />
+          <Plus size={18} color="#FFFFFF" />
         </View>
         <Text style={styles.createText}>Skapa oregistrerad spelare</Text>
       </TouchableOpacity>
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   doneBtn: {
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 8,
@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
   slotAvatarPlaceholder: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
   },
   slotInitial: {
     fontSize: 20,
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -490,13 +490,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   radioActive: {
-    borderColor: '#1B5E20',
+    borderColor: '#FFFFFF',
   },
   radioDot: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#FFFFFF',
   },
   listContent: {
     paddingBottom: 40,

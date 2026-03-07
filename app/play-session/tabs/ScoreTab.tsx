@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
     marginHorizontal: 16,
     marginTop: 8,
     paddingHorizontal: 16,
@@ -321,7 +321,7 @@ const styles = StyleSheet.create({
   },
   playerHcp: {
     fontSize: 13,
-    color: '#c8e6c9',
+    color: '#CCCCCC',
     fontWeight: '500' as const,
   },
   toParBadge: {
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   toParText: {
     fontSize: 18,
     fontWeight: '800' as const,
-    color: '#1B5E20',
+    color: '#333333',
   },
   digitArea: {
     flex: 1,

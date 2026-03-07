@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   background: { flex: 1, backgroundColor: '#020d12' },
   container: { flex: 1 },
   scrollContent: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 100 },
-  sectionTitle: { fontSize: 28, fontWeight: "700" as const, color: '#006735', marginBottom: 16, textAlign: 'center' },
+  sectionTitle: { fontSize: 28, fontWeight: "700" as const, color: '#FFFFFF', marginBottom: 16, textAlign: 'center' },
   clubDataSection: {
     marginBottom: 20,
   },

@@ -136,8 +136,8 @@ export default function CourseModal() {
         <Star
           key={i}
           size={14}
-          color={i <= Math.floor(rating) ? '#1B5E20' : '#ccc'}
-          fill={i <= Math.floor(rating) ? '#1B5E20' : 'transparent'}
+          color={i <= Math.floor(rating) ? '#FFB74D' : '#ccc'}
+          fill={i <= Math.floor(rating) ? '#FFB74D' : 'transparent'}
         />
       );
     }
@@ -189,8 +189,8 @@ export default function CourseModal() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>BANOR</Text>
         <View style={styles.headerIcons}>
-          <MapPin size={22} color="#1B5E20" />
-          <Search size={22} color="#1B5E20" />
+          <MapPin size={22} color="#FFFFFF" />
+          <Search size={22} color="#FFFFFF" />
         </View>
       </View>
 
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
   },
   searchBar: {
     borderWidth: 1.5,
-    borderColor: '#1B5E20',
+    borderColor: '#333333',
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: Platform.OS === 'ios' ? 10 : 6,
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#1B5E20',
+    borderColor: '#333333',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -347,13 +347,13 @@ const styles = StyleSheet.create({
   },
   countryText: {
     fontSize: 14,
-    color: '#1B5E20',
+    color: '#CCCCCC',
     fontWeight: '500' as const,
     flex: 1,
   },
   countryChevron: {
     fontSize: 10,
-    color: '#1B5E20',
+    color: '#CCCCCC',
   },
   countryDropdown: {
     backgroundColor: '#141C18',
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#243028',
   },
   countryOptionActive: {
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
   },
   countryOptionText: {
     fontSize: 15,

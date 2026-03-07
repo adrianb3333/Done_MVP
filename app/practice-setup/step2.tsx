@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   stepIndicator: {
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
   },
   nextButton: {
-    backgroundColor: '#006735',
+    backgroundColor: '#333333',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',

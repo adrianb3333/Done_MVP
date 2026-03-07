@@ -9,7 +9,7 @@ interface StrokesGainedSection {
 
 const SECTIONS: StrokesGainedSection[] = [
   { title: 'Off-the-Tee', abbrev: 'OTT', color: '#4FC3F7' },
-  { title: 'Approach-the-Green', abbrev: 'APP', color: '#81C784' },
+  { title: 'Approach-the-Green', abbrev: 'APP', color: '#90A4AE' },
   { title: 'Around-the-Green', abbrev: 'ARG', color: '#FFB74D' },
   { title: 'Putting', abbrev: 'P', color: '#E57373' },
 ];

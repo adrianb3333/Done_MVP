@@ -75,17 +75,17 @@ export default function Step3Page1({ onRoundNameChange, roundDate, onPrivateChan
     <View style={styles.container}>
       <View style={styles.miniStatsRow}>
         <View style={styles.miniStat}>
-          <Clock size={14} color="#00E676" />
+          <Clock size={14} color="#FFFFFF" />
           <Text style={styles.miniStatValue}>{formatTime(currentTime)}</Text>
         </View>
         <View style={styles.miniStat}>
-          <Thermometer size={14} color="#00E676" />
+          <Thermometer size={14} color="#FFFFFF" />
           <Text style={styles.miniStatValue}>
             {tempLoading ? '...' : temperature !== null ? `${temperature}°C` : '--°C'}
           </Text>
         </View>
         <View style={styles.miniStat}>
-          <Timer size={14} color="#00E676" />
+          <Timer size={14} color="#FFFFFF" />
           <Text style={styles.miniStatValue}>0:00</Text>
         </View>
       </View>
@@ -122,15 +122,15 @@ export default function Step3Page1({ onRoundNameChange, roundDate, onPrivateChan
       <View style={styles.privateCard}>
         <View style={styles.privateLeft}>
           <View style={styles.lockIcon}>
-            <Lock size={20} color={isPrivate ? '#00E676' : '#8A9B90'} strokeWidth={2} />
+            <Lock size={20} color={isPrivate ? '#FFFFFF' : '#8A9B90'} strokeWidth={2} />
           </View>
           <Text style={styles.privateText}>PRIVATE</Text>
         </View>
         <Switch
           value={isPrivate}
           onValueChange={handlePrivateToggle}
-          trackColor={{ false: '#2A3A2E', true: '#1B5E20' }}
-          thumbColor={isPrivate ? '#00E676' : '#666'}
+          trackColor={{ false: '#2A2A2A', true: '#444444' }}
+          thumbColor={isPrivate ? '#FFFFFF' : '#666'}
           ios_backgroundColor="#2A3A2E"
         />
       </View>
@@ -138,15 +138,15 @@ export default function Step3Page1({ onRoundNameChange, roundDate, onPrivateChan
       <View style={styles.privateCard}>
         <View style={styles.privateLeft}>
           <View style={styles.lockIcon}>
-            <Radio size={20} color={sensorsEnabled ? '#00E676' : '#8A9B90'} strokeWidth={2} />
+            <Radio size={20} color={sensorsEnabled ? '#FFFFFF' : '#8A9B90'} strokeWidth={2} />
           </View>
           <Text style={styles.privateText}>SENSORS</Text>
         </View>
         <Switch
           value={sensorsEnabled}
           onValueChange={setSensorsEnabled}
-          trackColor={{ false: '#2A3A2E', true: '#1B5E20' }}
-          thumbColor={sensorsEnabled ? '#00E676' : '#666'}
+          trackColor={{ false: '#2A2A2A', true: '#444444' }}
+          thumbColor={sensorsEnabled ? '#FFFFFF' : '#666'}
           ios_backgroundColor="#2A3A2E"
         />
       </View>
@@ -154,15 +154,15 @@ export default function Step3Page1({ onRoundNameChange, roundDate, onPrivateChan
       <View style={styles.privateCard}>
         <View style={styles.privateLeft}>
           <View style={styles.lockIcon}>
-            <Smartphone size={20} color={deviceEnabled ? '#00E676' : '#8A9B90'} strokeWidth={2} />
+            <Smartphone size={20} color={deviceEnabled ? '#FFFFFF' : '#8A9B90'} strokeWidth={2} />
           </View>
           <Text style={styles.privateText}>DEVICE</Text>
         </View>
         <Switch
           value={deviceEnabled}
           onValueChange={setDeviceEnabled}
-          trackColor={{ false: '#2A3A2E', true: '#1B5E20' }}
-          thumbColor={deviceEnabled ? '#00E676' : '#666'}
+          trackColor={{ false: '#2A2A2A', true: '#444444' }}
+          thumbColor={deviceEnabled ? '#FFFFFF' : '#666'}
           ios_backgroundColor="#2A3A2E"
         />
       </View>
@@ -227,18 +227,18 @@ const styles = StyleSheet.create({
   nameValue: {
     fontSize: 15,
     fontWeight: '500' as const,
-    color: '#00E676',
+    color: '#FFFFFF',
     minHeight: 22,
   },
   nameInput: {
     fontSize: 15,
     fontWeight: '500' as const,
-    color: '#00E676',
+    color: '#FFFFFF',
     padding: 0,
     margin: 0,
     minHeight: 22,
     borderBottomWidth: 1,
-    borderBottomColor: '#00E676',
+    borderBottomColor: '#FFFFFF',
   },
   dateValue: {
     fontSize: 15,

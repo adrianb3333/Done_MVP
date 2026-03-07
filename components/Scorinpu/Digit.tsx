@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     borderColor: '#2a2a2a',
   },
   digitButtonPar: {
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
   },
   digitText: {
     fontSize: 26,
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     fontWeight: '500' as const,
   },
   digitLabelPar: {
-    color: '#c8e6c9',
+    color: '#CCCCCC',
   },
   bottomRow: {
     flexDirection: 'row',

@@ -69,7 +69,7 @@ const UiTra = () => {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color="#2e7d32" />
+        <ActivityIndicator color="#FFFFFF" />
       </View>
     );
   }
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     padding: 20,
     flexDirection: 'row',
     borderWidth: 2,
-    borderColor: '#2e7d32', // Matches Hulta GK theme
+    borderColor: '#333333', // Matches Hulta GK theme
   },
   leftColumn: { flex: 1 },
   rightColumn: { justifyContent: 'center' },

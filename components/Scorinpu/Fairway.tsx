@@ -150,8 +150,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   fairwayBtnActive: {
-    backgroundColor: '#1B5E20',
-    borderColor: '#2e7d32',
+    backgroundColor: '#333333',
+    borderColor: '#444444',
   },
   fairwayBtnText: {
     fontSize: 12,
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -197,8 +197,8 @@ const styles = StyleSheet.create({
     borderColor: '#3a4a3e',
   },
   distanceBtnActive: {
-    backgroundColor: '#1B5E20',
-    borderColor: '#2e7d32',
+    backgroundColor: '#333333',
+    borderColor: '#444444',
   },
   distanceBtnText: {
     fontSize: 14,
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: '#1B5E20',
+    backgroundColor: '#333333',
     alignItems: 'center',
   },
   nextBtnDisabled: {

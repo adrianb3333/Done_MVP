@@ -59,19 +59,19 @@ export default function Step3Page1() {
 
       <View style={styles.miniStatsRow}>
         <View style={styles.miniStat}>
-          <Clock size={16} color="#00E676" />
+          <Clock size={16} color="#FFFFFF" />
           <Text style={styles.miniStatLabel}>Time</Text>
           <Text style={styles.miniStatValue}>{formatTime(currentTime)}</Text>
         </View>
         <View style={styles.miniStat}>
-          <Thermometer size={16} color="#00E676" />
+          <Thermometer size={16} color="#FFFFFF" />
           <Text style={styles.miniStatLabel}>Temp</Text>
           <Text style={styles.miniStatValue}>
             {tempLoading ? '...' : temperature !== null ? `${temperature}°C` : '--°C'}
           </Text>
         </View>
         <View style={styles.miniStat}>
-          <Timer size={16} color="#00E676" />
+          <Timer size={16} color="#FFFFFF" />
           <Text style={styles.miniStatLabel}>Timer</Text>
           <Text style={styles.miniStatValue}>0:00</Text>
         </View>
@@ -80,15 +80,15 @@ export default function Step3Page1() {
       <View style={styles.toggleCard}>
         <View style={styles.toggleLeft}>
           <View style={styles.toggleIcon}>
-            <Radio size={20} color={sensorsEnabled ? '#00E676' : '#8A9B90'} strokeWidth={2} />
+            <Radio size={20} color={sensorsEnabled ? '#FFFFFF' : '#8A9B90'} strokeWidth={2} />
           </View>
           <Text style={styles.toggleText}>SENSORS</Text>
         </View>
         <Switch
           value={sensorsEnabled}
           onValueChange={setSensorsEnabled}
-          trackColor={{ false: '#2A3A2E', true: '#1B5E20' }}
-          thumbColor={sensorsEnabled ? '#00E676' : '#666'}
+          trackColor={{ false: '#2A2A2A', true: '#444444' }}
+          thumbColor={sensorsEnabled ? '#FFFFFF' : '#666'}
           ios_backgroundColor="#2A3A2E"
         />
       </View>
@@ -96,15 +96,15 @@ export default function Step3Page1() {
       <View style={styles.toggleCard}>
         <View style={styles.toggleLeft}>
           <View style={styles.toggleIcon}>
-            <Smartphone size={20} color={deviceEnabled ? '#00E676' : '#8A9B90'} strokeWidth={2} />
+            <Smartphone size={20} color={deviceEnabled ? '#FFFFFF' : '#8A9B90'} strokeWidth={2} />
           </View>
           <Text style={styles.toggleText}>DEVICE</Text>
         </View>
         <Switch
           value={deviceEnabled}
           onValueChange={setDeviceEnabled}
-          trackColor={{ false: '#2A3A2E', true: '#1B5E20' }}
-          thumbColor={deviceEnabled ? '#00E676' : '#666'}
+          trackColor={{ false: '#2A2A2A', true: '#444444' }}
+          thumbColor={deviceEnabled ? '#FFFFFF' : '#666'}
           ios_backgroundColor="#2A3A2E"
         />
       </View>
