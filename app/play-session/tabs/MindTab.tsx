@@ -16,15 +16,15 @@ type ModalKey = 'swing-thoughts' | 'club' | 'mental-game' | 'golf-iq' | 'general
 
 const NOTES_DATA: { title: string; description: string; modalKey: ModalKey }[] = [
   { title: "Swing Thoughts", description: "Describe Every Detail Of Your Swing", modalKey: "swing-thoughts" },
-  { title: "Club", description: "Learn your Club Difference", modalKey: "club" },
+  { title: "Mental Thinking & Strategies", description: "Your mental approach to the game", modalKey: "club" },
   { title: "Mental Game", description: '"Golf is 90% mental and 10% physical."', modalKey: "mental-game" },
   { title: "Golf IQ", description: "Manage Yourself On The Course", modalKey: "golf-iq" },
   { title: "General", description: "Your Own Focus", modalKey: "general" },
 ];
 
 const PREPARATION_DATA = {
-  title: "Pre Round",
-  description: "Create routines to perform better!",
+  title: "Terrain & Weather",
+  description: "Understand how external factors affect your game",
   modalKey: "pre-round" as ModalKey,
 };
 
@@ -91,7 +91,7 @@ export default function MindTab() {
             </Pressable>
           ))}
 
-          <Text style={[styles.sectionTitle, { marginTop: 32 }]}>Preparation!</Text>
+          <Text style={[styles.sectionTitle, { marginTop: 32 }]}>The External Factors</Text>
 
           <Pressable 
             onPress={() => setActiveModal(PREPARATION_DATA.modalKey)}

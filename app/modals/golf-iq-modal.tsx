@@ -1,43 +1,24 @@
 import React, { useCallback, useRef } from "react";
-import { StyleSheet, Text, View, ImageBackground, ScrollView, Pressable, TextInput } from "react-native";
+import { StyleSheet, Text, View, ScrollView, Pressable, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { X, ChevronLeft } from "lucide-react-native";
+import { X } from "lucide-react-native";
 import { useRouter } from "expo-router";
-import LiquidGlassCard from "@/components/reusables/LiquidGlassCard";
-import StatCard from "@/components/reusables/StatCard";
 import { useUserData } from "@/hooks/useUserData";
 
-const INFO_CATEGORIES = [
-  { id: 'club', label: 'Club', count: 11 },
-  { id: 'ball', label: 'Ball & Launch', count: 6 },
-  { id: 'flight', label: 'Flight & Landing', count: 8 },
-  { id: 'impact', label: 'Impact', count: 4 },
-  { id: 'body', label: 'Body Mechanism', count: 4 },
-  { id: 'turf', label: 'Turf Interaction', count: 3 },
-  { id: 'wedge', label: 'Wedge', count: 3 },
-  { id: 'putter', label: 'Putter', count: 3 },
-  { id: 'green', label: 'Green Reading', count: 4 },
+const SECTIONS = [
+  { id: 'offTheTee', label: 'Off the Tee' },
+  { id: 'approachTheGreen', label: 'Approach the Green' },
+  { id: 'aroundTheGreen', label: 'Around the Green' },
+  { id: 'putting', label: 'Putting' },
 ];
 
-export default function TrainingDashboard({ onClose }: { onClose?: () => void }) {
+export default function GolfIQModal({ onClose }: { onClose?: () => void }) {
   const router = useRouter();
+  const handleClose = () => { if (onClose) { onClose(); } else { router.back(); } };
   const { userData, updateGolfIQ } = useUserData();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  
-  const [activeInfoCard, setActiveInfoCard] = React.useState<string | null>(null);
-  const [activeDataCard, setActiveDataCard] = React.useState<number | null>(null);
 
   const golfIQNotes = userData.golfIQ;
-
-  const handleBack = () => {
-    if (activeDataCard !== null) {
-      setActiveDataCard(null);
-    } else if (activeInfoCard !== null) {
-      setActiveInfoCard(null);
-    } else {
-      if (onClose) { onClose(); } else { router.back(); }
-    }
-  };
 
   const handleNoteChange = useCallback((key: string, value: string) => {
     if (debounceRef.current) {
@@ -49,124 +30,94 @@ export default function TrainingDashboard({ onClose }: { onClose?: () => void })
     }, 500);
   }, [updateGolfIQ]);
 
-  const currentCategory = INFO_CATEGORIES.find(c => c.id === activeInfoCard);
-  const noteKey = `${activeInfoCard}-${activeDataCard}`;
-
   return (
-    <ImageBackground
-      source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/2og1gfzbpfgrdjyzujhyg' }}
-      style={styles.background}
-    >
-      <SafeAreaView style={styles.container}>
+    <View style={styles.background}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.header}>
-          <Pressable onPress={handleBack} style={styles.closeButton}>
-            {activeInfoCard ? <ChevronLeft size={28} color="#FFFFFF" /> : <X size={28} color="#FFFFFF" />}
+          <Pressable onPress={handleClose} style={styles.closeButton}>
+            <X size={28} color="#FFFFFF" strokeWidth={2.5} />
           </Pressable>
-          <Text style={styles.headerTitle}>
-            {activeDataCard !== null ? "Data Entry" : activeInfoCard ? "Select Data" : "Performance"}
-          </Text>
+          <Text style={styles.headerTitle}>Golf IQ</Text>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          
-          {!activeInfoCard && (
-            <View style={styles.grid}>
-              <Text style={styles.sectionTitle}>InfoCard</Text>
-              <View style={styles.rowWrap}>
-                {INFO_CATEGORIES.map((item) => (
-                  <Pressable 
-                    key={item.id} 
-                    style={styles.infoCardWrapper}
-                    onPress={() => setActiveInfoCard(item.id)}
-                  >
-                    <StatCard label={item.label} value={`${item.count}`} />
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-          )}
+          <Text style={styles.subtitle}>Manage Yourself On The Course</Text>
 
-          {activeInfoCard && activeDataCard === null && (
-            <View style={styles.grid}>
-              <Text style={styles.sectionTitle}>DataCard: {currentCategory?.label}</Text>
-              <View style={styles.rowWrap}>
-                {Array.from({ length: currentCategory?.count || 0 }).map((_, index) => (
-                  <Pressable 
-                    key={index} 
-                    style={styles.infoCardWrapper}
-                    onPress={() => setActiveDataCard(index + 1)}
-                  >
-                    <StatCard label={`Metric ${index + 1}`} value="" />
-                  </Pressable>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {activeDataCard !== null && (
-            <LiquidGlassCard containerStyle={styles.inputCard}>
-              <Text style={styles.inputHeader}>{currentCategory?.label} - Point {activeDataCard}</Text>
+          {SECTIONS.map((section) => (
+            <View key={section.id} style={styles.inputCard}>
+              <Text style={styles.sectionLabel}>{section.label}</Text>
               <TextInput
                 style={styles.inputBox}
-                placeholder="Enter technical notes..."
-                placeholderTextColor="#999"
+                placeholder={`Your ${section.label.toLowerCase()} strategy...`}
+                placeholderTextColor="rgba(255,255,255,0.3)"
                 multiline
-                defaultValue={golfIQNotes[noteKey] || ''}
-                onChangeText={(text) => handleNoteChange(noteKey, text)}
+                textAlignVertical="top"
+                defaultValue={golfIQNotes[section.id] || ''}
+                onChangeText={(text) => handleNoteChange(section.id, text)}
               />
-            </LiquidGlassCard>
-          )}
-
+            </View>
+          ))}
         </ScrollView>
       </SafeAreaView>
-    </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  background: { flex: 1, backgroundColor: '#020d12' },
-  container: { flex: 1 },
+  background: {
+    flex: 1,
+    backgroundColor: '#0A0A0A',
+  },
+  container: {
+    flex: 1,
+  },
   header: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  closeButton: {
+    padding: 8,
   },
   headerTitle: {
     flex: 1,
     fontSize: 22,
-    fontWeight: "700" as const,
-    color: "#FFD700",
-    textAlign: "center",
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+    textAlign: 'center' as const,
     marginRight: 44,
   },
-  closeButton: { padding: 8 },
-  scrollContent: { padding: 12 },
-  sectionTitle: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: '800' as const,
-    marginBottom: 15,
-    textAlign: 'center',
-    textTransform: 'uppercase'
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 60,
   },
-  grid: { width: '100%' },
-  rowWrap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: 'flex-start',
+  subtitle: {
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center' as const,
+    marginBottom: 30,
   },
-  infoCardWrapper: {
-    width: "33.33%",
-    padding: 5,
+  inputCard: {
+    backgroundColor: '#151515',
+    borderRadius: 14,
+    padding: 18,
+    marginBottom: 20,
   },
-  inputCard: { padding: 20, marginTop: 20 },
-  inputHeader: { color: '#FFCC00', fontSize: 20, fontWeight: '700' as const, marginBottom: 15 },
+  sectionLabel: {
+    fontSize: 17,
+    fontWeight: '700' as const,
+    color: '#7CFC7C',
+    marginBottom: 12,
+  },
   inputBox: {
-    backgroundColor: '#FFF',
+    backgroundColor: '#1E1E1E',
     borderRadius: 10,
-    padding: 15,
-    minHeight: 120,
+    padding: 14,
     fontSize: 16,
-    textAlignVertical: 'top'
-  }
+    color: '#FFFFFF',
+    minHeight: 110,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
 });
