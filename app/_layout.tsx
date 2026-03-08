@@ -235,6 +235,14 @@ function AppContent() {
           }} 
         />
         <Stack.Screen 
+          name="modals/rounds-history-modal" 
+          options={{ 
+            presentation: "fullScreenModal",
+            headerShown: false,
+            animation: "slide_from_bottom"
+          }} 
+        />
+        <Stack.Screen 
           name="modals/qr-modal" 
           options={{ 
             presentation: "fullScreenModal",
