@@ -16,7 +16,7 @@ import {
   Animated,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Menu, BarChart2, TrendingUp, Crosshair, List, Video, Plus, Columns2, Trash2, Flag, Target, Dumbbell, ChevronDown, HelpCircle, Filter, ChevronRight, MapPin, Search, Star } from 'lucide-react-native';
+import { Menu, BarChart2, TrendingUp, Crosshair, List, Video, Plus, Columns2, Trash2, Flag, Target, Dumbbell, ChevronRight, MapPin, Search, Star, X } from 'lucide-react-native';
 import { useScrollHeader, ScrollHeaderProvider, useScrollHeaderContext } from '@/hooks/useScrollHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TabCourse, { CourseTab } from '@/components/PlaSta/TabCourse';
@@ -471,12 +471,28 @@ const OVERALL_CATEGORIES = [
 ];
 
 function MiniChart({ data, color, height = 120 }: { data: number[]; color: string; height?: number }) {
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   if (data.length === 0) return null;
   const maxVal = Math.max(...data.map(Math.abs), 3);
   const chartWidth = 280;
   const barAreaHeight = height;
   const midY = barAreaHeight / 2;
   const stepX = chartWidth / (data.length - 1 || 1);
+
+  const handleChartPress = useCallback((evt: any) => {
+    const locationX = evt.nativeEvent.locationX;
+    let closestIdx = 0;
+    let closestDist = Infinity;
+    for (let i = 0; i < data.length; i++) {
+      const dotX = i * stepX;
+      const dist = Math.abs(locationX - dotX);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closestIdx = i;
+      }
+    }
+    setSelectedIndex(closestIdx);
+  }, [data.length, stepX]);
 
   return (
     <View style={sgStyles.chartContainer}>
@@ -487,7 +503,7 @@ function MiniChart({ data, color, height = 120 }: { data: number[]; color: strin
         <Text style={sgStyles.chartYLabel}>-1.5</Text>
         <Text style={sgStyles.chartYLabel}>3</Text>
       </View>
-      <View style={[sgStyles.chartArea, { height: barAreaHeight }]}>
+      <Pressable onPress={handleChartPress} style={[sgStyles.chartArea, { height: barAreaHeight }]}>
         {data.map((val, i) => {
           const barH = (Math.abs(val) / maxVal) * (barAreaHeight / 2 - 4);
           const isNeg = val < 0;
@@ -510,20 +526,29 @@ function MiniChart({ data, color, height = 120 }: { data: number[]; color: strin
         <View style={[sgStyles.chartMidLine, { top: midY }]} />
         {data.map((val, i) => {
           const y = midY - (val / maxVal) * (barAreaHeight / 2 - 4);
+          const isSelected = selectedIndex === i;
           return (
-            <View
-              key={`dot-${i}`}
-              style={[
-                sgStyles.chartDot,
-                {
-                  left: i * stepX - 4,
-                  top: y - 4,
-                  backgroundColor: i === data.length - 1 ? color : 'transparent',
-                  borderColor: color,
-                  borderWidth: 2,
-                },
-              ]}
-            />
+            <View key={`dot-${i}`}>
+              <View
+                style={[
+                  sgStyles.chartDot,
+                  {
+                    left: i * stepX - 4,
+                    top: y - 4,
+                    backgroundColor: (i === data.length - 1 || isSelected) ? color : 'transparent',
+                    borderColor: color,
+                    borderWidth: 2,
+                  },
+                ]}
+              />
+              {isSelected && (
+                <View style={[sgStyles.chartTooltip, { left: i * stepX - 20, top: y - 28 }]}>
+                  <Text style={sgStyles.chartTooltipText}>
+                    {val >= 0 ? '+' : ''}{val.toFixed(1)}
+                  </Text>
+                </View>
+              )}
+            </View>
           );
         })}
         {data.length > 1 && (
@@ -555,37 +580,18 @@ function MiniChart({ data, color, height = 120 }: { data: number[]; color: strin
             })}
           </View>
         )}
-        <View style={sgStyles.chartRightLabel}>
-          <Text style={sgStyles.chartLatestText}>Latest</Text>
-          <Text style={sgStyles.chartLatestText}>Round</Text>
-        </View>
-      </View>
+      </Pressable>
     </View>
   );
 }
 
-function SGOverallView() {
+function SGOverallView({ selectedHandicap }: { selectedHandicap: string }) {
   const scrollHandler = useScrollHeaderContext();
   return (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }} onScroll={scrollHandler} scrollEventThrottle={16}>
-      <View style={sgStyles.compareBar}>
-        <Text style={sgStyles.compareText}>
-          Compared to a <Text style={sgStyles.compareBold}>0 HCP</Text> using <Text style={sgStyles.compareBold}>10 Round Avg</Text>
-          <Text style={sgStyles.compareChevron}> ▾</Text>
-        </Text>
-        <TouchableOpacity activeOpacity={0.7}>
-          <Filter size={18} color="#8A9B90" />
-        </TouchableOpacity>
-      </View>
-
       <View style={sgStyles.titleRow}>
-        <View style={sgStyles.titleLeft}>
-          <Text style={sgStyles.gameTitle}>Overall Game</Text>
-          <ChevronDown size={16} color="#F5F7F6" />
-        </View>
-        <TouchableOpacity activeOpacity={0.7}>
-          <HelpCircle size={20} color="#8A9B90" />
-        </TouchableOpacity>
+        <Text style={sgStyles.gameTitle}>Overall Game</Text>
+        <Text style={sgStyles.handicapBadgeText}>{selectedHandicap}</Text>
       </View>
 
       <View style={sgStyles.mainCard}>
@@ -632,7 +638,7 @@ function SGOverallView() {
   );
 }
 
-function SGCategoryView({ segment }: { segment: SGSegment }) {
+function SGCategoryView({ segment, selectedHandicap }: { segment: SGSegment; selectedHandicap: string }) {
   const scrollHandler = useScrollHeaderContext();
   const config = SG_CONFIG[segment];
   const isPositive = config.value >= 0;
@@ -640,69 +646,36 @@ function SGCategoryView({ segment }: { segment: SGSegment }) {
 
   return (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }} onScroll={scrollHandler} scrollEventThrottle={16}>
-      <View style={sgStyles.compareBar}>
-        <Text style={sgStyles.compareText}>
-          Compared to a <Text style={sgStyles.compareBold}>0 HCP</Text> using <Text style={sgStyles.compareBold}>10 Round Avg</Text>
-          <Text style={sgStyles.compareChevron}> ▾</Text>
-        </Text>
-        <TouchableOpacity activeOpacity={0.7}>
-          <Filter size={18} color="#8A9B90" />
-        </TouchableOpacity>
-      </View>
-
       <View style={sgStyles.titleRow}>
-        <View style={sgStyles.titleLeft}>
-          <Text style={sgStyles.gameTitle}>{config.title}</Text>
-          <ChevronDown size={16} color="#F5F7F6" />
-        </View>
-        <TouchableOpacity activeOpacity={0.7}>
-          <HelpCircle size={20} color="#8A9B90" />
-        </TouchableOpacity>
+        <Text style={sgStyles.gameTitle}>{config.title}</Text>
+        <Text style={sgStyles.handicapBadgeText}>{selectedHandicap}</Text>
       </View>
 
-      <View style={sgStyles.circleWrap}>
-        <View style={[sgStyles.circleOuter, { borderColor: config.color }]}>
-          <Text style={[sgStyles.circleValue, { color: config.color }]}>{valueStr}</Text>
-        </View>
-        <Text style={sgStyles.circleSubtitle}>{config.subtitle}</Text>
+      <View style={sgStyles.bigValueWrap}>
+        <Text style={[sgStyles.bigSGValue, { color: isPositive ? '#FFFFFF' : '#E57373' }]}>{valueStr}</Text>
+        <Text style={sgStyles.avgSGLabel}>AVG SG</Text>
       </View>
-
-      <Text style={sgStyles.catDescription}>
-        {config.description.split(isPositive ? 'gaining' : 'losing').map((part, i) => {
-          if (i === 0) return <Text key={i}>{part}</Text>;
-          return (
-            <Text key={i}>
-              <Text style={{ color: config.color, fontWeight: '700' as const }}>
-                {isPositive ? 'gaining' : 'losing'}
-              </Text>
-              {part}
-            </Text>
-          );
-        })}
-      </Text>
 
       <MiniChart data={config.chartData} color={config.color} />
-
-      <View style={sgStyles.trendCard}>
-        <Text style={sgStyles.trendDescription}>
-          {config.trendDirection === 'up' ? 'Way to go! ' : 'Okay, time to reset. '}
-          Your {config.title.toLowerCase().replace(' game', '')} game is{' '}
-          <Text style={{ color: config.trendDirection === 'up' ? '#FFFFFF' : '#E57373', fontWeight: '700' as const }}>
-            trending {config.trendDirection} by {config.trend >= 0 ? '+' : ''}{config.trend.toFixed(1)} SG
-          </Text>{' '}
-          compared to your last 10 round average.
-        </Text>
-      </View>
     </ScrollView>
   );
 }
 
+const HANDICAP_OPTIONS = ['Pro', 'Scratch', '5 Handicap', '10 Handicap', '15 Handicap', '20 Handicap'];
+
 function SGContent() {
   const [sgSegment, setSgSegment] = useState<SGSegment>('ovve');
+  const [selectedHandicap, setSelectedHandicap] = useState<string>('Scratch');
+  const [showHandicapPicker, setShowHandicapPicker] = useState(false);
 
   return (
     <View style={{ flex: 1 }}>
-      <Text style={sgStyles.sectionHeader}>Strokes Gained</Text>
+      <View style={sgStyles.sectionHeaderRow}>
+        <Text style={sgStyles.sectionHeader}>Strokes Gained</Text>
+        <TouchableOpacity onPress={() => setShowHandicapPicker(true)} activeOpacity={0.7} style={sgStyles.vsIconBtn}>
+          <Text style={sgStyles.vsIcon}>🆚</Text>
+        </TouchableOpacity>
+      </View>
       <View style={sgStyles.segmentWrap}>
         <View style={sgStyles.segmentControl}>
           {SG_SEGMENTS.map((seg) => (
@@ -721,22 +694,66 @@ function SGContent() {
       </View>
 
       {sgSegment === 'ovve' ? (
-        <SGOverallView />
+        <SGOverallView selectedHandicap={selectedHandicap} />
       ) : (
-        <SGCategoryView segment={sgSegment} />
+        <SGCategoryView segment={sgSegment} selectedHandicap={selectedHandicap} />
       )}
+
+      <Modal
+        visible={showHandicapPicker}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowHandicapPicker(false)}
+      >
+        <Pressable style={sgStyles.handicapOverlay} onPress={() => setShowHandicapPicker(false)}>
+          <View style={sgStyles.handicapModal}>
+            <View style={sgStyles.handicapModalHeader}>
+              <Text style={sgStyles.handicapModalTitle}>Compare Against</Text>
+              <TouchableOpacity onPress={() => setShowHandicapPicker(false)}>
+                <X size={20} color="#8A9B90" />
+              </TouchableOpacity>
+            </View>
+            {HANDICAP_OPTIONS.map((option) => (
+              <TouchableOpacity
+                key={option}
+                style={[sgStyles.handicapOption, selectedHandicap === option && sgStyles.handicapOptionActive]}
+                onPress={() => {
+                  setSelectedHandicap(option);
+                  setShowHandicapPicker(false);
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={[sgStyles.handicapOptionText, selectedHandicap === option && sgStyles.handicapOptionTextActive]}>
+                  {option}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
 
 const sgStyles = StyleSheet.create({
+  sectionHeaderRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    paddingTop: 14,
+    paddingBottom: 6,
+    gap: 8,
+  },
   sectionHeader: {
     fontSize: 22,
     fontWeight: '800' as const,
     color: '#F5F7F6',
-    textAlign: 'center' as const,
-    paddingTop: 14,
-    paddingBottom: 6,
+  },
+  vsIconBtn: {
+    padding: 4,
+  },
+  vsIcon: {
+    fontSize: 20,
   },
   segmentWrap: {
     paddingHorizontal: 16,
@@ -768,48 +785,42 @@ const sgStyles = StyleSheet.create({
   segmentTextActive: {
     color: '#000',
   },
-  compareBar: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-    backgroundColor: 'transparent',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#222222',
-  },
-  compareText: {
-    fontSize: 12,
-    color: '#8A9B90',
-    fontWeight: '500' as const,
-  },
-  compareBold: {
-    fontWeight: '800' as const,
-    color: '#F5F7F6',
-  },
-  compareChevron: {
-    color: '#5A6B60',
-  },
   titleRow: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     marginBottom: 20,
-    gap: 6,
-  },
-  titleLeft: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 4,
-    flex: 1,
-    justifyContent: 'center' as const,
+    gap: 10,
   },
   gameTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
     color: '#F5F7F6',
+  },
+  handicapBadgeText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#8A9B90',
+    backgroundColor: '#1A1A1A',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    overflow: 'hidden' as const,
+  },
+  bigValueWrap: {
+    alignItems: 'center' as const,
+    marginBottom: 24,
+  },
+  bigSGValue: {
+    fontSize: 52,
+    fontWeight: '800' as const,
+    letterSpacing: -2,
+  },
+  avgSGLabel: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: '#8A9B90',
+    marginTop: 4,
   },
   mainCard: {
     backgroundColor: 'transparent',
@@ -929,37 +940,7 @@ const sgStyles = StyleSheet.create({
     fontWeight: '600' as const,
     color: '#8A9B90',
   },
-  circleWrap: {
-    alignItems: 'center' as const,
-    marginBottom: 20,
-  },
-  circleOuter: {
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    borderWidth: 4,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    marginBottom: 8,
-  },
-  circleValue: {
-    fontSize: 40,
-    fontWeight: '800' as const,
-    letterSpacing: -1,
-  },
-  circleSubtitle: {
-    fontSize: 12,
-    fontWeight: '600' as const,
-    color: '#8A9B90',
-  },
-  catDescription: {
-    fontSize: 14,
-    color: '#8A9B90',
-    textAlign: 'center' as const,
-    lineHeight: 21,
-    paddingHorizontal: 20,
-    marginBottom: 24,
-  },
+
   chartContainer: {
     flexDirection: 'row' as const,
     marginBottom: 20,
@@ -1010,29 +991,64 @@ const sgStyles = StyleSheet.create({
     height: 2,
     transformOrigin: 'left center',
   },
-  chartRightLabel: {
+  chartTooltip: {
     position: 'absolute' as const,
-    right: -8,
-    top: 4,
-    alignItems: 'flex-end' as const,
+    backgroundColor: '#333',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    zIndex: 10,
   },
-  chartLatestText: {
-    fontSize: 9,
-    color: '#5A6B60',
-    fontWeight: '500' as const,
+  chartTooltipText: {
+    fontSize: 12,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
   },
-  trendCard: {
-    backgroundColor: 'transparent',
-    borderRadius: 14,
-    padding: 18,
+  handicapOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  handicapModal: {
+    backgroundColor: '#111111',
+    borderRadius: 16,
+    width: '80%' as const,
+    paddingBottom: 8,
     borderWidth: 1,
     borderColor: '#222222',
   },
-  trendDescription: {
-    fontSize: 14,
+  handicapModalHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#222222',
+  },
+  handicapModalTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#F5F7F6',
+  },
+  handicapOption: {
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1A1A1A',
+  },
+  handicapOptionActive: {
+    backgroundColor: '#1A1A1A',
+  },
+  handicapOptionText: {
+    fontSize: 15,
+    fontWeight: '500' as const,
     color: '#8A9B90',
-    textAlign: 'center' as const,
-    lineHeight: 21,
+  },
+  handicapOptionTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700' as const,
   },
 });
 
