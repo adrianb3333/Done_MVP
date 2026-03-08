@@ -14,7 +14,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, QrCode, Share2, Users, Calendar, Target, BarChart3, Trophy } from 'lucide-react-native';
+import { ChevronLeft, QrCode, Share2, Users, Target, BarChart3 } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import * as Sharing from 'expo-sharing';
@@ -195,13 +195,6 @@ export default function QrModal() {
             <Text style={styles.qrHint}>Scan to add as friend</Text>
           </View>
 
-          <View style={styles.actionsRow}>
-            <TouchableOpacity style={styles.actionBtn} activeOpacity={0.7} testID="qr-affiliate-btn">
-              <Users size={20} color="#1DB954" />
-              <Text style={styles.actionText}>Affiliate</Text>
-            </TouchableOpacity>
-          </View>
-
           <View style={styles.gridRow}>
             <TouchableOpacity style={styles.gridBtn} activeOpacity={0.7} testID="qr-last-round">
               <BarChart3 size={22} color="#1DB954" />
@@ -217,16 +210,13 @@ export default function QrModal() {
               <BarChart3 size={22} color="#1DB954" />
               <Text style={styles.gridBtnText}>Shot Overview</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.gridBtn} activeOpacity={0.7} testID="qr-tournament">
-              <Trophy size={22} color="#1DB954" />
-              <Text style={styles.gridBtnText}>Tournament</Text>
+            <TouchableOpacity style={styles.gridBtn} activeOpacity={0.7} testID="qr-affiliate">
+              <Share2 size={22} color="#1DB954" />
+              <Text style={styles.gridBtnText}>Affiliate</Text>
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.eventBtn} activeOpacity={0.8} testID="qr-event-btn">
-            <Calendar size={20} color="#fff" />
-            <Text style={styles.eventBtnText}>EVENT</Text>
-          </TouchableOpacity>
+
         </View>
 
         <View style={styles.page}>
