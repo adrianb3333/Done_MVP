@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,22 @@ import {
 } from 'react-native';
 import { ChevronLeft, Trophy } from 'lucide-react-native';
 import { UserProfile } from '@/contexts/ProfileContext';
+
+interface TourData {
+  eventsPlayed: number;
+  placements: string;
+  earnings: string;
+  rank: string;
+  age: number;
+}
+
+const MOCK_TOUR_DATA: TourData = {
+  eventsPlayed: 3,
+  placements: 'T5',
+  earnings: '1.2k SEK',
+  rank: '#42',
+  age: 27,
+};
 
 interface ProfileCardProps {
   visible: boolean;
@@ -30,6 +46,8 @@ export default function ProfileCard({
   isFollowingUser = false,
   onToggleFollow,
 }: ProfileCardProps) {
+  const [tourModalVisible, setTourModalVisible] = useState<boolean>(false);
+
   if (!user) return null;
 
   const initials = (user.display_name || user.username || '?')
@@ -40,6 +58,7 @@ export default function ProfileCard({
     .slice(0, 2);
 
   const randomHcp = (Math.random() * 30 + 2).toFixed(1);
+  const homeCourse = 'Bro Hof Slott GC';
 
   return (
     <Modal
@@ -58,7 +77,7 @@ export default function ProfileCard({
           >
             <ChevronLeft size={24} color="#EFEFEF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Profile</Text>
+          <Text style={styles.headerTitle}>@{user.username}</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -75,8 +94,7 @@ export default function ProfileCard({
                 <Text style={styles.avatarInitials}>{initials}</Text>
               </View>
             )}
-            <Text style={styles.displayName}>{user.display_name || user.username}</Text>
-            <Text style={styles.username}>@{user.username}</Text>
+            <Text style={styles.homeCourse}>{homeCourse}</Text>
           </View>
 
           <View style={styles.statsRow}>
@@ -91,12 +109,26 @@ export default function ProfileCard({
             </View>
           </View>
 
-          <View style={styles.handicapCard}>
-            <Trophy size={24} color="#D4AF37" />
-            <View style={styles.handicapInfo}>
-              <Text style={styles.handicapLabel}>Handicap</Text>
-              <Text style={styles.handicapValue}>{randomHcp}</Text>
+          <View style={styles.badgeRow}>
+            <View style={styles.handicapCard}>
+              <Trophy size={16} color="#D4AF37" />
+              <View style={styles.handicapInfo}>
+                <Text style={styles.handicapLabel}>Handicap</Text>
+                <Text style={styles.handicapValue}>{randomHcp}</Text>
+              </View>
             </View>
+
+            <TouchableOpacity
+              style={styles.tourCard}
+              activeOpacity={0.7}
+              onPress={() => {
+                console.log('[ProfileCard] TOUR pressed');
+                setTourModalVisible(true);
+              }}
+            >
+              <Trophy size={16} color="#FFB74D" />
+              <Text style={styles.tourButtonText}>TOUR</Text>
+            </TouchableOpacity>
           </View>
 
           {onToggleFollow && (
@@ -126,6 +158,52 @@ export default function ProfileCard({
           </View>
         </ScrollView>
       </View>
+
+      <Modal
+        visible={tourModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setTourModalVisible(false)}
+      >
+        <View style={tourStyles.overlay}>
+          <View style={tourStyles.modalCard}>
+            <Text style={tourStyles.modalTitle}>Tour Stats</Text>
+
+            <View style={tourStyles.dataGrid}>
+              <View style={tourStyles.dataItem}>
+                <Text style={tourStyles.dataValue}>{MOCK_TOUR_DATA.eventsPlayed}</Text>
+                <Text style={tourStyles.dataLabel}>Events Played</Text>
+              </View>
+              <View style={tourStyles.dataItem}>
+                <Text style={tourStyles.dataValue}>{MOCK_TOUR_DATA.placements}</Text>
+                <Text style={tourStyles.dataLabel}>Placements</Text>
+              </View>
+              <View style={tourStyles.dataItem}>
+                <Text style={tourStyles.dataValue}>{MOCK_TOUR_DATA.earnings}</Text>
+                <Text style={tourStyles.dataLabel}>Earnings</Text>
+              </View>
+              <View style={tourStyles.dataItem}>
+                <Text style={tourStyles.dataValue}>{MOCK_TOUR_DATA.rank}</Text>
+                <Text style={tourStyles.dataLabel}>Rank</Text>
+              </View>
+              <View style={tourStyles.dataItem}>
+                <Text style={tourStyles.dataValue}>{MOCK_TOUR_DATA.age}</Text>
+                <Text style={tourStyles.dataLabel}>Age</Text>
+              </View>
+            </View>
+
+            <View style={tourStyles.closeRow}>
+              <TouchableOpacity
+                style={tourStyles.closeButton}
+                activeOpacity={0.7}
+                onPress={() => setTourModalVisible(false)}
+              >
+                <Text style={tourStyles.closeButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </Modal>
   );
 }
@@ -191,14 +269,10 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: '#1DB954',
   },
-  displayName: {
-    fontSize: 22,
-    fontWeight: '800' as const,
-    color: '#EFEFEF',
-  },
-  username: {
-    fontSize: 14,
-    color: '#666',
+  homeCourse: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: '#888',
     marginTop: 4,
   },
   statsRow: {
@@ -231,28 +305,51 @@ const styles = StyleSheet.create({
     height: 30,
     backgroundColor: '#2A2A2A',
   },
+  badgeRow: {
+    flexDirection: 'row' as const,
+    gap: 10,
+    marginBottom: 16,
+  },
   handicapCard: {
+    flex: 1,
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     backgroundColor: 'transparent',
     borderRadius: 16,
-    padding: 18,
-    marginBottom: 16,
+    padding: 14,
     borderWidth: 1,
     borderColor: '#D4AF3730',
-    gap: 14,
+    gap: 10,
   },
   handicapInfo: {
     flex: 1,
   },
   handicapLabel: {
-    fontSize: 12,
+    fontSize: 9,
     color: '#888',
   },
   handicapValue: {
-    fontSize: 22,
+    fontSize: 14,
     fontWeight: '800' as const,
     color: '#D4AF37',
+  },
+  tourCard: {
+    flex: 1,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: 'transparent',
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#FFB74D30',
+    gap: 8,
+  },
+  tourButtonText: {
+    fontSize: 14,
+    fontWeight: '800' as const,
+    color: '#FFB74D',
+    letterSpacing: 1,
   },
   followButton: {
     backgroundColor: '#1DB954',
@@ -294,5 +391,69 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#555',
     textAlign: 'center' as const,
+  },
+});
+
+const tourStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'flex-start' as const,
+    paddingTop: 80,
+    paddingHorizontal: 20,
+  },
+  modalCard: {
+    backgroundColor: '#111111',
+    borderRadius: 20,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: '#222222',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '800' as const,
+    color: '#EFEFEF',
+    marginBottom: 20,
+    textAlign: 'center' as const,
+  },
+  dataGrid: {
+    gap: 12,
+  },
+  dataItem: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    backgroundColor: '#0A0A0A',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderWidth: 1,
+    borderColor: '#1A1A1A',
+  },
+  dataLabel: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '600' as const,
+  },
+  dataValue: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: '#FFB74D',
+  },
+  closeRow: {
+    flexDirection: 'row' as const,
+    justifyContent: 'flex-end' as const,
+    marginTop: 20,
+  },
+  closeButton: {
+    backgroundColor: '#222222',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+  },
+  closeButtonText: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: '#EFEFEF',
   },
 });
