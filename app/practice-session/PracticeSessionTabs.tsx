@@ -20,9 +20,9 @@ type PracticeTab = 'my' | 'position' | 'flight' | 'notes' | 'drills';
 
 const tabsConfig: { key: PracticeTab; label: string; icon: React.ReactNode }[] = [
   { key: 'my', label: 'My', icon: <User size={20} /> },
-  { key: 'position', label: 'Position', icon: <Navigation size={20} /> },
-  { key: 'flight', label: 'Flight', icon: <Plane size={20} /> },
   { key: 'notes', label: 'Notes', icon: <FileText size={20} /> },
+  { key: 'flight', label: 'Flight', icon: <Plane size={20} /> },
+  { key: 'position', label: 'Position', icon: <Navigation size={20} /> },
   { key: 'drills', label: 'Drills', icon: <Dumbbell size={20} /> },
 ];
 
