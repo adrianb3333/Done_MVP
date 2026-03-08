@@ -587,7 +587,7 @@ export default function ProfileScreen() {
               activeOpacity={0.7}
               testID="weekly-summary-button"
             >
-              <TrendingUp size={20} color="#B0B0B0" />
+              <Image source={require('@/assets/images/coach-icon.png')} style={styles.coachHeaderIcon} resizeMode="contain" />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={toggleHelpMenu}
@@ -1940,5 +1940,10 @@ const styles = StyleSheet.create({
   },
   popupPracticeWrap: {
     paddingBottom: 20,
+  },
+  coachHeaderIcon: {
+    width: 22,
+    height: 22,
+    tintColor: '#B0B0B0',
   },
 });
