@@ -2,12 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Platform, Switch } from 'react-native';
 import { Clock, Thermometer, Timer, Radio, Smartphone } from 'lucide-react-native';
 import { fetchGolfWeather } from '@/services/weatherApi';
+import { useSession } from '@/contexts/SessionContext';
 
 export default function Step3Page1() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [temperature, setTemperature] = useState<number | null>(null);
   const [tempLoading, setTempLoading] = useState(true);
-  const [sensorsEnabled, setSensorsEnabled] = useState<boolean>(false);
+  const { sensorsEnabled, setSensorsEnabled } = useSession();
   const [deviceEnabled, setDeviceEnabled] = useState<boolean>(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 

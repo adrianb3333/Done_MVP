@@ -1,5 +1,5 @@
 import createContextHook from '@nkzw/create-context-hook';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -26,6 +26,9 @@ interface SessionContextValue {
   roundDate: string;
   isPrivate: boolean;
   lastRound: LastRoundData | null;
+  sensorsEnabled: boolean;
+  showPracticeSummary: boolean;
+  setSensorsEnabled: (val: boolean) => void;
   startSetup: (type: 'play' | 'practice') => void;
   nextSetupStep: () => void;
   prevSetupStep: () => void;
@@ -35,6 +38,7 @@ interface SessionContextValue {
   finishSession: () => void;
   finishRoundWithData: (data: LastRoundData) => void;
   quitSession: () => void;
+  dismissPracticeSummary: () => void;
 }
 
 const LAST_ROUND_KEY = 'last_round_data';
@@ -48,9 +52,11 @@ export const [SessionProvider, useSession] = createContextHook<SessionContextVal
   const [roundDate, setRoundDate] = useState<string>('');
   const [isPrivate, setIsPrivate] = useState<boolean>(false);
   const [lastRound, setLastRound] = useState<LastRoundData | null>(null);
+  const [sensorsEnabled, setSensorsEnabled] = useState<boolean>(false);
+  const [showPracticeSummary, setShowPracticeSummary] = useState<boolean>(false);
 
   useEffect(() => {
-    AsyncStorage.getItem(LAST_ROUND_KEY).then((stored) => {
+    void AsyncStorage.getItem(LAST_ROUND_KEY).then((stored) => {
       if (stored) {
         try {
           setLastRound(JSON.parse(stored));
@@ -131,7 +137,8 @@ export const [SessionProvider, useSession] = createContextHook<SessionContextVal
   }, []);
 
   const quitSession = useCallback(() => {
-    console.log('Quitting session');
+    console.log('Quitting session, sensorsEnabled:', sensorsEnabled, 'sessionType:', sessionType);
+    const wasPracticeWithSensors = sessionType === 'practice' && sensorsEnabled;
     setSessionType(null);
     setSessionState('idle');
     setSetupStep(1);
@@ -139,10 +146,23 @@ export const [SessionProvider, useSession] = createContextHook<SessionContextVal
     setRoundName('');
     setRoundDate('');
     setIsPrivate(false);
+    if (wasPracticeWithSensors) {
+      console.log('Showing practice summary');
+      setShowPracticeSummary(true);
+    } else {
+      setSensorsEnabled(false);
+      router.replace('/(tabs)/profile' as any);
+    }
+  }, [sensorsEnabled, sessionType]);
+
+  const dismissPracticeSummary = useCallback(() => {
+    console.log('Dismissing practice summary');
+    setShowPracticeSummary(false);
+    setSensorsEnabled(false);
     router.replace('/(tabs)/profile' as any);
   }, []);
 
-  return {
+  return useMemo(() => ({
     sessionType,
     sessionState,
     setupStep,
@@ -151,6 +171,9 @@ export const [SessionProvider, useSession] = createContextHook<SessionContextVal
     roundDate,
     isPrivate,
     lastRound,
+    sensorsEnabled,
+    showPracticeSummary,
+    setSensorsEnabled,
     startSetup,
     nextSetupStep,
     prevSetupStep,
@@ -160,5 +183,12 @@ export const [SessionProvider, useSession] = createContextHook<SessionContextVal
     finishSession,
     finishRoundWithData,
     quitSession,
-  };
+    dismissPracticeSummary,
+  }), [
+    sessionType, sessionState, setupStep, sessionStartTime,
+    roundName, roundDate, isPrivate, lastRound, sensorsEnabled,
+    showPracticeSummary, setSensorsEnabled, startSetup, nextSetupStep,
+    prevSetupStep, startSession, minimizeSession, expandSession,
+    finishSession, finishRoundWithData, quitSession, dismissPracticeSummary,
+  ]);
 });

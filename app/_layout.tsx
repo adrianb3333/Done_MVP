@@ -18,6 +18,7 @@ import ProfileScreen from "@/app/(tabs)/profile";
 import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
 import OnboardingOverlay from "@/components/OnboardingOverlay";
+import PracticeSummary from "@/components/PracticeSummary";
 
 if (Platform.OS !== 'web') {
   SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -26,12 +27,13 @@ if (Platform.OS !== 'web') {
 const queryClient = new QueryClient();
 
 function AppContent() {
-  const { sessionState, sessionType } = useSession();
+  const { sessionState, sessionType, showPracticeSummary } = useSession();
   const { currentSection } = useAppNavigation();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const prevSessionRef = useRef<Session | null>(null);
+  const isInitialLoadRef = useRef<boolean>(true);
   const router = useRouter();
   const segments = useSegments();
 
@@ -45,10 +47,11 @@ function AppContent() {
       .then(({ data: { session } }) => {
         console.log('Supabase session loaded:', !!session);
         clearTimeout(timeout);
-        if (session) {
+        if (session && isInitialLoadRef.current) {
           prevSessionRef.current = session;
           setShowOnboarding(true);
         }
+        isInitialLoadRef.current = false;
         setSession(session);
         setLoading(false);
       })
@@ -60,7 +63,7 @@ function AppContent() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       console.log('Auth state changed:', !!session);
-      if (session && !prevSessionRef.current) {
+      if (session && !prevSessionRef.current && isInitialLoadRef.current) {
         console.log('User just logged in, showing onboarding');
         setShowOnboarding(true);
       }
@@ -88,6 +91,10 @@ function AppContent() {
 
   if (loading) {
     return <View style={styles.container} />;
+  }
+
+  if (showPracticeSummary) {
+    return <PracticeSummary />;
   }
 
   if (sessionState === 'active') {
