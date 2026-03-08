@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { HelpCircle, X, User, Newspaper, TrendingUp, Bluetooth, Trophy, QrCode, Swords, Clock, Target, Zap, Hash, Menu, BarChart2, MapPin, Award, Calendar, ChevronRight, Share2, Gift, Users, DollarSign, Star, Percent, Settings, Camera, Bell } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const PROFILE_HEADER_HEIGHT = 56;
@@ -690,16 +691,27 @@ export default function ProfileScreen() {
             <View style={styles.actionGrid}>
               <View style={styles.actionGridRow}>
                 <TouchableOpacity
-                  style={styles.gridBtn}
                   onPress={() => {
                     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     router.push('/modals/handicap-modal' as any);
                   }}
                   activeOpacity={0.8}
                   testID="handicap-button"
+                  style={styles.handicapGradientBtn}
                 >
-                  <Trophy size={16} color="#D4AF37" />
-                  <Text style={styles.gridBtnText}>{randomHcp}</Text>
+                  <LinearGradient
+                    colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={styles.handicapGradientInner}
+                  >
+                    <Text style={styles.handicapBoldText}>{randomHcp}</Text>
+                    <Image
+                      source={require('@/assets/images/sgf-icon.png')}
+                      style={styles.handicapSgfIcon}
+                      resizeMode="contain"
+                    />
+                  </LinearGradient>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -1319,6 +1331,31 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '600' as const,
     color: '#888',
+  },
+  handicapGradientBtn: {
+    flex: 1,
+    borderRadius: 12,
+    overflow: 'hidden' as const,
+  },
+  handicapGradientInner: {
+    flex: 1,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  handicapBoldText: {
+    fontSize: 15,
+    fontWeight: '900' as const,
+    color: '#FFFFFF',
+    letterSpacing: -0.3,
+  },
+  handicapSgfIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
   },
   helpMenuOverlay: {
     position: 'absolute' as const,
