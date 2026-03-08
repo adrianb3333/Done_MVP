@@ -10,7 +10,7 @@ import {
   Dimensions,
   Animated,
 } from 'react-native';
-import { ChevronLeft, X, Target } from 'lucide-react-native';
+import { ChevronLeft, X, Target, Calendar } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -92,6 +92,10 @@ export default function RecapModal() {
           <ChevronLeft size={28} color="#FFFFFF" />
         </TouchableOpacity>
         <Text style={styles.title}>Coach</Text>
+        <View style={{ flex: 1 }} />
+        <TouchableOpacity onPress={() => router.push('/modals/past-summaries-modal')} style={styles.calendarBtn} activeOpacity={0.7}>
+          <Calendar size={24} color="#FFFFFF" />
+        </TouchableOpacity>
       </View>
 
       <Animated.View style={[styles.body, { opacity: fadeAnim }]}>
@@ -437,5 +441,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800' as const,
     color: '#3A8E56',
+  },
+  calendarBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
   },
 });

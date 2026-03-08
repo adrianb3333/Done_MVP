@@ -251,6 +251,14 @@ function AppContent() {
           }} 
         />
         <Stack.Screen 
+          name="modals/past-summaries-modal" 
+          options={{ 
+            presentation: "fullScreenModal",
+            headerShown: false,
+            animation: "slide_from_bottom"
+          }} 
+        />
+        <Stack.Screen 
           name="modals/compare-modal" 
           options={{ 
             presentation: "fullScreenModal",
