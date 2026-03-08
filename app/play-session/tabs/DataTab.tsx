@@ -1,17 +1,44 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Modal } from 'react-native';
-import { Clock, Thermometer, Timer, Flag } from 'lucide-react-native';
+import { Clock, Thermometer, Timer, Flag, X } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useSession } from '@/contexts/SessionContext';
 import { useScoring } from '@/contexts/ScoringContext';
 import { fetchGolfWeather } from '@/services/weatherApi';
 import { computeRoundStats, getToParString, pctOf } from '@/services/statsHelper';
 
+const SG_SEGMENTS: { key: string; label: string }[] = [
+  { key: 'ovve', label: 'Ovve' },
+  { key: 'ott', label: 'OTT' },
+  { key: 'app', label: 'APP' },
+  { key: 'arg', label: 'ARG' },
+  { key: 'p', label: 'P' },
+];
+
+const SG_MOCK_DATA: Record<string, number> = {
+  ovve: -1.3,
+  ott: -2.6,
+  app: 1.2,
+  arg: 1.0,
+  p: -0.9,
+};
+
+const SG_TITLES: Record<string, string> = {
+  ovve: 'Overall',
+  ott: 'Off the Tee',
+  app: 'Approach',
+  arg: 'Around the Green',
+  p: 'Putting',
+};
+
 export default function DataTab() {
   const { quitSession, sessionStartTime } = useSession();
   const { allScores, holes } = useScoring();
 
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
+  const [showSGModal, setShowSGModal] = useState(false);
+  const [sgSegment, setSgSegment] = useState<string>('ovve');
+  const selectedHandicap = 'Scratch';
   const [currentTime, setCurrentTime] = useState(new Date());
   const [elapsed, setElapsed] = useState(0);
   const [temperature, setTemperature] = useState<number | null>(null);
@@ -76,8 +103,21 @@ export default function DataTab() {
   const stats = useMemo(() => computeRoundStats(allScores, holes), [allScores, holes]);
   const toParStr = getToParString(stats.scoreToPar);
 
+  const sgValue = SG_MOCK_DATA[sgSegment] ?? 0;
+  const sgFormatted = sgValue >= 0 ? `+${sgValue.toFixed(1)}` : sgValue.toFixed(1);
+
   return (
     <View style={styles.container}>
+      <View style={styles.dataHeaderRow}>
+        <View style={{ flex: 1 }} />
+        <TouchableOpacity
+          style={styles.sgButton}
+          onPress={() => setShowSGModal(true)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.sgButtonText}>Strokes Gained</Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.miniStatsRow}>
         <View style={styles.miniStat}>
           <Clock size={13} color="#FFFFFF" />
@@ -126,6 +166,56 @@ export default function DataTab() {
       <TouchableOpacity style={styles.quitButton} onPress={() => setShowQuitConfirm(true)}>
         <Text style={styles.quitText}>Quit Round</Text>
       </TouchableOpacity>
+
+      <Modal
+        visible={showSGModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowSGModal(false)}
+      >
+        <View style={styles.sgModalOverlay}>
+          <View style={styles.sgModalCard}>
+            <View style={styles.sgModalHeader}>
+              <TouchableOpacity onPress={() => setShowSGModal(false)} activeOpacity={0.7}>
+                <X size={22} color="#F5F7F6" />
+              </TouchableOpacity>
+              <Text style={styles.sgModalTitle}>Strokes Gained</Text>
+              <View style={{ width: 22 }} />
+            </View>
+
+            <View style={styles.sgSegmentWrap}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sgSegmentScroll}>
+                {SG_SEGMENTS.map((seg) => (
+                  <TouchableOpacity
+                    key={seg.key}
+                    style={[styles.sgSegmentBtn, sgSegment === seg.key && styles.sgSegmentBtnActive]}
+                    onPress={() => setSgSegment(seg.key)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.sgSegmentText, sgSegment === seg.key && styles.sgSegmentTextActive]}>
+                      {seg.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            <View style={styles.sgVsBadge}>
+              <Text style={styles.sgVsText}>vs {selectedHandicap}</Text>
+            </View>
+
+            <View style={styles.sgValueContainer}>
+              <Text style={styles.sgRoundAvgLabel}>Round AVG for {SG_TITLES[sgSegment]}</Text>
+              <Text style={[
+                styles.sgValueText,
+                sgValue >= 0 ? styles.sgValuePositive : styles.sgValueNegative,
+              ]}>
+                {sgFormatted}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         visible={showQuitConfirm}
@@ -810,5 +900,108 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700' as const,
     color: '#FFFFFF',
+  },
+  dataHeaderRow: {
+    flexDirection: 'row' as const,
+    justifyContent: 'flex-end' as const,
+    alignItems: 'center' as const,
+    marginBottom: 8,
+  },
+  sgButton: {
+    borderWidth: 1,
+    borderColor: '#A4D15F',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  sgButtonText: {
+    fontSize: 12,
+    fontWeight: '700' as const,
+    color: '#A4D15F',
+  },
+  sgModalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end' as const,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  sgModalCard: {
+    height: '75%' as unknown as number,
+    backgroundColor: '#111111',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+  },
+  sgModalHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    marginBottom: 24,
+  },
+  sgModalTitle: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: '#F5F7F6',
+  },
+  sgSegmentWrap: {
+    marginBottom: 24,
+  },
+  sgSegmentScroll: {
+    gap: 8,
+  },
+  sgSegmentBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#1A1A1A',
+    borderWidth: 1,
+    borderColor: '#222222',
+  },
+  sgSegmentBtnActive: {
+    backgroundColor: '#A4D15F',
+    borderColor: '#A4D15F',
+  },
+  sgSegmentText: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: '#8A9B90',
+  },
+  sgSegmentTextActive: {
+    color: '#000000',
+  },
+  sgVsBadge: {
+    alignSelf: 'center' as const,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: '#222222',
+    marginBottom: 32,
+  },
+  sgVsText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: '#8A9B90',
+  },
+  sgValueContainer: {
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    flex: 1,
+  },
+  sgRoundAvgLabel: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: '#8A9B90',
+    marginBottom: 12,
+  },
+  sgValueText: {
+    fontSize: 56,
+    fontWeight: '800' as const,
+  },
+  sgValuePositive: {
+    color: '#A4D15F',
+  },
+  sgValueNegative: {
+    color: '#FF5252',
   },
 });
