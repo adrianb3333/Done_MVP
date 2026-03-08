@@ -9,6 +9,7 @@ import {
   Modal,
 } from 'react-native';
 import { ChevronLeft, Trophy } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { UserProfile } from '@/contexts/ProfileContext';
 
 interface TourData {
@@ -110,13 +111,19 @@ export default function ProfileCard({
           </View>
 
           <View style={styles.badgeRow}>
-            <View style={styles.handicapCard}>
-              <Trophy size={16} color="#D4AF37" />
-              <View style={styles.handicapInfo}>
-                <Text style={styles.handicapLabel}>Handicap</Text>
-                <Text style={styles.handicapValue}>{randomHcp}</Text>
-              </View>
-            </View>
+            <LinearGradient
+              colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={styles.handicapCard}
+            >
+              <Text style={styles.handicapValue}>{randomHcp}</Text>
+              <Image
+                source={require('@/assets/images/sgf-icon.png')}
+                style={styles.handicapSgfIcon}
+                resizeMode="contain"
+              />
+            </LinearGradient>
 
             <TouchableOpacity
               style={styles.tourCard}
@@ -314,24 +321,21 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: 'transparent',
+    justifyContent: 'center' as const,
     borderRadius: 16,
     padding: 14,
-    borderWidth: 1,
-    borderColor: '#D4AF3730',
     gap: 10,
   },
-  handicapInfo: {
-    flex: 1,
-  },
-  handicapLabel: {
-    fontSize: 9,
-    color: '#888',
-  },
   handicapValue: {
-    fontSize: 14,
-    fontWeight: '800' as const,
-    color: '#D4AF37',
+    fontSize: 18,
+    fontWeight: '900' as const,
+    color: '#fff',
+    letterSpacing: -0.5,
+  },
+  handicapSgfIcon: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
   },
   tourCard: {
     flex: 1,
