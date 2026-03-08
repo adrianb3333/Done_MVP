@@ -250,6 +250,14 @@ function AppContent() {
             animation: "slide_from_bottom"
           }} 
         />
+        <Stack.Screen 
+          name="modals/notifications-modal" 
+          options={{ 
+            presentation: "fullScreenModal",
+            headerShown: false,
+            animation: "slide_from_bottom"
+          }} 
+        />
         {/* End Modals */}
 
         <Stack.Screen 

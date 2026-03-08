@@ -14,7 +14,7 @@ import {
 
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { HelpCircle, X, User, Newspaper, TrendingUp, Bluetooth, Trophy, QrCode, Swords, Clock, Target, Zap, Hash, Menu, BarChart2, MapPin, Award, Calendar, ChevronRight, Share2, Gift, Users, DollarSign, Star, Percent, Settings, Camera } from 'lucide-react-native';
+import { HelpCircle, X, User, Newspaper, TrendingUp, Bluetooth, Trophy, QrCode, Swords, Clock, Target, Zap, Hash, Menu, BarChart2, MapPin, Award, Calendar, ChevronRight, Share2, Gift, Users, DollarSign, Star, Percent, Settings, Camera, Bell } from 'lucide-react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const PROFILE_HEADER_HEIGHT = 56;
@@ -578,6 +578,17 @@ export default function ProfileScreen() {
           </TouchableOpacity>
           <View style={styles.headerIcons}>
             <TouchableOpacity
+              onPress={() => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push('/modals/recap-modal' as any);
+              }}
+              style={styles.headerIconBtn}
+              activeOpacity={0.7}
+              testID="weekly-summary-button"
+            >
+              <TrendingUp size={20} color="#B0B0B0" />
+            </TouchableOpacity>
+            <TouchableOpacity
               onPress={toggleHelpMenu}
               style={styles.headerIconBtn}
               activeOpacity={0.7}
@@ -615,19 +626,20 @@ export default function ProfileScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.helpMenuItem}
-              onPress={() => { toggleHelpMenu(); router.push('/modals/recap-modal' as any); }}
-              activeOpacity={0.7}
-            >
-              <TrendingUp size={18} color="#B0B0B0" />
-              <Text style={styles.helpMenuText}>Weekly Summary</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.helpMenuItem}
               onPress={() => { toggleHelpMenu(); router.push('/modals/pair-impact-modal' as any); }}
               activeOpacity={0.7}
             >
               <Bluetooth size={18} color="#B0B0B0" />
-              <Text style={styles.helpMenuText}>Pair Impact</Text>
+              <Text style={styles.helpMenuText}>Pair Sensors</Text>
+            </TouchableOpacity>
+            <View style={styles.helpMenuDivider} />
+            <TouchableOpacity
+              style={styles.helpMenuItem}
+              onPress={() => { toggleHelpMenu(); router.push('/modals/notifications-modal' as any); }}
+              activeOpacity={0.7}
+            >
+              <Bell size={18} color="#B0B0B0" />
+              <Text style={styles.helpMenuText}>Friends</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -1341,6 +1353,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600' as const,
     color: '#EFEFEF',
+  },
+  helpMenuDivider: {
+    height: 1,
+    backgroundColor: '#2A2A2A',
+    marginHorizontal: 10,
+    marginVertical: 4,
   },
 
   liveSection: {
