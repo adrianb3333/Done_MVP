@@ -7,18 +7,19 @@ import { getToParString, pctOf } from '@/services/statsHelper';
 interface RoundStatsDisplayProps {
   stats: RoundStats;
   headerLabel?: string;
+  glassMode?: boolean;
 }
 
-export default function RoundStatsDisplay({ stats, headerLabel }: RoundStatsDisplayProps) {
+export default function RoundStatsDisplay({ stats, headerLabel, glassMode }: RoundStatsDisplayProps) {
   const toParStr = getToParString(stats.scoreToPar);
 
   return (
     <View style={styles.wrapper}>
       {headerLabel ? (
-        <Text style={styles.headerLabel}>{headerLabel}</Text>
+        <Text style={[styles.headerLabel, glassMode && { color: 'rgba(255,255,255,0.5)' }]}>{headerLabel}</Text>
       ) : null}
 
-      <View style={styles.heroRow}>
+      <View style={[styles.heroRow, glassMode && glassCard]}>
         <View style={styles.heroItem}>
           <Text style={styles.heroLabel}>Shots</Text>
           <Text style={styles.heroValue}>{stats.totalShots}</Text>
@@ -30,22 +31,22 @@ export default function RoundStatsDisplay({ stats, headerLabel }: RoundStatsDisp
         </View>
       </View>
 
-      {stats.scoreCategories.length > 0 && <ScoreSection categories={stats.scoreCategories} />}
-      {stats.fairwayTotal > 0 && <FairwaySection hit={stats.fairwayHit} missLeft={stats.fairwayMissLeft} missRight={stats.fairwayMissRight} total={stats.fairwayTotal} />}
-      {stats.girTotal > 0 && <GIRSection made={stats.girMade} missShort={stats.girMissShort} missLong={stats.girMissLong} missLeft={stats.girMissLeft} missRight={stats.girMissRight} total={stats.girTotal} />}
-      {stats.holesPlayed > 0 && <PuttingSection p1={stats.putts1} p2={stats.putts2} p3={stats.putts3} p4={stats.putts4Plus} totalPutts={stats.totalPutts} avgPutts={stats.avgPutts} holesPlayed={stats.holesPlayed} />}
-      {(stats.totalBunker > 0 || stats.totalPenalty > 0 || stats.totalChips > 0) && <ExtraSection bunker={stats.totalBunker} penalty={stats.totalPenalty} chips={stats.totalChips} totalShots={stats.totalShots} />}
-      {(stats.totalSandSaveAttempts > 0 || stats.totalUpAndDownAttempts > 0) && <SavesSection sandSaves={stats.totalSandSaves} sandAttempts={stats.totalSandSaveAttempts} upDowns={stats.totalUpAndDowns} upDownAttempts={stats.totalUpAndDownAttempts} />}
+      {stats.scoreCategories.length > 0 && <ScoreSection categories={stats.scoreCategories} glass={glassMode} />}
+      {stats.fairwayTotal > 0 && <FairwaySection hit={stats.fairwayHit} missLeft={stats.fairwayMissLeft} missRight={stats.fairwayMissRight} total={stats.fairwayTotal} glass={glassMode} />}
+      {stats.girTotal > 0 && <GIRSection made={stats.girMade} missShort={stats.girMissShort} missLong={stats.girMissLong} missLeft={stats.girMissLeft} missRight={stats.girMissRight} total={stats.girTotal} glass={glassMode} />}
+      {stats.holesPlayed > 0 && <PuttingSection p1={stats.putts1} p2={stats.putts2} p3={stats.putts3} p4={stats.putts4Plus} totalPutts={stats.totalPutts} avgPutts={stats.avgPutts} holesPlayed={stats.holesPlayed} glass={glassMode} />}
+      {(stats.totalBunker > 0 || stats.totalPenalty > 0 || stats.totalChips > 0) && <ExtraSection bunker={stats.totalBunker} penalty={stats.totalPenalty} chips={stats.totalChips} totalShots={stats.totalShots} glass={glassMode} />}
+      {(stats.totalSandSaveAttempts > 0 || stats.totalUpAndDownAttempts > 0) && <SavesSection sandSaves={stats.totalSandSaves} sandAttempts={stats.totalSandSaveAttempts} upDowns={stats.totalUpAndDowns} upDownAttempts={stats.totalUpAndDownAttempts} glass={glassMode} />}
     </View>
   );
 }
 
-function ScoreSection({ categories }: { categories: { label: string; count: number; percentage: number; color: string }[] }) {
+function ScoreSection({ categories, glass }: { categories: { label: string; count: number; percentage: number; color: string }[]; glass?: boolean }) {
   const maxCount = Math.max(...categories.map((c) => c.count), 1);
   const MAX_BAR = 100;
 
   return (
-    <View style={styles.sectionCard}>
+    <View style={[styles.sectionCard, glass && glassCard]}>
       <Text style={styles.sectionTitle}>Score</Text>
       <View style={styles.barChart}>
         {categories.map((cat) => {
@@ -65,13 +66,13 @@ function ScoreSection({ categories }: { categories: { label: string; count: numb
   );
 }
 
-function FairwaySection({ hit, missLeft, missRight, total }: { hit: number; missLeft: number; missRight: number; total: number }) {
+function FairwaySection({ hit, missLeft, missRight, total, glass }: { hit: number; missLeft: number; missRight: number; total: number; glass?: boolean }) {
   const hitPct = pctOf(hit, total);
   const leftPct = pctOf(missLeft, total);
   const rightPct = pctOf(missRight, total);
 
   return (
-    <View style={styles.sectionCard}>
+    <View style={[styles.sectionCard, glass && glassCard]}>
       <Text style={styles.sectionTitle}>Fairway</Text>
       <View style={styles.fairwayVisual}>
         <View style={styles.fairwayArc}>
@@ -105,7 +106,7 @@ function FairwaySection({ hit, missLeft, missRight, total }: { hit: number; miss
   );
 }
 
-function GIRSection({ made, missShort, missLong, missLeft, missRight, total }: { made: number; missShort: number; missLong: number; missLeft: number; missRight: number; total: number }) {
+function GIRSection({ made, missShort, missLong, missLeft, missRight, total, glass }: { made: number; missShort: number; missLong: number; missLeft: number; missRight: number; total: number; glass?: boolean }) {
   const madePct = pctOf(made, total);
   const shortPct = pctOf(missShort, total);
   const longPct = pctOf(missLong, total);
@@ -114,7 +115,7 @@ function GIRSection({ made, missShort, missLong, missLeft, missRight, total }: {
   const missed = total - made;
 
   return (
-    <View style={styles.sectionCard}>
+    <View style={[styles.sectionCard, glass && glassCard]}>
       <Text style={styles.sectionTitle}>GIR</Text>
       <View style={styles.girVisual}>
         <View style={styles.girTop}>
@@ -154,7 +155,7 @@ function GIRSection({ made, missShort, missLong, missLeft, missRight, total }: {
   );
 }
 
-function PuttingSection({ p1, p2, p3, p4, totalPutts, avgPutts, holesPlayed }: { p1: number; p2: number; p3: number; p4: number; totalPutts: number; avgPutts: number; holesPlayed: number }) {
+function PuttingSection({ p1, p2, p3, p4, totalPutts, avgPutts, holesPlayed, glass }: { p1: number; p2: number; p3: number; p4: number; totalPutts: number; avgPutts: number; holesPlayed: number; glass?: boolean }) {
   const puttData: { label: string; count: number; color: string }[] = [];
   if (p1 > 0) puttData.push({ label: '1-Putt', count: p1, color: '#FFFFFF' });
   if (p2 > 0) puttData.push({ label: '2-Putt', count: p2, color: '#888888' });
@@ -165,7 +166,7 @@ function PuttingSection({ p1, p2, p3, p4, totalPutts, avgPutts, holesPlayed }: {
   const MAX_BAR = 80;
 
   return (
-    <View style={styles.sectionCard}>
+    <View style={[styles.sectionCard, glass && glassCard]}>
       <Text style={styles.sectionTitle}>Putting</Text>
       <View style={styles.puttSummaryRow}>
         <View style={styles.puttSummaryItem}>
@@ -196,9 +197,9 @@ function PuttingSection({ p1, p2, p3, p4, totalPutts, avgPutts, holesPlayed }: {
   );
 }
 
-function ExtraSection({ bunker, penalty, chips, totalShots }: { bunker: number; penalty: number; chips: number; totalShots: number }) {
+function ExtraSection({ bunker, penalty, chips, totalShots, glass }: { bunker: number; penalty: number; chips: number; totalShots: number; glass?: boolean }) {
   return (
-    <View style={styles.sectionCard}>
+    <View style={[styles.sectionCard, glass && glassCard]}>
       <Text style={styles.sectionTitle}>Bunker, Penalty, Chips</Text>
       <View style={styles.boxRow}>
         <View style={styles.statBox}>
@@ -221,9 +222,9 @@ function ExtraSection({ bunker, penalty, chips, totalShots }: { bunker: number; 
   );
 }
 
-function SavesSection({ sandSaves, sandAttempts, upDowns, upDownAttempts }: { sandSaves: number; sandAttempts: number; upDowns: number; upDownAttempts: number }) {
+function SavesSection({ sandSaves, sandAttempts, upDowns, upDownAttempts, glass }: { sandSaves: number; sandAttempts: number; upDowns: number; upDownAttempts: number; glass?: boolean }) {
   return (
-    <View style={styles.sectionCard}>
+    <View style={[styles.sectionCard, glass && glassCard]}>
       <Text style={styles.sectionTitle}>Sand Saves, Up & Downs</Text>
       <View style={styles.boxRow}>
         <View style={[styles.statBox, styles.statBoxWide]}>
@@ -539,3 +540,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 });
+
+const glassCard = {
+  backgroundColor: 'rgba(0,0,0,0.25)',
+  borderColor: 'rgba(255,255,255,0.12)',
+  borderWidth: 1,
+};

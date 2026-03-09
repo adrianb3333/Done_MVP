@@ -8,6 +8,7 @@ import {
 import { ChevronLeft } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import HorizontalPager from '@/components/HorizontalPager';
 import Step2Page1 from './screens/Step2Page1';
 import Step2Page2 from './screens/Step2Page2';
@@ -29,7 +30,12 @@ export default function PracticeStep2Screen() {
   };
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#0059B2', '#1075E3', '#1C8CFF']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.container}
+    >
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity onPress={handleBack} style={styles.headerButton}>
           <ChevronLeft size={28} color="#FFFFFF" />
@@ -53,27 +59,26 @@ export default function PracticeStep2Screen() {
           <Text style={styles.nextButtonText}>Next</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
     paddingHorizontal: 16,
     paddingBottom: 12,
   },
   headerButton: {
     width: 40,
     height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
   },
   headerTitle: {
     fontSize: 18,
@@ -81,7 +86,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   stepIndicator: {
-    backgroundColor: '#333333',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
@@ -96,13 +101,12 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: 24,
-    backgroundColor: '#000',
   },
   nextButton: {
-    backgroundColor: '#333333',
+    backgroundColor: 'rgba(255,255,255,0.18)',
     paddingVertical: 16,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: 'center' as const,
   },
   nextButtonText: {
     color: '#FFFFFF',

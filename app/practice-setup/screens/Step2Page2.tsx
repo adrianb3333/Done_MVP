@@ -60,7 +60,7 @@ export default function Step2Page2() {
         </View>
       </View>
 
-      <RoundStatsDisplay stats={stats} headerLabel="CAREER AVERAGES" />
+      <RoundStatsDisplay stats={stats} headerLabel="CAREER AVERAGES" glassMode />
 
       <View style={{ height: 40 }} />
     </ScrollView>
@@ -70,7 +70,7 @@ export default function Step2Page2() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0F0D',
+    backgroundColor: 'transparent',
   },
   scrollContent: {
     padding: 16,
@@ -78,13 +78,13 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#0A0F0D',
+    backgroundColor: 'transparent',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
   emptyContainer: {
     flex: 1,
-    backgroundColor: '#0A0F0D',
+    backgroundColor: 'transparent',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     padding: 24,
@@ -123,16 +123,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     gap: 5,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.15)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   metaText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
   },
 });
