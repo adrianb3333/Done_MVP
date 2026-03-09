@@ -62,7 +62,7 @@ export default function Step1Page3() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0F0D',
+    backgroundColor: 'transparent',
   },
   scrollContent: {
     padding: 20,
@@ -77,12 +77,12 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 26,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   statusBadge: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 20,
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 10,
     fontWeight: '800' as const,
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.6)',
     letterSpacing: 1,
   },
   section: {
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     flex: 1,
   },
   abbrevBadge: {
@@ -134,13 +134,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   sectionBody: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row' as const,
     gap: 16,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   valuePlaceholder: {
     flex: 1,
@@ -150,17 +150,17 @@ const styles = StyleSheet.create({
   valueLabel: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.6)',
     letterSpacing: 0.3,
   },
   valueDash: {
     fontSize: 24,
     fontWeight: '700' as const,
-    color: '#5A6B60',
+    color: 'rgba(255,255,255,0.4)',
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     marginTop: 16,
     marginBottom: 8,
   },

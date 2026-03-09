@@ -73,19 +73,26 @@ export default function Step3Page1({ onRoundNameChange, roundDate, onPrivateChan
 
   return (
     <View style={styles.container}>
+      <Text style={styles.subtitle}>Session Overview</Text>
+
       <View style={styles.miniStatsRow}>
         <View style={styles.miniStat}>
-          <Clock size={14} color="#FFFFFF" />
+          <Clock size={16} color="#FFFFFF" />
+          <Text style={styles.miniStatLabel}>Time</Text>
           <Text style={styles.miniStatValue}>{formatTime(currentTime)}</Text>
         </View>
+        <View style={styles.miniStatDivider} />
         <View style={styles.miniStat}>
-          <Thermometer size={14} color="#FFFFFF" />
+          <Thermometer size={16} color="#FFFFFF" />
+          <Text style={styles.miniStatLabel}>Temp</Text>
           <Text style={styles.miniStatValue}>
             {tempLoading ? '...' : temperature !== null ? `${temperature}°C` : '--°C'}
           </Text>
         </View>
+        <View style={styles.miniStatDivider} />
         <View style={styles.miniStat}>
-          <Timer size={14} color="#FFFFFF" />
+          <Timer size={16} color="#FFFFFF" />
+          <Text style={styles.miniStatLabel}>Timer</Text>
           <Text style={styles.miniStatValue}>0:00</Text>
         </View>
       </View>
@@ -102,7 +109,7 @@ export default function Step3Page1({ onRoundNameChange, roundDate, onPrivateChan
                 onBlur={() => setIsEditingName(false)}
                 autoFocus
                 placeholder=""
-                placeholderTextColor="#8A9B90"
+                placeholderTextColor="rgba(255,255,255,0.5)"
               />
             ) : (
               <Pressable onPress={() => setIsEditingName(true)}>
@@ -119,51 +126,51 @@ export default function Step3Page1({ onRoundNameChange, roundDate, onPrivateChan
         </View>
       </View>
 
-      <View style={styles.privateCard}>
-        <View style={styles.privateLeft}>
-          <View style={styles.lockIcon}>
-            <Lock size={20} color={isPrivate ? '#FFFFFF' : '#8A9B90'} strokeWidth={2} />
+      <View style={styles.toggleCard}>
+        <View style={styles.toggleLeft}>
+          <View style={styles.toggleIcon}>
+            <Lock size={20} color={isPrivate ? '#FFFFFF' : 'rgba(255,255,255,0.6)'} strokeWidth={2} />
           </View>
-          <Text style={styles.privateText}>PRIVATE</Text>
+          <Text style={styles.toggleText}>PRIVATE</Text>
         </View>
         <Switch
           value={isPrivate}
           onValueChange={handlePrivateToggle}
-          trackColor={{ false: '#2A2A2A', true: '#444444' }}
-          thumbColor={isPrivate ? '#FFFFFF' : '#666'}
-          ios_backgroundColor="#2A3A2E"
+          trackColor={{ false: 'rgba(255,255,255,0.2)', true: 'rgba(255,255,255,0.35)' }}
+          thumbColor={isPrivate ? '#FFFFFF' : '#CCC'}
+          ios_backgroundColor="rgba(255,255,255,0.2)"
         />
       </View>
 
-      <View style={styles.privateCard}>
-        <View style={styles.privateLeft}>
-          <View style={styles.lockIcon}>
-            <Radio size={20} color={sensorsEnabled ? '#FFFFFF' : '#8A9B90'} strokeWidth={2} />
+      <View style={styles.toggleCard}>
+        <View style={styles.toggleLeft}>
+          <View style={styles.toggleIcon}>
+            <Radio size={20} color={sensorsEnabled ? '#FFFFFF' : 'rgba(255,255,255,0.6)'} strokeWidth={2} />
           </View>
-          <Text style={styles.privateText}>SENSORS</Text>
+          <Text style={styles.toggleText}>SENSORS</Text>
         </View>
         <Switch
           value={sensorsEnabled}
           onValueChange={setSensorsEnabled}
-          trackColor={{ false: '#2A2A2A', true: '#444444' }}
-          thumbColor={sensorsEnabled ? '#FFFFFF' : '#666'}
-          ios_backgroundColor="#2A3A2E"
+          trackColor={{ false: 'rgba(255,255,255,0.2)', true: 'rgba(255,255,255,0.35)' }}
+          thumbColor={sensorsEnabled ? '#FFFFFF' : '#CCC'}
+          ios_backgroundColor="rgba(255,255,255,0.2)"
         />
       </View>
 
-      <View style={styles.privateCard}>
-        <View style={styles.privateLeft}>
-          <View style={styles.lockIcon}>
-            <Smartphone size={20} color={deviceEnabled ? '#FFFFFF' : '#8A9B90'} strokeWidth={2} />
+      <View style={styles.toggleCard}>
+        <View style={styles.toggleLeft}>
+          <View style={styles.toggleIcon}>
+            <Smartphone size={20} color={deviceEnabled ? '#FFFFFF' : 'rgba(255,255,255,0.6)'} strokeWidth={2} />
           </View>
-          <Text style={styles.privateText}>DEVICE</Text>
+          <Text style={styles.toggleText}>DEVICE</Text>
         </View>
         <Switch
           value={deviceEnabled}
           onValueChange={setDeviceEnabled}
-          trackColor={{ false: '#2A2A2A', true: '#444444' }}
-          thumbColor={deviceEnabled ? '#FFFFFF' : '#666'}
-          ios_backgroundColor="#2A3A2E"
+          trackColor={{ false: 'rgba(255,255,255,0.2)', true: 'rgba(255,255,255,0.35)' }}
+          thumbColor={deviceEnabled ? '#FFFFFF' : '#CCC'}
+          ios_backgroundColor="rgba(255,255,255,0.2)"
         />
       </View>
     </View>
@@ -173,39 +180,54 @@ export default function Step3Page1({ onRoundNameChange, roundDate, onPrivateChan
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
     paddingTop: 8,
+  },
+  subtitle: {
+    fontSize: 22,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+    marginBottom: 24,
   },
   miniStatsRow: {
     flexDirection: 'row' as const,
-    justifyContent: 'space-between' as const,
-    marginBottom: 16,
-    gap: 8,
+    borderRadius: 12,
+    overflow: 'hidden' as const,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    marginBottom: 12,
   },
   miniStat: {
     flex: 1,
-    flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    gap: 6,
-    backgroundColor: 'transparent',
-    borderRadius: 10,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: '#222222',
+    gap: 4,
+  },
+  miniStatDivider: {
+    width: 1,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    marginVertical: 4,
+  },
+  miniStatLabel: {
+    fontSize: 11,
+    fontWeight: '500' as const,
+    color: 'rgba(255,255,255,0.6)',
+    letterSpacing: 0.3,
   },
   miniStatValue: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: '#F5F7F6',
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
   },
   nameDateCard: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   nameDateRow: {
     flexDirection: 'row' as const,
@@ -220,7 +242,7 @@ const styles = StyleSheet.create({
   columnLabel: {
     fontSize: 13,
     fontWeight: '800' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.6)',
     marginBottom: 4,
     letterSpacing: 0.5,
   },
@@ -243,10 +265,10 @@ const styles = StyleSheet.create({
   dateValue: {
     fontSize: 15,
     fontWeight: '500' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
-  privateCard: {
-    backgroundColor: 'transparent',
+  toggleCard: {
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
@@ -254,27 +276,27 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     justifyContent: 'space-between' as const,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.1)',
     marginBottom: 12,
   },
-  privateLeft: {
+  toggleLeft: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     gap: 12,
   },
-  lockIcon: {
+  toggleIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.25)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
-  privateText: {
+  toggleText: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     letterSpacing: 0.5,
   },
 });

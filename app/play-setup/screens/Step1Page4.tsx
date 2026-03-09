@@ -60,7 +60,7 @@ export default function Step1Page4() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: 'transparent',
   },
   scrollContent: {
     padding: 20,
@@ -75,12 +75,12 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontSize: 26,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   statusBadge: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 20,
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 10,
     fontWeight: '800' as const,
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.6)',
     letterSpacing: 1,
   },
   section: {
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.06)',
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   sectionDot: {
     width: 8,
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 20,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     letterSpacing: -0.3,
   },
 });

@@ -10,7 +10,6 @@ import {
 import { router, useFocusEffect } from 'expo-router';
 import { Plus, ChevronRight, Search, X } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Colors from '@/constants/colors';
 import CourseBuild, { HoleOption } from '@/components/PlaSta/CourseBuild';
 import { useProfile } from '@/contexts/ProfileContext';
 
@@ -46,7 +45,7 @@ export default function Step2Page1() {
 
   useFocusEffect(
     useCallback(() => {
-      loadSelections();
+      void loadSelections();
     }, [])
   );
 
@@ -166,7 +165,7 @@ export default function Step2Page1() {
                   onPress={handleOpenFriendsModal}
                   activeOpacity={0.7}
                 >
-                  <Plus size={20} color={Colors.accent} />
+                  <Plus size={20} color="#FFFFFF" />
                   <Text style={styles.addSlotText}>Lägg till spelare</Text>
                 </TouchableOpacity>
               )}
@@ -186,7 +185,7 @@ export default function Step2Page1() {
               <Text style={styles.courseBannerName}>{selectedCourse.name}</Text>
             ) : (
               <View style={styles.courseSearchRow}>
-                <Search size={18} color={Colors.accent} />
+                <Search size={18} color="#FFFFFF" />
                 <Text style={styles.courseSearchText}>Sök banor</Text>
               </View>
             )}
@@ -207,19 +206,19 @@ export default function Step2Page1() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: 'transparent',
   },
   friendsSection: {
-    backgroundColor: Colors.surface,
+    backgroundColor: 'rgba(0,0,0,0.25)',
     marginHorizontal: 16,
     marginTop: 16,
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   friendsHeader: {
-    backgroundColor: '#333333',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -229,14 +228,14 @@ const styles = StyleSheet.create({
   friendsHeaderText: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#fff',
+    color: '#FFFFFF',
   },
   headerRight: {
     alignItems: 'flex-end',
   },
   headerRightText: {
     fontSize: 12,
-    color: '#ffffffcc',
+    color: 'rgba(255,255,255,0.8)',
     fontWeight: '500' as const,
   },
   slotsContainer: {
@@ -252,11 +251,11 @@ const styles = StyleSheet.create({
   playerSlot: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surfaceLight,
+    backgroundColor: 'rgba(0,0,0,0.2)',
     borderRadius: 12,
     padding: 10,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: 'rgba(255,255,255,0.1)',
     minHeight: 80,
     position: 'relative' as const,
   },
@@ -264,20 +263,20 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#ddd',
+    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   avatarPlaceholder: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: Colors.primary,
+    backgroundColor: 'rgba(0,0,0,0.3)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarInitial: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#fff',
+    color: '#FFFFFF',
   },
   playerInfo: {
     marginLeft: 8,
@@ -286,11 +285,11 @@ const styles = StyleSheet.create({
   playerName: {
     fontSize: 13,
     fontWeight: '700' as const,
-    color: Colors.textPrimary,
+    color: '#FFFFFF',
   },
   playerDetail: {
     fontSize: 11,
-    color: Colors.textSecondary,
+    color: 'rgba(255,255,255,0.7)',
     fontWeight: '500' as const,
   },
   removeBtn: {
@@ -306,18 +305,18 @@ const styles = StyleSheet.create({
   },
   addSlot: {
     borderWidth: 1.5,
-    borderColor: Colors.border,
+    borderColor: 'rgba(255,255,255,0.2)',
     borderStyle: 'dashed' as const,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 80,
     gap: 4,
-    backgroundColor: Colors.surfaceLight,
+    backgroundColor: 'rgba(0,0,0,0.15)',
   },
   addSlotText: {
     fontSize: 12,
-    color: Colors.accent,
+    color: '#FFFFFF',
     fontWeight: '600' as const,
   },
   courseSection: {
@@ -329,8 +328,10 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 14,
     overflow: 'hidden',
-    backgroundColor: '#2e5e3a',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   courseBannerOverlay: {
     flex: 1,
@@ -338,35 +339,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    backgroundColor: 'rgba(27, 94, 32, 0.85)',
   },
   courseBannerName: {
     fontSize: 17,
     fontWeight: '700' as const,
-    color: '#fff',
+    color: '#FFFFFF',
     flex: 1,
   },
   courseSearchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surfaceLight,
+    backgroundColor: 'rgba(0,0,0,0.2)',
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 24,
     flex: 1,
     marginRight: 12,
     gap: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   courseSearchText: {
     fontSize: 15,
-    color: Colors.accent,
+    color: '#FFFFFF',
     fontWeight: '500' as const,
   },
   courseArrowCircle: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#333333',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     alignItems: 'center',
     justifyContent: 'center',
   },

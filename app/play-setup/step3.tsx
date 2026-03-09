@@ -9,7 +9,7 @@ import {
 import { ChevronLeft } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Colors from '@/constants/colors';
+import { LinearGradient } from 'expo-linear-gradient';
 import HorizontalPager from '@/components/HorizontalPager';
 import Step3Page1 from './screens/Step3Page1';
 import { useSession } from '@/contexts/SessionContext';
@@ -41,7 +41,12 @@ export default function PlayStep3Screen() {
   };
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#4BA35B', '#3D954D', '#2D803D']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.container}
+    >
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity onPress={handleBack} style={styles.headerButton}>
           <ChevronLeft size={28} color="#FFFFFF" />
@@ -65,14 +70,13 @@ export default function PlayStep3Screen() {
           <Text style={styles.startButtonText}>Start</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0F0D',
   },
   header: {
     flexDirection: 'row',
@@ -93,7 +97,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   stepIndicator: {
-    backgroundColor: Colors.primary,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
@@ -108,13 +112,14 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: 24,
-    backgroundColor: '#0A0F0D',
   },
   startButton: {
-    backgroundColor: '#333333',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   startButtonText: {
     color: '#FFFFFF',
