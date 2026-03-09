@@ -42,7 +42,7 @@ import * as Haptics from 'expo-haptics';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { useAppNavigation } from '@/contexts/AppNavigationContext';
 import { useProfile } from '@/contexts/ProfileContext';
-import { useScrollHeader, ScrollHeaderProvider, useScrollHeaderContext } from '@/hooks/useScrollHeader';
+import { useScrollHeader, ScrollHeaderProvider, useScrollHeaderContext, useScrollHeaderPadding } from '@/hooks/useScrollHeader';
 
 type CommunityTab = 'tour' | 'affiliate' | 'entertainment';
 
@@ -423,6 +423,7 @@ function EventCard({
 
 function TourContent({ onOpenEvent }: { onOpenEvent: (event: TourEvent) => void }) {
   const scrollHandler = useScrollHeaderContext();
+  const scrollPadding = useScrollHeaderPadding();
   const { profile } = useProfile();
 
   const handleEventPress = useCallback((event: TourEvent) => {
@@ -439,7 +440,7 @@ function TourContent({ onOpenEvent }: { onOpenEvent: (event: TourEvent) => void 
     .slice(0, 2);
 
   return (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }} onScroll={scrollHandler} scrollEventThrottle={16}>
+    <ScrollView style={styles.tabContentNoPad} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30, paddingTop: scrollPadding, paddingHorizontal: 16 }} onScroll={scrollHandler} scrollEventThrottle={16}>
       <Text style={tourStyles.pageTitle}>Tour</Text>
 
       <View style={tourStyles.profileSection}>
@@ -796,6 +797,7 @@ function GoalPickerModal({
 
 function AffiliateContent() {
   const scrollHandler = useScrollHeaderContext();
+  const scrollPadding = useScrollHeaderPadding();
   const [goal, setGoal] = useState<GoalOption>(100);
   const [pickerVisible, setPickerVisible] = useState<boolean>(false);
 
@@ -837,9 +839,9 @@ function AffiliateContent() {
   return (
     <>
       <ScrollView
-        style={styles.tabContent}
+        style={styles.tabContentNoPad}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 30 }}
+        contentContainerStyle={{ paddingBottom: 30, paddingTop: scrollPadding, paddingHorizontal: 16 }}
         onScroll={scrollHandler}
         scrollEventThrottle={16}
       >
@@ -1201,6 +1203,7 @@ function EntertainmentDetailScreen({ section, onClose }: { section: Entertainmen
 
 function EntertainmentContent() {
   const scrollHandler = useScrollHeaderContext();
+  const scrollPadding = useScrollHeaderPadding();
   const [openSection, setOpenSection] = useState<EntertainmentSection | null>(null);
 
   const handleSocialPress = useCallback(async (nativeUrl: string, webUrl: string) => {
@@ -1232,7 +1235,7 @@ function EntertainmentContent() {
   }
 
   return (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }} onScroll={scrollHandler} scrollEventThrottle={16}>
+    <ScrollView style={styles.tabContentNoPad} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30, paddingTop: scrollPadding, paddingHorizontal: 16 }} onScroll={scrollHandler} scrollEventThrottle={16}>
       <Text style={entStyles.pageTitle}>Entertainment</Text>
 
       <Text style={entStyles.sectionLabel}>Social Media</Text>
@@ -1412,7 +1415,8 @@ export default function CommunityScreen() {
   }
 
   const { headerTranslateY, onScroll: onHeaderScroll } = useScrollHeader(52);
-  const scrollHeaderValue = useMemo(() => ({ onScroll: onHeaderScroll }), [onHeaderScroll]);
+  const contentPaddingTop = insets.top + HEADER_BAR_HEIGHT;
+  const scrollHeaderValue = useMemo(() => ({ onScroll: onHeaderScroll, contentPaddingTop }), [onHeaderScroll, contentPaddingTop]);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -1441,7 +1445,7 @@ export default function CommunityScreen() {
         </SafeAreaView>
       </Animated.View>
 
-      <View style={[styles.body, { paddingTop: insets.top + HEADER_BAR_HEIGHT }]}>
+      <View style={styles.body}>
         <ScrollHeaderProvider value={scrollHeaderValue}>
           {renderContent()}
         </ScrollHeaderProvider>
@@ -1521,6 +1525,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 16,
+  },
+  tabContentNoPad: {
+    flex: 1,
   },
   placeholderCard: {
     backgroundColor: '#F5F5F5',
