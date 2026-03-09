@@ -378,15 +378,13 @@ const edStyles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: 'row' as const,
-    paddingTop: 0,
-    paddingBottom: 0,
+    paddingTop: 3,
+    paddingBottom: 1,
   },
   tab: {
     flex: 1,
     alignItems: 'center' as const,
-    paddingVertical: 0,
-    paddingTop: 4,
-    paddingBottom: 4,
+    paddingVertical: 2,
   },
   iconActive: {},
   iconInactive: {
@@ -1978,15 +1976,13 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: 'row' as const,
-    paddingTop: 0,
-    paddingBottom: 0,
+    paddingTop: 3,
+    paddingBottom: 1,
   },
   tab: {
     flex: 1,
     alignItems: 'center' as const,
-    paddingVertical: 0,
-    paddingTop: 4,
-    paddingBottom: 4,
+    paddingVertical: 2,
   },
   iconActive: {},
   iconInactive: {
