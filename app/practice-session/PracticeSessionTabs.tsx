@@ -7,9 +7,12 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronDown, User, Navigation, Plane, FileText, Dumbbell } from 'lucide-react-native';
-import Colors from '@/constants/colors';
 import { useSession } from '@/contexts/SessionContext';
+
+const BLUE_ACTIVE = '#0059B2';
+const BLUE_INACTIVE = '#8BB8E0';
 import MyTab from './tabs/MyTab';
 import PositionTab from './tabs/PositionTab';
 import FlightTab from './tabs/FlightTab';
@@ -84,24 +87,42 @@ export default function PracticeSessionTabs() {
       </View>
 
       {!isDrillFullScreen && (
-        <View style={styles.tabBar}>
-          {tabsConfig.map((tab) => (
-            <TouchableOpacity
-              key={tab.key}
-              style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-              onPress={() => setActiveTab(tab.key)}
-              activeOpacity={0.7}
-            >
-              <View style={activeTab === tab.key ? styles.iconActive : styles.iconInactive}>
-                {React.cloneElement(tab.icon as React.ReactElement<{ color: string }>, {
-                  color: activeTab === tab.key ? Colors.accent : Colors.tabInactive,
-                })}
-              </View>
-              <Text style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}>
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View style={[styles.tabBar, { paddingBottom: insets.bottom > 0 ? insets.bottom : 20 }]}>
+          {tabsConfig.map((tab) => {
+            const isActive = activeTab === tab.key;
+            return (
+              <TouchableOpacity
+                key={tab.key}
+                style={styles.tab}
+                onPress={() => setActiveTab(tab.key)}
+                activeOpacity={0.7}
+              >
+                <View style={isActive ? styles.tabActiveHighlight : undefined}>
+                  <View style={[{ alignItems: 'center' as const }, isActive ? styles.iconActive : styles.iconInactive]}>
+                    {isActive ? (
+                      <LinearGradient
+                        colors={['#0059B2', '#1075E3', '#1C8CFF']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.iconGradientWrap}
+                      >
+                        {React.cloneElement(tab.icon as React.ReactElement<{ color: string }>, {
+                          color: '#FFFFFF',
+                        })}
+                      </LinearGradient>
+                    ) : (
+                      React.cloneElement(tab.icon as React.ReactElement<{ color: string }>, {
+                        color: BLUE_INACTIVE,
+                      })
+                    )}
+                    <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+                      {tab.label}
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       )}
     </View>
@@ -149,30 +170,41 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: 'row' as const,
-    backgroundColor: Colors.surface,
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    paddingBottom: 20,
-    paddingTop: 8,
+    borderTopColor: '#E8E8E8',
+    paddingTop: 4,
   },
   tab: {
     flex: 1,
     alignItems: 'center' as const,
-    paddingVertical: 8,
+    paddingVertical: 4,
   },
-  tabActive: {},
+  tabActiveHighlight: {
+    backgroundColor: 'rgba(0,89,178,0.08)',
+    borderRadius: 10,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+  },
   iconActive: {},
   iconInactive: {
-    opacity: 0.6,
+    opacity: 0.5,
+  },
+  iconGradientWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
   },
   tabLabel: {
-    fontSize: 11,
-    marginTop: 4,
-    color: Colors.tabInactive,
+    fontSize: 10,
+    marginTop: 2,
+    color: BLUE_INACTIVE,
     fontWeight: '500' as const,
   },
   tabLabelActive: {
-    color: Colors.accent,
-    fontWeight: '600' as const,
+    color: BLUE_ACTIVE,
+    fontWeight: '700' as const,
   },
 });

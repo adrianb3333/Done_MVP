@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, ImageBackground, View, ScrollView, ActivityIndicator, Platform } from "react-native";
+import { StyleSheet, ImageBackground, View, ScrollView, ActivityIndicator, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from 'expo-location';
 
@@ -84,13 +84,6 @@ export default function FlightTab() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* HEADER */}
-          <View style={styles.header}>
-            <View style={styles.pill}>
-              <Text style={styles.pillText}>Tournament Prep</Text>
-            </View>
-          </View>
-
           {/* CENTER: Compass */}
           <View style={styles.compassWrapper}>
             {loading ? (
@@ -169,24 +162,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 40,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    alignItems: 'flex-start',
-    marginBottom: 20,
-  },
-  pill: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  pillText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
   },
   compassWrapper: {
     alignItems: 'center',

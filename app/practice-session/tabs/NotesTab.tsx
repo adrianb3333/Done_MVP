@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { StyleSheet, Text, ScrollView, View, Pressable, Modal } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 import LiquidGlassCard from "@/components/reusables/LiquidGlassCard";
 
 import SwingThoughtsModal from "@/app/modals/swing-thoughts-modal";
@@ -53,9 +53,13 @@ export default function NotesScreen() {
   };
 
   return (
-    <View style={styles.background}>
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+    <LinearGradient
+      colors={['#0059B2', '#1075E3', '#1C8CFF']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.background}
+    >
+        <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
           <View style={styles.clubDataSection}>
             <View style={styles.clubDataHeaderRow}>
               <Text style={styles.clubDataHeader}>Club DATA</Text>
@@ -107,7 +111,6 @@ export default function NotesScreen() {
             </LiquidGlassCard>
           </Pressable>
         </ScrollView>
-      </SafeAreaView>
 
       <Modal
         visible={activeModal !== null}
@@ -117,14 +120,14 @@ export default function NotesScreen() {
       >
         {renderModal()}
       </Modal>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  background: { flex: 1, backgroundColor: '#020d12' },
+  background: { flex: 1 },
   container: { flex: 1 },
-  scrollContent: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 100 },
+  scrollContent: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 20 },
   sectionTitle: { fontSize: 28, fontWeight: "700" as const, color: '#FFFFFF', marginBottom: 16, textAlign: 'center' },
   clubDataSection: {
     marginBottom: 20,
@@ -138,11 +141,11 @@ const styles = StyleSheet.create({
   clubDataHeader: {
     fontSize: 18,
     fontWeight: '800' as const,
-    color: '#1DB954',
+    color: '#FFFFFF',
   },
   clubDataSubtext: {
     fontSize: 11,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.6)',
     fontWeight: '500' as const,
   },
   clubDataButtons: {
@@ -151,20 +154,27 @@ const styles = StyleSheet.create({
   },
   clubDataButton: {
     flex: 1,
-    backgroundColor: '#111111',
-    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    borderRadius: 14,
     paddingVertical: 14,
     paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
   },
   clubDataButtonTitle: {
     fontSize: 13,
     fontWeight: '800' as const,
-    color: '#7CFC7C',
+    color: '#FFFFFF',
   },
   cardContainer: { marginBottom: 12 },
   card: { width: '100%' },
   cardContent: { flexDirection: 'row' as const, alignItems: 'center' as const, padding: 16 },
   textContainer: { flex: 1, gap: 4 },
-  cardTitle: { fontSize: 18, fontWeight: "700" as const, color: '#7CFC7C' },
-  cardDescription: { fontSize: 14, color: '#FFFFFF', lineHeight: 18 },
+  cardTitle: { fontSize: 18, fontWeight: "700" as const, color: '#FFFFFF' },
+  cardDescription: { fontSize: 14, color: 'rgba(255,255,255,0.8)', lineHeight: 18 },
 });

@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, Switch, Modal } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Clock, Thermometer, Timer, Wifi, Smartphone } from 'lucide-react-native';
 import { useSession } from '@/contexts/SessionContext';
 import { fetchGolfWeather } from '@/services/weatherApi';
+import LiquidGlassCard from '@/components/reusables/LiquidGlassCard';
 
 export default function MyTab() {
   const { quitSession, sessionStartTime } = useSession();
@@ -81,60 +83,80 @@ export default function MyTab() {
   const [deviceEnabled, setDeviceEnabled] = useState(false);
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#0059B2', '#1075E3', '#1C8CFF']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.container}
+    >
       <View style={styles.topContent}>
         <View style={styles.miniStatsRow}>
-          <View style={styles.miniStat}>
-            <Clock size={16} color="#FFFFFF" />
-            <Text style={styles.miniStatLabel}>Time</Text>
-            <Text style={styles.miniStatValue}>{formatTime(currentTime)}</Text>
-          </View>
-          <View style={styles.miniStat}>
-            <Thermometer size={16} color="#FFFFFF" />
-            <Text style={styles.miniStatLabel}>Temp</Text>
-            <Text style={styles.miniStatValue}>
-              {tempLoading ? '...' : temperature !== null ? `${temperature}°C` : '--°C'}
-            </Text>
-          </View>
-          <View style={[styles.miniStat, styles.timerStat]}>
-            <Timer size={16} color="#FFFFFF" />
-            <Text style={styles.miniStatLabel}>Duration</Text>
-            <Text style={[styles.miniStatValue, styles.timerValue]}>{formatElapsed(elapsed)}</Text>
-          </View>
+          <LiquidGlassCard containerStyle={styles.miniStatCard}>
+            <View style={styles.miniStat}>
+              <Clock size={16} color="#FFFFFF" />
+              <Text style={styles.miniStatLabel}>Time</Text>
+              <Text style={styles.miniStatValue}>{formatTime(currentTime)}</Text>
+            </View>
+          </LiquidGlassCard>
+          <LiquidGlassCard containerStyle={styles.miniStatCard}>
+            <View style={styles.miniStat}>
+              <Thermometer size={16} color="#FFFFFF" />
+              <Text style={styles.miniStatLabel}>Temp</Text>
+              <Text style={styles.miniStatValue}>
+                {tempLoading ? '...' : temperature !== null ? `${temperature}°C` : '--°C'}
+              </Text>
+            </View>
+          </LiquidGlassCard>
+          <LiquidGlassCard containerStyle={styles.miniStatCard}>
+            <View style={styles.miniStat}>
+              <Timer size={16} color="#FFFFFF" />
+              <Text style={styles.miniStatLabel}>Duration</Text>
+              <Text style={styles.miniStatValue}>{formatElapsed(elapsed)}</Text>
+            </View>
+          </LiquidGlassCard>
         </View>
 
-        <View style={styles.toggleSection}>
-          <View style={styles.toggleRow}>
-            <View style={styles.toggleLeft}>
-              <Wifi size={18} color="#8A9B90" />
-              <Text style={styles.toggleLabel}>Sensors</Text>
+        <LiquidGlassCard containerStyle={styles.toggleCard}>
+          <View style={styles.toggleSection}>
+            <View style={styles.toggleRow}>
+              <View style={styles.toggleLeft}>
+                <Wifi size={18} color="rgba(255,255,255,0.7)" />
+                <Text style={styles.toggleLabel}>Sensors</Text>
+              </View>
+              <Switch
+                value={sensorsEnabled}
+                onValueChange={setSensorsEnabled}
+                trackColor={{ false: 'rgba(255,255,255,0.2)', true: 'rgba(255, 255, 255, 0.35)' }}
+                thumbColor={sensorsEnabled ? '#FFFFFF' : 'rgba(255,255,255,0.6)'}
+              />
             </View>
-            <Switch
-              value={sensorsEnabled}
-              onValueChange={setSensorsEnabled}
-              trackColor={{ false: '#2A3530', true: 'rgba(255, 255, 255, 0.35)' }}
-              thumbColor={sensorsEnabled ? '#FFFFFF' : '#6B7B70'}
-            />
-          </View>
-          <View style={styles.toggleDivider} />
-          <View style={styles.toggleRow}>
-            <View style={styles.toggleLeft}>
-              <Smartphone size={18} color="#8A9B90" />
-              <Text style={styles.toggleLabel}>Device</Text>
+            <View style={styles.toggleDivider} />
+            <View style={styles.toggleRow}>
+              <View style={styles.toggleLeft}>
+                <Smartphone size={18} color="rgba(255,255,255,0.7)" />
+                <Text style={styles.toggleLabel}>Device</Text>
+              </View>
+              <Switch
+                value={deviceEnabled}
+                onValueChange={setDeviceEnabled}
+                trackColor={{ false: 'rgba(255,255,255,0.2)', true: 'rgba(255, 255, 255, 0.35)' }}
+                thumbColor={deviceEnabled ? '#FFFFFF' : 'rgba(255,255,255,0.6)'}
+              />
             </View>
-            <Switch
-              value={deviceEnabled}
-              onValueChange={setDeviceEnabled}
-              trackColor={{ false: '#2A3530', true: 'rgba(255, 255, 255, 0.35)' }}
-              thumbColor={deviceEnabled ? '#FFFFFF' : '#6B7B70'}
-            />
           </View>
-        </View>
+        </LiquidGlassCard>
       </View>
 
       <View style={styles.bottomSection}>
-        <TouchableOpacity style={styles.quitButton} onPress={() => setShowQuitConfirm(true)} activeOpacity={0.8}>
-          <Text style={styles.quitText}>Quit Practice</Text>
+        <TouchableOpacity onPress={() => setShowQuitConfirm(true)} activeOpacity={0.8}>
+          <LinearGradient
+            colors={['#B20000', '#E31010', '#FF1C1C']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.quitButton}
+          >
+            <Text style={styles.quitText}>Quit Practice</Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
 
@@ -170,7 +192,7 @@ export default function MyTab() {
           </View>
         </View>
       </Modal>
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -187,40 +209,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
   },
-  miniStat: {
+  miniStatCard: {
     flex: 1,
-    backgroundColor: 'transparent',
-    borderRadius: 12,
+  },
+  miniStat: {
     padding: 14,
     alignItems: 'center' as const,
-    borderWidth: 1,
-    borderColor: '#222222',
     gap: 4,
-  },
-  timerStat: {
-    borderColor: 'rgba(0, 230, 118, 0.2)',
   },
   miniStatLabel: {
     fontSize: 11,
     fontWeight: '500' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     letterSpacing: 0.3,
   },
   miniStatValue: {
     fontSize: 20,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
-  },
-  timerValue: {
     color: '#FFFFFF',
   },
-  toggleSection: {
+  toggleCard: {
     marginTop: 16,
     marginHorizontal: 16,
-    backgroundColor: 'transparent',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#222222',
+  },
+  toggleSection: {
     overflow: 'hidden' as const,
   },
   toggleRow: {
@@ -238,11 +250,11 @@ const styles = StyleSheet.create({
   toggleLabel: {
     fontSize: 15,
     fontWeight: '500' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   toggleDivider: {
     height: 1,
-    backgroundColor: '#222222',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     marginHorizontal: 16,
   },
   bottomSection: {
@@ -250,7 +262,6 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   quitButton: {
-    backgroundColor: '#FF5252',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center' as const,
@@ -267,23 +278,23 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
   },
   confirmBox: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,40,80,0.85)',
     borderRadius: 20,
     padding: 28,
     width: '80%' as unknown as number,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.15)',
   },
   confirmTitle: {
     fontSize: 20,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   confirmMessage: {
     fontSize: 15,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     textAlign: 'center' as const,
     marginBottom: 24,
     lineHeight: 21,
@@ -295,7 +306,7 @@ const styles = StyleSheet.create({
   },
   confirmNo: {
     flex: 1,
-    backgroundColor: '#222222',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center' as const,
@@ -303,11 +314,11 @@ const styles = StyleSheet.create({
   confirmNoText: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   confirmYes: {
     flex: 1,
-    backgroundColor: '#FF5252',
+    backgroundColor: '#E31010',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center' as const,
