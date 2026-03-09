@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Platform, Switch } from 'react-native';
 import { Clock, Thermometer, Timer, Radio, Smartphone } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+
 import { fetchGolfWeather } from '@/services/weatherApi';
 import { useSession } from '@/contexts/SessionContext';
 
@@ -58,10 +58,7 @@ export default function Step3Page1() {
     <View style={styles.container}>
       <Text style={styles.subtitle}>Session Overview</Text>
 
-      <LinearGradient
-        colors={['#4BA35B', '#3D954D', '#2D803D']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+      <View
         style={styles.miniStatsRow}
       >
         <View style={styles.miniStat}>
@@ -83,12 +80,9 @@ export default function Step3Page1() {
           <Text style={styles.miniStatLabel}>Timer</Text>
           <Text style={styles.miniStatValue}>0:00</Text>
         </View>
-      </LinearGradient>
+      </View>
 
-      <LinearGradient
-        colors={['#4BA35B', '#3D954D', '#2D803D']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+      <View
         style={[styles.toggleCard, { marginTop: 12 }]}
       >
         <View style={styles.toggleLeft}>
@@ -100,16 +94,13 @@ export default function Step3Page1() {
         <Switch
           value={sensorsEnabled}
           onValueChange={setSensorsEnabled}
-          trackColor={{ false: '#FFFFFF', true: '#1075E3' }}
+          trackColor={{ false: 'rgba(255,255,255,0.2)', true: '#1075E3' }}
           thumbColor={sensorsEnabled ? '#FFFFFF' : '#CCC'}
-          ios_backgroundColor="#FFFFFF"
+          ios_backgroundColor="rgba(255,255,255,0.2)"
         />
-      </LinearGradient>
+      </View>
 
-      <LinearGradient
-        colors={['#4BA35B', '#3D954D', '#2D803D']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+      <View
         style={[styles.toggleCard, { marginTop: 12 }]}
       >
         <View style={styles.toggleLeft}>
@@ -121,11 +112,11 @@ export default function Step3Page1() {
         <Switch
           value={deviceEnabled}
           onValueChange={setDeviceEnabled}
-          trackColor={{ false: '#FFFFFF', true: '#1075E3' }}
+          trackColor={{ false: 'rgba(255,255,255,0.2)', true: '#1075E3' }}
           thumbColor={deviceEnabled ? '#FFFFFF' : '#CCC'}
-          ios_backgroundColor="#FFFFFF"
+          ios_backgroundColor="rgba(255,255,255,0.2)"
         />
-      </LinearGradient>
+      </View>
     </View>
   );
 }
@@ -147,6 +138,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden' as const,
     paddingVertical: 14,
     paddingHorizontal: 8,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   miniStat: {
     flex: 1,
@@ -161,7 +155,7 @@ const styles = StyleSheet.create({
   miniStatLabel: {
     fontSize: 11,
     fontWeight: '500' as const,
-    color: '#D1F2DE',
+    color: 'rgba(255,255,255,0.6)',
     letterSpacing: 0.3,
   },
   miniStatValue: {
@@ -176,6 +170,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'space-between' as const,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   toggleLeft: {
     flexDirection: 'row' as const,
@@ -187,7 +184,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.4)',
+    borderColor: 'rgba(255,255,255,0.25)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },

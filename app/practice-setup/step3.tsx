@@ -46,15 +46,8 @@ export default function PracticeStep3Screen() {
       </View>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom > 0 ? insets.bottom : 24 }]}>
-        <TouchableOpacity onPress={handleStart} activeOpacity={0.8}>
-          <LinearGradient
-            colors={['#4BA35B', '#3D954D', '#2D803D']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={styles.startButton}
-          >
-            <Text style={styles.startButtonText}>Start</Text>
-          </LinearGradient>
+        <TouchableOpacity onPress={handleStart} activeOpacity={0.8} style={styles.startButton}>
+          <Text style={styles.startButtonText}>Start</Text>
         </TouchableOpacity>
       </View>
     </LinearGradient>
@@ -93,6 +86,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center' as const,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   startButtonText: {
     color: '#FFFFFF',
