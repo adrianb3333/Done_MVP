@@ -417,19 +417,7 @@ function EventCard({
       >
         <View style={tourStyles.eventCardLeft}>
           {variant === 'upcoming' ? (
-            <MaskedView
-              style={{ height: 20 }}
-              maskElement={
-                <Text style={tourStyles.eventNameMasked}>{event.eventName}</Text>
-              }
-            >
-              <LinearGradient
-                colors={['#FF1C1C', '#E31010', '#B20000']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={{ flex: 1 }}
-              />
-            </MaskedView>
+            <Text style={tourStyles.eventNameUpcoming}>{event.eventName}</Text>
           ) : (
             <Text style={tourStyles.eventNamePast}>{event.eventName}</Text>
           )}
@@ -1014,10 +1002,10 @@ const tourStyles = StyleSheet.create({
     flex: 1,
     gap: 4,
   },
-  eventNameMasked: {
+  eventNameUpcoming: {
     fontSize: 14,
     fontWeight: '700' as const,
-    color: '#000000',
+    color: '#E31010',
   },
   eventNamePast: {
     fontSize: 14,
