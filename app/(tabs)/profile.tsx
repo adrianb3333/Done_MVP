@@ -684,6 +684,13 @@ export default function ProfileScreen() {
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.headerAbsolute, { transform: [{ translateY: headerTranslateY }] }]}>
+        <LinearGradient
+          colors={['rgba(0,0,0,0.08)', 'rgba(0,0,0,0.03)', 'rgba(0,0,0,0)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.topEdgeShadow}
+          pointerEvents="none"
+        />
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <View style={styles.headerRow}>
           <TouchableOpacity
@@ -1352,6 +1359,14 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     zIndex: 10,
+  },
+  topEdgeShadow: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 18,
+    zIndex: 20,
   },
   headerRow: {
     flexDirection: 'row' as const,
