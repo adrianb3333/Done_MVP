@@ -767,35 +767,22 @@ export default function ProfileScreen() {
         <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
 
           <View style={styles.profileTopSection}>
-            <TouchableOpacity
-              onPress={handleAvatarPress}
-              style={styles.avatarTouchable}
-              activeOpacity={0.8}
-              testID="avatar-button"
-            >
-              <View style={styles.avatarShadowWrap}>
-                {profile?.avatar_url ? (
-                  <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
-                ) : (
-                  <View style={styles.avatarPlaceholder}>
-                    <Text style={styles.avatarInitials}>{initials}</Text>
-                  </View>
-                )}
-              </View>
-            </TouchableOpacity>
-
-            <View style={styles.rightColumn}>
+            <View style={styles.avatarAndFriendsColumn}>
               <TouchableOpacity
-                style={styles.followPillVertical}
-                onPress={() => openFollowsModal('followers')}
-                activeOpacity={0.7}
-                testID="followers-button"
+                onPress={handleAvatarPress}
+                style={styles.avatarTouchable}
+                activeOpacity={0.8}
+                testID="avatar-button"
               >
-                <Text style={styles.followStatNumber}>{followersCount}</Text>
-                <Text style={styles.followStatLabel}>följare</Text>
-                <View style={styles.followHorizontalDivider} />
-                <Text style={styles.followStatNumber}>{followingCount}</Text>
-                <Text style={styles.followStatLabel}>följer</Text>
+                <View style={styles.avatarShadowWrap}>
+                  {profile?.avatar_url ? (
+                    <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
+                  ) : (
+                    <View style={styles.avatarPlaceholder}>
+                      <Text style={styles.avatarInitials}>{initials}</Text>
+                    </View>
+                  )}
+                </View>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -817,6 +804,21 @@ export default function ProfileScreen() {
                     <Text style={styles.friendsStackInitial}>K</Text>
                   </View>
                 </View>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.rightColumn}>
+              <TouchableOpacity
+                style={styles.followPillVertical}
+                onPress={() => openFollowsModal('followers')}
+                activeOpacity={0.7}
+                testID="followers-button"
+              >
+                <Text style={styles.followStatNumber}>{followersCount}</Text>
+                <Text style={styles.followStatLabel}>följare</Text>
+                <View style={styles.followHorizontalDivider} />
+                <Text style={styles.followStatNumber}>{followingCount}</Text>
+                <Text style={styles.followStatLabel}>följer</Text>
               </TouchableOpacity>
             </View>
 
@@ -1390,6 +1392,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     gap: 12,
   },
+  avatarAndFriendsColumn: {
+    alignItems: 'center' as const,
+    gap: 8,
+  },
   rightColumn: {
     flex: 1,
     gap: 8,
@@ -1459,12 +1465,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     backgroundColor: '#F5F5F5',
-    borderRadius: 16,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    gap: 10,
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    gap: 6,
     borderWidth: 1,
     borderColor: '#E8E8E8',
+    alignSelf: 'stretch' as const,
   },
   friendsCount: {
     fontSize: 16,
