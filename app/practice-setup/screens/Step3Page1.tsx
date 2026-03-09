@@ -5,19 +5,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { fetchGolfWeather } from '@/services/weatherApi';
 import { useSession } from '@/contexts/SessionContext';
 
-function BlueBorderWrap({ children, style }: { children: React.ReactNode; style?: object }) {
-  return (
-    <LinearGradient
-      colors={['#1C8CFF', '#1075E3', '#0059B2']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={[{ borderRadius: 13, padding: 1.5 }, style]}
-    >
-      {children}
-    </LinearGradient>
-  );
-}
-
 export default function Step3Page1() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [temperature, setTemperature] = useState<number | null>(null);
@@ -69,83 +56,76 @@ export default function Step3Page1() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Ready to Practice</Text>
-      <Text style={styles.subtitle}>Session overview</Text>
+      <Text style={styles.subtitle}>Session Overview</Text>
 
-      <BlueBorderWrap>
-        <LinearGradient
-          colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={styles.miniStatsRow}
-        >
-          <View style={styles.miniStat}>
-            <Clock size={16} color="#FFFFFF" />
-            <Text style={styles.miniStatLabel}>Time</Text>
-            <Text style={styles.miniStatValue}>{formatTime(currentTime)}</Text>
-          </View>
-          <View style={styles.miniStatDivider} />
-          <View style={styles.miniStat}>
-            <Thermometer size={16} color="#FFFFFF" />
-            <Text style={styles.miniStatLabel}>Temp</Text>
-            <Text style={styles.miniStatValue}>
-              {tempLoading ? '...' : temperature !== null ? `${temperature}°C` : '--°C'}
-            </Text>
-          </View>
-          <View style={styles.miniStatDivider} />
-          <View style={styles.miniStat}>
-            <Timer size={16} color="#FFFFFF" />
-            <Text style={styles.miniStatLabel}>Timer</Text>
-            <Text style={styles.miniStatValue}>0:00</Text>
-          </View>
-        </LinearGradient>
-      </BlueBorderWrap>
+      <LinearGradient
+        colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.miniStatsRow}
+      >
+        <View style={styles.miniStat}>
+          <Clock size={16} color="#FFFFFF" />
+          <Text style={styles.miniStatLabel}>Time</Text>
+          <Text style={styles.miniStatValue}>{formatTime(currentTime)}</Text>
+        </View>
+        <View style={styles.miniStatDivider} />
+        <View style={styles.miniStat}>
+          <Thermometer size={16} color="#FFFFFF" />
+          <Text style={styles.miniStatLabel}>Temp</Text>
+          <Text style={styles.miniStatValue}>
+            {tempLoading ? '...' : temperature !== null ? `${temperature}°C` : '--°C'}
+          </Text>
+        </View>
+        <View style={styles.miniStatDivider} />
+        <View style={styles.miniStat}>
+          <Timer size={16} color="#FFFFFF" />
+          <Text style={styles.miniStatLabel}>Timer</Text>
+          <Text style={styles.miniStatValue}>0:00</Text>
+        </View>
+      </LinearGradient>
 
-      <BlueBorderWrap style={{ marginTop: 12 }}>
-        <LinearGradient
-          colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={styles.toggleCard}
-        >
-          <View style={styles.toggleLeft}>
-            <View style={styles.toggleIcon}>
-              <Radio size={20} color="#FFFFFF" strokeWidth={2} />
-            </View>
-            <Text style={styles.toggleText}>SENSORS</Text>
+      <LinearGradient
+        colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={[styles.toggleCard, { marginTop: 12 }]}
+      >
+        <View style={styles.toggleLeft}>
+          <View style={styles.toggleIcon}>
+            <Radio size={20} color="#FFFFFF" strokeWidth={2} />
           </View>
-          <Switch
-            value={sensorsEnabled}
-            onValueChange={setSensorsEnabled}
-            trackColor={{ false: '#FFFFFF', true: '#1075E3' }}
-            thumbColor={sensorsEnabled ? '#FFFFFF' : '#CCC'}
-            ios_backgroundColor="#FFFFFF"
-          />
-        </LinearGradient>
-      </BlueBorderWrap>
+          <Text style={styles.toggleText}>SENSORS</Text>
+        </View>
+        <Switch
+          value={sensorsEnabled}
+          onValueChange={setSensorsEnabled}
+          trackColor={{ false: '#FFFFFF', true: '#1075E3' }}
+          thumbColor={sensorsEnabled ? '#FFFFFF' : '#CCC'}
+          ios_backgroundColor="#FFFFFF"
+        />
+      </LinearGradient>
 
-      <BlueBorderWrap style={{ marginTop: 12 }}>
-        <LinearGradient
-          colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={styles.toggleCard}
-        >
-          <View style={styles.toggleLeft}>
-            <View style={styles.toggleIcon}>
-              <Smartphone size={20} color="#FFFFFF" strokeWidth={2} />
-            </View>
-            <Text style={styles.toggleText}>DEVICE</Text>
+      <LinearGradient
+        colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={[styles.toggleCard, { marginTop: 12 }]}
+      >
+        <View style={styles.toggleLeft}>
+          <View style={styles.toggleIcon}>
+            <Smartphone size={20} color="#FFFFFF" strokeWidth={2} />
           </View>
-          <Switch
-            value={deviceEnabled}
-            onValueChange={setDeviceEnabled}
-            trackColor={{ false: '#FFFFFF', true: '#1075E3' }}
-            thumbColor={deviceEnabled ? '#FFFFFF' : '#CCC'}
-            ios_backgroundColor="#FFFFFF"
-          />
-        </LinearGradient>
-      </BlueBorderWrap>
+          <Text style={styles.toggleText}>DEVICE</Text>
+        </View>
+        <Switch
+          value={deviceEnabled}
+          onValueChange={setDeviceEnabled}
+          trackColor={{ false: '#FFFFFF', true: '#1075E3' }}
+          thumbColor={deviceEnabled ? '#FFFFFF' : '#CCC'}
+          ios_backgroundColor="#FFFFFF"
+        />
+      </LinearGradient>
     </View>
   );
 }
@@ -154,18 +134,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
-    backgroundColor: '#FFFFFF',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '800' as const,
-    color: '#0059B2',
-    marginBottom: 6,
   },
   subtitle: {
-    fontSize: 15,
-    color: '#1075E3',
-    marginBottom: 36,
+    fontSize: 22,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+    marginBottom: 24,
   },
   miniStatsRow: {
     flexDirection: 'row' as const,

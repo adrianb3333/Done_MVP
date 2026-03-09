@@ -28,11 +28,17 @@ export default function PracticeStep3Screen() {
   };
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#0059B2', '#1075E3', '#1C8CFF']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.container}
+    >
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity onPress={handleBack} style={styles.headerButton}>
-          <ChevronLeft size={28} color="#1075E3" />
+          <ChevronLeft size={28} color="#FFFFFF" />
         </TouchableOpacity>
+        <Text style={styles.headerTitle}>Ready to Practice</Text>
       </View>
 
       <View style={styles.content}>
@@ -51,21 +57,25 @@ export default function PracticeStep3Screen() {
           </LinearGradient>
         </TouchableOpacity>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     paddingHorizontal: 16,
     paddingBottom: 12,
-    backgroundColor: '#FFFFFF',
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+    marginLeft: 8,
   },
   headerButton: {
     width: 40,
@@ -78,7 +88,6 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: 24,
-    backgroundColor: '#FFFFFF',
   },
   startButton: {
     paddingVertical: 16,
