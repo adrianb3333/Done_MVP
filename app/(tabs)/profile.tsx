@@ -815,10 +815,8 @@ export default function ProfileScreen() {
                 testID="followers-button"
               >
                 <Text style={styles.followStatNumber}>{followersCount}</Text>
-                <Text style={styles.followStatLabel}>följare</Text>
                 <View style={styles.followHorizontalDivider} />
                 <Text style={styles.followStatNumber}>{followingCount}</Text>
-                <Text style={styles.followStatLabel}>följer</Text>
               </TouchableOpacity>
             </View>
 
