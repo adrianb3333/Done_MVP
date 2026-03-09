@@ -22,10 +22,8 @@ import {
   Users,
   Crosshair,
   Info,
-  Award,
   Gift,
   ChevronRight,
-  Copy,
   Target,
   ImageIcon,
   Tag,
@@ -753,8 +751,6 @@ function TourContent({ onOpenEvent, onOpenTourScreen, onOpenLeaderboard }: { onO
 
   return (
     <ScrollView style={styles.tabContentNoPad} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30, paddingTop: scrollPadding, paddingHorizontal: 16 }} onScroll={scrollHandler} scrollEventThrottle={16}>
-      <Text style={tourStyles.pageTitle}>Tour</Text>
-
       <View style={tourStyles.profileSection}>
         <View style={tourStyles.profileLeft}>
           {profile?.avatar_url ? (
@@ -1197,8 +1193,6 @@ function AffiliateContent() {
         onScroll={scrollHandler}
         scrollEventThrottle={16}
       >
-        <Text style={affStyles.pageTitle}>Affiliate</Text>
-
         <View style={affStyles.topBoxRow}>
           <TouchableOpacity
             style={affStyles.countBox}
@@ -1211,7 +1205,10 @@ function AffiliateContent() {
               <Text style={affStyles.countOf}>out of {goal}</Text>
             </View>
             <View style={affStyles.progressBarBg}>
-              <View
+              <LinearGradient
+                colors={['#4BA35B', '#3D954D', '#2D803D']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
                 style={[
                   affStyles.progressBarFill,
                   { width: `${Math.min((currentCount / goal) * 100, 100)}%` },
@@ -1226,7 +1223,6 @@ function AffiliateContent() {
             onPress={() => handleOpenPicker('perks')}
           >
             <Text style={affStyles.goalLabel}>{goal}</Text>
-            <Award size={28} color="#FFB74D" />
             <Text style={affStyles.perksHeader}>Perks and Prizes</Text>
             <Text style={affStyles.perksValue}>{PERKS_MAP[goal]}</Text>
           </TouchableOpacity>
@@ -1237,28 +1233,36 @@ function AffiliateContent() {
           activeOpacity={0.7}
           onPress={handleShare}
         >
-          <Copy size={14} color="#FFFFFF" />
           <View>
             <Text style={affStyles.discountLabel}>Discount Code</Text>
-            <Text style={affStyles.discountCode}>{discountCode}</Text>
+            <MaskedView
+              style={{ height: 18 }}
+              maskElement={<Text style={[affStyles.discountCode, { backgroundColor: 'transparent' }]}>{discountCode}</Text>}
+            >
+              <LinearGradient colors={['#FF1C1C', '#E31010', '#B20000']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1 }} />
+            </MaskedView>
           </View>
         </TouchableOpacity>
 
         {AFFILIATE_CATEGORIES.map((cat) => (
           <View key={cat.key} style={affStyles.categorySection}>
-            <View style={affStyles.categoryHeaderRow}>
-              {cat.icon}
-              <Text style={affStyles.categoryTitle}>{cat.label}</Text>
-            </View>
+            <Text style={affStyles.categoryTitle}>{cat.label}</Text>
             {cat.items.map((item) => (
               <TouchableOpacity
                 key={item.id}
-                style={affStyles.categoryCard}
                 activeOpacity={0.7}
                 onPress={() => handleItemPress(item.title, cat.label)}
+                style={affStyles.categoryCardOuter}
               >
-                <Text style={affStyles.categoryCardTitle}>{item.title}</Text>
-                <ChevronRight size={16} color="#999999" />
+                <LinearGradient
+                  colors={['#4BA35B', '#3D954D', '#2D803D']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0, y: 1 }}
+                  style={affStyles.categoryCard}
+                >
+                  <Text style={affStyles.categoryCardTitle}>{item.title}</Text>
+                  <ChevronRight size={16} color="#1A1A1A" />
+                </LinearGradient>
               </TouchableOpacity>
             ))}
           </View>
@@ -1289,13 +1293,18 @@ const affStyles = StyleSheet.create({
   },
   countBox: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'rgba(30,30,30,0.75)',
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E8E8E8',
+    borderColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center' as const,
     gap: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 12,
   },
   countCenter: {
     alignItems: 'center' as const,
@@ -1303,42 +1312,46 @@ const affStyles = StyleSheet.create({
   countBig: {
     fontSize: 32,
     fontWeight: '900' as const,
-    color: '#1A1A1A',
+    color: '#FFFFFF',
   },
   countOf: {
     fontSize: 12,
-    color: '#888888',
+    color: 'rgba(255,255,255,0.6)',
     fontWeight: '600' as const,
   },
   progressBarBg: {
     width: '100%',
     height: 5,
     borderRadius: 3,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     marginTop: 4,
     overflow: 'hidden' as const,
   },
   progressBarFill: {
     height: 5,
     borderRadius: 3,
-    backgroundColor: '#1A1A1A',
   },
   perksBox: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: 'rgba(30,30,30,0.75)',
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E8E8E8',
+    borderColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center' as const,
     gap: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 12,
   },
   goalLabel: {
     fontSize: 10,
     fontWeight: '700' as const,
-    color: '#FFB74D',
+    color: 'rgba(255,255,255,0.7)',
     alignSelf: 'flex-end' as const,
-    backgroundColor: '#E8E8E8',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -1347,59 +1360,67 @@ const affStyles = StyleSheet.create({
   perksHeader: {
     fontSize: 13,
     fontWeight: '700' as const,
-    color: '#1A1A1A',
+    color: '#FFFFFF',
     textAlign: 'center' as const,
   },
   perksValue: {
     fontSize: 11,
-    color: '#666666',
+    color: 'rgba(255,255,255,0.7)',
     textAlign: 'center' as const,
   },
   discountButton: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     alignSelf: 'center' as const,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 20,
     gap: 10,
     marginBottom: 24,
+    borderWidth: 1.5,
+    borderColor: '#E31010',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 12,
   },
   discountLabel: {
     fontSize: 10,
-    color: '#CCCCCC',
+    color: '#E31010',
     fontWeight: '600' as const,
   },
   discountCode: {
     fontSize: 14,
     fontWeight: '800' as const,
-    color: '#FFFFFF',
+    color: '#E31010',
     letterSpacing: 1,
   },
   categorySection: {
     marginBottom: 20,
   },
-  categoryHeaderRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 8,
-    marginBottom: 10,
-  },
   categoryTitle: {
     fontSize: 15,
     fontWeight: '700' as const,
     color: '#1A1A1A',
+    marginBottom: 10,
+  },
+  categoryCardOuter: {
+    borderRadius: 12,
+    overflow: 'hidden' as const,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 12,
   },
   categoryCard: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'space-between' as const,
-    backgroundColor: '#F5F5F5',
     borderRadius: 12,
     padding: 16,
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
   },
   categoryCardTitle: {
     fontSize: 14,
@@ -1799,7 +1820,7 @@ export default function CommunityScreen() {
             <TouchableOpacity onPress={openSidebar} style={styles.menuBtn} activeOpacity={0.7}>
               <Menu size={24} color="#1A1A1A" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>{tabs.find(t => t.key === activeTab)?.label ?? 'Community'}</Text>
+            <Text style={styles.headerTitle}>{activeTab === 'tour' ? "Golfer's Tour" : (tabs.find(t => t.key === activeTab)?.label ?? 'Community')}</Text>
             <TouchableOpacity onPress={() => navigateTo('mygame')} style={styles.menuBtn} activeOpacity={0.7}>
               <Image source={require('@/assets/images/golferscrib-logo.png')} style={styles.logoIcon} resizeMode="contain" />
             </TouchableOpacity>
