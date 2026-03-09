@@ -123,7 +123,7 @@ const tabStyles = StyleSheet.create({
     borderRadius: 40,
   },
   circleText: {
-    fontSize: 15,
+    fontSize: 12,
     fontWeight: '900' as const,
     color: '#FFFFFF',
     letterSpacing: 1,
