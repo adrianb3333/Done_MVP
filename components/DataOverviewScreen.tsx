@@ -15,6 +15,7 @@ import {
   Modal,
   Animated,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Menu, BarChart2, TrendingUp, Crosshair, List, Video, Plus, Columns2, Trash2, Flag, Target, Dumbbell, ChevronRight, MapPin, Search, Star, X } from 'lucide-react-native';
 import { useScrollHeader, ScrollHeaderProvider, useScrollHeaderContext } from '@/hooks/useScrollHeader';
@@ -181,14 +182,14 @@ function StatsContent() {
         <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }} onScroll={scrollHandler} scrollEventThrottle={16}>
           {roundQuery.isLoading ? (
             <View style={statsStyles.loadingWrap}>
-              <ActivityIndicator size="large" color="#4FC3F7" />
+              <ActivityIndicator size="large" color="#FFFFFF" />
               <Text style={statsStyles.loadingText}>Loading round stats...</Text>
             </View>
           ) : roundQuery.data ? (
             <RoundStatsDisplay stats={roundQuery.data} headerLabel="All-Time Round Stats" />
           ) : (
             <View style={styles.placeholderCard}>
-              <BarChart2 size={32} color="#4FC3F7" />
+              <BarChart2 size={32} color="#FFFFFF" />
               <Text style={styles.placeholderTitle}>No Round Data</Text>
               <Text style={styles.placeholderSub}>Complete a round to see your statistics here</Text>
             </View>
@@ -198,7 +199,7 @@ function StatsContent() {
         <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }} onScroll={scrollHandler} scrollEventThrottle={16}>
           {practiceQuery.isLoading ? (
             <View style={statsStyles.loadingWrap}>
-              <ActivityIndicator size="large" color="#4FC3F7" />
+              <ActivityIndicator size="large" color="#FFFFFF" />
               <Text style={statsStyles.loadingText}>Loading practice stats...</Text>
             </View>
           ) : practiceQuery.data && practiceQuery.data.length > 0 ? (
@@ -207,7 +208,7 @@ function StatsContent() {
             ))
           ) : (
             <View style={styles.placeholderCard}>
-              <Dumbbell size={32} color="#4FC3F7" />
+              <Dumbbell size={32} color="#FFFFFF" />
               <Text style={styles.placeholderTitle}>No Practice Data</Text>
               <Text style={styles.placeholderSub}>Complete drills during practice to see your statistics here</Text>
             </View>
@@ -226,11 +227,11 @@ const statsStyles = StyleSheet.create({
   },
   segmentControl: {
     flexDirection: 'row' as const,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.2)',
     borderRadius: 10,
     padding: 3,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.18)',
   },
   segmentButton: {
     flex: 1,
@@ -239,15 +240,15 @@ const statsStyles = StyleSheet.create({
     borderRadius: 8,
   },
   segmentButtonActive: {
-    backgroundColor: '#4FC3F7',
+    backgroundColor: 'rgba(255,255,255,0.3)',
   },
   segmentText: {
     fontSize: 14,
     fontWeight: '700' as const,
-    color: '#5A6B60',
+    color: 'rgba(255,255,255,0.5)',
   },
   segmentTextActive: {
-    color: '#000',
+    color: '#FFFFFF',
   },
   loadingWrap: {
     paddingVertical: 60,
@@ -256,16 +257,16 @@ const statsStyles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 14,
-    color: '#5A6B60',
+    color: 'rgba(255,255,255,0.7)',
     fontWeight: '500' as const,
   },
   categoryCard: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 14,
     padding: 16,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.18)',
   },
   categoryHeader: {
     flexDirection: 'row' as const,
@@ -288,15 +289,15 @@ const statsStyles = StyleSheet.create({
   categoryName: {
     fontSize: 18,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   categoryBadge: {
-    backgroundColor: '#0A0A0A',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.15)',
   },
   categoryBadgeText: {
     fontSize: 11,
@@ -311,14 +312,14 @@ const statsStyles = StyleSheet.create({
   categoryAvgLabel: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     width: 80,
   },
   categoryAvgBarWrap: {
     flex: 1,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#0A0A0A',
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
   categoryAvgBar: {
     height: 8,
@@ -336,7 +337,7 @@ const statsStyles = StyleSheet.create({
     justifyContent: 'space-between' as const,
     paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: '#222222',
+    borderTopColor: 'rgba(255,255,255,0.12)',
   },
   drillNameWrap: {
     flex: 1,
@@ -344,12 +345,12 @@ const statsStyles = StyleSheet.create({
   drillName: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   drillAttempts: {
     fontSize: 11,
     fontWeight: '500' as const,
-    color: '#5A6B60',
+    color: 'rgba(255,255,255,0.5)',
     marginTop: 2,
   },
   drillScores: {
@@ -363,25 +364,25 @@ const statsStyles = StyleSheet.create({
   drillScoreLabel: {
     fontSize: 10,
     fontWeight: '600' as const,
-    color: '#5A6B60',
+    color: 'rgba(255,255,255,0.5)',
     textTransform: 'uppercase' as const,
     letterSpacing: 0.5,
   },
   drillScoreValue: {
     fontSize: 16,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     marginTop: 2,
   },
   drillScoreDivider: {
     width: 1,
     height: 28,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.15)',
   },
   drillNoData: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#2E4038',
+    color: 'rgba(255,255,255,0.4)',
   },
 });
 
@@ -516,7 +517,7 @@ function MiniChart({ data, color, height = 120 }: { data: number[]; color: strin
                   left: i * stepX - 8,
                   height: barH,
                   top: isNeg ? midY : midY - barH,
-                  backgroundColor: '#222222',
+                  backgroundColor: 'rgba(0,0,0,0.25)',
                   width: 16,
                 },
               ]}
@@ -623,7 +624,7 @@ function SGOverallView({ selectedHandicap }: { selectedHandicap: string }) {
               </Text>
               <TouchableOpacity style={sgStyles.categorySgLink} activeOpacity={0.7}>
                 <Text style={sgStyles.categorySgText}>SG</Text>
-                <ChevronRight size={12} color="#8A9B90" />
+                <ChevronRight size={12} color="rgba(255,255,255,0.5)" />
               </TouchableOpacity>
             </View>
           ))}
@@ -631,7 +632,7 @@ function SGOverallView({ selectedHandicap }: { selectedHandicap: string }) {
 
         <TouchableOpacity style={sgStyles.handicapLink} activeOpacity={0.7}>
           <Text style={sgStyles.handicapLinkText}>Show Handicap Breakdown</Text>
-          <ChevronRight size={14} color="#8A9B90" />
+          <ChevronRight size={14} color="rgba(255,255,255,0.5)" />
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -710,7 +711,7 @@ function SGContent() {
             <View style={sgStyles.handicapModalHeader}>
               <Text style={sgStyles.handicapModalTitle}>Compare Against</Text>
               <TouchableOpacity onPress={() => setShowHandicapPicker(false)}>
-                <X size={20} color="#8A9B90" />
+                <X size={20} color="rgba(255,255,255,0.6)" />
               </TouchableOpacity>
             </View>
             {HANDICAP_OPTIONS.map((option) => (
@@ -747,7 +748,7 @@ const sgStyles = StyleSheet.create({
   sectionHeader: {
     fontSize: 22,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   vsIconBtn: {
     padding: 4,
@@ -762,11 +763,11 @@ const sgStyles = StyleSheet.create({
   },
   segmentControl: {
     flexDirection: 'row' as const,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.2)',
     borderRadius: 10,
     padding: 3,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.18)',
   },
   segmentButton: {
     flex: 1,
@@ -775,15 +776,15 @@ const sgStyles = StyleSheet.create({
     borderRadius: 8,
   },
   segmentButtonActive: {
-    backgroundColor: '#4FC3F7',
+    backgroundColor: 'rgba(255,255,255,0.3)',
   },
   segmentText: {
     fontSize: 13,
     fontWeight: '700' as const,
-    color: '#5A6B60',
+    color: 'rgba(255,255,255,0.5)',
   },
   segmentTextActive: {
-    color: '#000',
+    color: '#FFFFFF',
   },
   titleRow: {
     flexDirection: 'row' as const,
@@ -795,13 +796,13 @@ const sgStyles = StyleSheet.create({
   gameTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   handicapBadgeText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: '#8A9B90',
-    backgroundColor: '#1A1A1A',
+    color: 'rgba(255,255,255,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -819,15 +820,15 @@ const sgStyles = StyleSheet.create({
   avgSGLabel: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 4,
   },
   mainCard: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 16,
     padding: 22,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center' as const,
   },
   cardHeader: {
@@ -845,7 +846,7 @@ const sgStyles = StyleSheet.create({
   bigValue: {
     fontSize: 52,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     letterSpacing: -2,
   },
   trendBadge: {
@@ -867,13 +868,13 @@ const sgStyles = StyleSheet.create({
   bigSubtitle: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 4,
     marginBottom: 16,
   },
   cardDescription: {
     fontSize: 14,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     textAlign: 'center' as const,
     lineHeight: 20,
     marginBottom: 22,
@@ -908,7 +909,7 @@ const sgStyles = StyleSheet.create({
   categoryLabel: {
     fontSize: 11,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     marginBottom: 4,
   },
   categoryValue: {
@@ -922,7 +923,7 @@ const sgStyles = StyleSheet.create({
   },
   categorySgText: {
     fontSize: 11,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     fontWeight: '600' as const,
   },
   handicapLink: {
@@ -931,14 +932,14 @@ const sgStyles = StyleSheet.create({
     gap: 4,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#222222',
+    borderTopColor: 'rgba(255,255,255,0.12)',
     width: '100%' as const,
     justifyContent: 'center' as const,
   },
   handicapLinkText: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
   },
 
   chartContainer: {
@@ -954,7 +955,7 @@ const sgStyles = StyleSheet.create({
   },
   chartYLabel: {
     fontSize: 10,
-    color: '#5A6B60',
+    color: 'rgba(255,255,255,0.5)',
     fontWeight: '500' as const,
   },
   chartArea: {
@@ -971,7 +972,7 @@ const sgStyles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: '#222222',
+    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   chartDot: {
     position: 'absolute' as const,
@@ -993,7 +994,7 @@ const sgStyles = StyleSheet.create({
   },
   chartTooltip: {
     position: 'absolute' as const,
-    backgroundColor: '#333',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     borderRadius: 6,
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -1011,12 +1012,12 @@ const sgStyles = StyleSheet.create({
     alignItems: 'center' as const,
   },
   handicapModal: {
-    backgroundColor: '#111111',
+    backgroundColor: 'rgba(0,40,80,0.9)',
     borderRadius: 16,
     width: '80%' as const,
     paddingBottom: 8,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.18)',
   },
   handicapModalHeader: {
     flexDirection: 'row' as const,
@@ -1025,26 +1026,26 @@ const sgStyles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#222222',
+    borderBottomColor: 'rgba(255,255,255,0.12)',
   },
   handicapModalTitle: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   handicapOption: {
     paddingHorizontal: 18,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#1A1A1A',
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   handicapOptionActive: {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
   handicapOptionText: {
     fontSize: 15,
     fontWeight: '500' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.6)',
   },
   handicapOptionTextActive: {
     color: '#FFFFFF',
@@ -1093,7 +1094,7 @@ function ShotsContent() {
 
       <View style={shotsStyles.totalContainer}>
         {isLoading ? (
-          <ActivityIndicator size="large" color="#4FC3F7" />
+          <ActivityIndicator size="large" color="#FFFFFF" />
         ) : (
           <View style={shotsStyles.totalValueWrap}>
             <Text style={shotsStyles.totalValue}>{totalShots}</Text>
@@ -1113,11 +1114,11 @@ const shotsStyles = StyleSheet.create({
   },
   segmentControl: {
     flexDirection: 'row' as const,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.2)',
     borderRadius: 10,
     padding: 3,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.18)',
   },
   segmentButton: {
     flex: 1,
@@ -1126,15 +1127,15 @@ const shotsStyles = StyleSheet.create({
     borderRadius: 8,
   },
   segmentButtonActive: {
-    backgroundColor: '#4FC3F7',
+    backgroundColor: 'rgba(255,255,255,0.3)',
   },
   segmentText: {
     fontSize: 14,
     fontWeight: '700' as const,
-    color: '#5A6B60',
+    color: 'rgba(255,255,255,0.5)',
   },
   segmentTextActive: {
-    color: '#000',
+    color: '#FFFFFF',
   },
   totalContainer: {
     alignItems: 'flex-end' as const,
@@ -1147,13 +1148,13 @@ const shotsStyles = StyleSheet.create({
   totalValue: {
     fontSize: 48,
     fontWeight: '900' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     letterSpacing: -1,
   },
   totalLabel: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#5A6B60',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 2,
   },
 });
@@ -1293,7 +1294,7 @@ function DetailsCoursesList() {
         <Star
           key={i}
           size={14}
-          color={i <= Math.floor(rating) ? '#FFB74D' : '#5A6B60'}
+          color={i <= Math.floor(rating) ? '#FFB74D' : 'rgba(255,255,255,0.3)'}
           fill={i <= Math.floor(rating) ? '#FFB74D' : 'transparent'}
         />
       );
@@ -1311,7 +1312,7 @@ function DetailsCoursesList() {
             <Text style={detailsStyles.courseClub}>
               {item.clubName}, {item.holes}/{item.par}
             </Text>
-            <MapPin size={12} color="#5A6B60" />
+            <MapPin size={12} color="rgba(255,255,255,0.5)" />
           </View>
           <Text style={detailsStyles.courseCity}>{item.city}, {item.country}</Text>
           <View style={detailsStyles.courseBottom}>
@@ -1326,7 +1327,7 @@ function DetailsCoursesList() {
         >
           <Star
             size={20}
-            color={isFav ? '#FFB74D' : '#5A6B60'}
+            color={isFav ? '#FFB74D' : 'rgba(255,255,255,0.3)'}
             fill={isFav ? '#FFB74D' : 'transparent'}
           />
         </TouchableOpacity>
@@ -1338,11 +1339,11 @@ function DetailsCoursesList() {
     <View style={{ flex: 1 }}>
       <View style={detailsStyles.searchSection}>
         <View style={detailsStyles.searchBar}>
-          <Search size={16} color="#5A6B60" />
+          <Search size={16} color="rgba(255,255,255,0.6)" />
           <TextInput
             style={detailsStyles.searchInput}
             placeholder="Sök"
-            placeholderTextColor="#5A6B60"
+            placeholderTextColor="rgba(255,255,255,0.4)"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
@@ -1527,7 +1528,7 @@ function TheGameContent() {
             <Text style={detailsStyles.gameSectionNumber}>{index + 1}</Text>
           </View>
           <Text style={detailsStyles.gameSectionTitle}>{section}</Text>
-          <ChevronRight size={18} color="#5A6B60" />
+          <ChevronRight size={18} color="rgba(255,255,255,0.5)" />
         </View>
       ))}
     </ScrollView>
@@ -1577,11 +1578,11 @@ const detailsStyles = StyleSheet.create({
   },
   segmentControl: {
     flexDirection: 'row' as const,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.2)',
     borderRadius: 10,
     padding: 3,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.18)',
   },
   segmentButton: {
     flex: 1,
@@ -1590,15 +1591,15 @@ const detailsStyles = StyleSheet.create({
     borderRadius: 8,
   },
   segmentButtonActive: {
-    backgroundColor: '#4FC3F7',
+    backgroundColor: 'rgba(255,255,255,0.3)',
   },
   segmentText: {
     fontSize: 14,
     fontWeight: '700' as const,
-    color: '#5A6B60',
+    color: 'rgba(255,255,255,0.5)',
   },
   segmentTextActive: {
-    color: '#000',
+    color: '#FFFFFF',
   },
   searchSection: {
     paddingHorizontal: 16,
@@ -1608,12 +1609,12 @@ const detailsStyles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     borderWidth: 1.5,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.18)',
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: Platform.OS === 'ios' ? 10 : 6,
     marginBottom: 10,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.2)',
     gap: 8,
   },
   searchInput: {
@@ -1630,35 +1631,35 @@ const detailsStyles = StyleSheet.create({
   },
   filterLabel: {
     fontSize: 14,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     fontWeight: '600' as const,
   },
   countryPicker: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.18)',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
     gap: 6,
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.2)',
   },
   countryText: {
     fontSize: 14,
-    color: '#CCCCCC',
+    color: '#FFFFFF',
     fontWeight: '500' as const,
     flex: 1,
   },
   countryChevron: {
     fontSize: 10,
-    color: '#CCCCCC',
+    color: '#FFFFFF',
   },
   countryDropdown: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.18)',
     borderRadius: 10,
     marginBottom: 10,
     overflow: 'hidden' as const,
@@ -1667,14 +1668,14 @@ const detailsStyles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#222222',
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   countryOptionActive: {
-    backgroundColor: '#222222',
+    backgroundColor: 'rgba(255,255,255,0.15)',
   },
   countryOptionText: {
     fontSize: 15,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.6)',
   },
   countryOptionTextActive: {
     color: '#FFFFFF',
@@ -1689,7 +1690,7 @@ const detailsStyles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#222222',
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   courseInfo: {
     flex: 1,
@@ -1707,11 +1708,11 @@ const detailsStyles = StyleSheet.create({
   },
   courseClub: {
     fontSize: 13,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
   },
   courseCity: {
     fontSize: 12,
-    color: '#5A6B60',
+    color: 'rgba(255,255,255,0.5)',
     marginTop: 1,
   },
   courseBottom: {
@@ -1726,7 +1727,7 @@ const detailsStyles = StyleSheet.create({
   },
   courseDistance: {
     fontSize: 13,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     fontWeight: '500' as const,
   },
   favBtn: {
@@ -1742,7 +1743,7 @@ const detailsStyles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 15,
-    color: '#5A6B60',
+    color: 'rgba(255,255,255,0.6)',
   },
   notesScrollContent: {
     paddingHorizontal: 16,
@@ -1761,11 +1762,11 @@ const detailsStyles = StyleSheet.create({
   clubDataHeader: {
     fontSize: 18,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   clubDataSubtext: {
     fontSize: 11,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.6)',
     fontWeight: '500' as const,
   },
   clubDataButtons: {
@@ -1774,15 +1775,17 @@ const detailsStyles = StyleSheet.create({
   },
   clubDataButton: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 10,
     paddingVertical: 14,
     paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
   },
   clubDataButtonTitle: {
     fontSize: 13,
     fontWeight: '800' as const,
-    color: '#8B1A1A',
+    color: '#FFFFFF',
   },
   noteCardContainer: {
     marginBottom: 12,
@@ -1825,19 +1828,19 @@ const detailsStyles = StyleSheet.create({
   gameSectionCard: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 14,
     padding: 18,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.18)',
     gap: 14,
   },
   gameSectionNumberWrap: {
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: '#222222',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
@@ -1850,7 +1853,7 @@ const detailsStyles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     lineHeight: 20,
   },
 });
@@ -1941,14 +1944,14 @@ function VideoContent() {
       onPress={() => handleOpenSession(item)}
     >
       <View style={styles.videoSessionIcon}>
-        {item.isComparison ? <Columns2 size={18} color="#4FC3F7" /> : <Video size={18} color="#4FC3F7" />}
+        {item.isComparison ? <Columns2 size={18} color="#FFFFFF" /> : <Video size={18} color="#FFFFFF" />}
       </View>
       <View style={styles.videoSessionInfo}>
         <Text style={styles.videoSessionTitle}>{item.isComparison ? 'Comparison' : 'Swing Analysis'}</Text>
         <Text style={styles.videoSessionDate}>{formatSessionDate(item.createdAt)}</Text>
       </View>
       <Pressable onPress={() => removeSession(item.id)} style={styles.videoDeleteBtn}>
-        <Trash2 size={14} color="#5A6B60" />
+        <Trash2 size={14} color="rgba(255,255,255,0.5)" />
       </Pressable>
     </Pressable>
   ), [handleOpenSession, removeSession]);
@@ -1966,11 +1969,11 @@ function VideoContent() {
         <View style={styles.videoActionsSection}>
           <Text style={styles.videoHeaderTitle}>Swing Analyzer</Text>
           <Pressable style={styles.videoUploadButton} onPress={() => pickAndAnalyze(false)}>
-            <Plus size={24} color="#000" />
+            <Plus size={24} color="#FFFFFF" />
             <Text style={styles.videoUploadTitle}>New Analysis</Text>
           </Pressable>
           <Pressable style={styles.videoCompareButton} onPress={() => pickAndAnalyze(true)}>
-            <Columns2 size={22} color="#4FC3F7" />
+            <Columns2 size={22} color="#FFFFFF" />
             <Text style={styles.videoCompareTitle}>Compare Swings</Text>
           </Pressable>
           {sessions.length > 0 && <Text style={styles.videoSectionTitle}>History</Text>}
@@ -2008,12 +2011,17 @@ export default function DataOverviewScreen() {
   const scrollHeaderValue = useMemo(() => ({ onScroll: onHeaderScroll }), [onHeaderScroll]);
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#0F6FAF', '#3FB8E8', '#BFF3FF']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.container}
+    >
       <Animated.View style={[styles.headerAbsolute, { transform: [{ translateY: headerTranslateY }] }]}>
         <SafeAreaView edges={['top']} style={styles.safeTop}>
           <View style={styles.header}>
             <TouchableOpacity onPress={openSidebar} style={styles.menuBtn} activeOpacity={0.7}>
-              <Menu size={24} color="#F5F7F6" />
+              <Menu size={24} color="#FFFFFF" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>{tabs.find(t => t.key === activeTab)?.label ?? 'Stats'}</Text>
             <TouchableOpacity onPress={() => navigateTo('mygame')} style={styles.menuBtn} activeOpacity={0.7}>
@@ -2042,7 +2050,7 @@ export default function DataOverviewScreen() {
               >
                 <View style={isActive ? styles.iconActive : styles.iconInactive}>
                   {React.cloneElement(tab.icon as React.ReactElement<{ color: string }>, {
-                    color: isActive ? '#4FC3F7' : '#5A6B60',
+                    color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.5)',
                   })}
                 </View>
                 <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
@@ -2053,14 +2061,13 @@ export default function DataOverviewScreen() {
           })}
         </View>
       </SafeAreaView>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0F0D',
   },
   headerAbsolute: {
     position: 'absolute' as const,
@@ -2068,10 +2075,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 100,
-    backgroundColor: '#000000',
+    backgroundColor: 'transparent',
   },
   safeTop: {
-    backgroundColor: '#000000',
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row' as const,
@@ -2093,8 +2100,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     letterSpacing: 0.3,
+    textShadowColor: 'rgba(0,0,0,0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   body: {
     flex: 1,
@@ -2105,23 +2115,23 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   placeholderCard: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 16,
     padding: 28,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.18)',
     marginBottom: 20,
     gap: 10,
   },
   placeholderTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   placeholderSub: {
     fontSize: 14,
-    color: '#5A6B60',
+    color: 'rgba(255,255,255,0.7)',
     textAlign: 'center' as const,
     lineHeight: 20,
   },
@@ -2133,46 +2143,46 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '47%' as any,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 14,
     padding: 18,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.18)',
     gap: 6,
   },
   statCardValue: {
     fontSize: 28,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   statCardLabel: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: '#5A6B60',
+    color: 'rgba(255,255,255,0.7)',
   },
   sgRow: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.18)',
     gap: 12,
   },
   sgLabel: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     width: 80,
   },
   sgBarWrap: {
     flex: 1,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#222222',
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
   sgBar: {
     height: 8,
@@ -2182,14 +2192,14 @@ const styles = StyleSheet.create({
   sgValue: {
     fontSize: 15,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     width: 36,
     textAlign: 'right' as const,
   },
   videoHeaderTitle: {
     fontSize: 22,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     marginBottom: 16,
   },
   videoListContent: {
@@ -2202,47 +2212,49 @@ const styles = StyleSheet.create({
   videoUploadButton: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: '#4FC3F7',
-    borderRadius: 12,
-    padding: 16,
-    gap: 12,
-  },
-  videoUploadTitle: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: '#000',
-  },
-  videoCompareButton: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.25)',
     borderRadius: 12,
     padding: 16,
     gap: 12,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  videoUploadTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+  },
+  videoCompareButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderRadius: 12,
+    padding: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
   },
   videoCompareTitle: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   videoSectionTitle: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#5A6B60',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 20,
     textTransform: 'uppercase' as const,
   },
   videoSessionCard: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 12,
     padding: 12,
     marginTop: 8,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.18)',
   },
   videoSessionCardPressed: {
     opacity: 0.7,
@@ -2251,7 +2263,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 8,
-    backgroundColor: 'rgba(79,195,247,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
@@ -2262,17 +2274,17 @@ const styles = StyleSheet.create({
   videoSessionTitle: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   videoSessionDate: {
     fontSize: 12,
-    color: '#5A6B60',
+    color: 'rgba(255,255,255,0.6)',
   },
   videoDeleteBtn: {
     padding: 8,
   },
   tabBarSafe: {
-    backgroundColor: '#000000',
+    backgroundColor: 'rgba(0,0,0,0.2)',
   },
   tabBar: {
     flexDirection: 'row' as const,
@@ -2291,10 +2303,10 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 10,
     marginTop: 4,
-    color: '#5A6B60',
+    color: 'rgba(255,255,255,0.5)',
     fontWeight: '600' as const,
   },
   tabLabelActive: {
-    color: '#4FC3F7',
+    color: '#FFFFFF',
   },
 });
