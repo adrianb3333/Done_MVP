@@ -955,7 +955,7 @@ export default function ProfileScreen() {
               <View style={styles.tourCardHeader}>
                 <Text style={styles.tourCardHeaderText}>Golfer's Tour</Text>
                 <View style={styles.tourCardHeaderRight}>
-                  <Image source={require('@/assets/images/golferscrib-logo.png')} style={styles.cardLogoImage} resizeMode="contain" />
+                  <Image source={require('@/assets/images/golferscrib-logo-clean.png')} style={styles.cardLogoImage} resizeMode="contain" />
                   <ChevronRight size={16} color="#666" />
                 </View>
               </View>
@@ -1002,7 +1002,7 @@ export default function ProfileScreen() {
               <View style={styles.affiliateCardHeader}>
                 <Text style={styles.affiliateCardHeaderText}>Get your Rewards!</Text>
                 <View style={styles.tourCardHeaderRight}>
-                  <Image source={require('@/assets/images/golferscrib-logo.png')} style={styles.cardLogoImage} resizeMode="contain" />
+                  <Image source={require('@/assets/images/golferscrib-logo-clean.png')} style={styles.cardLogoImage} resizeMode="contain" />
                   <ChevronRight size={16} color="#666" />
                 </View>
               </View>
