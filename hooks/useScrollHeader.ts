@@ -50,6 +50,7 @@ export function useScrollHeader(headerHeight: number = 60) {
 
 type ScrollHeaderContextType = {
   onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  contentPaddingTop?: number;
 };
 
 const ScrollHeaderContext = createContext<ScrollHeaderContextType | null>(null);
@@ -59,4 +60,9 @@ export const ScrollHeaderProvider = ScrollHeaderContext.Provider;
 export function useScrollHeaderContext() {
   const ctx = useContext(ScrollHeaderContext);
   return ctx?.onScroll;
+}
+
+export function useScrollHeaderPadding() {
+  const ctx = useContext(ScrollHeaderContext);
+  return ctx?.contentPaddingTop ?? 0;
 }

@@ -18,7 +18,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Menu, BarChart2, TrendingUp, Crosshair, List, Video, Plus, Columns2, Trash2, Flag, Target, Dumbbell, ChevronRight, MapPin, Search, Star, X } from 'lucide-react-native';
-import { useScrollHeader, ScrollHeaderProvider, useScrollHeaderContext } from '@/hooks/useScrollHeader';
+import { useScrollHeader, ScrollHeaderProvider, useScrollHeaderContext, useScrollHeaderPadding } from '@/hooks/useScrollHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TabCourse, { CourseTab } from '@/components/PlaSta/TabCourse';
 import LiquidGlassCard from '@/components/reusables/LiquidGlassCard';
@@ -137,6 +137,7 @@ function PracticeCategoryCard({ category }: { category: DrillCategoryStats }) {
 
 function StatsContent({ segment }: { segment: StatsSegment }) {
   const scrollHandler = useScrollHeaderContext();
+  const topPadding = useScrollHeaderPadding();
 
   const roundQuery = useQuery({
     queryKey: ['allTimeRoundStats'],
@@ -151,7 +152,7 @@ function StatsContent({ segment }: { segment: StatsSegment }) {
   return (
     <View style={{ flex: 1 }}>
       {segment === 'round' ? (
-        <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }} onScroll={scrollHandler} scrollEventThrottle={16}>
+        <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30, paddingTop: topPadding }} onScroll={scrollHandler} scrollEventThrottle={16}>
           {roundQuery.isLoading ? (
             <View style={statsStyles.loadingWrap}>
               <ActivityIndicator size="large" color="#FFFFFF" />
@@ -168,7 +169,7 @@ function StatsContent({ segment }: { segment: StatsSegment }) {
           )}
         </ScrollView>
       ) : (
-        <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }} onScroll={scrollHandler} scrollEventThrottle={16}>
+        <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30, paddingTop: topPadding }} onScroll={scrollHandler} scrollEventThrottle={16}>
           {practiceQuery.isLoading ? (
             <View style={statsStyles.loadingWrap}>
               <ActivityIndicator size="large" color="#FFFFFF" />
@@ -560,8 +561,9 @@ function MiniChart({ data, color, height = 120 }: { data: number[]; color: strin
 
 function SGOverallView({ selectedHandicap }: { selectedHandicap: string; }) {
   const scrollHandler = useScrollHeaderContext();
+  const topPadding = useScrollHeaderPadding();
   return (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }} onScroll={scrollHandler} scrollEventThrottle={16}>
+    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40, paddingTop: topPadding }} onScroll={scrollHandler} scrollEventThrottle={16}>
       <View style={sgStyles.titleRow}>
         <Text style={sgStyles.gameTitle}>Overall Game</Text>
         <Text style={sgStyles.handicapBadgeText}>{selectedHandicap}</Text>
@@ -613,12 +615,13 @@ function SGOverallView({ selectedHandicap }: { selectedHandicap: string; }) {
 
 function SGCategoryView({ segment, selectedHandicap }: { segment: SGSegment; selectedHandicap: string }) {
   const scrollHandler = useScrollHeaderContext();
+  const topPadding = useScrollHeaderPadding();
   const config = SG_CONFIG[segment];
   const isPositive = config.value >= 0;
   const valueStr = (isPositive ? '+' : '') + config.value.toFixed(1);
 
   return (
-    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }} onScroll={scrollHandler} scrollEventThrottle={16}>
+    <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40, paddingTop: topPadding }} onScroll={scrollHandler} scrollEventThrottle={16}>
       <View style={sgStyles.titleRow}>
         <Text style={sgStyles.gameTitle}>{config.title}</Text>
         <Text style={sgStyles.handicapBadgeText}>{selectedHandicap}</Text>
@@ -1007,6 +1010,7 @@ const sgStyles = StyleSheet.create({
 type ShotsSegment = 'round' | 'practice';
 
 function ShotsContent({ segment }: { segment: ShotsSegment }) {
+  const topPadding = useScrollHeaderPadding();
   const roundShotsQuery = useQuery({
     queryKey: ['totalRoundShots'],
     queryFn: fetchRoundShotCount,
@@ -1022,7 +1026,7 @@ function ShotsContent({ segment }: { segment: ShotsSegment }) {
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={shotsStyles.totalContainer}>
+      <View style={[shotsStyles.totalContainer, { paddingTop: topPadding + 20 }]}>
         {isLoading ? (
           <ActivityIndicator size="large" color="#FFFFFF" />
         ) : (
@@ -1160,6 +1164,7 @@ const THE_GAME_SECTIONS = [
 
 function DetailsCoursesList() {
   const scrollHandler = useScrollHeaderContext();
+  const topPadding = useScrollHeaderPadding();
   const [activeTab, setActiveTab] = useState<CourseTab>('nearby');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCountry, setSelectedCountry] = useState('Alla länder');
@@ -1267,7 +1272,7 @@ function DetailsCoursesList() {
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={detailsStyles.searchSection}>
+      <View style={[detailsStyles.searchSection, { paddingTop: topPadding + 12 }]}>
         <View style={detailsStyles.searchBar}>
           <Search size={16} color="rgba(255,255,255,0.6)" />
           <TextInput
@@ -1350,6 +1355,7 @@ function DetailsCoursesList() {
 
 function DetailsNotesContent() {
   const scrollHandler = useScrollHeaderContext();
+  const topPadding = useScrollHeaderPadding();
   const [activeModal, setActiveModal] = useState<NotesModalKey>(null);
 
   const closeModal = () => setActiveModal(null);
@@ -1373,7 +1379,7 @@ function DetailsNotesContent() {
     <View style={{ flex: 1 }}>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={detailsStyles.notesScrollContent}
+        contentContainerStyle={[detailsStyles.notesScrollContent, { paddingTop: topPadding + 16 }]}
         showsVerticalScrollIndicator={false}
         onScroll={scrollHandler}
         scrollEventThrottle={16}
@@ -1444,10 +1450,11 @@ function DetailsNotesContent() {
 
 function TheGameContent() {
   const scrollHandler = useScrollHeaderContext();
+  const topPadding = useScrollHeaderPadding();
   return (
     <ScrollView
       style={{ flex: 1 }}
-      contentContainerStyle={detailsStyles.gameScrollContent}
+      contentContainerStyle={[detailsStyles.gameScrollContent, { paddingTop: topPadding + 16 }]}
       showsVerticalScrollIndicator={false}
       onScroll={scrollHandler}
       scrollEventThrottle={16}
@@ -1780,6 +1787,7 @@ function formatSessionDate(iso: string): string {
 
 function VideoContent() {
   const scrollHandler = useScrollHeaderContext();
+  const topPadding = useScrollHeaderPadding();
   const router = useRouter();
   const { sessions = [], addSession, removeSession } = useSessions();
   const { setVideoUri, setComparisonMode, clearAll } = useSwingStore();
@@ -1867,7 +1875,7 @@ function VideoContent() {
       keyExtractor={(item) => item.id}
       renderItem={renderSession}
       style={styles.tabContent}
-      contentContainerStyle={styles.videoListContent}
+      contentContainerStyle={[styles.videoListContent, { paddingTop: topPadding }]}
       onScroll={scrollHandler}
       scrollEventThrottle={16}
       ListHeaderComponent={
@@ -1937,7 +1945,8 @@ export default function DataOverviewScreen() {
   };
 
   const { headerTranslateY, onScroll: onHeaderScroll } = useScrollHeader(totalHeaderHeight);
-  const scrollHeaderValue = useMemo(() => ({ onScroll: onHeaderScroll }), [onHeaderScroll]);
+  const contentPaddingTop = insets.top + totalHeaderHeight;
+  const scrollHeaderValue = useMemo(() => ({ onScroll: onHeaderScroll, contentPaddingTop }), [onHeaderScroll, contentPaddingTop]);
 
   const renderHeaderTitle = () => {
     if (activeTab === 'sg') {
@@ -2061,7 +2070,7 @@ export default function DataOverviewScreen() {
           {renderSegmentControl()}
       </Animated.View>
 
-      <View style={[styles.body, { paddingTop: insets.top + totalHeaderHeight }]}>
+      <View style={styles.body}>
         <ScrollHeaderProvider value={scrollHeaderValue}>
           {renderContent()}
         </ScrollHeaderProvider>
