@@ -798,6 +798,28 @@ export default function ProfileScreen() {
                 <Text style={styles.followStatLabel}>följer</Text>
               </TouchableOpacity>
 
+              <TouchableOpacity
+                style={styles.friendsPillUnder}
+                onPress={() => openFollowsModal('friends')}
+                activeOpacity={0.7}
+                testID="friends-button"
+              >
+                <Text style={styles.friendsCount}>12</Text>
+                <Text style={styles.friendsLabel}>Friends</Text>
+                <View style={styles.friendsAvatarStack}>
+                  <View style={[styles.friendsStackAvatar, { backgroundColor: '#4BA35B', zIndex: 3 }]}>
+                    <Text style={styles.friendsStackInitial}>A</Text>
+                  </View>
+                  <View style={[styles.friendsStackAvatar, { backgroundColor: '#1075E3', left: -10, zIndex: 2 }]}>
+                    <Text style={styles.friendsStackInitial}>M</Text>
+                  </View>
+                  <View style={[styles.friendsStackAvatar, { backgroundColor: '#FF5252', left: -20, zIndex: 1 }]}>
+                    <Text style={styles.friendsStackInitial}>K</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            </View>
+
             <View style={styles.actionGrid}>
               <View style={styles.actionGridRow}>
                 <TouchableOpacity
@@ -865,28 +887,6 @@ export default function ProfileScreen() {
               </View>
             </View>
           </View>
-
-              <TouchableOpacity
-                style={styles.friendsPillUnder}
-                onPress={() => openFollowsModal('friends')}
-                activeOpacity={0.7}
-                testID="friends-button"
-              >
-                <Text style={styles.friendsCount}>12</Text>
-                <Text style={styles.friendsLabel}>Friends</Text>
-                <View style={styles.friendsAvatarStack}>
-                  <View style={[styles.friendsStackAvatar, { backgroundColor: '#4BA35B', zIndex: 3 }]}>
-                    <Text style={styles.friendsStackInitial}>A</Text>
-                  </View>
-                  <View style={[styles.friendsStackAvatar, { backgroundColor: '#1075E3', left: -10, zIndex: 2 }]}>
-                    <Text style={styles.friendsStackInitial}>M</Text>
-                  </View>
-                  <View style={[styles.friendsStackAvatar, { backgroundColor: '#FF5252', left: -20, zIndex: 1 }]}>
-                    <Text style={styles.friendsStackInitial}>K</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            </View>
 
           <View style={styles.liveSection}>
             <Text style={styles.liveSectionTitle}>LIVE</Text>
@@ -1496,11 +1496,9 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   actionGrid: {
-    flex: 1,
     gap: 8,
     justifyContent: 'flex-start' as const,
     alignItems: 'flex-end' as const,
-    paddingRight: 4,
   },
   actionGridRow: {
     flexDirection: 'row' as const,
