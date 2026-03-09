@@ -694,6 +694,11 @@ export default function ProfileScreen() {
           >
             <Menu size={24} color="#1A1A1A" />
           </TouchableOpacity>
+          <Image
+            source={require('@/assets/images/golferscrib-header-logo.png')}
+            style={styles.headerLogo}
+            resizeMode="contain"
+          />
           <View style={styles.headerIcons}>
             <TouchableOpacity
               onPress={() => {
@@ -1384,6 +1389,10 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
+  },
+  headerLogo: {
+    height: 28,
+    width: 130,
   },
   headerIcons: {
     flexDirection: 'row' as const,
