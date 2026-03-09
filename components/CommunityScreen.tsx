@@ -373,13 +373,13 @@ const edStyles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: 'row' as const,
-    paddingTop: 4,
-    paddingBottom: 2,
+    paddingTop: 2,
+    paddingBottom: 0,
   },
   tab: {
     flex: 1,
     alignItems: 'center' as const,
-    paddingVertical: 4,
+    paddingVertical: 2,
   },
   iconActive: {},
   iconInactive: {
@@ -387,7 +387,7 @@ const edStyles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 10,
-    marginTop: 4,
+    marginTop: 2,
     color: '#8A8A8A',
     fontWeight: '600' as const,
   },
@@ -1966,13 +1966,13 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: 'row' as const,
-    paddingTop: 4,
-    paddingBottom: 2,
+    paddingTop: 2,
+    paddingBottom: 0,
   },
   tab: {
     flex: 1,
     alignItems: 'center' as const,
-    paddingVertical: 4,
+    paddingVertical: 2,
   },
   iconActive: {},
   iconInactive: {
@@ -1980,7 +1980,7 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 10,
-    marginTop: 4,
+    marginTop: 2,
     color: '#8A8A8A',
     fontWeight: '600' as const,
   },
