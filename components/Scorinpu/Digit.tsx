@@ -81,12 +81,12 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#3a3a3a',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderWidth: 0.5,
-    borderColor: '#2a2a2a',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   digitButtonPar: {
-    backgroundColor: '#333333',
+    backgroundColor: 'rgba(0,0,0,0.35)',
   },
   digitText: {
     fontSize: 26,
@@ -113,13 +113,13 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#2a2a2a',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     borderWidth: 0.5,
-    borderColor: '#222',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   bottomButtonText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#ccc',
+    color: '#FFFFFF',
   },
 });

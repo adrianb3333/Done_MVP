@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { StyleSheet, Text, ScrollView, View, Pressable, Modal } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 import LiquidGlassCard from "@/components/reusables/LiquidGlassCard";
 
 import SwingThoughtsModal from "@/app/modals/swing-thoughts-modal";
@@ -53,7 +54,12 @@ export default function MindTab() {
   };
 
   return (
-    <View style={styles.background}>
+    <LinearGradient
+      colors={['#4BA35B', '#3D954D', '#2D803D']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.background}
+    >
       <SafeAreaView style={styles.container} edges={['top']}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.clubDataSection}>
@@ -117,12 +123,12 @@ export default function MindTab() {
       >
         {renderModal()}
       </Modal>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  background: { flex: 1, backgroundColor: '#020d12' },
+  background: { flex: 1 },
   container: { flex: 1 },
   scrollContent: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 100 },
   sectionTitle: { fontSize: 28, fontWeight: "700" as const, color: '#FFFFFF', marginBottom: 16, textAlign: 'center' },
@@ -138,11 +144,11 @@ const styles = StyleSheet.create({
   clubDataHeader: {
     fontSize: 18,
     fontWeight: '800' as const,
-    color: '#1DB954',
+    color: '#FFFFFF',
   },
   clubDataSubtext: {
     fontSize: 11,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.6)',
     fontWeight: '500' as const,
   },
   clubDataButtons: {
@@ -151,20 +157,22 @@ const styles = StyleSheet.create({
   },
   clubDataButton: {
     flex: 1,
-    backgroundColor: '#111111',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 10,
     paddingVertical: 14,
     paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   clubDataButtonTitle: {
     fontSize: 13,
     fontWeight: '800' as const,
-    color: '#7CFC7C',
+    color: '#FFFFFF',
   },
   cardContainer: { marginBottom: 12 },
   card: { width: '100%' },
   cardContent: { flexDirection: 'row' as const, alignItems: 'center' as const, padding: 16 },
   textContainer: { flex: 1, gap: 4 },
-  cardTitle: { fontSize: 18, fontWeight: "700" as const, color: '#7CFC7C' },
-  cardDescription: { fontSize: 14, color: '#FFFFFF', lineHeight: 18 },
+  cardTitle: { fontSize: 18, fontWeight: "700" as const, color: '#FFFFFF' },
+  cardDescription: { fontSize: 14, color: 'rgba(255,255,255,0.8)', lineHeight: 18 },
 });

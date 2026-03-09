@@ -1,5 +1,6 @@
-import React, { useCallback, useState, useEffect, useRef } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Modal, Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronLeft, ChevronRight, List } from 'lucide-react-native';
 import { useScoring } from '@/contexts/ScoringContext';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -57,7 +58,7 @@ export default function ScoreTab() {
         if (result) setTemperature(result.temp);
       }
     };
-    loadTemp();
+    void loadTemp();
   }, []);
 
   const playerName = profile?.display_name || profile?.username || 'Spelare';
@@ -145,7 +146,12 @@ export default function ScoreTab() {
   };
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#4BA35B', '#3D954D', '#2D803D']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.container}
+    >
       <View style={styles.holeHeader}>
         <TouchableOpacity
           style={styles.navArrow}
@@ -265,14 +271,13 @@ export default function ScoreTab() {
           roundData={roundSumData}
         />
       </Modal>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a2e1f',
   },
   loadingText: {
     color: '#fff',
@@ -286,15 +291,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: '#0d1f12',
+    backgroundColor: 'rgba(0,0,0,0.15)',
   },
   navArrow: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#2a3a2e',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   holeTitle: {
     fontSize: 18,
@@ -306,12 +313,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#333333',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     marginHorizontal: 16,
     marginTop: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   playerInfo: {},
   playerName: {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Modal } from 'react-native';
 import { Clock, Thermometer, Timer, Flag, X } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/colors';
 import { useSession } from '@/contexts/SessionContext';
 import { useScoring } from '@/contexts/ScoringContext';
@@ -107,7 +108,12 @@ export default function DataTab() {
   const sgFormatted = sgValue >= 0 ? `+${sgValue.toFixed(1)}` : sgValue.toFixed(1);
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#4BA35B', '#3D954D', '#2D803D']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.container}
+    >
       <View style={styles.dataHeaderRow}>
         <View style={{ flex: 1 }} />
         <TouchableOpacity
@@ -177,7 +183,7 @@ export default function DataTab() {
           <View style={styles.sgModalCard}>
             <View style={styles.sgModalHeader}>
               <TouchableOpacity onPress={() => setShowSGModal(false)} activeOpacity={0.7}>
-                <X size={22} color="#F5F7F6" />
+                <X size={22} color="#FFFFFF" />
               </TouchableOpacity>
               <Text style={styles.sgModalTitle}>Strokes Gained</Text>
               <View style={{ width: 22 }} />
@@ -249,7 +255,7 @@ export default function DataTab() {
           </View>
         </View>
       </Modal>
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -271,7 +277,7 @@ function ScoreSection({ categories }: ScoreSectionProps) {
           return (
             <View key={cat.label} style={styles.barColumn}>
               <Text style={styles.barPct}>{cat.percentage}%</Text>
-              <View style={[styles.bar, { height: barH, backgroundColor: cat.color, borderWidth: isWhite ? 1 : 0, borderColor: isWhite ? '#ccc' : 'transparent' }]} />
+              <View style={[styles.bar, { height: barH, backgroundColor: cat.color, borderWidth: isWhite ? 1 : 0, borderColor: isWhite ? 'rgba(255,255,255,0.4)' : 'transparent' }]} />
               <Text style={styles.barLabel}>{cat.label}</Text>
               <Text style={styles.barCount}>{cat.count}</Text>
             </View>
@@ -400,7 +406,7 @@ interface PuttingSectionProps {
 function PuttingSection({ p1, p2, p3, p4, totalPutts, avgPutts, holesPlayed }: PuttingSectionProps) {
   const puttData: { label: string; count: number; color: string }[] = [];
   if (p1 > 0) puttData.push({ label: '1-Putt', count: p1, color: '#FFFFFF' });
-  if (p2 > 0) puttData.push({ label: '2-Putt', count: p2, color: '#888888' });
+  if (p2 > 0) puttData.push({ label: '2-Putt', count: p2, color: 'rgba(255,255,255,0.6)' });
   if (p3 > 0) puttData.push({ label: '3-Putt', count: p3, color: '#e53935' });
   if (p4 > 0) puttData.push({ label: '4+ Putt', count: p4, color: '#B71C1C' });
 
@@ -507,6 +513,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between' as const,
     gap: 6,
     marginBottom: 12,
+    paddingHorizontal: 16,
   },
   miniStat: {
     flex: 1,
@@ -514,16 +521,16 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     gap: 5,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 8,
     paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   miniStatValue: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   emptyState: {
     flex: 1,
@@ -533,29 +540,30 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600' as const,
-    color: '#555',
+    color: 'rgba(255,255,255,0.7)',
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#888',
+    color: 'rgba(255,255,255,0.5)',
     marginTop: 4,
   },
   scrollContent: {
     flex: 1,
+    paddingHorizontal: 16,
   },
   scrollInner: {
     paddingBottom: 20,
   },
   heroRow: {
     flexDirection: 'row' as const,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 14,
     padding: 20,
     marginBottom: 16,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   heroItem: {
     flex: 1,
@@ -564,14 +572,14 @@ const styles = StyleSheet.create({
   heroLabel: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     textTransform: 'uppercase' as const,
     letterSpacing: 1,
   },
   heroValue: {
     fontSize: 40,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     marginTop: 2,
   },
   heroUnder: {
@@ -583,20 +591,20 @@ const styles = StyleSheet.create({
   heroDivider: {
     width: 1,
     height: 50,
-    backgroundColor: '#222222',
+    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   sectionCard: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 14,
     padding: 16,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     marginBottom: 14,
     textAlign: 'center' as const,
   },
@@ -615,7 +623,7 @@ const styles = StyleSheet.create({
   barPct: {
     fontSize: 10,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   bar: {
@@ -626,14 +634,14 @@ const styles = StyleSheet.create({
   barLabel: {
     fontSize: 8,
     fontWeight: '700' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 6,
     textAlign: 'center' as const,
   },
   barCount: {
     fontSize: 11,
     fontWeight: '600' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     marginTop: 2,
   },
   fairwayVisual: {
@@ -683,7 +691,7 @@ const styles = StyleSheet.create({
   fairwayStatLabel: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 2,
   },
   fairwayHitLabel: {
@@ -692,7 +700,7 @@ const styles = StyleSheet.create({
   fairwayStatCount: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     marginTop: 2,
   },
   fairwaySummaryRow: {
@@ -700,12 +708,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between' as const,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#243028',
+    borderTopColor: 'rgba(255,255,255,0.15)',
   },
   fairwaySummaryText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
   },
   girVisual: {
     alignItems: 'center' as const,
@@ -750,19 +758,19 @@ const styles = StyleSheet.create({
   girDirectionLabel: {
     fontSize: 13,
     fontWeight: '700' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
   },
   girDirectionPct: {
     fontSize: 20,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   girSummaryRow: {
     flexDirection: 'row' as const,
     justifyContent: 'space-around' as const,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#243028',
+    borderTopColor: 'rgba(255,255,255,0.15)',
     marginTop: 8,
   },
   girSummaryItem: {
@@ -771,12 +779,12 @@ const styles = StyleSheet.create({
   girSummaryValue: {
     fontSize: 18,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   girSummaryLabel: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 2,
   },
   puttSummaryRow: {
@@ -790,12 +798,12 @@ const styles = StyleSheet.create({
   puttSummaryValue: {
     fontSize: 28,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   puttSummaryLabel: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 2,
   },
   boxRow: {
@@ -804,7 +812,7 @@ const styles = StyleSheet.create({
   },
   statBox: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 12,
     padding: 14,
     alignItems: 'center' as const,
@@ -838,9 +846,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center' as const,
     marginTop: 12,
+    marginHorizontal: 16,
+    marginBottom: 8,
   },
   quitText: {
-    color: Colors.textLight,
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600' as const,
   },
@@ -851,23 +861,23 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
   },
   confirmBox: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.6)',
     borderRadius: 20,
     padding: 28,
     width: '80%' as unknown as number,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   confirmTitle: {
     fontSize: 20,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   confirmMessage: {
     fontSize: 15,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     textAlign: 'center' as const,
     marginBottom: 24,
     lineHeight: 21,
@@ -879,7 +889,7 @@ const styles = StyleSheet.create({
   },
   confirmNo: {
     flex: 1,
-    backgroundColor: '#222222',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center' as const,
@@ -887,7 +897,7 @@ const styles = StyleSheet.create({
   confirmNoText: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   confirmYes: {
     flex: 1,
@@ -906,18 +916,20 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end' as const,
     alignItems: 'center' as const,
     marginBottom: 8,
+    paddingHorizontal: 16,
   },
   sgButton: {
     borderWidth: 1,
-    borderColor: '#A4D15F',
+    borderColor: 'rgba(255,255,255,0.4)',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
+    backgroundColor: 'rgba(0,0,0,0.15)',
   },
   sgButtonText: {
     fontSize: 12,
     fontWeight: '700' as const,
-    color: '#A4D15F',
+    color: '#FFFFFF',
   },
   sgModalOverlay: {
     flex: 1,
@@ -926,7 +938,7 @@ const styles = StyleSheet.create({
   },
   sgModalCard: {
     height: '75%' as unknown as number,
-    backgroundColor: '#111111',
+    backgroundColor: '#1a1a1a',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
@@ -940,7 +952,7 @@ const styles = StyleSheet.create({
   sgModalTitle: {
     fontSize: 18,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   sgSegmentWrap: {
     marginBottom: 24,
@@ -952,36 +964,36 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   sgSegmentBtnActive: {
-    backgroundColor: '#A4D15F',
-    borderColor: '#A4D15F',
+    backgroundColor: '#4BA35B',
+    borderColor: '#4BA35B',
   },
   sgSegmentText: {
     fontSize: 13,
     fontWeight: '700' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.6)',
   },
   sgSegmentTextActive: {
-    color: '#000000',
+    color: '#FFFFFF',
   },
   sgVsBadge: {
     alignSelf: 'center' as const,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.12)',
     marginBottom: 32,
   },
   sgVsText: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.6)',
   },
   sgValueContainer: {
     alignItems: 'center' as const,
@@ -991,7 +1003,7 @@ const styles = StyleSheet.create({
   sgRoundAvgLabel: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.6)',
     marginBottom: 12,
   },
   sgValueText: {

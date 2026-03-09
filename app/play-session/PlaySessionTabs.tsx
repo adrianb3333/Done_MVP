@@ -19,6 +19,9 @@ import ScoreBoard from '@/components/ScoBoa/ScoreBoard';
 
 type PlayTab = 'score' | 'gps' | 'wind' | 'mind' | 'data';
 
+const GREEN_ACTIVE = '#3D954D';
+const GREEN_INACTIVE = '#9BBFA2';
+
 const tabConfig: { key: PlayTab; label: string; icon: React.ReactNode }[] = [
   { key: 'score', label: 'Score', icon: <Target size={20} /> },
   { key: 'gps', label: 'GPS', icon: <Navigation size={20} /> },
@@ -79,23 +82,26 @@ function PlaySessionContent() {
       )}
 
       <View style={[styles.tabBar, { paddingBottom: insets.bottom > 0 ? insets.bottom : 20 }]}>
-        {tabConfig.map((tab) => (
-          <TouchableOpacity
-            key={tab.key}
-            style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-            onPress={() => setActiveTab(tab.key)}
-            activeOpacity={0.7}
-          >
-            <View style={activeTab === tab.key ? styles.iconActive : styles.iconInactive}>
-              {React.cloneElement(tab.icon as React.ReactElement<{ color: string }>, {
-                color: activeTab === tab.key ? Colors.primary : Colors.tabInactive,
-              })}
-            </View>
-            <Text style={[styles.tabLabel, activeTab === tab.key && styles.tabLabelActive]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        {tabConfig.map((tab) => {
+          const isActive = activeTab === tab.key;
+          return (
+            <TouchableOpacity
+              key={tab.key}
+              style={[styles.tab, isActive && styles.tabActive]}
+              onPress={() => setActiveTab(tab.key)}
+              activeOpacity={0.7}
+            >
+              <View style={isActive ? styles.iconActive : styles.iconInactive}>
+                {React.cloneElement(tab.icon as React.ReactElement<{ color: string }>, {
+                  color: isActive ? GREEN_ACTIVE : GREEN_INACTIVE,
+                })}
+              </View>
+              <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       <ScoreBoard visible={showScoreboard} onClose={() => setShowScoreboard(false)} />
@@ -118,7 +124,6 @@ const styles = StyleSheet.create({
   },
   scoreContainer: {
     flex: 1,
-    backgroundColor: '#1a2e1f',
   },
   minimizeButton: {
     position: 'absolute' as const,
@@ -137,9 +142,9 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: Colors.surface,
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: '#E8E8E8',
     paddingTop: 8,
   },
   tab: {
@@ -147,19 +152,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
   },
-  tabActive: {},
+  tabActive: {
+    borderTopWidth: 2,
+    borderTopColor: GREEN_ACTIVE,
+    marginTop: -1,
+  },
   iconActive: {},
   iconInactive: {
-    opacity: 0.6,
+    opacity: 0.5,
   },
   tabLabel: {
     fontSize: 11,
     marginTop: 4,
-    color: Colors.tabInactive,
+    color: GREEN_INACTIVE,
     fontWeight: '500' as const,
   },
   tabLabelActive: {
-    color: Colors.primary,
-    fontWeight: '600' as const,
+    color: GREEN_ACTIVE,
+    fontWeight: '700' as const,
   },
 });

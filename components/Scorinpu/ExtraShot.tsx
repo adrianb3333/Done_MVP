@@ -54,8 +54,8 @@ export default function ExtraShot({
             <Switch
               value={sandSave}
               onValueChange={setSandSave}
-              trackColor={{ false: '#3a3a3a', true: '#444444' }}
-              thumbColor={sandSave ? '#fff' : '#888'}
+              trackColor={{ false: 'rgba(0,0,0,0.3)', true: 'rgba(255,255,255,0.3)' }}
+              thumbColor={sandSave ? '#fff' : 'rgba(255,255,255,0.5)'}
             />
           </View>
           <View style={styles.toggleItem}>
@@ -63,8 +63,8 @@ export default function ExtraShot({
             <Switch
               value={upAndDown}
               onValueChange={setUpAndDown}
-              trackColor={{ false: '#3a3a3a', true: '#444444' }}
-              thumbColor={upAndDown ? '#fff' : '#888'}
+              trackColor={{ false: 'rgba(0,0,0,0.3)', true: 'rgba(255,255,255,0.3)' }}
+              thumbColor={upAndDown ? '#fff' : 'rgba(255,255,255,0.5)'}
             />
           </View>
         </View>
@@ -136,9 +136,11 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#333333',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   counterValue: {
     fontSize: 32,
@@ -160,7 +162,7 @@ const styles = StyleSheet.create({
   toggleLabel: {
     fontSize: 14,
     fontWeight: '500' as const,
-    color: '#aaa',
+    color: 'rgba(255,255,255,0.7)',
   },
   footer: {
     flexDirection: 'row',
@@ -172,8 +174,10 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: '#2a3a2e',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   prevBtnText: {
     fontSize: 15,
@@ -184,8 +188,10 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: '#333333',
+    backgroundColor: 'rgba(0,0,0,0.35)',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   doneBtnText: {
     fontSize: 15,

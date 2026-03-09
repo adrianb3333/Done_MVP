@@ -116,7 +116,7 @@ export default function Sidebar() {
           <View style={styles.sidebarHeader}>
             <Image source={require('@/assets/images/golferscrib-logo.png')} style={styles.sidebarLogo} resizeMode="contain" />
             <TouchableOpacity onPress={closeSidebar} style={styles.closeBtn} activeOpacity={0.7}>
-              <X size={22} color="#8A9B90" />
+              <X size={22} color="#999999" />
             </TouchableOpacity>
           </View>
 
@@ -166,9 +166,9 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     bottom: 0,
-    backgroundColor: '#0A0A0A',
+    backgroundColor: '#FFFFFF',
     borderRightWidth: 1,
-    borderRightColor: '#1C1C1C',
+    borderRightColor: '#E8E8E8',
     justifyContent: 'space-between' as const,
   },
   sidebarHeader: {
@@ -198,9 +198,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between' as const,
   },
   sectionItemActive: {
-    backgroundColor: 'transparent',
+    backgroundColor: '#F5F5F5',
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: '#E0E0E0',
   },
   sectionRow: {
     flexDirection: 'row' as const,
@@ -215,29 +215,29 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#8A9B90',
+    color: '#999999',
   },
   sectionLabelActive: {
-    color: '#F5F7F6',
+    color: '#1A1A1A',
   },
 
   activeIndicator: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1A1A1A',
   },
   sidebarFooter: {
     paddingHorizontal: 20,
   },
   footerDivider: {
     height: 1,
-    backgroundColor: '#222222',
+    backgroundColor: '#E8E8E8',
     marginBottom: 16,
   },
   footerText: {
     fontSize: 12,
-    color: '#5A6B60',
+    color: '#999999',
     textAlign: 'center' as const,
   },
 });
