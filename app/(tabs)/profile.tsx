@@ -14,7 +14,7 @@ import {
 
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { HelpCircle, X, User, Newspaper, Bluetooth, Trophy, QrCode, Swords, Clock, Target, Zap, Hash, Menu, BarChart2, ChevronRight, Share2, Settings, Camera, Bell } from 'lucide-react-native';
+import { HelpCircle, X, User, Newspaper, Bluetooth, QrCode, Swords, Clock, Target, Zap, Hash, Menu, BarChart2, ChevronRight, Settings, Camera, Bell } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -953,10 +953,11 @@ export default function ProfileScreen() {
               testID="tour-card"
             >
               <View style={styles.tourCardHeader}>
-                <View style={styles.tourCardTitleRow}>
-                  <Trophy size={16} color="#FFB74D" />
+                <Text style={styles.tourCardHeaderText}>Golfer's Tour</Text>
+                <View style={styles.tourCardHeaderRight}>
+                  <Image source={require('@/assets/images/golferscrib-logo.png')} style={styles.cardLogoImage} resizeMode="contain" />
+                  <ChevronRight size={16} color="#666" />
                 </View>
-                <ChevronRight size={16} color="#999" />
               </View>
               <View style={styles.tourDataGrid}>
                 <View style={styles.tourDataItem}>
@@ -999,10 +1000,11 @@ export default function ProfileScreen() {
               testID="affiliate-card"
             >
               <View style={styles.affiliateCardHeader}>
-                <View style={styles.affiliateCardTitleRow}>
-                  <Share2 size={16} color="#4FC3F7" />
+                <Text style={styles.affiliateCardHeaderText}>Get your Rewards!</Text>
+                <View style={styles.tourCardHeaderRight}>
+                  <Image source={require('@/assets/images/golferscrib-logo.png')} style={styles.cardLogoImage} resizeMode="contain" />
+                  <ChevronRight size={16} color="#666" />
                 </View>
-                <ChevronRight size={16} color="#999" />
               </View>
               <View style={styles.tourDataGrid}>
                 <View style={styles.tourDataItem}>
@@ -1703,6 +1705,20 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     gap: 7,
   },
+  tourCardHeaderText: {
+    fontSize: 17,
+    fontWeight: '800' as const,
+    color: '#1A1A1A',
+  },
+  tourCardHeaderRight: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+  },
+  cardLogoImage: {
+    width: 80,
+    height: 24,
+  },
   tourCardTitle: {
     fontSize: 14,
     fontWeight: '700' as const,
@@ -1715,22 +1731,22 @@ const styles = StyleSheet.create({
   },
   tourDataItem: {
     width: '30%' as any,
-    backgroundColor: 'rgba(0,0,0,0.18)',
+    backgroundColor: 'rgba(0,0,0,0.08)',
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 6,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(0,0,0,0.04)',
   },
   tourDataValue: {
     fontSize: 14,
     fontWeight: '800' as const,
-    color: '#FFFFFF',
+    color: '#1A1A1A',
   },
   tourDataLabel: {
     fontSize: 9,
-    color: 'rgba(255,255,255,0.7)',
+    color: '#666',
     marginTop: 2,
     textAlign: 'center' as const,
   },
@@ -1755,6 +1771,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     gap: 7,
+  },
+  affiliateCardHeaderText: {
+    fontSize: 17,
+    fontWeight: '800' as const,
+    color: '#1A1A1A',
   },
   affiliateCardTitle: {
     fontSize: 14,
