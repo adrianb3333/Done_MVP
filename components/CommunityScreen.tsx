@@ -370,6 +370,11 @@ const edStyles = StyleSheet.create({
   },
   tabBarSafe: {
     backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 3,
   },
   tabBar: {
     flexDirection: 'row' as const,
@@ -380,8 +385,8 @@ const edStyles = StyleSheet.create({
     flex: 1,
     alignItems: 'center' as const,
     paddingVertical: 0,
-    paddingTop: 2,
-    paddingBottom: 2,
+    paddingTop: 4,
+    paddingBottom: 4,
   },
   iconActive: {},
   iconInactive: {
@@ -389,7 +394,7 @@ const edStyles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 9,
-    marginTop: 1,
+    marginTop: 0,
     color: '#8A8A8A',
     fontWeight: '600' as const,
   },
@@ -1965,6 +1970,11 @@ const styles = StyleSheet.create({
   },
   tabBarSafe: {
     backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 3,
   },
   tabBar: {
     flexDirection: 'row' as const,
@@ -1975,8 +1985,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center' as const,
     paddingVertical: 0,
-    paddingTop: 2,
-    paddingBottom: 2,
+    paddingTop: 4,
+    paddingBottom: 4,
   },
   iconActive: {},
   iconInactive: {
@@ -1984,7 +1994,7 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 9,
-    marginTop: 1,
+    marginTop: 0,
     color: '#8A8A8A',
     fontWeight: '600' as const,
   },
