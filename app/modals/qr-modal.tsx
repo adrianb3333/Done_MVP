@@ -28,7 +28,7 @@ const QR_SIZE = 220;
 
 function getQrImageUrl(value: string, size: number = 400): string {
   const encoded = encodeURIComponent(value);
-  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encoded}&bgcolor=1A1A1A&color=EFEFEF&format=png&margin=8`;
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encoded}&bgcolor=FFFFFF&color=1A1A1A&format=png&margin=8`;
 }
 
 export default function QrModal() {
@@ -132,9 +132,9 @@ export default function QrModal() {
               testID="qr-header-share"
             >
               {isSharing ? (
-                <ActivityIndicator size="small" color="#EFEFEF" />
+                <ActivityIndicator size="small" color="#1A1A1A" />
               ) : (
-                <Share2 size={18} color="#EFEFEF" />
+                <Share2 size={18} color="#1A1A1A" />
               )}
             </TouchableOpacity>
             <TouchableOpacity
@@ -143,7 +143,7 @@ export default function QrModal() {
               activeOpacity={0.7}
               testID="qr-header-mini-qr"
             >
-              <QrCode size={18} color="#EFEFEF" />
+              <QrCode size={18} color="#1A1A1A" />
             </TouchableOpacity>
           </View>
         </View>
@@ -168,7 +168,7 @@ export default function QrModal() {
             <View style={styles.qrImageWrapper}>
               {!qrLoaded && (
                 <View style={styles.qrLoadingOverlay}>
-                  <ActivityIndicator size="large" color="#1DB954" />
+                  <ActivityIndicator size="large" color="#1A1A1A" />
                 </View>
               )}
               <Image
@@ -191,32 +191,30 @@ export default function QrModal() {
 
           <View style={styles.gridRow}>
             <TouchableOpacity style={styles.gridBtn} activeOpacity={0.7} testID="qr-last-round">
-              <BarChart3 size={22} color="#1DB954" />
+              <BarChart3 size={22} color="#FFFFFF" />
               <Text style={styles.gridBtnText}>Last Round</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.gridBtn} activeOpacity={0.7} testID="qr-last-practice">
-              <Target size={22} color="#1DB954" />
+              <Target size={22} color="#FFFFFF" />
               <Text style={styles.gridBtnText}>Last Practice</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.gridRow}>
             <TouchableOpacity style={styles.gridBtn} activeOpacity={0.7} testID="qr-shot-overview">
-              <BarChart3 size={22} color="#1DB954" />
+              <BarChart3 size={22} color="#FFFFFF" />
               <Text style={styles.gridBtnText}>Shot Overview</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.gridBtn} activeOpacity={0.7} testID="qr-affiliate">
-              <Share2 size={22} color="#1DB954" />
+              <Share2 size={22} color="#FFFFFF" />
               <Text style={styles.gridBtnText}>Affiliate</Text>
             </TouchableOpacity>
           </View>
-
-
         </View>
 
         <View style={styles.page}>
           <View style={styles.scanCard}>
             <View style={styles.scanIconCircle}>
-              <Users size={48} color="#4A90D9" />
+              <Users size={48} color="#1A1A1A" />
             </View>
             <Text style={styles.scanTitle}>Scan a Friend</Text>
             <Text style={styles.scanDescription}>
@@ -224,7 +222,7 @@ export default function QrModal() {
             </Text>
 
             <TouchableOpacity style={styles.scanBtn} activeOpacity={0.8}>
-              <QrCode size={20} color="#fff" />
+              <QrCode size={20} color="#FFFFFF" />
               <Text style={styles.scanBtnText}>Open Scanner</Text>
             </TouchableOpacity>
           </View>
@@ -244,7 +242,7 @@ export default function QrModal() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0A',
+    backgroundColor: '#FFFFFF',
   },
   safeTop: {},
   header: {
@@ -254,11 +252,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
-
   headerTitle: {
     fontSize: 17,
     fontWeight: '700' as const,
-    color: '#EFEFEF',
+    color: '#1A1A1A',
     letterSpacing: 0.3,
   },
   headerRight: {
@@ -270,11 +267,11 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'rgba(0,0,0,0.06)',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#2A2A2A',
+    borderColor: 'rgba(0,0,0,0.08)',
   },
   dotsRow: {
     flexDirection: 'row' as const,
@@ -287,10 +284,10 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#333',
+    backgroundColor: '#D0D0D0',
   },
   dotActive: {
-    backgroundColor: '#1DB954',
+    backgroundColor: '#1A1A1A',
     width: 24,
     borderRadius: 4,
   },
@@ -303,22 +300,27 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   qrCard: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.06)',
     borderRadius: 24,
     padding: 32,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: 'rgba(0,0,0,0.08)',
   },
   qrImageWrapper: {
     width: QR_SIZE,
     height: QR_SIZE,
     borderRadius: 20,
     overflow: 'hidden' as const,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#FFFFFF',
     marginBottom: 20,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   qrImage: {
     width: QR_SIZE,
@@ -329,40 +331,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     zIndex: 1,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#FFFFFF',
   },
   qrUsername: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#EFEFEF',
+    color: '#1A1A1A',
     marginBottom: 6,
   },
   qrHint: {
     fontSize: 13,
-    color: '#666',
-  },
-  actionsRow: {
-    flexDirection: 'row' as const,
-    justifyContent: 'center' as const,
-    gap: 12,
-    marginTop: 20,
-  },
-  actionBtn: {
-    flex: 1,
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    gap: 8,
-    backgroundColor: '#1A1A1A',
-    paddingVertical: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#222',
-  },
-  actionText: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: '#EFEFEF',
+    color: '#888',
   },
   gridRow: {
     flexDirection: 'row' as const,
@@ -371,49 +350,33 @@ const styles = StyleSheet.create({
   },
   gridBtn: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     gap: 8,
     borderWidth: 1,
-    borderColor: '#1E1E1E',
+    borderColor: 'rgba(0,0,0,0.08)',
   },
   gridBtnText: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: '#EFEFEF',
-  },
-  eventBtn: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    gap: 10,
-    backgroundColor: '#1DB954',
-    paddingVertical: 16,
-    borderRadius: 14,
-    marginTop: 16,
-  },
-  eventBtnText: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: '#fff',
-    letterSpacing: 1,
+    color: '#FFFFFF',
   },
   scanCard: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.06)',
     borderRadius: 24,
     padding: 32,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: 'rgba(0,0,0,0.08)',
   },
   scanIconCircle: {
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: '#4A90D918',
+    backgroundColor: 'rgba(0,0,0,0.06)',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     marginBottom: 20,
@@ -421,12 +384,12 @@ const styles = StyleSheet.create({
   scanTitle: {
     fontSize: 22,
     fontWeight: '800' as const,
-    color: '#EFEFEF',
+    color: '#1A1A1A',
     marginBottom: 10,
   },
   scanDescription: {
     fontSize: 14,
-    color: '#888',
+    color: '#666',
     textAlign: 'center' as const,
     lineHeight: 22,
     marginBottom: 24,
@@ -435,15 +398,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     gap: 10,
-    backgroundColor: '#1DB954',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     paddingHorizontal: 28,
     paddingVertical: 14,
     borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.08)',
   },
   scanBtnText: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#fff',
+    color: '#FFFFFF',
   },
   recentScansSection: {
     marginTop: 28,
@@ -451,19 +416,19 @@ const styles = StyleSheet.create({
   recentTitle: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#EFEFEF',
+    color: '#1A1A1A',
     marginBottom: 12,
   },
   emptyScans: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.06)',
     borderRadius: 14,
     padding: 20,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#1A1A1A',
+    borderColor: 'rgba(0,0,0,0.08)',
   },
   emptyScansText: {
     fontSize: 14,
-    color: '#555',
+    color: '#888',
   },
 });

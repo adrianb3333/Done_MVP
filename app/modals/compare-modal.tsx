@@ -11,6 +11,7 @@ import { useRouter } from 'expo-router';
 import { User, Search } from 'lucide-react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useProfile } from '@/contexts/ProfileContext';
 
 export default function CompareModal() {
@@ -19,7 +20,12 @@ export default function CompareModal() {
   const username = profile?.display_name || profile?.username || 'User';
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#FF1C1C', '#E31010', '#B20000', '#800000']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.container}
+    >
       <SafeAreaView edges={['top']} style={styles.safeTop}>
         <View style={styles.header}>
           <GlassBackButton onPress={() => router.back()} />
@@ -36,7 +42,7 @@ export default function CompareModal() {
                 <Image source={{ uri: profile.avatar_url }} style={styles.vsAvatar} />
               ) : (
                 <View style={styles.vsAvatarPlaceholder}>
-                  <User size={28} color="#1DB954" />
+                  <User size={28} color="#FFFFFF" />
                 </View>
               )}
               <Text style={styles.vsName}>{username}</Text>
@@ -49,7 +55,7 @@ export default function CompareModal() {
 
             <View style={styles.vsPlayer}>
               <View style={styles.vsAvatarEmpty}>
-                <Search size={24} color="#555" />
+                <Search size={24} color="rgba(255,255,255,0.5)" />
               </View>
               <Text style={styles.vsNameEmpty}>Select Player</Text>
               <Text style={styles.vsHcpEmpty}>—</Text>
@@ -68,7 +74,7 @@ export default function CompareModal() {
                   <Image source={{ uri: user.avatar_url }} style={styles.friendAvatar} />
                 ) : (
                   <View style={styles.friendAvatarPlaceholder}>
-                    <User size={18} color="#666" />
+                    <User size={18} color="rgba(255,255,255,0.6)" />
                   </View>
                 )}
                 <View style={styles.friendInfo}>
@@ -100,14 +106,13 @@ export default function CompareModal() {
           ))}
         </View>
       </ScrollView>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0A',
   },
   safeTop: {},
   header: {
@@ -117,11 +122,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
-
   headerTitle: {
     fontSize: 17,
     fontWeight: '700' as const,
-    color: '#EFEFEF',
+    color: '#FFFFFF',
     letterSpacing: 0.3,
   },
   headerSpacer: {
@@ -135,14 +139,14 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   vsCard: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 20,
     padding: 24,
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'space-between' as const,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   vsPlayer: {
     flex: 1,
@@ -153,65 +157,67 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 30,
     borderWidth: 2,
-    borderColor: '#1DB954',
+    borderColor: 'rgba(255,255,255,0.4)',
     marginBottom: 8,
   },
   vsAvatarPlaceholder: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     borderWidth: 2,
-    borderColor: '#1DB954',
+    borderColor: 'rgba(255,255,255,0.3)',
     marginBottom: 8,
   },
   vsAvatarEmpty: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'rgba(0,0,0,0.2)',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     borderWidth: 2,
-    borderColor: '#333',
+    borderColor: 'rgba(255,255,255,0.15)',
     borderStyle: 'dashed' as const,
     marginBottom: 8,
   },
   vsName: {
     fontSize: 14,
     fontWeight: '700' as const,
-    color: '#EFEFEF',
+    color: '#FFFFFF',
   },
   vsNameEmpty: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#555',
+    color: 'rgba(255,255,255,0.5)',
   },
   vsHcp: {
     fontSize: 12,
-    color: '#888',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 2,
   },
   vsHcpEmpty: {
     fontSize: 12,
-    color: '#444',
+    color: 'rgba(255,255,255,0.3)',
     marginTop: 2,
   },
   vsBadge: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#FF4444',
+    backgroundColor: 'rgba(0,0,0,0.35)',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     marginHorizontal: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
   },
   vsText: {
     fontSize: 14,
     fontWeight: '900' as const,
-    color: '#fff',
+    color: '#FFFFFF',
   },
   selectSection: {
     marginTop: 28,
@@ -219,23 +225,23 @@ const styles = StyleSheet.create({
   selectTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#EFEFEF',
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   selectSubtitle: {
     fontSize: 13,
-    color: '#666',
+    color: 'rgba(255,255,255,0.6)',
     marginBottom: 16,
   },
   friendRow: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 14,
     padding: 14,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#1A1A1A',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   friendAvatar: {
     width: 40,
@@ -246,7 +252,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
   },
@@ -257,33 +263,37 @@ const styles = StyleSheet.create({
   friendName: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: '#EFEFEF',
+    color: '#FFFFFF',
   },
   friendUsername: {
     fontSize: 12,
-    color: '#666',
+    color: 'rgba(255,255,255,0.5)',
     marginTop: 1,
   },
   selectBtn: {
-    backgroundColor: '#FF4444',
+    backgroundColor: 'rgba(0,0,0,0.35)',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   selectBtnText: {
     fontSize: 13,
     fontWeight: '700' as const,
-    color: '#fff',
+    color: '#FFFFFF',
   },
   emptyState: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.2)',
     borderRadius: 14,
     padding: 24,
     alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   emptyText: {
     fontSize: 14,
-    color: '#555',
+    color: 'rgba(255,255,255,0.6)',
   },
   statsPreview: {
     marginTop: 28,
@@ -292,7 +302,7 @@ const styles = StyleSheet.create({
   statsPreviewTitle: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#EFEFEF',
+    color: '#FFFFFF',
     marginBottom: 16,
   },
   statRow: {
@@ -302,25 +312,25 @@ const styles = StyleSheet.create({
   },
   statName: {
     fontSize: 13,
-    color: '#888',
+    color: 'rgba(255,255,255,0.7)',
     width: 110,
   },
   statBar: {
     flex: 1,
     height: 6,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 3,
     marginHorizontal: 10,
     overflow: 'hidden' as const,
   },
   statBarFill: {
     height: 6,
-    backgroundColor: '#333',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 3,
   },
   statDash: {
     fontSize: 13,
-    color: '#444',
+    color: 'rgba(255,255,255,0.3)',
     width: 30,
     textAlign: 'right' as const,
   },

@@ -855,34 +855,46 @@ export default function ProfileScreen() {
                   activeOpacity={0.8}
                   testID="qr-button"
                 >
-                  <QrCode size={18} color="#EFEFEF" />
-                  <Text style={styles.gridBtnLabel}>QR</Text>
+                  <QrCode size={20} color="#EFEFEF" />
                 </TouchableOpacity>
               </View>
               <View style={styles.actionGridRow}>
                 <TouchableOpacity
-                  style={styles.gridBtn}
                   onPress={() => {
                     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     navigateTo('data-overview', { initialTab: 'video' });
                   }}
                   activeOpacity={0.8}
                   testID="camera-button"
+                  style={styles.cameraGradientBtn}
                 >
-                  <Camera size={18} color="#4FC3F7" />
-                  <Text style={styles.gridBtnLabel}>Video</Text>
+                  <LinearGradient
+                    colors={['#BFF3FF', '#3FB8E8', '#0F6FAF']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={styles.cameraGradientInner}
+                  >
+                    <Camera size={18} color="#000000" />
+                  </LinearGradient>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.gridBtn, styles.gridBtnCompare]}
                   onPress={() => {
                     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     router.push('/modals/compare-modal' as any);
                   }}
                   activeOpacity={0.8}
                   testID="compare-button"
+                  style={styles.compareGradientBtn}
                 >
-                  <Swords size={18} color="#FF5252" />
+                  <LinearGradient
+                    colors={['#FF1C1C', '#E31010', '#B20000']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    style={styles.compareGradientInner}
+                  >
+                    <Swords size={18} color="#FFFFFF" />
+                  </LinearGradient>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1523,6 +1535,30 @@ const styles = StyleSheet.create({
   gridBtnCompare: {
     backgroundColor: '#FFF0F0',
     borderColor: '#FFD0D0',
+  },
+  compareGradientBtn: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    overflow: 'hidden' as const,
+  },
+  compareGradientInner: {
+    flex: 1,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    borderRadius: 12,
+  },
+  cameraGradientBtn: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    overflow: 'hidden' as const,
+  },
+  cameraGradientInner: {
+    flex: 1,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    borderRadius: 12,
   },
   gridBtnText: {
     fontSize: 11,
