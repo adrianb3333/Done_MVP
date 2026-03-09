@@ -17,7 +17,6 @@ import CommunityScreen from "@/components/CommunityScreen";
 import ProfileScreen from "@/app/(tabs)/profile";
 import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
-import OnboardingOverlay from "@/components/OnboardingOverlay";
 import PracticeSummary from "@/components/PracticeSummary";
 
 if (Platform.OS !== 'web') {
@@ -31,7 +30,6 @@ function AppContent() {
   const { currentSection } = useAppNavigation();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
   const prevSessionRef = useRef<Session | null>(null);
   const isInitialLoadRef = useRef<boolean>(true);
   const router = useRouter();
@@ -49,7 +47,6 @@ function AppContent() {
         clearTimeout(timeout);
         if (session && isInitialLoadRef.current) {
           prevSessionRef.current = session;
-          setShowOnboarding(true);
         }
         isInitialLoadRef.current = false;
         setSession(session);
@@ -64,8 +61,7 @@ function AppContent() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       console.log('Auth state changed:', !!session);
       if (session && !prevSessionRef.current && isInitialLoadRef.current) {
-        console.log('User just logged in, showing onboarding');
-        setShowOnboarding(true);
+        console.log('User just logged in');
       }
       prevSessionRef.current = session;
       setSession(session);
@@ -303,10 +299,6 @@ function AppContent() {
         <Stack.Screen name="+not-found" />
       </Stack>
       <Sidebar />
-      <OnboardingOverlay
-        visible={showOnboarding}
-        onDismiss={() => setShowOnboarding(false)}
-      />
     </View>
   );
 }
