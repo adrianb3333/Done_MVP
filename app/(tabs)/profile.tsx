@@ -14,7 +14,7 @@ import {
 
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { HelpCircle, X, User, Newspaper, TrendingUp, Bluetooth, Trophy, QrCode, Swords, Clock, Target, Zap, Hash, Menu, BarChart2, MapPin, Award, Calendar, ChevronRight, Share2, Gift, Users, DollarSign, Star, Percent, Settings, Camera, Bell } from 'lucide-react-native';
+import { HelpCircle, X, User, Newspaper, Bluetooth, Trophy, QrCode, Swords, Clock, Target, Zap, Hash, Menu, BarChart2, ChevronRight, Share2, Settings, Camera, Bell } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -956,48 +956,30 @@ export default function ProfileScreen() {
                 <View style={styles.tourCardTitleRow}>
                   <Trophy size={16} color="#FFB74D" />
                 </View>
-                <ChevronRight size={16} color="#BBB" />
+                <ChevronRight size={16} color="#999" />
               </View>
               <View style={styles.tourDataGrid}>
                 <View style={styles.tourDataItem}>
-                  <View style={styles.tourDataIconWrap}>
-                    <Calendar size={13} color="#4FC3F7" />
-                  </View>
                   <Text style={styles.tourDataValue}>4</Text>
                   <Text style={styles.tourDataLabel}>Events Played</Text>
                 </View>
                 <View style={styles.tourDataItem}>
-                  <View style={styles.tourDataIconWrap}>
-                    <Award size={13} color="#FFB74D" />
-                  </View>
                   <Text style={styles.tourDataValue}>2</Text>
                   <Text style={styles.tourDataLabel}>Placements</Text>
                 </View>
                 <View style={styles.tourDataItem}>
-                  <View style={styles.tourDataIconWrap}>
-                    <Text style={styles.tourDataIconText}>$</Text>
-                  </View>
                   <Text style={styles.tourDataValue}>8,500</Text>
                   <Text style={styles.tourDataLabel}>Earnings</Text>
                 </View>
                 <View style={styles.tourDataItem}>
-                  <View style={styles.tourDataIconWrap}>
-                    <TrendingUp size={13} color="#1DB954" />
-                  </View>
                   <Text style={styles.tourDataValue}>#12</Text>
                   <Text style={styles.tourDataLabel}>Rank</Text>
                 </View>
                 <View style={styles.tourDataItem}>
-                  <View style={styles.tourDataIconWrap}>
-                    <MapPin size={13} color="#E040FB" />
-                  </View>
                   <Text style={styles.tourDataValue} numberOfLines={1}>Bro Hof</Text>
                   <Text style={styles.tourDataLabel}>Home Course</Text>
                 </View>
                 <View style={styles.tourDataItem}>
-                  <View style={styles.tourDataIconWrap}>
-                    <User size={13} color="#FF5252" />
-                  </View>
                   <Text style={styles.tourDataValue}>24</Text>
                   <Text style={styles.tourDataLabel}>Age</Text>
                 </View>
@@ -1020,48 +1002,30 @@ export default function ProfileScreen() {
                 <View style={styles.affiliateCardTitleRow}>
                   <Share2 size={16} color="#4FC3F7" />
                 </View>
-                <ChevronRight size={16} color="#BBB" />
+                <ChevronRight size={16} color="#999" />
               </View>
               <View style={styles.tourDataGrid}>
                 <View style={styles.tourDataItem}>
-                  <View style={styles.tourDataIconWrap}>
-                    <Users size={13} color="#4FC3F7" />
-                  </View>
                   <Text style={styles.tourDataValue}>19</Text>
                   <Text style={styles.tourDataLabel}>Referrals</Text>
                 </View>
                 <View style={styles.tourDataItem}>
-                  <View style={styles.tourDataIconWrap}>
-                    <Target size={13} color="#FFB74D" />
-                  </View>
                   <Text style={styles.tourDataValue}>100</Text>
                   <Text style={styles.tourDataLabel}>Goal</Text>
                 </View>
                 <View style={styles.tourDataItem}>
-                  <View style={styles.tourDataIconWrap}>
-                    <Gift size={13} color="#E040FB" />
-                  </View>
                   <Text style={styles.tourDataValue} numberOfLines={1}>5 Rounds</Text>
                   <Text style={styles.tourDataLabel}>Next Perk</Text>
                 </View>
                 <View style={styles.tourDataItem}>
-                  <View style={styles.tourDataIconWrap}>
-                    <DollarSign size={13} color="#1DB954" />
-                  </View>
                   <Text style={styles.tourDataValue}>2,400</Text>
                   <Text style={styles.tourDataLabel}>Earnings</Text>
                 </View>
                 <View style={styles.tourDataItem}>
-                  <View style={styles.tourDataIconWrap}>
-                    <Star size={13} color="#D4AF37" />
-                  </View>
                   <Text style={styles.tourDataValue}>3</Text>
                   <Text style={styles.tourDataLabel}>Perks Won</Text>
                 </View>
                 <View style={styles.tourDataItem}>
-                  <View style={styles.tourDataIconWrap}>
-                    <Percent size={13} color="#FF5252" />
-                  </View>
                   <Text style={styles.tourDataValue}>19%</Text>
                   <Text style={styles.tourDataLabel}>Progress</Text>
                 </View>
@@ -1719,7 +1683,7 @@ const styles = StyleSheet.create({
   },
 
   tourCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#EBF4FF',
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
@@ -1751,42 +1715,28 @@ const styles = StyleSheet.create({
   },
   tourDataItem: {
     width: '30%' as any,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(0,0,0,0.18)',
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 6,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#ECECEC',
-  },
-  tourDataIconWrap: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#F0F0F0',
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    marginBottom: 5,
-  },
-  tourDataIconText: {
-    fontSize: 12,
-    fontWeight: '800' as const,
-    color: '#3D954D',
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   tourDataValue: {
     fontSize: 14,
     fontWeight: '800' as const,
-    color: '#1A1A1A',
+    color: '#FFFFFF',
   },
   tourDataLabel: {
     fontSize: 9,
-    color: '#888',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 2,
     textAlign: 'center' as const,
   },
 
   affiliateCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#EBF4FF',
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
