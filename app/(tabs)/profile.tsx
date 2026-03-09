@@ -764,22 +764,24 @@ export default function ProfileScreen() {
         <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
 
           <View style={styles.profileTopSection}>
-            <View style={styles.avatarSection}>
+            <View style={styles.avatarAndFollowCol}>
               <TouchableOpacity
                 onPress={handleAvatarPress}
                 style={styles.avatarTouchable}
                 activeOpacity={0.8}
                 testID="avatar-button"
               >
-                {profile?.avatar_url ? (
-                  <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
-                ) : (
-                  <View style={styles.avatarPlaceholder}>
-                    <Text style={styles.avatarInitials}>{initials}</Text>
-                  </View>
-                )}
+                <View style={styles.avatarShadowWrap}>
+                  {profile?.avatar_url ? (
+                    <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
+                  ) : (
+                    <View style={styles.avatarPlaceholder}>
+                      <Text style={styles.avatarInitials}>{initials}</Text>
+                    </View>
+                  )}
+                </View>
               </TouchableOpacity>
-              <View style={styles.followRow}>
+              <View style={styles.followPill}>
                 <TouchableOpacity
                   style={styles.followStatBtn}
                   onPress={() => openFollowsModal('followers')}
@@ -837,7 +839,7 @@ export default function ProfileScreen() {
                   activeOpacity={0.8}
                   testID="qr-button"
                 >
-                  <QrCode size={16} color="#EFEFEF" />
+                  <QrCode size={18} color="#EFEFEF" />
                   <Text style={styles.gridBtnLabel}>QR</Text>
                 </TouchableOpacity>
               </View>
@@ -851,7 +853,7 @@ export default function ProfileScreen() {
                   activeOpacity={0.8}
                   testID="camera-button"
                 >
-                  <Camera size={16} color="#4FC3F7" />
+                  <Camera size={18} color="#4FC3F7" />
                   <Text style={styles.gridBtnLabel}>Video</Text>
                 </TouchableOpacity>
 
@@ -864,8 +866,24 @@ export default function ProfileScreen() {
                   activeOpacity={0.8}
                   testID="compare-button"
                 >
-                  <Swords size={16} color="#FF5252" />
+                  <Swords size={18} color="#FF5252" />
                 </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.friendsPill}>
+            <Text style={styles.friendsCount}>12</Text>
+            <Text style={styles.friendsLabel}>Friends</Text>
+            <View style={styles.friendsAvatarStack}>
+              <View style={[styles.friendsStackAvatar, { backgroundColor: '#4BA35B', zIndex: 3 }]}>
+                <Text style={styles.friendsStackInitial}>A</Text>
+              </View>
+              <View style={[styles.friendsStackAvatar, { backgroundColor: '#1075E3', left: -10, zIndex: 2 }]}>
+                <Text style={styles.friendsStackInitial}>M</Text>
+              </View>
+              <View style={[styles.friendsStackAvatar, { backgroundColor: '#FF5252', left: -20, zIndex: 1 }]}>
+                <Text style={styles.friendsStackInitial}>K</Text>
               </View>
             </View>
           </View>
@@ -959,31 +977,34 @@ export default function ProfileScreen() {
                   <ChevronRight size={16} color="#666" />
                 </View>
               </View>
-              <View style={styles.tourDataGrid}>
-                <View style={styles.tourDataItem}>
-                  <Text style={styles.tourDataValue}>4</Text>
-                  <Text style={styles.tourDataLabel}>Events Played</Text>
+              <View style={styles.tourCardBody}>
+                <View style={styles.tourDataGridCompact}>
+                  <View style={styles.tourDataItemSmall}>
+                    <Text style={styles.tourDataValueSmall}>4</Text>
+                    <Text style={styles.tourDataLabelSmall}>Events</Text>
+                  </View>
+                  <View style={styles.tourDataItemSmall}>
+                    <Text style={styles.tourDataValueSmall}>2</Text>
+                    <Text style={styles.tourDataLabelSmall}>Places</Text>
+                  </View>
+                  <View style={styles.tourDataItemSmall}>
+                    <Text style={styles.tourDataValueSmall}>8,500</Text>
+                    <Text style={styles.tourDataLabelSmall}>Earnings</Text>
+                  </View>
+                  <View style={styles.tourDataItemSmall}>
+                    <Text style={styles.tourDataValueSmall}>#12</Text>
+                    <Text style={styles.tourDataLabelSmall}>Rank</Text>
+                  </View>
+                  <View style={styles.tourDataItemSmall}>
+                    <Text style={styles.tourDataValueSmall} numberOfLines={1}>Bro Hof</Text>
+                    <Text style={styles.tourDataLabelSmall}>Course</Text>
+                  </View>
+                  <View style={styles.tourDataItemSmall}>
+                    <Text style={styles.tourDataValueSmall}>24</Text>
+                    <Text style={styles.tourDataLabelSmall}>Age</Text>
+                  </View>
                 </View>
-                <View style={styles.tourDataItem}>
-                  <Text style={styles.tourDataValue}>2</Text>
-                  <Text style={styles.tourDataLabel}>Placements</Text>
-                </View>
-                <View style={styles.tourDataItem}>
-                  <Text style={styles.tourDataValue}>8,500</Text>
-                  <Text style={styles.tourDataLabel}>Earnings</Text>
-                </View>
-                <View style={styles.tourDataItem}>
-                  <Text style={styles.tourDataValue}>#12</Text>
-                  <Text style={styles.tourDataLabel}>Rank</Text>
-                </View>
-                <View style={styles.tourDataItem}>
-                  <Text style={styles.tourDataValue} numberOfLines={1}>Bro Hof</Text>
-                  <Text style={styles.tourDataLabel}>Home Course</Text>
-                </View>
-                <View style={styles.tourDataItem}>
-                  <Text style={styles.tourDataValue}>24</Text>
-                  <Text style={styles.tourDataLabel}>Age</Text>
-                </View>
+                <Image source={require('@/assets/images/tour-card-photo.png')} style={styles.tourCardPhoto} resizeMode="cover" />
               </View>
             </TouchableOpacity>
             </View>
@@ -1006,31 +1027,34 @@ export default function ProfileScreen() {
                   <ChevronRight size={16} color="#666" />
                 </View>
               </View>
-              <View style={styles.tourDataGrid}>
-                <View style={styles.tourDataItem}>
-                  <Text style={styles.tourDataValue}>19</Text>
-                  <Text style={styles.tourDataLabel}>Referrals</Text>
+              <View style={styles.tourCardBody}>
+                <View style={styles.tourDataGridCompact}>
+                  <View style={styles.tourDataItemSmall}>
+                    <Text style={styles.tourDataValueSmall}>19</Text>
+                    <Text style={styles.tourDataLabelSmall}>Referrals</Text>
+                  </View>
+                  <View style={styles.tourDataItemSmall}>
+                    <Text style={styles.tourDataValueSmall}>100</Text>
+                    <Text style={styles.tourDataLabelSmall}>Goal</Text>
+                  </View>
+                  <View style={styles.tourDataItemSmall}>
+                    <Text style={styles.tourDataValueSmall} numberOfLines={1}>5 Rounds</Text>
+                    <Text style={styles.tourDataLabelSmall}>Next Perk</Text>
+                  </View>
+                  <View style={styles.tourDataItemSmall}>
+                    <Text style={styles.tourDataValueSmall}>2,400</Text>
+                    <Text style={styles.tourDataLabelSmall}>Earnings</Text>
+                  </View>
+                  <View style={styles.tourDataItemSmall}>
+                    <Text style={styles.tourDataValueSmall}>3</Text>
+                    <Text style={styles.tourDataLabelSmall}>Perks Won</Text>
+                  </View>
+                  <View style={styles.tourDataItemSmall}>
+                    <Text style={styles.tourDataValueSmall}>19%</Text>
+                    <Text style={styles.tourDataLabelSmall}>Progress</Text>
+                  </View>
                 </View>
-                <View style={styles.tourDataItem}>
-                  <Text style={styles.tourDataValue}>100</Text>
-                  <Text style={styles.tourDataLabel}>Goal</Text>
-                </View>
-                <View style={styles.tourDataItem}>
-                  <Text style={styles.tourDataValue} numberOfLines={1}>5 Rounds</Text>
-                  <Text style={styles.tourDataLabel}>Next Perk</Text>
-                </View>
-                <View style={styles.tourDataItem}>
-                  <Text style={styles.tourDataValue}>2,400</Text>
-                  <Text style={styles.tourDataLabel}>Earnings</Text>
-                </View>
-                <View style={styles.tourDataItem}>
-                  <Text style={styles.tourDataValue}>3</Text>
-                  <Text style={styles.tourDataLabel}>Perks Won</Text>
-                </View>
-                <View style={styles.tourDataItem}>
-                  <Text style={styles.tourDataValue}>19%</Text>
-                  <Text style={styles.tourDataLabel}>Progress</Text>
-                </View>
+                <Image source={require('@/assets/images/affiliate-card-photo.png')} style={styles.tourCardPhoto} resizeMode="cover" />
               </View>
             </TouchableOpacity>
             </View>
@@ -1355,13 +1379,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'flex-start' as const,
     marginBottom: 8,
-    gap: 16,
+    gap: 12,
   },
-  avatarSection: {
+  avatarAndFollowCol: {
     alignItems: 'center' as const,
   },
   avatarTouchable: {
     position: 'relative' as const,
+  },
+  avatarShadowWrap: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    elevation: 8,
   },
   avatar: {
     width: 96,
@@ -1385,11 +1416,16 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: '#3D954D',
   },
-  followRow: {
+  followPill: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     marginTop: 10,
-    gap: 0,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    borderWidth: 1,
+    borderColor: '#E8E8E8',
   },
   followStatBtn: {
     alignItems: 'center' as const,
@@ -1410,19 +1446,63 @@ const styles = StyleSheet.create({
     height: 20,
     backgroundColor: '#D0D0D0',
   },
+  friendsPill: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginTop: 4,
+    marginBottom: 8,
+    alignSelf: 'flex-start' as const,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#E8E8E8',
+  },
+  friendsCount: {
+    fontSize: 16,
+    fontWeight: '800' as const,
+    color: '#1A1A1A',
+  },
+  friendsLabel: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#888',
+  },
+  friendsAvatarStack: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    marginLeft: 4,
+  },
+  friendsStackAvatar: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    borderWidth: 2,
+    borderColor: '#F5F5F5',
+  },
+  friendsStackInitial: {
+    fontSize: 11,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+  },
   actionGrid: {
     flex: 1,
     gap: 8,
     justifyContent: 'flex-start' as const,
     alignItems: 'flex-end' as const,
+    paddingRight: 4,
   },
   actionGridRow: {
     flexDirection: 'row' as const,
     gap: 8,
   },
   gridBtn: {
-    width: 52,
-    height: 52,
+    width: 56,
+    height: 56,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     gap: 2,
@@ -1446,8 +1526,8 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   handicapGradientBtn: {
-    width: 52,
-    height: 52,
+    width: 56,
+    height: 56,
     borderRadius: 12,
     overflow: 'hidden' as const,
   },
@@ -1698,7 +1778,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     justifyContent: 'space-between' as const,
     alignItems: 'center' as const,
-    marginBottom: 14,
+    marginBottom: 10,
   },
   tourCardTitleRow: {
     flexDirection: 'row' as const,
@@ -1723,6 +1803,42 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700' as const,
     color: '#1A1A1A',
+  },
+  tourCardBody: {
+    flexDirection: 'row' as const,
+    gap: 10,
+  },
+  tourDataGridCompact: {
+    flex: 1,
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    gap: 6,
+  },
+  tourDataItemSmall: {
+    width: '46%' as any,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    borderRadius: 8,
+    paddingVertical: 7,
+    paddingHorizontal: 5,
+    alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.04)',
+  },
+  tourDataValueSmall: {
+    fontSize: 12,
+    fontWeight: '800' as const,
+    color: '#1A1A1A',
+  },
+  tourDataLabelSmall: {
+    fontSize: 8,
+    color: '#666',
+    marginTop: 1,
+    textAlign: 'center' as const,
+  },
+  tourCardPhoto: {
+    width: 110,
+    height: 140,
+    borderRadius: 12,
   },
   tourDataGrid: {
     flexDirection: 'row' as const,
@@ -1765,7 +1881,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     justifyContent: 'space-between' as const,
     alignItems: 'center' as const,
-    marginBottom: 14,
+    marginBottom: 10,
   },
   affiliateCardTitleRow: {
     flexDirection: 'row' as const,

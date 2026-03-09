@@ -80,7 +80,7 @@ export default function TabLayout() {
         options={{
           title: '',
           tabBarIcon: ({ focused }) => (
-            <User size={34} color={focused ? '#1A1A1A' : '#9E9E9E'} strokeWidth={focused ? 2.5 : 1.8} />
+            <User size={42} color={focused ? '#1A1A1A' : '#9E9E9E'} strokeWidth={focused ? 2.5 : 1.8} />
           ),
         }}
       />
@@ -110,20 +110,20 @@ export default function TabLayout() {
 
 const tabStyles = StyleSheet.create({
   circleWrapper: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     overflow: 'hidden' as const,
-    marginTop: -8,
+    marginTop: -14,
   },
   circleGradient: {
     flex: 1,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    borderRadius: 34,
+    borderRadius: 40,
   },
   circleText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800' as const,
     color: '#FFFFFF',
     letterSpacing: 0.5,
