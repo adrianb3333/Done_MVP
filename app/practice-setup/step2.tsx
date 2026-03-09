@@ -47,7 +47,7 @@ export default function PracticeStep2Screen() {
       </View>
 
       <View style={styles.content}>
-        <HorizontalPager pages={pages} />
+        <HorizontalPager pages={pages} dotColor="rgba(255,255,255,0.3)" dotActiveColor="#FFFFFF" />
       </View>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom > 0 ? insets.bottom : 24 }]}>
@@ -103,10 +103,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   nextButton: {
-    backgroundColor: 'rgba(255,255,255,0.18)',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   nextButtonText: {
     color: '#FFFFFF',

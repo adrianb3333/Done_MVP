@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { ChevronLeft, MapPin, Search, Star } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TabCourse, { CourseTab } from '@/components/PlaSta/TabCourse';
 
@@ -182,6 +183,12 @@ export default function CourseModal() {
   };
 
   return (
+    <LinearGradient
+      colors={['#4BA35B', '#3D954D', '#2D803D']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.gradientContainer}
+    >
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
@@ -269,13 +276,17 @@ export default function CourseModal() {
         }
       />
     </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
+  gradientContainer: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#0A0F0D',
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',
@@ -284,7 +295,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#243028',
+    borderBottomColor: 'rgba(255,255,255,0.12)',
   },
   backBtn: {
     width: 40,
@@ -309,12 +320,12 @@ const styles = StyleSheet.create({
   },
   searchBar: {
     borderWidth: 1.5,
-    borderColor: '#333333',
+    borderColor: 'rgba(255,255,255,0.15)',
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: Platform.OS === 'ios' ? 10 : 6,
     marginBottom: 10,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.35)',
   },
   searchInput: {
     fontSize: 15,
@@ -330,35 +341,35 @@ const styles = StyleSheet.create({
   },
   filterLabel: {
     fontSize: 14,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.8)',
     fontWeight: '600' as const,
   },
   countryPicker: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#333333',
+    borderColor: 'rgba(255,255,255,0.15)',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
     gap: 6,
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.35)',
   },
   countryText: {
     fontSize: 14,
-    color: '#CCCCCC',
+    color: '#FFFFFF',
     fontWeight: '500' as const,
     flex: 1,
   },
   countryChevron: {
     fontSize: 10,
-    color: '#CCCCCC',
+    color: '#FFFFFF',
   },
   countryDropdown: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.45)',
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 10,
     marginBottom: 10,
     overflow: 'hidden',
@@ -372,14 +383,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#243028',
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   countryOptionActive: {
-    backgroundColor: '#222222',
+    backgroundColor: 'rgba(0,0,0,0.35)',
   },
   countryOptionText: {
     fontSize: 15,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
   },
   countryOptionTextActive: {
     color: '#FFFFFF',
@@ -394,7 +405,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#243028',
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   courseInfo: {
     flex: 1,
@@ -412,11 +423,11 @@ const styles = StyleSheet.create({
   },
   courseClub: {
     fontSize: 13,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
   },
   courseCity: {
     fontSize: 12,
-    color: '#5A6B60',
+    color: 'rgba(255,255,255,0.5)',
     marginTop: 1,
   },
   courseBottom: {
@@ -431,7 +442,7 @@ const styles = StyleSheet.create({
   },
   courseDistance: {
     fontSize: 13,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     fontWeight: '500' as const,
   },
   favBtn: {
@@ -447,6 +458,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 15,
-    color: '#5A6B60',
+    color: 'rgba(255,255,255,0.5)',
   },
 });

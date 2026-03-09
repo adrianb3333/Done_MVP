@@ -42,7 +42,7 @@ export default function PlayStep2Screen() {
       </View>
 
       <View style={styles.content}>
-        <HorizontalPager pages={pages} />
+        <HorizontalPager pages={pages} hideDots />
       </View>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom > 0 ? insets.bottom : 24 }]}>

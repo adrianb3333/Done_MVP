@@ -28,7 +28,7 @@ export default function Step1Page2() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000', // Matches the Whoop/Dark theme
+    backgroundColor: 'transparent',
   },
   pageContent: {
     padding: 24,
@@ -48,24 +48,24 @@ const styles = StyleSheet.create({
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   pulseDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#f2cc8f', // Wedge accent color (Yellow/Sand)
+    backgroundColor: '#FFFFFF',
     marginRight: 6,
   },
   statusText: {
     fontSize: 10,
-    fontWeight: '800',
-    color: 'rgba(255,255,255,0.5)',
+    fontWeight: '800' as const,
+    color: 'rgba(255,255,255,0.6)',
     letterSpacing: 1,
   },
 });

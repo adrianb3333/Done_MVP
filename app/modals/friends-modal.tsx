@@ -9,6 +9,7 @@ import {
   Image,
   SafeAreaView,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Search, X, Plus } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -230,6 +231,12 @@ export default function FriendsModal() {
   }, [sections]);
 
   return (
+    <LinearGradient
+      colors={['#4BA35B', '#3D954D', '#2D803D']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.gradientContainer}
+    >
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerSpacer} />
@@ -285,13 +292,17 @@ export default function FriendsModal() {
         contentContainerStyle={styles.listContent}
       />
     </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
+  gradientContainer: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#0A0F0D',
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',
@@ -300,7 +311,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#243028',
+    borderBottomColor: 'rgba(255,255,255,0.12)',
   },
   headerSpacer: {
     width: 60,
@@ -316,11 +327,11 @@ const styles = StyleSheet.create({
   },
   headerCount: {
     fontSize: 13,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 2,
   },
   doneBtn: {
-    backgroundColor: '#222222',
+    backgroundColor: 'rgba(0,0,0,0.35)',
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 8,
@@ -334,12 +345,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     margin: 16,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.35)',
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.12)',
     gap: 8,
   },
   searchInput: {
@@ -368,7 +379,7 @@ const styles = StyleSheet.create({
   slotAvatarPlaceholder: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#222222',
+    backgroundColor: 'rgba(0,0,0,0.35)',
   },
   slotInitial: {
     fontSize: 20,
@@ -394,20 +405,20 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: 26,
     borderWidth: 1.5,
-    borderColor: '#3a4a40',
+    borderColor: 'rgba(255,255,255,0.25)',
     borderStyle: 'dashed' as const,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.2)',
   },
   slotEmptyNum: {
     fontSize: 16,
-    color: '#5A6B60',
+    color: 'rgba(255,255,255,0.5)',
     fontWeight: '600' as const,
   },
   slotName: {
     fontSize: 12,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 4,
     textAlign: 'center' as const,
   },
@@ -422,7 +433,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#222222',
+    backgroundColor: 'rgba(0,0,0,0.35)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -433,7 +444,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: '#222222',
+    backgroundColor: 'rgba(255,255,255,0.12)',
     marginHorizontal: 16,
   },
   sectionTitle: {
@@ -460,12 +471,12 @@ const styles = StyleSheet.create({
   playerAvatarPlaceholder: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#222222',
+    backgroundColor: 'rgba(0,0,0,0.35)',
   },
   playerAvatarInitial: {
     fontSize: 17,
     fontWeight: '700' as const,
-    color: '#8A9B90',
+    color: '#FFFFFF',
   },
   playerMeta: {
     flex: 1,
@@ -477,7 +488,7 @@ const styles = StyleSheet.create({
   },
   playerClub: {
     fontSize: 13,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.6)',
     marginTop: 1,
   },
   radio: {
@@ -485,7 +496,7 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#3a4a40',
+    borderColor: 'rgba(255,255,255,0.3)',
     alignItems: 'center',
     justifyContent: 'center',
   },

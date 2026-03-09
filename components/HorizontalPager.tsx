@@ -13,9 +13,12 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface HorizontalPagerProps {
   pages: React.ReactNode[];
+  dotColor?: string;
+  dotActiveColor?: string;
+  hideDots?: boolean;
 }
 
-export default function HorizontalPager({ pages }: HorizontalPagerProps) {
+export default function HorizontalPager({ pages, dotColor, dotActiveColor, hideDots }: HorizontalPagerProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
 
@@ -47,17 +50,21 @@ export default function HorizontalPager({ pages }: HorizontalPagerProps) {
           </View>
         ))}
       </ScrollView>
-      <View style={styles.pagination}>
-        {pages.map((_, index) => (
-          <View
-            key={index}
-            style={[
-              styles.dot,
-              index === activeIndex && styles.dotActive,
-            ]}
-          />
-        ))}
-      </View>
+      {!hideDots && (
+        <View style={styles.pagination}>
+          {pages.map((_, index) => (
+            <View
+              key={index}
+              style={[
+                styles.dot,
+                dotColor ? { backgroundColor: dotColor } : undefined,
+                index === activeIndex && styles.dotActive,
+                index === activeIndex && dotActiveColor ? { backgroundColor: dotActiveColor } : undefined,
+              ]}
+            />
+          ))}
+        </View>
+      )}
     </View>
   );
 }

@@ -8,7 +8,7 @@ import {
 import { ChevronLeft } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Colors from '@/constants/colors';
+import { LinearGradient } from 'expo-linear-gradient';
 import HorizontalPager from '@/components/HorizontalPager';
 import Step1Page1 from './screens/Step1Page1';
 import Step1Page2 from './screens/Step1Page2';
@@ -36,19 +36,26 @@ export default function PracticeStep1Screen() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Header with manual top inset to avoid white bar */}
+    <LinearGradient
+      colors={['#0059B2', '#1075E3', '#1C8CFF']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.container}
+    >
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity onPress={handleBack} style={styles.headerButton}>
           <ChevronLeft size={28} color="#FFFFFF" />
         </TouchableOpacity>
+        <Text style={styles.headerTitle}>Practice Setup</Text>
+        <View style={styles.stepIndicator}>
+          <Text style={styles.stepText}>1/3</Text>
+        </View>
       </View>
 
       <View style={styles.content}>
-        <HorizontalPager pages={pages} />
+        <HorizontalPager pages={pages} dotColor="rgba(255,255,255,0.3)" dotActiveColor="#FFFFFF" />
       </View>
 
-      {/* Footer with manual bottom inset so the button stays safe but the background is black */}
       <View style={[styles.footer, { paddingBottom: insets.bottom > 0 ? insets.bottom : 24 }]}>
         <TouchableOpacity
           style={styles.nextButton}
@@ -58,43 +65,60 @@ export default function PracticeStep1Screen() {
           <Text style={styles.nextButtonText}>Next</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000', // Forces the "bars" to be black
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
     paddingHorizontal: 16,
     paddingBottom: 12,
   },
   headerButton: {
     width: 40,
     height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+  },
+  stepIndicator: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  stepText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600' as const,
   },
   content: {
     flex: 1,
   },
   footer: {
     paddingHorizontal: 24,
-    backgroundColor: '#000', // Matches the rest of the screen
   },
   nextButton: {
-    backgroundColor: '#333333',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     paddingVertical: 16,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   nextButtonText: {
     color: '#FFFFFF',
     fontSize: 17,
-    fontWeight: '700',
+    fontWeight: '700' as const,
   },
 });

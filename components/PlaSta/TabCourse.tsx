@@ -50,20 +50,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.2)',
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.15)',
   },
   tabActive: {
-    backgroundColor: '#333333',
-    borderColor: '#333333',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    borderColor: 'rgba(255,255,255,0.25)',
   },
   tabText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.6)',
   },
   tabTextActive: {
-    color: '#fff',
+    color: '#FFFFFF',
   },
 });

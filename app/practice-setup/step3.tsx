@@ -42,7 +42,7 @@ export default function PracticeStep3Screen() {
       </View>
 
       <View style={styles.content}>
-        <HorizontalPager pages={pages} />
+        <HorizontalPager pages={pages} hideDots />
       </View>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom > 0 ? insets.bottom : 24 }]}>
@@ -86,9 +86,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center' as const,
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   startButtonText: {
     color: '#FFFFFF',

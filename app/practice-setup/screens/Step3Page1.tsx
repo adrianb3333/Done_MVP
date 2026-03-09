@@ -138,9 +138,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden' as const,
     paddingVertical: 14,
     paddingHorizontal: 8,
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    backgroundColor: 'rgba(0,0,0,0.35)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   miniStat: {
     flex: 1,
@@ -170,9 +170,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'space-between' as const,
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    backgroundColor: 'rgba(0,0,0,0.35)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   toggleLeft: {
     flexDirection: 'row' as const,

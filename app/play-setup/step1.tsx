@@ -53,7 +53,7 @@ export default function PlayStep1Screen() {
       </View>
 
       <View style={styles.content}>
-        <HorizontalPager pages={pages} />
+        <HorizontalPager pages={pages} dotColor="rgba(255,255,255,0.3)" dotActiveColor="#FFFFFF" />
       </View>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom > 0 ? insets.bottom : 24 }]}>

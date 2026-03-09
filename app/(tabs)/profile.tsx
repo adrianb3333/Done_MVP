@@ -519,7 +519,7 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
 
   const [followsModalVisible, setFollowsModalVisible] = useState<boolean>(false);
-  const [followsTab, setFollowsTab] = useState<'hitta' | 'followers' | 'following'>('hitta');
+  const [followsTab, setFollowsTab] = useState<'hitta' | 'followers' | 'following' | 'friends'>('hitta');
   const [avatarPreviewVisible, setAvatarPreviewVisible] = useState<boolean>(false);
   const [lastRoundPopupVisible, setLastRoundPopupVisible] = useState<boolean>(false);
   const [lastPracticePopupVisible, setLastPracticePopupVisible] = useState<boolean>(false);
@@ -555,7 +555,7 @@ export default function ProfileScreen() {
     setAvatarPreviewVisible(true);
   }, []);
 
-  const openFollowsModal = useCallback((tab: 'hitta' | 'followers' | 'following') => {
+  const openFollowsModal = useCallback((tab: 'hitta' | 'followers' | 'following' | 'friends') => {
     console.log('[Profile] Opening follows modal, tab:', tab);
     setFollowsTab(tab);
     setFollowsModalVisible(true);
@@ -617,18 +617,21 @@ export default function ProfileScreen() {
   const getModalTitle = useCallback(() => {
     if (followsTab === 'hitta') return 'Hitta';
     if (followsTab === 'followers') return 'Följare';
+    if (followsTab === 'friends') return 'Friends';
     return 'Följer';
   }, [followsTab]);
 
   const getListData = useCallback(() => {
     if (followsTab === 'hitta') return allUsers;
     if (followsTab === 'followers') return followers;
+    if (followsTab === 'friends') return following;
     return following;
   }, [followsTab, allUsers, followers, following]);
 
   const getEmptyText = useCallback(() => {
     if (followsTab === 'hitta') return 'Inga användare hittades';
     if (followsTab === 'followers') return 'Inga följare ännu';
+    if (followsTab === 'friends') return 'No friends yet';
     return 'Följer ingen ännu';
   }, [followsTab]);
 
@@ -764,45 +767,36 @@ export default function ProfileScreen() {
         <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
 
           <View style={styles.profileTopSection}>
-            <View style={styles.avatarAndFollowCol}>
-              <TouchableOpacity
-                onPress={handleAvatarPress}
-                style={styles.avatarTouchable}
-                activeOpacity={0.8}
-                testID="avatar-button"
-              >
-                <View style={styles.avatarShadowWrap}>
-                  {profile?.avatar_url ? (
-                    <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
-                  ) : (
-                    <View style={styles.avatarPlaceholder}>
-                      <Text style={styles.avatarInitials}>{initials}</Text>
-                    </View>
-                  )}
-                </View>
-              </TouchableOpacity>
-              <View style={styles.followPill}>
-                <TouchableOpacity
-                  style={styles.followStatBtn}
-                  onPress={() => openFollowsModal('followers')}
-                  activeOpacity={0.7}
-                  testID="followers-button"
-                >
-                  <Text style={styles.followStatNumber}>{followersCount}</Text>
-                  <Text style={styles.followStatLabel}>följare</Text>
-                </TouchableOpacity>
-                <View style={styles.followDivider} />
-                <TouchableOpacity
-                  style={styles.followStatBtn}
-                  onPress={() => openFollowsModal('following')}
-                  activeOpacity={0.7}
-                  testID="following-button"
-                >
-                  <Text style={styles.followStatNumber}>{followingCount}</Text>
-                  <Text style={styles.followStatLabel}>följer</Text>
-                </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleAvatarPress}
+              style={styles.avatarTouchable}
+              activeOpacity={0.8}
+              testID="avatar-button"
+            >
+              <View style={styles.avatarShadowWrap}>
+                {profile?.avatar_url ? (
+                  <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
+                ) : (
+                  <View style={styles.avatarPlaceholder}>
+                    <Text style={styles.avatarInitials}>{initials}</Text>
+                  </View>
+                )}
               </View>
-            </View>
+            </TouchableOpacity>
+
+            <View style={styles.rightColumn}>
+              <TouchableOpacity
+                style={styles.followPillVertical}
+                onPress={() => openFollowsModal('followers')}
+                activeOpacity={0.7}
+                testID="followers-button"
+              >
+                <Text style={styles.followStatNumber}>{followersCount}</Text>
+                <Text style={styles.followStatLabel}>följare</Text>
+                <View style={styles.followHorizontalDivider} />
+                <Text style={styles.followStatNumber}>{followingCount}</Text>
+                <Text style={styles.followStatLabel}>följer</Text>
+              </TouchableOpacity>
 
             <View style={styles.actionGrid}>
               <View style={styles.actionGridRow}>
@@ -872,21 +866,27 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <View style={styles.friendsPill}>
-            <Text style={styles.friendsCount}>12</Text>
-            <Text style={styles.friendsLabel}>Friends</Text>
-            <View style={styles.friendsAvatarStack}>
-              <View style={[styles.friendsStackAvatar, { backgroundColor: '#4BA35B', zIndex: 3 }]}>
-                <Text style={styles.friendsStackInitial}>A</Text>
-              </View>
-              <View style={[styles.friendsStackAvatar, { backgroundColor: '#1075E3', left: -10, zIndex: 2 }]}>
-                <Text style={styles.friendsStackInitial}>M</Text>
-              </View>
-              <View style={[styles.friendsStackAvatar, { backgroundColor: '#FF5252', left: -20, zIndex: 1 }]}>
-                <Text style={styles.friendsStackInitial}>K</Text>
-              </View>
+              <TouchableOpacity
+                style={styles.friendsPillUnder}
+                onPress={() => openFollowsModal('friends')}
+                activeOpacity={0.7}
+                testID="friends-button"
+              >
+                <Text style={styles.friendsCount}>12</Text>
+                <Text style={styles.friendsLabel}>Friends</Text>
+                <View style={styles.friendsAvatarStack}>
+                  <View style={[styles.friendsStackAvatar, { backgroundColor: '#4BA35B', zIndex: 3 }]}>
+                    <Text style={styles.friendsStackInitial}>A</Text>
+                  </View>
+                  <View style={[styles.friendsStackAvatar, { backgroundColor: '#1075E3', left: -10, zIndex: 2 }]}>
+                    <Text style={styles.friendsStackInitial}>M</Text>
+                  </View>
+                  <View style={[styles.friendsStackAvatar, { backgroundColor: '#FF5252', left: -20, zIndex: 1 }]}>
+                    <Text style={styles.friendsStackInitial}>K</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
             </View>
-          </View>
 
           <View style={styles.liveSection}>
             <Text style={styles.liveSectionTitle}>LIVE</Text>
@@ -1137,6 +1137,15 @@ export default function ProfileScreen() {
                   Följer ({followingCount})
                 </Text>
               </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.tabBtn, followsTab === 'friends' && styles.tabBtnActive]}
+                onPress={() => setFollowsTab('friends')}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.tabBtnText, followsTab === 'friends' && styles.tabBtnTextActive]}>
+                  Friends
+                </Text>
+              </TouchableOpacity>
             </View>
 
             {followsTab === 'hitta' && isLoadingAllUsers ? (
@@ -1381,8 +1390,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     gap: 12,
   },
-  avatarAndFollowCol: {
-    alignItems: 'center' as const,
+  rightColumn: {
+    flex: 1,
+    gap: 8,
   },
   avatarTouchable: {
     position: 'relative' as const,
@@ -1416,14 +1426,12 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: '#3D954D',
   },
-  followPill: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    marginTop: 10,
+  followPillVertical: {
     backgroundColor: '#F5F5F5',
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 4,
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: 'center' as const,
     borderWidth: 1,
     borderColor: '#E8E8E8',
   },
@@ -1441,21 +1449,19 @@ const styles = StyleSheet.create({
     color: '#888',
     marginTop: 1,
   },
-  followDivider: {
-    width: 1,
-    height: 20,
+  followHorizontalDivider: {
+    width: '80%' as any,
+    height: 1,
     backgroundColor: '#D0D0D0',
+    marginVertical: 6,
   },
-  friendsPill: {
+  friendsPillUnder: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     backgroundColor: '#F5F5F5',
     borderRadius: 16,
     paddingVertical: 10,
     paddingHorizontal: 14,
-    marginTop: 4,
-    marginBottom: 8,
-    alignSelf: 'flex-start' as const,
     gap: 10,
     borderWidth: 1,
     borderColor: '#E8E8E8',
