@@ -1162,41 +1162,9 @@ const THE_GAME_SECTIONS = [
   'The Psychology of "Rub of the Green"',
 ];
 
-function DetailsCoursesList() {
+function DetailsCoursesList({ courseTab, searchQuery, selectedCountry, favorites, toggleFavorite }: { courseTab: CourseTab; searchQuery: string; selectedCountry: string; favorites: string[]; toggleFavorite: (courseId: string) => void }) {
   const scrollHandler = useScrollHeaderContext();
   const topPadding = useScrollHeaderPadding();
-  const [activeTab, setActiveTab] = useState<CourseTab>('nearby');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCountry, setSelectedCountry] = useState('Alla länder');
-  const [favorites, setFavorites] = useState<string[]>([]);
-  const [showCountryPicker, setShowCountryPicker] = useState(false);
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const stored = await AsyncStorage.getItem(DETAILS_STORAGE_KEY_FAVORITES);
-        if (stored) setFavorites(JSON.parse(stored));
-      } catch (e) {
-        console.log('[DetailsCourses] Error loading favorites:', e);
-      }
-    };
-    void load();
-  }, []);
-
-  const toggleFavorite = useCallback(async (courseId: string) => {
-    setFavorites((prev) => {
-      const updated = prev.includes(courseId)
-        ? prev.filter((id) => id !== courseId)
-        : [...prev, courseId];
-      AsyncStorage.setItem(DETAILS_STORAGE_KEY_FAVORITES, JSON.stringify(updated)).catch(() => {});
-      return updated;
-    });
-  }, []);
-
-  const playedCount = useMemo(
-    () => DETAILS_MOCK_COURSES.filter((c) => c.played).length,
-    []
-  );
 
   const filteredCourses = useMemo(() => {
     let list = [...DETAILS_MOCK_COURSES];
@@ -1212,15 +1180,15 @@ function DetailsCoursesList() {
           c.city.toLowerCase().includes(q)
       );
     }
-    if (activeTab === 'played') {
+    if (courseTab === 'played') {
       list = list.filter((c) => c.played);
-    } else if (activeTab === 'favorite') {
+    } else if (courseTab === 'favorite') {
       list = list.filter((c) => favorites.includes(c.id));
     } else {
       list.sort((a, b) => a.distance - b.distance);
     }
     return list;
-  }, [activeTab, searchQuery, selectedCountry, favorites]);
+  }, [courseTab, searchQuery, selectedCountry, favorites]);
 
   const renderStars = (rating: number) => {
     const stars = [];
@@ -1271,85 +1239,24 @@ function DetailsCoursesList() {
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      <View style={[detailsStyles.searchSection, { paddingTop: topPadding + 12 }]}>
-        <View style={detailsStyles.searchBar}>
-          <Search size={16} color="rgba(255,255,255,0.6)" />
-          <TextInput
-            style={detailsStyles.searchInput}
-            placeholder="Sök"
-            placeholderTextColor="rgba(255,255,255,0.4)"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
+    <FlatList
+      data={filteredCourses}
+      keyExtractor={(item) => item.id}
+      renderItem={renderCourseItem}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ paddingBottom: 40, paddingTop: topPadding }}
+      onScroll={scrollHandler}
+      scrollEventThrottle={16}
+      ListEmptyComponent={
+        <View style={detailsStyles.emptyState}>
+          <Text style={detailsStyles.emptyText}>
+            {courseTab === 'favorite'
+              ? 'Inga favoritbanor ännu'
+              : 'Inga banor hittades'}
+          </Text>
         </View>
-
-        <View style={detailsStyles.filterRow}>
-          <Text style={detailsStyles.filterLabel}>Filter:</Text>
-          <TouchableOpacity
-            style={detailsStyles.countryPicker}
-            onPress={() => setShowCountryPicker(!showCountryPicker)}
-          >
-            <Text style={detailsStyles.countryText}>{selectedCountry}</Text>
-            <Text style={detailsStyles.countryChevron}>▼</Text>
-          </TouchableOpacity>
-        </View>
-
-        {showCountryPicker && (
-          <View style={detailsStyles.countryDropdown}>
-            {DETAILS_COUNTRIES.map((country) => (
-              <TouchableOpacity
-                key={country}
-                style={[
-                  detailsStyles.countryOption,
-                  selectedCountry === country && detailsStyles.countryOptionActive,
-                ]}
-                onPress={() => {
-                  setSelectedCountry(country);
-                  setShowCountryPicker(false);
-                }}
-              >
-                <Text
-                  style={[
-                    detailsStyles.countryOptionText,
-                    selectedCountry === country && detailsStyles.countryOptionTextActive,
-                  ]}
-                >
-                  {country}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-        <View style={detailsStyles.tabRow}>
-          <TabCourse
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            playedCount={playedCount}
-          />
-        </View>
-      </View>
-
-      <FlatList
-        data={filteredCourses}
-        keyExtractor={(item) => item.id}
-        renderItem={renderCourseItem}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={detailsStyles.listContent}
-        onScroll={scrollHandler}
-        scrollEventThrottle={16}
-        ListEmptyComponent={
-          <View style={detailsStyles.emptyState}>
-            <Text style={detailsStyles.emptyText}>
-              {activeTab === 'favorite'
-                ? 'Inga favoritbanor ännu'
-                : 'Inga banor hittades'}
-            </Text>
-          </View>
-        }
-      />
-    </View>
+      }
+    />
   );
 }
 
@@ -1472,10 +1379,10 @@ function TheGameContent() {
   );
 }
 
-function DetailsContent({ detailsSegment }: { detailsSegment: DetailsSegment }) {
+function DetailsContent({ detailsSegment, courseTab, courseSearchQuery, courseSelectedCountry, courseFavorites, toggleCourseFavorite }: { detailsSegment: DetailsSegment; courseTab: CourseTab; courseSearchQuery: string; courseSelectedCountry: string; courseFavorites: string[]; toggleCourseFavorite: (courseId: string) => void }) {
   return (
     <View style={{ flex: 1 }}>
-      {detailsSegment === 'courses' && <DetailsCoursesList />}
+      {detailsSegment === 'courses' && <DetailsCoursesList courseTab={courseTab} searchQuery={courseSearchQuery} selectedCountry={courseSelectedCountry} favorites={courseFavorites} toggleFavorite={toggleCourseFavorite} />}
       {detailsSegment === 'notes' && <DetailsNotesContent />}
       {detailsSegment === 'thegame' && <TheGameContent />}
     </View>
@@ -1898,6 +1805,7 @@ function VideoContent() {
 
 const HEADER_BAR_HEIGHT = 44;
 const SEGMENT_HEIGHT = 40;
+const DETAILS_COURSES_SEARCH_HEIGHT = 140;
 
 const DETAIL_SEGMENTS: { key: DetailsSegment; label: string }[] = [
   { key: 'courses', label: 'Courses' },
@@ -1917,6 +1825,39 @@ export default function DataOverviewScreen() {
   const [selectedHandicap, setSelectedHandicap] = useState<string>('Scratch');
   const [showHandicapPicker, setShowHandicapPicker] = useState(false);
 
+  const [courseTab, setCourseTab] = useState<CourseTab>('nearby');
+  const [courseSearchQuery, setCourseSearchQuery] = useState('');
+  const [courseSelectedCountry, setCourseSelectedCountry] = useState('Alla länder');
+  const [courseShowCountryPicker, setCourseShowCountryPicker] = useState(false);
+  const [courseFavorites, setCourseFavorites] = useState<string[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(DETAILS_STORAGE_KEY_FAVORITES);
+        if (stored) setCourseFavorites(JSON.parse(stored));
+      } catch (e) {
+        console.log('[DataOverview] Error loading favorites:', e);
+      }
+    };
+    void load();
+  }, []);
+
+  const toggleCourseFavorite = useCallback(async (courseId: string) => {
+    setCourseFavorites((prev) => {
+      const updated = prev.includes(courseId)
+        ? prev.filter((id) => id !== courseId)
+        : [...prev, courseId];
+      AsyncStorage.setItem(DETAILS_STORAGE_KEY_FAVORITES, JSON.stringify(updated)).catch(() => {});
+      return updated;
+    });
+  }, []);
+
+  const coursePlayedCount = useMemo(
+    () => DETAILS_MOCK_COURSES.filter((c) => c.played).length,
+    []
+  );
+
   useEffect(() => {
     if (dataOverviewInitialStatsSegment) {
       setStatsSegment(dataOverviewInitialStatsSegment);
@@ -1932,14 +1873,15 @@ export default function DataOverviewScreen() {
   }, [dataOverviewInitialTab, clearDataOverviewInitialTab]);
 
   const hasSegment = activeTab === 'stats' || activeTab === 'sg' || activeTab === 'shots' || activeTab === 'details';
-  const totalHeaderHeight = HEADER_BAR_HEIGHT + (hasSegment ? SEGMENT_HEIGHT : 0);
+  const isDetailsCourses = activeTab === 'details' && detailsSegment === 'courses';
+  const totalHeaderHeight = HEADER_BAR_HEIGHT + (hasSegment ? SEGMENT_HEIGHT : 0) + (isDetailsCourses ? DETAILS_COURSES_SEARCH_HEIGHT : 0);
 
   const renderContent = () => {
     switch (activeTab) {
       case 'stats': return <StatsContent segment={statsSegment} />;
       case 'sg': return <SGContent sgSegment={sgSegment} selectedHandicap={selectedHandicap} showHandicapPicker={showHandicapPicker} setShowHandicapPicker={setShowHandicapPicker} setSelectedHandicap={setSelectedHandicap} />;
       case 'shots': return <ShotsContent segment={shotsSegment} />;
-      case 'details': return <DetailsContent detailsSegment={detailsSegment} />;
+      case 'details': return <DetailsContent detailsSegment={detailsSegment} courseTab={courseTab} courseSearchQuery={courseSearchQuery} courseSelectedCountry={courseSelectedCountry} courseFavorites={courseFavorites} toggleCourseFavorite={toggleCourseFavorite} />;
       case 'video': return <VideoContent />;
     }
   };
@@ -2068,6 +2010,37 @@ export default function DataOverviewScreen() {
             </TouchableOpacity>
           </View>
           {renderSegmentControl()}
+          {isDetailsCourses && (
+            <View style={styles.headerSearchSection}>
+              <View style={styles.headerSearchBar}>
+                <Search size={16} color="rgba(255,255,255,0.6)" />
+                <TextInput
+                  style={styles.headerSearchInput}
+                  placeholder="Sök"
+                  placeholderTextColor="rgba(255,255,255,0.4)"
+                  value={courseSearchQuery}
+                  onChangeText={setCourseSearchQuery}
+                />
+              </View>
+              <View style={styles.headerFilterRow}>
+                <Text style={styles.headerFilterLabel}>Filter:</Text>
+                <TouchableOpacity
+                  style={styles.headerCountryPicker}
+                  onPress={() => setCourseShowCountryPicker(true)}
+                >
+                  <Text style={styles.headerCountryText}>{courseSelectedCountry}</Text>
+                  <Text style={styles.headerCountryChevron}>▼</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.headerTabRow}>
+                <TabCourse
+                  activeTab={courseTab}
+                  onTabChange={setCourseTab}
+                  playedCount={coursePlayedCount}
+                />
+              </View>
+            </View>
+          )}
       </Animated.View>
 
       <View style={styles.body}>
@@ -2075,6 +2048,39 @@ export default function DataOverviewScreen() {
           {renderContent()}
         </ScrollHeaderProvider>
       </View>
+
+      <Modal
+        visible={courseShowCountryPicker}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCourseShowCountryPicker(false)}
+      >
+        <Pressable style={sgStyles.handicapOverlay} onPress={() => setCourseShowCountryPicker(false)}>
+          <View style={sgStyles.handicapModal}>
+            <View style={sgStyles.handicapModalHeader}>
+              <Text style={sgStyles.handicapModalTitle}>Select Country</Text>
+              <TouchableOpacity onPress={() => setCourseShowCountryPicker(false)}>
+                <X size={20} color="rgba(255,255,255,0.6)" />
+              </TouchableOpacity>
+            </View>
+            {DETAILS_COUNTRIES.map((country) => (
+              <TouchableOpacity
+                key={country}
+                style={[sgStyles.handicapOption, courseSelectedCountry === country && sgStyles.handicapOptionActive]}
+                onPress={() => {
+                  setCourseSelectedCountry(country);
+                  setCourseShowCountryPicker(false);
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={[sgStyles.handicapOptionText, courseSelectedCountry === country && sgStyles.handicapOptionTextActive]}>
+                  {country}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Pressable>
+      </Modal>
 
       <View style={[styles.tabBarSafe, { paddingBottom: insets.bottom }]}>
         <View style={styles.tabBar}>
@@ -2174,6 +2180,64 @@ const styles = StyleSheet.create({
   },
   headerSegmentTextActive: {
     color: '#FFFFFF',
+  },
+  headerSearchSection: {
+    paddingHorizontal: 16,
+    paddingTop: 4,
+  },
+  headerSearchBar: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: Platform.OS === 'ios' ? 8 : 5,
+    marginBottom: 8,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    gap: 8,
+  },
+  headerSearchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: '#FFFFFF',
+    padding: 0,
+  },
+  headerFilterRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    marginBottom: 8,
+    gap: 8,
+  },
+  headerFilterLabel: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)',
+    fontWeight: '600' as const,
+  },
+  headerCountryPicker: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    gap: 6,
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  headerCountryText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontWeight: '500' as const,
+    flex: 1,
+  },
+  headerCountryChevron: {
+    fontSize: 10,
+    color: '#FFFFFF',
+  },
+  headerTabRow: {
+    marginBottom: 4,
   },
   headerTitle: {
     fontSize: 18,
