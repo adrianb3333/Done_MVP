@@ -26,7 +26,7 @@ import { useAppNavigation } from '@/contexts/AppNavigationContext';
 
 import ProfileCard from '@/components/ProfileCard';
 import { supabase } from '@/lib/supabase';
-import { useScrollHeader } from '@/hooks/useScrollHeader';
+
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -669,7 +669,7 @@ export default function ProfileScreen() {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }, [helpMenuVisible, helpMenuAnim]);
 
-  const { headerTranslateY, onScroll: onHeaderScroll } = useScrollHeader(56);
+
 
   if (isLoading) {
     return (
@@ -683,16 +683,9 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.headerAbsolute, { transform: [{ translateY: headerTranslateY }] }]}>
-        <LinearGradient
-          colors={['rgba(0,0,0,0.08)', 'rgba(0,0,0,0.03)', 'rgba(0,0,0,0)']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={styles.topEdgeShadow}
-          pointerEvents="none"
-        />
+      <View style={styles.headerAbsolute} pointerEvents="box-none">
         <SafeAreaView edges={['top']} style={styles.safeArea}>
-          <View style={styles.headerRow}>
+          <View style={styles.headerRow} pointerEvents="box-none">
           <TouchableOpacity
             onPress={openSidebar}
             style={styles.hamburgerBtn}
@@ -724,7 +717,7 @@ export default function ProfileScreen() {
           </View>
         </View>
         </SafeAreaView>
-      </Animated.View>
+      </View>
 
       {helpMenuVisible && (
         <Animated.View style={[
@@ -770,7 +763,7 @@ export default function ProfileScreen() {
         </Animated.View>
       )}
 
-      <ScrollView style={[styles.scrollView, { paddingTop: insets.top + PROFILE_HEADER_HEIGHT }]} showsVerticalScrollIndicator={false} onScroll={onHeaderScroll} scrollEventThrottle={16}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: insets.top + PROFILE_HEADER_HEIGHT }}>
         <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
 
           <View style={styles.profileTopSection}>
@@ -1355,7 +1348,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 100,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
   },
   safeArea: {
     zIndex: 10,
