@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, ImageBackground, View, ScrollView, ActivityIndicator, Platform } from "react-native";
+import { StyleSheet, ImageBackground, View, ScrollView, ActivityIndicator, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from 'expo-location';
 
@@ -60,12 +60,12 @@ export default function WindTab() {
           lat: location.coords.latitude,
           lon: location.coords.longitude,
         });
-      } catch (error) {
+      } catch {
         setUserLocation({ lat: 59.3293, lon: 18.0686 });
       }
     };
 
-    getLocation();
+    void getLocation();
     const interval = setInterval(getLocation, 60000);
     return () => clearInterval(interval);
   }, []); 
@@ -82,12 +82,6 @@ export default function WindTab() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.header}>
-            <View style={styles.pill}>
-              <Text style={styles.pillText}>Tournament Prep</Text>
-            </View>
-          </View>
-
           <View style={styles.compassWrapper}>
             {loading ? (
               <ActivityIndicator size="large" color={Colors.white || "#ffffff"} />
@@ -164,24 +158,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 40,
   },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    alignItems: 'flex-start' as const,
-    marginBottom: 20,
-  },
-  pill: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  pillText: {
-    color: '#ffffff',
-    fontSize: 12,
-    fontWeight: '600' as const,
-    textTransform: 'uppercase',
-  },
+
   compassWrapper: {
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
