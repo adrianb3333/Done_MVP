@@ -8,14 +8,14 @@ import {
 import { ChevronLeft } from 'lucide-react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Colors from '@/constants/colors';
+import { LinearGradient } from 'expo-linear-gradient';
 import HorizontalPager from '@/components/HorizontalPager';
 import Step3Page1 from './screens/Step3Page1';
 import { useSession } from '@/contexts/SessionContext';
 
 export default function PracticeStep3Screen() {
   const { startSession } = useSession();
-  const insets = useSafeAreaInsets(); // Key for removing white bars
+  const insets = useSafeAreaInsets();
 
   const pages = [<Step3Page1 key="1" />];
 
@@ -29,10 +29,9 @@ export default function PracticeStep3Screen() {
 
   return (
     <View style={styles.container}>
-      {/* Header: Manual padding top to clear the notch while keeping background black */}
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity onPress={handleBack} style={styles.headerButton}>
-          <ChevronLeft size={28} color="#FFFFFF" />
+          <ChevronLeft size={28} color="#1075E3" />
         </TouchableOpacity>
       </View>
 
@@ -40,14 +39,16 @@ export default function PracticeStep3Screen() {
         <HorizontalPager pages={pages} />
       </View>
 
-      {/* Footer: Manual bottom padding to respect the home indicator area */}
       <View style={[styles.footer, { paddingBottom: insets.bottom > 0 ? insets.bottom : 24 }]}>
-        <TouchableOpacity
-          style={styles.startButton}
-          onPress={handleStart}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.startButtonText}>Start</Text>
+        <TouchableOpacity onPress={handleStart} activeOpacity={0.8}>
+          <LinearGradient
+            colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.startButton}
+          >
+            <Text style={styles.startButtonText}>Start</Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
     </View>
@@ -57,13 +58,14 @@ export default function PracticeStep3Screen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000', // Kills the white bars at the top/bottom
+    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingBottom: 12,
+    backgroundColor: '#FFFFFF',
   },
   headerButton: {
     width: 40,
@@ -76,13 +78,12 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: 24,
-    backgroundColor: '#000',
+    backgroundColor: '#FFFFFF',
   },
   startButton: {
-    backgroundColor: '#333333',
     paddingVertical: 16,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: 'center' as const,
   },
   startButtonText: {
     color: '#FFFFFF',
