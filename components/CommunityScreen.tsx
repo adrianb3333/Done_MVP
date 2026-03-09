@@ -16,7 +16,7 @@ import {
   Share2,
   Tv,
   User,
-  ChevronLeft,
+
   Calendar,
   MapPin,
   Users,
@@ -39,6 +39,7 @@ import {
 } from 'lucide-react-native';
 import { Linking, Platform, Animated } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { useAppNavigation } from '@/contexts/AppNavigationContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useScrollHeader, ScrollHeaderProvider, useScrollHeaderContext } from '@/hooks/useScrollHeader';
@@ -193,9 +194,7 @@ function EventDetailScreen({
     <View style={edStyles.container}>
       <SafeAreaView edges={['top']} style={edStyles.safeTop}>
         <View style={edStyles.header}>
-          <TouchableOpacity onPress={onClose} style={edStyles.backBtn} activeOpacity={0.7}>
-            <ChevronLeft size={24} color="#F5F7F6" />
-          </TouchableOpacity>
+          <GlassBackButton onPress={onClose} />
           <View style={edStyles.headerCenter}>
             <Text style={edStyles.headerTitle} numberOfLines={1}>{event.eventName}</Text>
             <Text style={edStyles.headerSub} numberOfLines={1}>{event.courseName} · {event.date}</Text>
@@ -254,12 +253,7 @@ const edStyles = StyleSheet.create({
     paddingVertical: 10,
     gap: 8,
   },
-  backBtn: {
-    width: 36,
-    height: 36,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
+
   headerCenter: {
     flex: 1,
   },
@@ -739,9 +733,7 @@ function AffiliateItemScreen({ item, onClose }: { item: AffiliateItemDetail; onC
     <View style={affStyles.detailContainer}>
       <SafeAreaView edges={['top']} style={affStyles.detailSafeTop}>
         <View style={affStyles.detailHeader}>
-          <TouchableOpacity onPress={onClose} style={affStyles.detailBack} activeOpacity={0.7}>
-            <ChevronLeft size={24} color="#F5F7F6" />
-          </TouchableOpacity>
+          <GlassBackButton onPress={onClose} />
           <View style={affStyles.detailHeaderCenter}>
             <Text style={affStyles.detailHeaderTitle} numberOfLines={1}>{item.itemTitle}</Text>
             <Text style={affStyles.detailHeaderSub}>{item.categoryLabel}</Text>
@@ -1197,9 +1189,7 @@ function EntertainmentDetailScreen({ section, onClose }: { section: Entertainmen
     <View style={entStyles.detailContainer}>
       <SafeAreaView edges={['top']} style={entStyles.detailSafeTop}>
         <View style={entStyles.detailHeader}>
-          <TouchableOpacity onPress={onClose} style={entStyles.detailBack} activeOpacity={0.7}>
-            <ChevronLeft size={24} color="#F5F7F6" />
-          </TouchableOpacity>
+          <GlassBackButton onPress={onClose} />
           <Text style={entStyles.detailHeaderTitle}>{section}</Text>
           <View style={{ width: 36 }} />
         </View>

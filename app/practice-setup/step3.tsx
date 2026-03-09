@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
+  Animated,
 } from 'react-native';
-import { ChevronLeft } from 'lucide-react-native';
+import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,6 +17,19 @@ import { useSession } from '@/contexts/SessionContext';
 export default function PracticeStep3Screen() {
   const { startSession } = useSession();
   const insets = useSafeAreaInsets();
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.05, duration: 400, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
+        Animated.delay(1200),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [pulseAnim]);
 
   const pages = [<Step3Page1 key="1" />];
 
@@ -35,9 +49,7 @@ export default function PracticeStep3Screen() {
       style={styles.container}
     >
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <TouchableOpacity onPress={handleBack} style={styles.headerButton}>
-          <ChevronLeft size={28} color="#FFFFFF" />
-        </TouchableOpacity>
+        <GlassBackButton onPress={handleBack} />
         <Text style={styles.headerTitle}>Ready to Practice</Text>
       </View>
 
@@ -46,9 +58,11 @@ export default function PracticeStep3Screen() {
       </View>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom > 0 ? insets.bottom : 24 }]}>
-        <TouchableOpacity onPress={handleStart} activeOpacity={0.8} style={styles.startButton}>
-          <Text style={styles.startButtonText}>Start</Text>
-        </TouchableOpacity>
+        <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+          <TouchableOpacity onPress={handleStart} activeOpacity={0.8} style={styles.startButton}>
+            <Text style={styles.startButtonText}>Start</Text>
+          </TouchableOpacity>
+        </Animated.View>
       </View>
     </LinearGradient>
   );
@@ -70,12 +84,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginLeft: 8,
   },
-  headerButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+
   content: {
     flex: 1,
   },

@@ -14,7 +14,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, QrCode, Share2, Users, Target, BarChart3 } from 'lucide-react-native';
+import { QrCode, Share2, Users, Target, BarChart3 } from 'lucide-react-native';
+import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import * as Sharing from 'expo-sharing';
@@ -120,14 +121,7 @@ export default function QrModal() {
     <View style={styles.container}>
       <SafeAreaView edges={['top']} style={styles.safeTop}>
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backBtn}
-            activeOpacity={0.7}
-            testID="qr-back-button"
-          >
-            <ChevronLeft size={24} color="#EFEFEF" />
-          </TouchableOpacity>
+          <GlassBackButton onPress={() => router.back()} />
           <Text style={styles.headerTitle}>{username}</Text>
           <View style={styles.headerRight}>
             <TouchableOpacity
@@ -260,10 +254,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
-  backBtn: {
-    padding: 6,
-    width: 40,
-  },
+
   headerTitle: {
     fontSize: 17,
     fontWeight: '700' as const,

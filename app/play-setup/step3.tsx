@@ -1,12 +1,13 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
+  Animated,
 } from 'react-native';
-import { ChevronLeft } from 'lucide-react-native';
+import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -20,6 +21,19 @@ export default function PlayStep3Screen() {
   const [roundName, setRoundName] = useState<string>('');  
   const [isPrivate, setIsPrivate] = useState<boolean>(false);
   const today = new Date().toISOString().split('T')[0];
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.05, duration: 400, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
+        Animated.delay(1200),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [pulseAnim]);
 
   const handleNameChange = useCallback((name: string) => {
     setRoundName(name);
@@ -48,9 +62,7 @@ export default function PlayStep3Screen() {
       style={styles.container}
     >
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <TouchableOpacity onPress={handleBack} style={styles.headerButton}>
-          <ChevronLeft size={28} color="#FFFFFF" />
-        </TouchableOpacity>
+        <GlassBackButton onPress={handleBack} />
         <Text style={styles.headerTitle}>Setup Round</Text>
         <View style={styles.stepIndicator}>
           <Text style={styles.stepText}>3/3</Text>
@@ -62,13 +74,15 @@ export default function PlayStep3Screen() {
       </View>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom > 0 ? insets.bottom : 24 }]}>
-        <TouchableOpacity
-          style={styles.startButton}
-          onPress={handleStart}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.startButtonText}>Start</Text>
-        </TouchableOpacity>
+        <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+          <TouchableOpacity
+            style={styles.startButton}
+            onPress={handleStart}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.startButtonText}>Start</Text>
+          </TouchableOpacity>
+        </Animated.View>
       </View>
     </LinearGradient>
   );
@@ -85,12 +99,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 12,
   },
-  headerButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+
   headerTitle: {
     fontSize: 18,
     fontWeight: '700' as const,

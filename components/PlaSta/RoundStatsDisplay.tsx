@@ -512,12 +512,12 @@ const styles = StyleSheet.create({
   },
   statBox: {
     flex: 1,
-    backgroundColor: '#0A0A0A',
+    backgroundColor: 'rgba(0,0,0,0.35)',
     borderRadius: 12,
     padding: 14,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#1A1A1A',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   statBoxWide: {
     flex: 1,
@@ -525,18 +525,18 @@ const styles = StyleSheet.create({
   statBoxValue: {
     fontSize: 22,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   statBoxLabel: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 4,
   },
   statBoxPct: {
     fontSize: 11,
     fontWeight: '500' as const,
-    color: '#5A6B60',
+    color: 'rgba(255,255,255,0.5)',
     marginTop: 2,
   },
 });

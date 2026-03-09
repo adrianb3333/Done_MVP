@@ -8,7 +8,8 @@ import {
   ScrollView,
   Modal,
 } from 'react-native';
-import { ChevronLeft, Trophy } from 'lucide-react-native';
+import { Trophy } from 'lucide-react-native';
+import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { LinearGradient } from 'expo-linear-gradient';
 import { UserProfile } from '@/contexts/ProfileContext';
 
@@ -70,14 +71,7 @@ export default function ProfileCard({
     >
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={onClose}
-            style={styles.backBtn}
-            activeOpacity={0.7}
-            testID="profile-card-back"
-          >
-            <ChevronLeft size={24} color="#EFEFEF" />
-          </TouchableOpacity>
+          <GlassBackButton onPress={onClose} />
           <Text style={styles.headerTitle}>@{user.username}</Text>
           <View style={styles.headerSpacer} />
         </View>
@@ -228,10 +222,7 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 14,
   },
-  backBtn: {
-    padding: 6,
-    width: 40,
-  },
+
   headerTitle: {
     fontSize: 17,
     fontWeight: '700' as const,

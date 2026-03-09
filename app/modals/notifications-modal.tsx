@@ -3,12 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   FlatList,
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, UserPlus, Heart, MessageCircle, Bell } from 'lucide-react-native';
+import { UserPlus, Heart, MessageCircle, Bell } from 'lucide-react-native';
+import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useProfile } from '@/contexts/ProfileContext';
 
@@ -88,14 +88,7 @@ export default function NotificationsModal() {
     <View style={s.container}>
       <SafeAreaView edges={['top']} style={s.safeTop}>
         <View style={s.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={s.backBtn}
-            activeOpacity={0.7}
-            testID="notifications-back"
-          >
-            <ArrowLeft size={22} color="#EFEFEF" />
-          </TouchableOpacity>
+          <GlassBackButton onPress={() => router.back()} />
           <Text style={s.headerTitle}>Aviseringar</Text>
           <View style={s.headerSpacer} />
         </View>
@@ -141,7 +134,7 @@ const s = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#1A1A1A',
   },
-  backBtn: {
+  backBtnUnused: {
     width: 36,
     height: 36,
     alignItems: 'center' as const,

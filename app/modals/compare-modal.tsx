@@ -8,7 +8,8 @@ import {
   Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, User, Search } from 'lucide-react-native';
+import { User, Search } from 'lucide-react-native';
+import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useProfile } from '@/contexts/ProfileContext';
 
@@ -21,14 +22,7 @@ export default function CompareModal() {
     <View style={styles.container}>
       <SafeAreaView edges={['top']} style={styles.safeTop}>
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backBtn}
-            activeOpacity={0.7}
-            testID="compare-back-button"
-          >
-            <ChevronLeft size={24} color="#EFEFEF" />
-          </TouchableOpacity>
+          <GlassBackButton onPress={() => router.back()} />
           <Text style={styles.headerTitle}>{username} VS</Text>
           <View style={styles.headerSpacer} />
         </View>
@@ -123,10 +117,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
-  backBtn: {
-    padding: 6,
-    width: 40,
-  },
+
   headerTitle: {
     fontSize: 17,
     fontWeight: '700' as const,

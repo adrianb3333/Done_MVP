@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown } from 'lucide-react-native';
+import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useProfile } from '@/contexts/ProfileContext';
 
@@ -69,14 +70,7 @@ export default function HandicapModal() {
     <View style={styles.container}>
       <SafeAreaView edges={['top']} style={styles.safeTop}>
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backBtn}
-            activeOpacity={0.7}
-            testID="handicap-back-button"
-          >
-            <ChevronLeft size={24} color="#fff" />
-          </TouchableOpacity>
+          <GlassBackButton onPress={() => router.back()} />
           <Text style={styles.headerTitle}>{username} Handicap</Text>
           <TouchableOpacity
             onPress={() => router.push('/modals/rounds-history-modal')}
@@ -211,10 +205,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
-  backBtn: {
-    padding: 6,
-    width: 40,
-  },
+
   headerTitle: {
     fontSize: 17,
     fontWeight: '700' as const,

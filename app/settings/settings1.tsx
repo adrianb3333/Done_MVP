@@ -11,10 +11,10 @@ import {
   Alert,
   ActivityIndicator,
   Image,
-  Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Camera, User, ChevronRight, LogOut } from 'lucide-react-native';
+import { Camera, User, ChevronRight, LogOut } from 'lucide-react-native';
+import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
@@ -239,18 +239,7 @@ export default function Settings1Screen() {
     <View style={styles.root}>
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.header}>
-          <Pressable
-            onPress={handleGoBack}
-            style={({ pressed }) => [
-              styles.backButton,
-              pressed && styles.backButtonPressed,
-            ]}
-            hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
-            testID="settings-back-button"
-          >
-            <ArrowLeft size={22} color={Colors.textPrimary} />
-            <Text style={styles.backLabel}>Back</Text>
-          </Pressable>
+          <GlassBackButton onPress={handleGoBack} />
           <Text style={styles.headerTitle}>Settings</Text>
           <TouchableOpacity
             onPress={handleSave}
@@ -368,23 +357,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: Colors.border,
   },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingRight: 12,
-    borderRadius: 8,
-    minWidth: 70,
-  },
-  backButtonPressed: {
-    opacity: 0.5,
-  },
-  backLabel: {
-    fontSize: 16,
-    color: Colors.textPrimary,
-    marginLeft: 4,
-    fontWeight: '500' as const,
-  },
+
   headerTitle: {
     fontSize: 17,
     fontWeight: '700' as const,

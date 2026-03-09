@@ -8,7 +8,8 @@ import {
   Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, HelpCircle, X } from 'lucide-react-native';
+import { HelpCircle, X } from 'lucide-react-native';
+import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -20,14 +21,7 @@ export default function RoundsHistoryModal() {
     <View style={styles.container}>
       <SafeAreaView edges={['top']} style={styles.safeTop}>
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backBtn}
-            activeOpacity={0.7}
-            testID="rounds-history-back"
-          >
-            <ChevronLeft size={24} color="#fff" />
-          </TouchableOpacity>
+          <GlassBackButton onPress={() => router.back()} />
           <Text style={styles.headerTitle}>Rounds History</Text>
           <TouchableOpacity
             onPress={() => setShowInfoModal(true)}
@@ -112,10 +106,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
-  backBtn: {
-    padding: 6,
-    width: 40,
-  },
+
   headerTitle: {
     fontSize: 17,
     fontWeight: '700' as const,

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, Image } from 'react-native';
-import { ChevronLeft, Newspaper, Play } from 'lucide-react-native';
+import { Newspaper, Play } from 'lucide-react-native';
+import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -156,9 +157,7 @@ export default function NewsModal() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-          <ChevronLeft size={28} color="#FFFFFF" />
-        </TouchableOpacity>
+        <GlassBackButton onPress={() => router.back()} />
         <Text style={styles.title}>News & Announcements</Text>
       </View>
 
@@ -212,12 +211,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     gap: 8,
   },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
+
   title: {
     fontSize: 20,
     fontWeight: '700' as const,

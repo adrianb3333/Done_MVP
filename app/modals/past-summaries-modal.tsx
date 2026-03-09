@@ -9,7 +9,8 @@ import {
   FlatList,
   Dimensions,
 } from 'react-native';
-import { ChevronLeft, ChevronDown } from 'lucide-react-native';
+import { ChevronDown } from 'lucide-react-native';
+import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -96,9 +97,7 @@ export default function PastSummariesModal() {
   return (
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-          <ChevronLeft size={28} color="#FFFFFF" />
-        </TouchableOpacity>
+        <GlassBackButton onPress={() => router.back()} />
         <Text style={styles.headerTitle}>Past Summaries</Text>
       </View>
 
@@ -218,12 +217,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     gap: 8,
   },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
+
   headerTitle: {
     fontSize: 22,
     fontWeight: '800' as const,

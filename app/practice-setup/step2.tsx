@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
+  Animated,
 } from 'react-native';
-import { ChevronLeft } from 'lucide-react-native';
+import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,6 +16,19 @@ import Step2Page2 from './screens/Step2Page2';
 
 export default function PracticeStep2Screen() {
   const insets = useSafeAreaInsets();
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 1.05, duration: 400, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
+        Animated.delay(1200),
+      ])
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [pulseAnim]);
 
   const pages = [
     <Step2Page1 key="1" />,
@@ -37,9 +51,7 @@ export default function PracticeStep2Screen() {
       style={styles.container}
     >
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <TouchableOpacity onPress={handleBack} style={styles.headerButton}>
-          <ChevronLeft size={28} color="#FFFFFF" />
-        </TouchableOpacity>
+        <GlassBackButton onPress={handleBack} />
         <Text style={styles.headerTitle}>Round Data</Text>
         <View style={styles.stepIndicator}>
           <Text style={styles.stepText}>2/3</Text>
@@ -51,13 +63,15 @@ export default function PracticeStep2Screen() {
       </View>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom > 0 ? insets.bottom : 24 }]}>
-        <TouchableOpacity
-          style={styles.nextButton}
-          onPress={handleNext}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.nextButtonText}>Next</Text>
-        </TouchableOpacity>
+        <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+          <TouchableOpacity
+            style={styles.nextButton}
+            onPress={handleNext}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.nextButtonText}>Next</Text>
+          </TouchableOpacity>
+        </Animated.View>
       </View>
     </LinearGradient>
   );
@@ -74,12 +88,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 12,
   },
-  headerButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
+
   headerTitle: {
     fontSize: 18,
     fontWeight: '700' as const,

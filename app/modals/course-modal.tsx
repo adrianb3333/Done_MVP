@@ -10,7 +10,8 @@ import {
   Platform,
 } from 'react-native';
 import { router } from 'expo-router';
-import { ChevronLeft, MapPin, Search, Star } from 'lucide-react-native';
+import { MapPin, Search, Star } from 'lucide-react-native';
+import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TabCourse, { CourseTab } from '@/components/PlaSta/TabCourse';
@@ -191,9 +192,7 @@ export default function CourseModal() {
     >
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <ChevronLeft size={26} color="#FFFFFF" />
-        </TouchableOpacity>
+        <GlassBackButton onPress={() => router.back()} />
         <Text style={styles.headerTitle}>BANOR</Text>
         <View style={styles.headerIcons}>
           <MapPin size={22} color="#FFFFFF" />
@@ -297,12 +296,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.12)',
   },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+
   headerTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
