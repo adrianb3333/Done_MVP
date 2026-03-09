@@ -40,6 +40,7 @@ import {
 import { Linking, Platform, Animated } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
+import MaskedView from '@react-native-masked-view/masked-view';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { useAppNavigation } from '@/contexts/AppNavigationContext';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -840,7 +841,19 @@ function TourContent({ onOpenEvent, onOpenTourScreen, onOpenLeaderboard }: { onO
         </TouchableOpacity>
       </View>
 
-      <Text style={[tourStyles.sectionTitle, { marginTop: 24 }]}>Upcoming Events</Text>
+      <MaskedView
+        style={{ height: 24, marginTop: 24, marginBottom: 12 }}
+        maskElement={
+          <Text style={[tourStyles.sectionTitle, { marginBottom: 0, backgroundColor: 'transparent' }]}>Upcoming Events</Text>
+        }
+      >
+        <LinearGradient
+          colors={['#FF1C1C', '#E31010', '#B20000']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={{ flex: 1 }}
+        />
+      </MaskedView>
       {UPCOMING_EVENTS.map((event) => (
         <EventCard key={event.id} event={event} onPress={() => handleEventPress(event)} variant="upcoming" />
       ))}
