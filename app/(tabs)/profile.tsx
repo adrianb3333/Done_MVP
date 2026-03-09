@@ -14,7 +14,7 @@ import {
 
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { HelpCircle, X, User, Newspaper, Bluetooth, QrCode, Swords, Clock, Target, Zap, Hash, Menu, BarChart2, ChevronRight, Settings, Camera, Bell } from 'lucide-react-native';
+import { HelpCircle, X, User, Newspaper, Bluetooth, QrCode, Swords, Clock, Target, Zap, Hash, Menu, BarChart2, ChevronRight, Settings, Camera, Bell, ArrowRight, ChevronLeft } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -1186,99 +1186,110 @@ export default function ProfileScreen() {
       <Modal
         visible={lastRoundPopupVisible}
         animationType="slide"
-        transparent
+        transparent={false}
         onRequestClose={() => setLastRoundPopupVisible(false)}
       >
-        <View style={styles.popupOverlay}>
-          <View style={styles.popupSheet}>
-            <View style={styles.popupHeader}>
-              <TouchableOpacity
-                onPress={() => setLastRoundPopupVisible(false)}
-                style={styles.popupCloseBtn}
-                activeOpacity={0.7}
-              >
-                <X size={22} color="#999" />
-              </TouchableOpacity>
-              <Text style={styles.popupTitle}>Last Round</Text>
-              <TouchableOpacity
-                style={styles.popupStatsBtn}
-                onPress={() => {
-                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setLastRoundPopupVisible(false);
-                  navigateTo('data-overview', { initialTab: 'stats', initialStatsSegment: 'round' });
-                }}
-                activeOpacity={0.7}
-                testID="round-stats-button"
-              >
-                <BarChart2 size={14} color="#4FC3F7" />
-                <Text style={styles.popupStatsBtnText}>Round Stats</Text>
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.popupScroll} showsVerticalScrollIndicator={false}>
-              {lastRound ? (
-                <>
-                  <View style={styles.popupRoundInfo}>
-                    <Text style={styles.popupCourseName}>{lastRound.courseName}</Text>
-                    <Text style={styles.popupDate}>{lastRound.roundDate}</Text>
-                    {lastRound.duration ? (
-                      <Text style={styles.popupDuration}>Duration: {lastRound.duration}</Text>
-                    ) : null}
-                  </View>
+        <LinearGradient
+          colors={['#4BA35B', '#3D954D', '#2D803D']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.lrGradientContainer}
+        >
+          <View style={[styles.lrHeader, { paddingTop: insets.top + 12 }]}>
+            <TouchableOpacity
+              onPress={() => setLastRoundPopupVisible(false)}
+              style={styles.lrBackBtn}
+              activeOpacity={0.7}
+            >
+              <ChevronLeft size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+            <Text style={styles.lrHeaderTitle}>Last Round</Text>
+            <View style={{ width: 44 }} />
+          </View>
 
-                  <View style={styles.popupScoreSection}>
-                    <View style={styles.popupScoreBig}>
-                      <Text style={styles.popupScoreValue}>{lastRound.totalScore}</Text>
-                      <Text style={[styles.popupToPar, { color: getToParColor() }]}>{getToParDisplay()}</Text>
+          <ScrollView style={styles.lrScroll} showsVerticalScrollIndicator={false} contentContainerStyle={styles.lrScrollContent}>
+            {lastRound ? (
+              <>
+                <View style={styles.lrRoundInfo}>
+                  <Text style={styles.lrCourseName}>{lastRound.courseName}</Text>
+                  <Text style={styles.lrDate}>{lastRound.roundDate}</Text>
+                  {lastRound.duration ? (
+                    <Text style={styles.lrDuration}>Duration: {lastRound.duration}</Text>
+                  ) : null}
+                </View>
+
+                <View style={styles.lrGlassCard}>
+                  <View style={styles.lrScoreRow}>
+                    <View style={styles.lrScoreBig}>
+                      <Text style={styles.lrScoreLabel}>Total Score</Text>
+                      <Text style={styles.lrScoreValue}>{lastRound.totalScore}</Text>
+                      <Text style={[styles.lrToPar, { color: getToParColor() }]}>{getToParDisplay()}</Text>
                     </View>
-                    <View style={styles.popupScoreDetails}>
-                      <View style={styles.popupDetailItem}>
-                        <Text style={styles.popupDetailValue}>{lastRound.holesPlayed}</Text>
-                        <Text style={styles.popupDetailLabel}>Holes</Text>
+                    <View style={styles.lrScoreDetails}>
+                      <View style={styles.lrDetailItem}>
+                        <Text style={styles.lrDetailValue}>{lastRound.holesPlayed}</Text>
+                        <Text style={styles.lrDetailLabel}>Holes</Text>
                       </View>
-                      <View style={styles.popupDetailItem}>
-                        <Text style={styles.popupDetailValue}>{lastRound.totalPar}</Text>
-                        <Text style={styles.popupDetailLabel}>Par</Text>
+                      <View style={styles.lrDetailItem}>
+                        <Text style={styles.lrDetailValue}>{lastRound.totalPar}</Text>
+                        <Text style={styles.lrDetailLabel}>Par</Text>
                       </View>
                     </View>
                   </View>
+                </View>
 
-                  <View style={styles.popupPlayersSection}>
-                    <Text style={styles.popupSectionTitle}>Players</Text>
-                    {lastRound.players.map((p, i) => (
-                      <View key={i} style={styles.popupPlayerRow}>
-                        <View style={styles.popupPlayerAvatar}>
-                          <User size={16} color="#888" />
-                        </View>
-                        <Text style={styles.popupPlayerName}>{p}</Text>
+                <View style={styles.lrGlassCard}>
+                  <Text style={styles.lrSectionTitle}>Players</Text>
+                  {lastRound.players.map((p, i) => (
+                    <View key={i} style={styles.lrPlayerRow}>
+                      <View style={styles.lrPlayerAvatar}>
+                        <User size={16} color="rgba(255,255,255,0.7)" />
+                      </View>
+                      <Text style={styles.lrPlayerName}>{p}</Text>
+                    </View>
+                  ))}
+                </View>
+
+                <View style={styles.lrGlassCard}>
+                  <Text style={styles.lrSectionTitle}>Summary</Text>
+                  <View style={styles.lrSummaryGrid}>
+                    {[
+                      { label: 'Score', value: `${lastRound.totalScore}` },
+                      { label: 'To Par', value: getToParDisplay() },
+                      { label: 'Holes', value: `${lastRound.holesPlayed}` },
+                      { label: 'Course Par', value: `${lastRound.totalPar}` },
+                    ].map((item, idx) => (
+                      <View key={idx} style={styles.lrSummaryItem}>
+                        <Text style={styles.lrSummaryValue}>{item.value}</Text>
+                        <Text style={styles.lrSummaryLabel}>{item.label}</Text>
                       </View>
                     ))}
                   </View>
-
-                  <View style={styles.popupSummarySection}>
-                    <Text style={styles.popupSectionTitle}>Summary</Text>
-                    <View style={styles.popupSummaryGrid}>
-                      {[
-                        { label: 'Score', value: `${lastRound.totalScore}` },
-                        { label: 'To Par', value: getToParDisplay() },
-                        { label: 'Holes', value: `${lastRound.holesPlayed}` },
-                        { label: 'Course Par', value: `${lastRound.totalPar}` },
-                      ].map((item, idx) => (
-                        <View key={idx} style={styles.popupSummaryItem}>
-                          <Text style={styles.popupSummaryValue}>{item.value}</Text>
-                          <Text style={styles.popupSummaryLabel}>{item.label}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  </View>
-                </>
-              ) : (
-                <View style={styles.popupEmpty}>
-                  <Text style={styles.popupEmptyText}>No round data available yet</Text>
                 </View>
-              )}
-            </ScrollView>
-          </View>
-        </View>
+              </>
+            ) : (
+              <View style={styles.lrEmpty}>
+                <Text style={styles.lrEmptyText}>No round data available yet</Text>
+              </View>
+            )}
+
+            <TouchableOpacity
+              style={styles.lrStatsButton}
+              onPress={() => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setLastRoundPopupVisible(false);
+                navigateTo('data-overview', { initialTab: 'stats', initialStatsSegment: 'round' });
+              }}
+              activeOpacity={0.8}
+              testID="round-stats-button"
+            >
+              <Text style={styles.lrStatsButtonText}>Round Stats</Text>
+              <ArrowRight size={20} color="#3D954D" />
+            </TouchableOpacity>
+
+            <View style={{ height: 40 }} />
+          </ScrollView>
+        </LinearGradient>
       </Modal>
 
       {/* Last Practice Popup */}
@@ -2129,6 +2140,185 @@ const styles = StyleSheet.create({
     color: '#666',
   },
 
+  lrGradientContainer: {
+    flex: 1,
+  },
+  lrHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
+  lrBackBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  lrHeaderTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+  },
+  lrScroll: {
+    flex: 1,
+  },
+  lrScrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 20,
+  },
+  lrRoundInfo: {
+    marginBottom: 20,
+  },
+  lrCourseName: {
+    fontSize: 22,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+  },
+  lrDate: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 4,
+  },
+  lrDuration: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 4,
+  },
+  lrGlassCard: {
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  lrScoreRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+  },
+  lrScoreBig: {
+    flex: 1,
+    alignItems: 'center' as const,
+  },
+  lrScoreLabel: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.6)',
+    textTransform: 'uppercase' as const,
+    letterSpacing: 1,
+  },
+  lrScoreValue: {
+    fontSize: 52,
+    fontWeight: '900' as const,
+    color: '#FFFFFF',
+    marginTop: 2,
+  },
+  lrToPar: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    marginTop: 2,
+  },
+  lrScoreDetails: {
+    flex: 1,
+    gap: 14,
+  },
+  lrDetailItem: {
+    alignItems: 'center' as const,
+  },
+  lrDetailValue: {
+    fontSize: 24,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+  },
+  lrDetailLabel: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 2,
+  },
+  lrSectionTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+    marginBottom: 12,
+  },
+  lrPlayerRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 10,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
+  },
+  lrPlayerAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  lrPlayerName: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: '#FFFFFF',
+  },
+  lrSummaryGrid: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    gap: 10,
+  },
+  lrSummaryItem: {
+    width: '47%' as any,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  lrSummaryValue: {
+    fontSize: 20,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+  },
+  lrSummaryLabel: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 4,
+  },
+  lrEmpty: {
+    paddingVertical: 60,
+    alignItems: 'center' as const,
+  },
+  lrEmptyText: {
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.6)',
+  },
+  lrStatsButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    marginTop: 8,
+    gap: 10,
+  },
+  lrStatsButtonText: {
+    fontSize: 17,
+    fontWeight: '700' as const,
+    color: '#3D954D',
+  },
   popupOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.75)',
@@ -2162,9 +2352,6 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: '#EFEFEF',
   },
-  popupHeaderSpacer: {
-    width: 32,
-  },
   popupStatsBtn: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
@@ -2185,133 +2372,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 20,
-  },
-
-  popupRoundInfo: {
-    marginBottom: 20,
-  },
-  popupCourseName: {
-    fontSize: 20,
-    fontWeight: '800' as const,
-    color: '#EFEFEF',
-  },
-  popupDate: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  popupDuration: {
-    fontSize: 13,
-    color: '#555',
-    marginTop: 4,
-  },
-
-  popupScoreSection: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    backgroundColor: '#1A1A1A',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#33333340',
-  },
-  popupScoreBig: {
-    flex: 1,
-    alignItems: 'center' as const,
-  },
-  popupScoreValue: {
-    fontSize: 48,
-    fontWeight: '900' as const,
-    color: '#1DB954',
-  },
-  popupToPar: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    marginTop: 2,
-  },
-  popupScoreDetails: {
-    flex: 1,
-    gap: 12,
-  },
-  popupDetailItem: {
-    alignItems: 'center' as const,
-  },
-  popupDetailValue: {
-    fontSize: 22,
-    fontWeight: '800' as const,
-    color: '#EFEFEF',
-  },
-  popupDetailLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
-  },
-
-  popupPlayersSection: {
-    marginBottom: 20,
-  },
-  popupSectionTitle: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: '#EFEFEF',
-    marginBottom: 12,
-  },
-  popupPlayerRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 10,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1A1A1A',
-  },
-  popupPlayerAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#1E1E1E',
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
-  },
-  popupPlayerName: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: '#EFEFEF',
-  },
-
-  popupSummarySection: {
-    marginBottom: 30,
-  },
-  popupSummaryGrid: {
-    flexDirection: 'row' as const,
-    flexWrap: 'wrap' as const,
-    gap: 10,
-  },
-  popupSummaryItem: {
-    width: '47%' as any,
-    backgroundColor: '#1A1A1A',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center' as const,
-  },
-  popupSummaryValue: {
-    fontSize: 20,
-    fontWeight: '800' as const,
-    color: '#EFEFEF',
-  },
-  popupSummaryLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-  },
-
-  popupEmpty: {
-    paddingVertical: 60,
-    alignItems: 'center' as const,
-  },
-  popupEmptyText: {
-    fontSize: 15,
-    color: '#555',
   },
   popupPracticeWrap: {
     paddingBottom: 20,
