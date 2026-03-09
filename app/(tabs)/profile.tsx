@@ -23,7 +23,7 @@ import * as Haptics from 'expo-haptics';
 import { useProfile, UserProfile } from '@/contexts/ProfileContext';
 import { useSession } from '@/contexts/SessionContext';
 import { useAppNavigation } from '@/contexts/AppNavigationContext';
-import UiTra from '@/components/probygg/UiTra';
+
 import ProfileCard from '@/components/ProfileCard';
 import { supabase } from '@/lib/supabase';
 import { useScrollHeader } from '@/hooks/useScrollHeader';
@@ -37,6 +37,120 @@ interface DrillEntry {
   created_at: string;
   user_id: string;
 }
+
+function usePracticeCardData() {
+  const [loading, setLoading] = useState<boolean>(true);
+  const [drillCount, setDrillCount] = useState<number>(0);
+  const [latestDrill, setLatestDrill] = useState<{ drill_name: string; score: number | null; created_at: string } | null>(null);
+
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        const { count, error: countErr } = await supabase
+          .from('golf_drills')
+          .select('*', { count: 'exact', head: true });
+        if (countErr) console.log('[PracticeCard] count error:', countErr.message);
+        setDrillCount(count || 0);
+
+        const { data, error } = await supabase
+          .from('golf_drills')
+          .select('drill_name, score, created_at')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (error) {
+          console.log('[PracticeCard] fetch error:', error.message);
+        } else {
+          setLatestDrill(data);
+        }
+      } catch (e: any) {
+        console.log('[PracticeCard] error:', e.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    void fetch();
+  }, []);
+
+  return { loading, drillCount, latestDrill };
+}
+
+function PracticeCardContent() {
+  const { loading, drillCount, latestDrill } = usePracticeCardData();
+
+  if (loading) {
+    return (
+      <View style={practiceCardStyles.centered}>
+        <ActivityIndicator size="small" color="#FFFFFF" />
+      </View>
+    );
+  }
+
+  const dateString = latestDrill?.created_at
+    ? new Date(latestDrill.created_at).toLocaleDateString('sv-SE', { year: 'numeric', month: 'short', day: 'numeric' })
+    : '';
+
+  return (
+    <View style={practiceCardStyles.content}>
+      {latestDrill ? (
+        <View style={practiceCardStyles.innerRow}>
+          <View style={practiceCardStyles.left}>
+            <Text style={practiceCardStyles.drillName}>{latestDrill.drill_name}</Text>
+            <Text style={practiceCardStyles.date}>{dateString}</Text>
+            <Text style={practiceCardStyles.count}>{drillCount} drills total</Text>
+          </View>
+          <Text style={practiceCardStyles.score}>{latestDrill.score ?? '-'}</Text>
+        </View>
+      ) : (
+        <Text style={practiceCardStyles.empty}>No practice yet</Text>
+      )}
+    </View>
+  );
+}
+
+const practiceCardStyles = StyleSheet.create({
+  centered: {
+    paddingVertical: 30,
+    alignItems: 'center' as const,
+  },
+  content: {
+    flex: 1,
+  },
+  innerRow: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+  },
+  left: {
+    flex: 1,
+  },
+  drillName: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+  },
+  date: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 3,
+  },
+  count: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 2,
+  },
+  score: {
+    fontSize: 38,
+    fontWeight: '900' as const,
+    color: '#FFFFFF',
+  },
+  empty: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)',
+    textAlign: 'center' as const,
+    paddingVertical: 20,
+  },
+});
 
 function PracticePopupContent() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -758,9 +872,11 @@ export default function ProfileScreen() {
 
           <View style={styles.liveSection}>
             <Text style={styles.liveSectionTitle}>LIVE</Text>
-            <View style={styles.liveEmptyState}>
-              <View style={styles.liveDot} />
-              <Text style={styles.liveEmptyText}>No friends playing right now</Text>
+            <View style={styles.liveCard}>
+              <View style={styles.liveEmptyState}>
+                <View style={styles.liveDot} />
+                <Text style={styles.liveEmptyText}>No friends playing right now</Text>
+              </View>
             </View>
           </View>
 
@@ -768,47 +884,65 @@ export default function ProfileScreen() {
             <View>
               <Text style={styles.cardSectionHeader}>Last Round</Text>
               <TouchableOpacity
-                style={styles.roundCard}
                 onPress={() => {
                   void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setLastRoundPopupVisible(true);
                 }}
                 activeOpacity={0.8}
+                style={styles.roundCardOuter}
               >
-              <View style={styles.cardHeaderRow}>
-                {lastRound ? (
-                  <Text style={[styles.cardToParBadge, { color: getToParColor() }]}>{getToParDisplay()}</Text>
-                ) : null}
-              </View>
-              {lastRound ? (
-                <View style={styles.cardInnerRow}>
-                  <View style={styles.cardLeft}>
-                    <Text style={styles.cardCourse} numberOfLines={1}>{lastRound.courseName}</Text>
-                    <Text style={styles.cardDate}>{lastRound.roundDate}</Text>
-                    <Text style={styles.cardHoles}>{lastRound.holesPlayed} holes</Text>
-                  </View>
-                  <Text style={styles.cardScore}>{lastRound.totalScore}</Text>
-                </View>
-              ) : (
-                <Text style={styles.cardEmpty}>No rounds yet</Text>
-              )}
+                <LinearGradient
+                  colors={['#4BA35B', '#3D954D', '#2D803D']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0, y: 1 }}
+                  style={styles.roundCardGradient}
+                >
+                  {lastRound ? (
+                    <View style={styles.gradientCardContent}>
+                      <View style={styles.gradientCardTop}>
+                        <Text style={styles.gradientCardToParBadge}>{getToParDisplay()}</Text>
+                      </View>
+                      <View style={styles.gradientCardInnerRow}>
+                        <View style={styles.gradientCardLeft}>
+                          <Text style={styles.gradientCardCourse} numberOfLines={1}>{lastRound.courseName}</Text>
+                          <Text style={styles.gradientCardDate}>{lastRound.roundDate}</Text>
+                          <Text style={styles.gradientCardHoles}>{lastRound.holesPlayed} holes</Text>
+                        </View>
+                        <Text style={styles.gradientCardScore}>{lastRound.totalScore}</Text>
+                      </View>
+                    </View>
+                  ) : (
+                    <View style={styles.gradientCardContent}>
+                      <Text style={styles.gradientCardEmpty}>No rounds yet</Text>
+                    </View>
+                  )}
+                </LinearGradient>
               </TouchableOpacity>
             </View>
 
             <View>
               <Text style={styles.cardSectionHeader}>Last Practice</Text>
               <TouchableOpacity
-                style={styles.practiceCard}
                 onPress={() => {
                   void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setLastPracticePopupVisible(true);
                 }}
                 activeOpacity={0.8}
+                style={styles.practiceCardOuter}
               >
-              <UiTra />
+                <LinearGradient
+                  colors={['#1C8CFF', '#1075E3', '#0059B2']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0, y: 1 }}
+                  style={styles.practiceCardGradient}
+                >
+                  <PracticeCardContent />
+                </LinearGradient>
               </TouchableOpacity>
             </View>
 
+            <View>
+            <Text style={styles.cardSectionHeader}>Tour</Text>
             <TouchableOpacity
               style={styles.tourCard}
               onPress={() => {
@@ -821,9 +955,8 @@ export default function ProfileScreen() {
               <View style={styles.tourCardHeader}>
                 <View style={styles.tourCardTitleRow}>
                   <Trophy size={16} color="#FFB74D" />
-                  <Text style={styles.tourCardTitle}>Tour</Text>
                 </View>
-                <ChevronRight size={16} color="#555" />
+                <ChevronRight size={16} color="#BBB" />
               </View>
               <View style={styles.tourDataGrid}>
                 <View style={styles.tourDataItem}>
@@ -870,7 +1003,10 @@ export default function ProfileScreen() {
                 </View>
               </View>
             </TouchableOpacity>
+            </View>
 
+            <View>
+            <Text style={styles.cardSectionHeader}>Affiliate</Text>
             <TouchableOpacity
               style={styles.affiliateCard}
               onPress={() => {
@@ -883,9 +1019,8 @@ export default function ProfileScreen() {
               <View style={styles.affiliateCardHeader}>
                 <View style={styles.affiliateCardTitleRow}>
                   <Share2 size={16} color="#4FC3F7" />
-                  <Text style={styles.affiliateCardTitle}>Affiliate</Text>
                 </View>
-                <ChevronRight size={16} color="#555" />
+                <ChevronRight size={16} color="#BBB" />
               </View>
               <View style={styles.tourDataGrid}>
                 <View style={styles.tourDataItem}>
@@ -932,6 +1067,7 @@ export default function ProfileScreen() {
                 </View>
               </View>
             </TouchableOpacity>
+            </View>
           </View>
 
         </Animated.View>
@@ -1244,15 +1380,15 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   cardSectionHeader: {
-    fontSize: 15,
-    fontWeight: '700' as const,
+    fontSize: 20,
+    fontWeight: '800' as const,
     color: '#1A1A1A',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   profileTopSection: {
     flexDirection: 'row' as const,
     alignItems: 'flex-start' as const,
-    marginBottom: 0,
+    marginBottom: 8,
     gap: 16,
   },
   avatarSection: {
@@ -1415,25 +1551,33 @@ const styles = StyleSheet.create({
   },
 
   liveSection: {
-    marginBottom: 24,
-    marginTop: 12,
+    marginBottom: 32,
+    marginTop: 20,
   },
   liveSectionTitle: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '800' as const,
     color: '#FF3B30',
     letterSpacing: 1,
     marginBottom: 14,
   },
+  liveCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
+  },
   liveEmptyState: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: '#F8F8F8',
-    borderRadius: 12,
-    padding: 14,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
     gap: 10,
-    borderWidth: 1,
-    borderColor: '#ECECEC',
   },
   liveDot: {
     width: 8,
@@ -1448,22 +1592,82 @@ const styles = StyleSheet.create({
   },
 
   cardsColumn: {
-    gap: 20,
+    gap: 32,
   },
-  roundCard: {
-    backgroundColor: '#F8F8F8',
+  roundCardOuter: {
     borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#ECECEC',
-  },
-  practiceCard: {
-    backgroundColor: '#F8F8F8',
-    borderRadius: 16,
-    padding: 4,
-    borderWidth: 1,
-    borderColor: '#ECECEC',
     overflow: 'hidden' as const,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  roundCardGradient: {
+    borderRadius: 16,
+    padding: 18,
+    minHeight: 120,
+  },
+  practiceCardOuter: {
+    borderRadius: 16,
+    overflow: 'hidden' as const,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  practiceCardGradient: {
+    borderRadius: 16,
+    padding: 18,
+    minHeight: 120,
+  },
+  gradientCardContent: {
+    flex: 1,
+  },
+  gradientCardTop: {
+    flexDirection: 'row' as const,
+    justifyContent: 'flex-end' as const,
+    marginBottom: 8,
+  },
+  gradientCardToParBadge: {
+    fontSize: 15,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+  },
+  gradientCardInnerRow: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+  },
+  gradientCardLeft: {
+    flex: 1,
+  },
+  gradientCardCourse: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+  },
+  gradientCardDate: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 3,
+  },
+  gradientCardHoles: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 2,
+  },
+  gradientCardScore: {
+    fontSize: 38,
+    fontWeight: '900' as const,
+    color: '#FFFFFF',
+  },
+  gradientCardEmpty: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)',
+    textAlign: 'center' as const,
+    paddingVertical: 20,
   },
   cardTitle: {
     fontSize: 14,
@@ -1515,11 +1719,14 @@ const styles = StyleSheet.create({
   },
 
   tourCard: {
-    backgroundColor: '#F8F8F8',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
-    borderWidth: 1,
-    borderColor: '#ECECEC',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
   },
   tourCardHeader: {
     flexDirection: 'row' as const,
@@ -1579,11 +1786,14 @@ const styles = StyleSheet.create({
   },
 
   affiliateCard: {
-    backgroundColor: '#F8F8F8',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
-    borderWidth: 1,
-    borderColor: '#ECECEC',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
   },
   affiliateCardHeader: {
     flexDirection: 'row' as const,
