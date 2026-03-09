@@ -135,17 +135,8 @@ function PracticeCategoryCard({ category }: { category: DrillCategoryStats }) {
   );
 }
 
-function StatsContent() {
+function StatsContent({ segment }: { segment: StatsSegment }) {
   const scrollHandler = useScrollHeaderContext();
-  const { dataOverviewInitialStatsSegment, clearDataOverviewInitialStatsSegment } = useAppNavigation();
-  const [segment, setSegment] = useState<StatsSegment>(dataOverviewInitialStatsSegment || 'round');
-
-  useEffect(() => {
-    if (dataOverviewInitialStatsSegment) {
-      setSegment(dataOverviewInitialStatsSegment);
-      clearDataOverviewInitialStatsSegment();
-    }
-  }, [dataOverviewInitialStatsSegment, clearDataOverviewInitialStatsSegment]);
 
   const roundQuery = useQuery({
     queryKey: ['allTimeRoundStats'],
@@ -159,25 +150,6 @@ function StatsContent() {
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={statsStyles.segmentWrap}>
-        <View style={statsStyles.segmentControl}>
-          <TouchableOpacity
-            style={[statsStyles.segmentButton, segment === 'round' && statsStyles.segmentButtonActive]}
-            onPress={() => setSegment('round')}
-            activeOpacity={0.7}
-          >
-            <Text style={[statsStyles.segmentText, segment === 'round' && statsStyles.segmentTextActive]}>Round</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[statsStyles.segmentButton, segment === 'practice' && statsStyles.segmentButtonActive]}
-            onPress={() => setSegment('practice')}
-            activeOpacity={0.7}
-          >
-            <Text style={[statsStyles.segmentText, segment === 'practice' && statsStyles.segmentTextActive]}>Practice</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
       {segment === 'round' ? (
         <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }} onScroll={scrollHandler} scrollEventThrottle={16}>
           {roundQuery.isLoading ? (
@@ -586,7 +558,7 @@ function MiniChart({ data, color, height = 120 }: { data: number[]; color: strin
   );
 }
 
-function SGOverallView({ selectedHandicap }: { selectedHandicap: string }) {
+function SGOverallView({ selectedHandicap }: { selectedHandicap: string; }) {
   const scrollHandler = useScrollHeaderContext();
   return (
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }} onScroll={scrollHandler} scrollEventThrottle={16}>
@@ -664,36 +636,15 @@ function SGCategoryView({ segment, selectedHandicap }: { segment: SGSegment; sel
 
 const HANDICAP_OPTIONS = ['Pro', 'Scratch', '5 Handicap', '10 Handicap', '15 Handicap', '20 Handicap'];
 
-function SGContent() {
-  const [sgSegment, setSgSegment] = useState<SGSegment>('ovve');
-  const [selectedHandicap, setSelectedHandicap] = useState<string>('Scratch');
-  const [showHandicapPicker, setShowHandicapPicker] = useState(false);
-
+function SGContent({ sgSegment, selectedHandicap, showHandicapPicker, setShowHandicapPicker, setSelectedHandicap }: {
+  sgSegment: SGSegment;
+  selectedHandicap: string;
+  showHandicapPicker: boolean;
+  setShowHandicapPicker: (v: boolean) => void;
+  setSelectedHandicap: (v: string) => void;
+}) {
   return (
     <View style={{ flex: 1 }}>
-      <View style={sgStyles.sectionHeaderRow}>
-        <Text style={sgStyles.sectionHeader}>Strokes Gained</Text>
-        <TouchableOpacity onPress={() => setShowHandicapPicker(true)} activeOpacity={0.7} style={sgStyles.vsIconBtn}>
-          <Text style={sgStyles.vsIcon}>🆚</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={sgStyles.segmentWrap}>
-        <View style={sgStyles.segmentControl}>
-          {SG_SEGMENTS.map((seg) => (
-            <TouchableOpacity
-              key={seg.key}
-              style={[sgStyles.segmentButton, sgSegment === seg.key && sgStyles.segmentButtonActive]}
-              onPress={() => setSgSegment(seg.key)}
-              activeOpacity={0.7}
-            >
-              <Text style={[sgStyles.segmentText, sgSegment === seg.key && sgStyles.segmentTextActive]}>
-                {seg.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
       {sgSegment === 'ovve' ? (
         <SGOverallView selectedHandicap={selectedHandicap} />
       ) : (
@@ -1055,9 +1006,7 @@ const sgStyles = StyleSheet.create({
 
 type ShotsSegment = 'round' | 'practice';
 
-function ShotsContent() {
-  const [segment, setSegment] = useState<ShotsSegment>('round');
-
+function ShotsContent({ segment }: { segment: ShotsSegment }) {
   const roundShotsQuery = useQuery({
     queryKey: ['totalRoundShots'],
     queryFn: fetchRoundShotCount,
@@ -1073,25 +1022,6 @@ function ShotsContent() {
 
   return (
     <View style={{ flex: 1 }}>
-      <View style={shotsStyles.segmentWrap}>
-        <View style={shotsStyles.segmentControl}>
-          <TouchableOpacity
-            style={[shotsStyles.segmentButton, segment === 'round' && shotsStyles.segmentButtonActive]}
-            onPress={() => setSegment('round')}
-            activeOpacity={0.7}
-          >
-            <Text style={[shotsStyles.segmentText, segment === 'round' && shotsStyles.segmentTextActive]}>Round</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[shotsStyles.segmentButton, segment === 'practice' && shotsStyles.segmentButtonActive]}
-            onPress={() => setSegment('practice')}
-            activeOpacity={0.7}
-          >
-            <Text style={[shotsStyles.segmentText, segment === 'practice' && shotsStyles.segmentTextActive]}>Practice</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
       <View style={shotsStyles.totalContainer}>
         {isLoading ? (
           <ActivityIndicator size="large" color="#FFFFFF" />
@@ -1535,34 +1465,9 @@ function TheGameContent() {
   );
 }
 
-function DetailsContent() {
-  const [detailsSegment, setDetailsSegment] = useState<DetailsSegment>('courses');
-
-  const DETAIL_SEGMENTS: { key: DetailsSegment; label: string }[] = [
-    { key: 'courses', label: 'Courses' },
-    { key: 'notes', label: 'Notes' },
-    { key: 'thegame', label: 'The Game' },
-  ];
-
+function DetailsContent({ detailsSegment }: { detailsSegment: DetailsSegment }) {
   return (
     <View style={{ flex: 1 }}>
-      <View style={detailsStyles.segmentWrap}>
-        <View style={detailsStyles.segmentControl}>
-          {DETAIL_SEGMENTS.map((seg) => (
-            <TouchableOpacity
-              key={seg.key}
-              style={[detailsStyles.segmentButton, detailsSegment === seg.key && detailsStyles.segmentButtonActive]}
-              onPress={() => setDetailsSegment(seg.key)}
-              activeOpacity={0.7}
-            >
-              <Text style={[detailsStyles.segmentText, detailsSegment === seg.key && detailsStyles.segmentTextActive]}>
-                {seg.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
       {detailsSegment === 'courses' && <DetailsCoursesList />}
       {detailsSegment === 'notes' && <DetailsNotesContent />}
       {detailsSegment === 'thegame' && <TheGameContent />}
@@ -1984,11 +1889,32 @@ function VideoContent() {
 }
 
 const HEADER_BAR_HEIGHT = 52;
+const SEGMENT_HEIGHT = 48;
+
+const DETAIL_SEGMENTS: { key: DetailsSegment; label: string }[] = [
+  { key: 'courses', label: 'Courses' },
+  { key: 'notes', label: 'Notes' },
+  { key: 'thegame', label: 'The Game' },
+];
 
 export default function DataOverviewScreen() {
   const [activeTab, setActiveTab] = useState<DataTab>('stats');
-  const { openSidebar, navigateTo, dataOverviewInitialTab, clearDataOverviewInitialTab } = useAppNavigation();
+  const { openSidebar, navigateTo, dataOverviewInitialTab, clearDataOverviewInitialTab, dataOverviewInitialStatsSegment, clearDataOverviewInitialStatsSegment } = useAppNavigation();
   const insets = useSafeAreaInsets();
+
+  const [statsSegment, setStatsSegment] = useState<StatsSegment>(dataOverviewInitialStatsSegment || 'round');
+  const [sgSegment, setSgSegment] = useState<SGSegment>('ovve');
+  const [shotsSegment, setShotsSegment] = useState<ShotsSegment>('round');
+  const [detailsSegment, setDetailsSegment] = useState<DetailsSegment>('courses');
+  const [selectedHandicap, setSelectedHandicap] = useState<string>('Scratch');
+  const [showHandicapPicker, setShowHandicapPicker] = useState(false);
+
+  useEffect(() => {
+    if (dataOverviewInitialStatsSegment) {
+      setStatsSegment(dataOverviewInitialStatsSegment);
+      clearDataOverviewInitialStatsSegment();
+    }
+  }, [dataOverviewInitialStatsSegment, clearDataOverviewInitialStatsSegment]);
 
   useEffect(() => {
     if (dataOverviewInitialTab && ['stats', 'sg', 'shots', 'details', 'video'].includes(dataOverviewInitialTab)) {
@@ -1997,18 +1923,123 @@ export default function DataOverviewScreen() {
     }
   }, [dataOverviewInitialTab, clearDataOverviewInitialTab]);
 
+  const hasSegment = activeTab === 'stats' || activeTab === 'sg' || activeTab === 'shots' || activeTab === 'details';
+  const totalHeaderHeight = HEADER_BAR_HEIGHT + (hasSegment ? SEGMENT_HEIGHT : 0);
+
   const renderContent = () => {
     switch (activeTab) {
-      case 'stats': return <StatsContent />;
-      case 'sg': return <SGContent />;
-      case 'shots': return <ShotsContent />;
-      case 'details': return <DetailsContent />;
+      case 'stats': return <StatsContent segment={statsSegment} />;
+      case 'sg': return <SGContent sgSegment={sgSegment} selectedHandicap={selectedHandicap} showHandicapPicker={showHandicapPicker} setShowHandicapPicker={setShowHandicapPicker} setSelectedHandicap={setSelectedHandicap} />;
+      case 'shots': return <ShotsContent segment={shotsSegment} />;
+      case 'details': return <DetailsContent detailsSegment={detailsSegment} />;
       case 'video': return <VideoContent />;
     }
   };
 
-  const { headerTranslateY, onScroll: onHeaderScroll } = useScrollHeader(52);
+  const { headerTranslateY, onScroll: onHeaderScroll } = useScrollHeader(totalHeaderHeight);
   const scrollHeaderValue = useMemo(() => ({ onScroll: onHeaderScroll }), [onHeaderScroll]);
+
+  const renderHeaderTitle = () => {
+    if (activeTab === 'sg') {
+      return (
+        <View style={styles.sgHeaderTitleRow}>
+          <Text style={styles.headerTitle}>Strokes Gained</Text>
+          <TouchableOpacity onPress={() => setShowHandicapPicker(true)} activeOpacity={0.7} style={styles.vsHeaderBtn}>
+            <Text style={styles.vsHeaderIcon}>🆚</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    return <Text style={styles.headerTitle}>{tabs.find(t => t.key === activeTab)?.label ?? 'Stats'}</Text>;
+  };
+
+  const renderSegmentControl = () => {
+    if (activeTab === 'stats') {
+      return (
+        <View style={styles.headerSegmentWrap}>
+          <View style={styles.headerSegmentControl}>
+            <TouchableOpacity
+              style={[styles.headerSegmentButton, statsSegment === 'round' && styles.headerSegmentButtonActive]}
+              onPress={() => setStatsSegment('round')}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.headerSegmentText, statsSegment === 'round' && styles.headerSegmentTextActive]}>Round</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.headerSegmentButton, statsSegment === 'practice' && styles.headerSegmentButtonActive]}
+              onPress={() => setStatsSegment('practice')}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.headerSegmentText, statsSegment === 'practice' && styles.headerSegmentTextActive]}>Practice</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      );
+    }
+    if (activeTab === 'sg') {
+      return (
+        <View style={styles.headerSegmentWrap}>
+          <View style={styles.headerSegmentControl}>
+            {SG_SEGMENTS.map((seg) => (
+              <TouchableOpacity
+                key={seg.key}
+                style={[styles.headerSegmentButton, sgSegment === seg.key && styles.headerSegmentButtonActive]}
+                onPress={() => setSgSegment(seg.key)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.headerSegmentText, sgSegment === seg.key && styles.headerSegmentTextActive]}>
+                  {seg.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      );
+    }
+    if (activeTab === 'shots') {
+      return (
+        <View style={styles.headerSegmentWrap}>
+          <View style={styles.headerSegmentControl}>
+            <TouchableOpacity
+              style={[styles.headerSegmentButton, shotsSegment === 'round' && styles.headerSegmentButtonActive]}
+              onPress={() => setShotsSegment('round')}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.headerSegmentText, shotsSegment === 'round' && styles.headerSegmentTextActive]}>Round</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.headerSegmentButton, shotsSegment === 'practice' && styles.headerSegmentButtonActive]}
+              onPress={() => setShotsSegment('practice')}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.headerSegmentText, shotsSegment === 'practice' && styles.headerSegmentTextActive]}>Practice</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      );
+    }
+    if (activeTab === 'details') {
+      return (
+        <View style={styles.headerSegmentWrap}>
+          <View style={styles.headerSegmentControl}>
+            {DETAIL_SEGMENTS.map((seg) => (
+              <TouchableOpacity
+                key={seg.key}
+                style={[styles.headerSegmentButton, detailsSegment === seg.key && styles.headerSegmentButtonActive]}
+                onPress={() => setDetailsSegment(seg.key)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.headerSegmentText, detailsSegment === seg.key && styles.headerSegmentTextActive]}>
+                  {seg.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      );
+    }
+    return null;
+  };
 
   return (
     <LinearGradient
@@ -2023,15 +2054,16 @@ export default function DataOverviewScreen() {
             <TouchableOpacity onPress={openSidebar} style={styles.menuBtn} activeOpacity={0.7}>
               <Menu size={24} color="#FFFFFF" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>{tabs.find(t => t.key === activeTab)?.label ?? 'Stats'}</Text>
+            {renderHeaderTitle()}
             <TouchableOpacity onPress={() => navigateTo('mygame')} style={styles.menuBtn} activeOpacity={0.7}>
               <Image source={require('@/assets/images/golferscrib-logo.png')} style={styles.logoIcon} resizeMode="contain" />
             </TouchableOpacity>
           </View>
+          {renderSegmentControl()}
         </SafeAreaView>
       </Animated.View>
 
-      <View style={[styles.body, { paddingTop: insets.top + HEADER_BAR_HEIGHT }]}>
+      <View style={[styles.body, { paddingTop: insets.top + totalHeaderHeight }]}>
         <ScrollHeaderProvider value={scrollHeaderValue}>
           {renderContent()}
         </ScrollHeaderProvider>
@@ -2096,6 +2128,47 @@ const styles = StyleSheet.create({
   logoIcon: {
     width: 32,
     height: 20,
+  },
+  sgHeaderTitleRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 6,
+  },
+  vsHeaderBtn: {
+    padding: 4,
+  },
+  vsHeaderIcon: {
+    fontSize: 18,
+  },
+  headerSegmentWrap: {
+    paddingHorizontal: 16,
+    paddingTop: 2,
+    paddingBottom: 6,
+  },
+  headerSegmentControl: {
+    flexDirection: 'row' as const,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderRadius: 10,
+    padding: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+  },
+  headerSegmentButton: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center' as const,
+    borderRadius: 8,
+  },
+  headerSegmentButtonActive: {
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+  headerSegmentText: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: 'rgba(255,255,255,0.5)',
+  },
+  headerSegmentTextActive: {
+    color: '#FFFFFF',
   },
   headerTitle: {
     fontSize: 18,
