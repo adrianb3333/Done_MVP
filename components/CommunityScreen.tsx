@@ -1751,6 +1751,10 @@ export default function CommunityScreen() {
   const { openSidebar, navigateTo, communityInitialTab, clearCommunityInitialTab } = useAppNavigation();
   const insets = useSafeAreaInsets();
 
+  const { headerTranslateY, onScroll: onHeaderScroll } = useScrollHeader(52);
+  const contentPaddingTop = insets.top + HEADER_BAR_HEIGHT;
+  const scrollHeaderValue = useMemo(() => ({ onScroll: onHeaderScroll, contentPaddingTop }), [onHeaderScroll, contentPaddingTop]);
+
   useEffect(() => {
     if (communityInitialTab && (communityInitialTab === 'tour' || communityInitialTab === 'affiliate' || communityInitialTab === 'entertainment')) {
       console.log('[Community] Setting initial tab from nav context:', communityInitialTab);
@@ -1775,10 +1779,6 @@ export default function CommunityScreen() {
       />
     );
   }
-
-  const { headerTranslateY, onScroll: onHeaderScroll } = useScrollHeader(52);
-  const contentPaddingTop = insets.top + HEADER_BAR_HEIGHT;
-  const scrollHeaderValue = useMemo(() => ({ onScroll: onHeaderScroll, contentPaddingTop }), [onHeaderScroll, contentPaddingTop]);
 
   const renderContent = () => {
     switch (activeTab) {
