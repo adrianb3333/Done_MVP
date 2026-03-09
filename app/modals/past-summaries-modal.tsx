@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -75,10 +75,19 @@ export default function PastSummariesModal() {
     console.log('[PastSummaries] Selected year:', year);
   };
 
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+
+  const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
+
   const handleWeekSelect = (week: number) => {
     setSelectedWeek(week);
     console.log('[PastSummaries] Selected week:', week);
   };
+
+  const handleDaySelect = useCallback((day: string) => {
+    setSelectedDay((prev) => (prev === day ? null : day));
+    console.log('[PastSummaries] Selected day:', day);
+  }, []);
 
   const isCurrentWeek = (week: number) => {
     return selectedYear === currentYear && week === getCurrentWeek();
@@ -135,8 +144,20 @@ export default function PastSummariesModal() {
         </ScrollView>
       </View>
 
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Past Summaries</Text>
+      <View style={styles.daysContainer}>
+        {DAYS.map((day) => {
+          const active = selectedDay === day;
+          return (
+            <TouchableOpacity
+              key={day}
+              onPress={() => handleDaySelect(day)}
+              activeOpacity={0.7}
+              style={[styles.dayItem, active && styles.dayItemActive]}
+            >
+              <Text style={[styles.dayLabel, active && styles.dayLabelActive]}>{day}</Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       <View style={styles.emptyContent}>
@@ -260,14 +281,31 @@ const styles = StyleSheet.create({
     backgroundColor: '#5BBF7F',
     marginTop: 3,
   },
-  sectionHeader: {
-    paddingHorizontal: 20,
-    marginBottom: 16,
+  daysContainer: {
+    flexDirection: 'row' as const,
+    paddingHorizontal: 16,
+    gap: 6,
+    marginBottom: 20,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700' as const,
+  dayItem: {
+    flex: 1,
+    height: 38,
+    borderRadius: 10,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  dayItemActive: {
+    backgroundColor: '#5BBF7F',
+  },
+  dayLabel: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.5)',
+  },
+  dayLabelActive: {
     color: '#FFFFFF',
+    fontWeight: '800' as const,
   },
   emptyContent: {
     flex: 1,

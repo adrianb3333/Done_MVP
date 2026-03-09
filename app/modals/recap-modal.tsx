@@ -147,6 +147,18 @@ export default function RecapModal() {
             </LinearGradient>
           </TouchableOpacity>
         </View>
+
+        <View style={styles.dividerLine} />
+
+        <View style={styles.weekDayRow}>
+          <Text style={styles.weekDayText}>
+            Week {(() => { const now = new Date(); const start = new Date(now.getFullYear(), 0, 1); const diff = now.getTime() - start.getTime(); const oneWeek = 7 * 24 * 60 * 60 * 1000; return Math.ceil((diff + start.getDay() * 24 * 60 * 60 * 1000) / oneWeek); })()}
+          </Text>
+          <Text style={styles.weekDayDot}> · </Text>
+          <Text style={styles.weekDayText}>
+            {new Date().toLocaleDateString('en-US', { weekday: 'long' })}
+          </Text>
+        </View>
       </Animated.View>
 
       <Modal
@@ -447,5 +459,26 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
+  },
+  dividerLine: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    marginTop: 20,
+    marginBottom: 14,
+  },
+  weekDayRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingLeft: 2,
+  },
+  weekDayText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+  },
+  weekDayDot: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: 'rgba(255,255,255,0.4)',
   },
 });
