@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -39,19 +38,18 @@ export default function PracticeSessionTabs() {
     setIsDrillActive(active);
   }, []);
 
-  const renderNonDrillContent = () => {
+  const renderContent = () => {
     switch (activeTab) {
       case 'my': return <MyTab />;
       case 'position': return <PositionTab />;
+      case 'flight': return <FlightTab />;
       case 'notes': return <NotesTab />;
       default: return null;
     }
   };
 
-  const isFlightTab = activeTab === 'flight';
-  const isPositionTab = activeTab === 'position';
-
   const isDrillFullScreen = isDrillActive && activeTab === 'drills';
+  const isContentTab = activeTab !== 'drills';
 
   return (
     <View style={styles.root}>
@@ -64,21 +62,9 @@ export default function PracticeSessionTabs() {
         </TouchableOpacity>
       )}
 
-      {activeTab !== 'drills' && !isFlightTab && !isPositionTab && !isDrillFullScreen && (
-        <ScrollView 
-          style={styles.content} 
-          contentContainerStyle={[
-            styles.contentContainer, 
-            { paddingTop: insets.top + 52 }
-          ]}
-        >
-          {renderNonDrillContent()}
-        </ScrollView>
-      )}
-
-      {(isFlightTab || isPositionTab) && !isDrillFullScreen && (
+      {isContentTab && !isDrillFullScreen && (
         <View style={styles.content}>
-          {isFlightTab ? <FlightTab /> : <PositionTab />}
+          {renderContent()}
         </View>
       )}
 
@@ -163,11 +149,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  contentContainer: {
-    // Removed padding: 20 to allow content to hit the edges
-    paddingHorizontal: 0,
-    paddingBottom: 40,
-  },
+
   tabBar: {
     flexDirection: 'row' as const,
     backgroundColor: '#FFFFFF',

@@ -127,7 +127,7 @@ export default function NotesScreen() {
 const styles = StyleSheet.create({
   background: { flex: 1 },
   container: { flex: 1 },
-  scrollContent: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 20 },
+  scrollContent: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 40, flexGrow: 1 },
   sectionTitle: { fontSize: 28, fontWeight: "700" as const, color: '#FFFFFF', marginBottom: 16, textAlign: 'center' },
   clubDataSection: {
     marginBottom: 20,

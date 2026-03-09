@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, Switch, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Switch, Modal, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Clock, Thermometer, Timer, Wifi, Smartphone } from 'lucide-react-native';
 import { useSession } from '@/contexts/SessionContext';
 import { fetchGolfWeather } from '@/services/weatherApi';
-import LiquidGlassCard from '@/components/reusables/LiquidGlassCard';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function MyTab() {
   const { quitSession, sessionStartTime } = useSession();
+  const insets = useSafeAreaInsets();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [elapsed, setElapsed] = useState(0);
   const [temperature, setTemperature] = useState<number | null>(null);
@@ -89,63 +90,101 @@ export default function MyTab() {
       end={{ x: 0, y: 1 }}
       style={styles.container}
     >
-      <View style={styles.topContent}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 52 }]}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.miniStatsRow}>
-          <LiquidGlassCard containerStyle={styles.miniStatCard}>
-            <View style={styles.miniStat}>
-              <Clock size={16} color="#FFFFFF" />
-              <Text style={styles.miniStatLabel}>Time</Text>
-              <Text style={styles.miniStatValue}>{formatTime(currentTime)}</Text>
-            </View>
-          </LiquidGlassCard>
-          <LiquidGlassCard containerStyle={styles.miniStatCard}>
-            <View style={styles.miniStat}>
-              <Thermometer size={16} color="#FFFFFF" />
-              <Text style={styles.miniStatLabel}>Temp</Text>
-              <Text style={styles.miniStatValue}>
-                {tempLoading ? '...' : temperature !== null ? `${temperature}°C` : '--°C'}
-              </Text>
-            </View>
-          </LiquidGlassCard>
-          <LiquidGlassCard containerStyle={styles.miniStatCard}>
-            <View style={styles.miniStat}>
-              <Timer size={16} color="#FFFFFF" />
-              <Text style={styles.miniStatLabel}>Duration</Text>
-              <Text style={styles.miniStatValue}>{formatElapsed(elapsed)}</Text>
-            </View>
-          </LiquidGlassCard>
+          <View style={styles.glassCard}>
+            <LinearGradient
+              colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0.04)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.glassGradient}
+            >
+              <View style={styles.glassInner}>
+                <View style={styles.miniStat}>
+                  <Clock size={16} color="#FFFFFF" />
+                  <Text style={styles.miniStatLabel}>Time</Text>
+                  <Text style={styles.miniStatValue}>{formatTime(currentTime)}</Text>
+                </View>
+              </View>
+            </LinearGradient>
+          </View>
+          <View style={styles.glassCard}>
+            <LinearGradient
+              colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0.04)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.glassGradient}
+            >
+              <View style={styles.glassInner}>
+                <View style={styles.miniStat}>
+                  <Thermometer size={16} color="#FFFFFF" />
+                  <Text style={styles.miniStatLabel}>Temp</Text>
+                  <Text style={styles.miniStatValue}>
+                    {tempLoading ? '...' : temperature !== null ? `${temperature}°C` : '--°C'}
+                  </Text>
+                </View>
+              </View>
+            </LinearGradient>
+          </View>
+          <View style={styles.glassCard}>
+            <LinearGradient
+              colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0.04)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.glassGradient}
+            >
+              <View style={styles.glassInner}>
+                <View style={styles.miniStat}>
+                  <Timer size={16} color="#FFFFFF" />
+                  <Text style={styles.miniStatLabel}>Duration</Text>
+                  <Text style={styles.miniStatValue}>{formatElapsed(elapsed)}</Text>
+                </View>
+              </View>
+            </LinearGradient>
+          </View>
         </View>
 
-        <LiquidGlassCard containerStyle={styles.toggleCard}>
-          <View style={styles.toggleSection}>
-            <View style={styles.toggleRow}>
-              <View style={styles.toggleLeft}>
-                <Wifi size={18} color="rgba(255,255,255,0.7)" />
-                <Text style={styles.toggleLabel}>Sensors</Text>
+        <View style={styles.toggleCardWrapper}>
+          <LinearGradient
+            colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0.04)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.toggleGlassGradient}
+          >
+            <View style={styles.toggleGlassInner}>
+              <View style={styles.toggleRow}>
+                <View style={styles.toggleLeft}>
+                  <Wifi size={18} color="rgba(255,255,255,0.7)" />
+                  <Text style={styles.toggleLabel}>Sensors</Text>
+                </View>
+                <Switch
+                  value={sensorsEnabled}
+                  onValueChange={setSensorsEnabled}
+                  trackColor={{ false: 'rgba(255,255,255,0.2)', true: 'rgba(255, 255, 255, 0.35)' }}
+                  thumbColor={sensorsEnabled ? '#FFFFFF' : 'rgba(255,255,255,0.6)'}
+                />
               </View>
-              <Switch
-                value={sensorsEnabled}
-                onValueChange={setSensorsEnabled}
-                trackColor={{ false: 'rgba(255,255,255,0.2)', true: 'rgba(255, 255, 255, 0.35)' }}
-                thumbColor={sensorsEnabled ? '#FFFFFF' : 'rgba(255,255,255,0.6)'}
-              />
-            </View>
-            <View style={styles.toggleDivider} />
-            <View style={styles.toggleRow}>
-              <View style={styles.toggleLeft}>
-                <Smartphone size={18} color="rgba(255,255,255,0.7)" />
-                <Text style={styles.toggleLabel}>Device</Text>
+              <View style={styles.toggleDivider} />
+              <View style={styles.toggleRow}>
+                <View style={styles.toggleLeft}>
+                  <Smartphone size={18} color="rgba(255,255,255,0.7)" />
+                  <Text style={styles.toggleLabel}>Device</Text>
+                </View>
+                <Switch
+                  value={deviceEnabled}
+                  onValueChange={setDeviceEnabled}
+                  trackColor={{ false: 'rgba(255,255,255,0.2)', true: 'rgba(255, 255, 255, 0.35)' }}
+                  thumbColor={deviceEnabled ? '#FFFFFF' : 'rgba(255,255,255,0.6)'}
+                />
               </View>
-              <Switch
-                value={deviceEnabled}
-                onValueChange={setDeviceEnabled}
-                trackColor={{ false: 'rgba(255,255,255,0.2)', true: 'rgba(255, 255, 255, 0.35)' }}
-                thumbColor={deviceEnabled ? '#FFFFFF' : 'rgba(255,255,255,0.6)'}
-              />
             </View>
-          </View>
-        </LiquidGlassCard>
-      </View>
+          </LinearGradient>
+        </View>
+      </ScrollView>
 
       <View style={styles.bottomSection}>
         <TouchableOpacity onPress={() => setShowQuitConfirm(true)} activeOpacity={0.8}>
@@ -200,17 +239,32 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  topContent: {
+  scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
   miniStatsRow: {
     flexDirection: 'row' as const,
     gap: 8,
-    paddingHorizontal: 16,
-    paddingTop: 8,
   },
-  miniStatCard: {
+  glassCard: {
     flex: 1,
+    borderRadius: 18,
+    overflow: 'hidden' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+  },
+  glassGradient: {
+    padding: 0,
+    borderRadius: 18,
+  },
+  glassInner: {
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderRadius: 17,
+    overflow: 'hidden' as const,
   },
   miniStat: {
     padding: 14,
@@ -228,11 +282,19 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: '#FFFFFF',
   },
-  toggleCard: {
+  toggleCardWrapper: {
     marginTop: 16,
-    marginHorizontal: 16,
+    borderRadius: 18,
+    overflow: 'hidden' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
   },
-  toggleSection: {
+  toggleGlassGradient: {
+    borderRadius: 18,
+  },
+  toggleGlassInner: {
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderRadius: 17,
     overflow: 'hidden' as const,
   },
   toggleRow: {
@@ -258,8 +320,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
   bottomSection: {
-    paddingHorizontal: 24,
-    paddingBottom: 32,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
   },
   quitButton: {
     paddingVertical: 16,
