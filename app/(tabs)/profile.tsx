@@ -23,6 +23,7 @@ import * as Haptics from 'expo-haptics';
 import { useProfile, UserProfile } from '@/contexts/ProfileContext';
 import { useSession } from '@/contexts/SessionContext';
 import { useAppNavigation } from '@/contexts/AppNavigationContext';
+import { useScrollHeader } from '@/hooks/useScrollHeader';
 
 import ProfileCard from '@/components/ProfileCard';
 import { supabase } from '@/lib/supabase';
@@ -517,6 +518,7 @@ export default function ProfileScreen() {
   const { lastRound } = useSession();
   const { openSidebar, navigateTo } = useAppNavigation();
   const insets = useSafeAreaInsets();
+  const { headerTranslateY, onScroll: onHeaderScroll } = useScrollHeader(PROFILE_HEADER_HEIGHT);
 
   const [followsModalVisible, setFollowsModalVisible] = useState<boolean>(false);
   const [followsTab, setFollowsTab] = useState<'hitta' | 'followers' | 'following' | 'friends'>('hitta');
@@ -683,7 +685,7 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerAbsolute} pointerEvents="box-none">
+      <Animated.View style={[styles.headerAbsolute, { transform: [{ translateY: headerTranslateY }] }]} pointerEvents="box-none">
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <View style={styles.headerRow} pointerEvents="box-none">
           <TouchableOpacity
@@ -722,7 +724,7 @@ export default function ProfileScreen() {
           </View>
         </View>
         </SafeAreaView>
-      </View>
+      </Animated.View>
 
       {helpMenuVisible && (
         <Animated.View style={[
@@ -768,7 +770,7 @@ export default function ProfileScreen() {
         </Animated.View>
       )}
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: insets.top + PROFILE_HEADER_HEIGHT }}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: insets.top + PROFILE_HEADER_HEIGHT }} onScroll={onHeaderScroll} scrollEventThrottle={16}>
         <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
 
           <View style={styles.profileTopSection}>
