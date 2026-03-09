@@ -123,7 +123,7 @@ function EventDetailScreen({
               (name, i) => (
                 <View key={i} style={edStyles.playerRow}>
                   <View style={edStyles.playerAvatar}>
-                    <User size={16} color="#5A6B60" />
+                    <User size={16} color="#888888" />
                   </View>
                   <View style={edStyles.playerInfo}>
                     <Text style={edStyles.playerName}>{name}</Text>
@@ -140,7 +140,7 @@ function EventDetailScreen({
           <ScrollView style={edStyles.tabScroll} showsVerticalScrollIndicator={false}>
             <Text style={edStyles.sectionHeader}>Impact Tracer</Text>
             <View style={edStyles.impactPlaceholder}>
-              <Crosshair size={40} color="#243028" />
+              <Crosshair size={40} color="#1A1A1A" />
               <Text style={edStyles.impactText}>
                 Impact data will be available {event.type === 'upcoming' ? 'during' : 'from'} the event
               </Text>
@@ -221,7 +221,7 @@ function EventDetailScreen({
               >
                 <View style={isActive ? edStyles.iconActive : edStyles.iconInactive}>
                   {React.cloneElement(tab.icon as React.ReactElement<{ color: string }>, {
-                    color: isActive ? '#FFB74D' : '#5A6B60',
+                    color: isActive ? '#1A1A1A' : '#8A8A8A',
                   })}
                 </View>
                 <Text style={[edStyles.tabLabel, isActive && edStyles.tabLabelActive]}>
@@ -239,12 +239,12 @@ function EventDetailScreen({
 const edStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#FFFFFF',
   },
   safeTop: {
-    backgroundColor: '#000000',
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#222222',
+    borderBottomColor: '#E8E8E8',
   },
   header: {
     flexDirection: 'row' as const,
@@ -260,17 +260,17 @@ const edStyles = StyleSheet.create({
   headerTitle: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
   },
   headerSub: {
     fontSize: 12,
-    color: '#5A6B60',
+    color: '#888888',
     marginTop: 2,
   },
   statusBadge: {
     fontSize: 9,
     fontWeight: '600' as const,
-    color: '#5A6B60',
+    color: '#888888',
     letterSpacing: 0.5,
     textTransform: 'uppercase' as const,
   },
@@ -285,25 +285,25 @@ const edStyles = StyleSheet.create({
   sectionHeader: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
     marginBottom: 14,
   },
   playerRow: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: 'transparent',
+    backgroundColor: '#F5F5F5',
     borderRadius: 12,
     padding: 14,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: '#E8E8E8',
     gap: 12,
   },
   playerAvatar: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#222222',
+    backgroundColor: '#E8E8E8',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
@@ -313,11 +313,11 @@ const edStyles = StyleSheet.create({
   playerName: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
   },
   playerHcp: {
     fontSize: 11,
-    color: '#5A6B60',
+    color: '#888888',
     marginTop: 2,
   },
   playerRank: {
@@ -326,25 +326,25 @@ const edStyles = StyleSheet.create({
     color: '#FFB74D',
   },
   impactPlaceholder: {
-    backgroundColor: 'transparent',
+    backgroundColor: '#F5F5F5',
     borderRadius: 16,
     padding: 40,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: '#E8E8E8',
     gap: 12,
   },
   impactText: {
     fontSize: 13,
-    color: '#5A6B60',
+    color: '#888888',
     textAlign: 'center' as const,
   },
   infoCard: {
-    backgroundColor: 'transparent',
+    backgroundColor: '#F5F5F5',
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: '#E8E8E8',
     gap: 14,
   },
   infoRow: {
@@ -354,22 +354,22 @@ const edStyles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 13,
-    color: '#5A6B60',
+    color: '#888888',
     width: 70,
   },
   infoValue: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
     flex: 1,
   },
   rulesText: {
     fontSize: 13,
-    color: '#8A9B90',
+    color: '#666666',
     lineHeight: 20,
   },
   tabBarSafe: {
-    backgroundColor: '#000000',
+    backgroundColor: '#FFFFFF',
   },
   tabBar: {
     flexDirection: 'row' as const,
@@ -388,11 +388,11 @@ const edStyles = StyleSheet.create({
   tabLabel: {
     fontSize: 10,
     marginTop: 4,
-    color: '#5A6B60',
+    color: '#8A8A8A',
     fontWeight: '600' as const,
   },
   tabLabelActive: {
-    color: '#FFB74D',
+    color: '#1A1A1A',
   },
 });
 
@@ -408,15 +408,15 @@ function EventCard({
       <View style={tourStyles.eventCardLeft}>
         <Text style={tourStyles.eventName}>{event.eventName}</Text>
         <View style={tourStyles.eventMeta}>
-          <MapPin size={12} color="#5A6B60" />
+          <MapPin size={12} color="#888888" />
           <Text style={tourStyles.eventCourse}>{event.courseName}</Text>
         </View>
         <View style={tourStyles.eventMeta}>
-          <Calendar size={12} color="#5A6B60" />
+          <Calendar size={12} color="#888888" />
           <Text style={tourStyles.eventDate}>{event.date}</Text>
         </View>
       </View>
-      <ChevronRight size={18} color="#5A6B60" />
+      <ChevronRight size={18} color="#999999" />
     </TouchableOpacity>
   );
 }
@@ -505,7 +505,7 @@ function TourContent({ onOpenEvent }: { onOpenEvent: (event: TourEvent) => void 
           <Text style={tourStyles.statsBoxSub}>Rankings & standings</Text>
         </TouchableOpacity>
         <TouchableOpacity style={tourStyles.statsBox} activeOpacity={0.7}>
-          <Gift size={24} color="#FFFFFF" />
+          <Gift size={24} color="#1A1A1A" />
           <Text style={tourStyles.statsBoxTitle}>Prizes & Benefits</Text>
           <Text style={tourStyles.statsBoxSub}>Rewards & perks</Text>
         </TouchableOpacity>
@@ -528,7 +528,7 @@ const tourStyles = StyleSheet.create({
   pageTitle: {
     fontSize: 22,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
     marginBottom: 16,
   },
   profileSection: {
@@ -545,22 +545,22 @@ const tourStyles = StyleSheet.create({
     height: 64,
     borderRadius: 32,
     borderWidth: 2,
-    borderColor: '#222222',
+    borderColor: '#E0E0E0',
   },
   profileAvatarPlaceholder: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#222222',
+    backgroundColor: '#E8E8E8',
     borderWidth: 2,
-    borderColor: '#222222',
+    borderColor: '#E0E0E0',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
   },
   profileInitials: {
     fontSize: 22,
     fontWeight: '700' as const,
-    color: '#FFFFFF',
+    color: '#1A1A1A',
   },
   profileRight: {
     flex: 1,
@@ -572,27 +572,27 @@ const tourStyles = StyleSheet.create({
   },
   profileDataItem: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: '#F5F5F5',
     borderRadius: 10,
     paddingVertical: 8,
     paddingHorizontal: 6,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: '#E8E8E8',
   },
   profileDataValue: {
     fontSize: 14,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
   },
   profileDataLabel: {
     fontSize: 9,
-    color: '#5A6B60',
+    color: '#888888',
     marginTop: 2,
     textAlign: 'center' as const,
   },
   joinButton: {
-    backgroundColor: '#222222',
+    backgroundColor: '#1A1A1A',
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center' as const,
@@ -606,13 +606,13 @@ const tourStyles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: '#222222',
+    backgroundColor: '#E8E8E8',
     marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
     marginBottom: 12,
   },
   statsBoxRow: {
@@ -621,34 +621,34 @@ const tourStyles = StyleSheet.create({
   },
   statsBox: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: '#F5F5F5',
     borderRadius: 14,
     padding: 18,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: '#E8E8E8',
     gap: 8,
   },
   statsBoxTitle: {
     fontSize: 13,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
     textAlign: 'center' as const,
   },
   statsBoxSub: {
     fontSize: 10,
-    color: '#5A6B60',
+    color: '#888888',
     textAlign: 'center' as const,
   },
   eventCard: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: 'transparent',
+    backgroundColor: '#F5F5F5',
     borderRadius: 12,
     padding: 14,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: '#E8E8E8',
   },
   eventCardLeft: {
     flex: 1,
@@ -657,7 +657,7 @@ const tourStyles = StyleSheet.create({
   eventName: {
     fontSize: 14,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
   },
   eventMeta: {
     flexDirection: 'row' as const,
@@ -666,11 +666,11 @@ const tourStyles = StyleSheet.create({
   },
   eventCourse: {
     fontSize: 12,
-    color: '#8A9B90',
+    color: '#666666',
   },
   eventDate: {
     fontSize: 12,
-    color: '#5A6B60',
+    color: '#888888',
   },
 });
 
@@ -764,7 +764,7 @@ function GoalPickerModal({
           <View style={affStyles.modalHeader}>
             <Text style={affStyles.modalTitle}>Choose Goal</Text>
             <TouchableOpacity onPress={onClose}>
-              <X size={20} color="#8A9B90" />
+              <X size={20} color="#999999" />
             </TouchableOpacity>
           </View>
           {options.map((opt) => (
@@ -904,7 +904,7 @@ function AffiliateContent() {
                 onPress={() => handleItemPress(item.title, cat.label)}
               >
                 <Text style={affStyles.categoryCardTitle}>{item.title}</Text>
-                <ChevronRight size={16} color="#5A6B60" />
+                <ChevronRight size={16} color="#999999" />
               </TouchableOpacity>
             ))}
           </View>
@@ -925,7 +925,7 @@ const affStyles = StyleSheet.create({
   pageTitle: {
     fontSize: 22,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
     marginBottom: 16,
   },
   topBoxRow: {
@@ -935,11 +935,11 @@ const affStyles = StyleSheet.create({
   },
   countBox: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: '#F5F5F5',
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: '#E8E8E8',
     alignItems: 'center' as const,
     gap: 6,
   },
@@ -949,33 +949,33 @@ const affStyles = StyleSheet.create({
   countBig: {
     fontSize: 32,
     fontWeight: '900' as const,
-    color: '#FFFFFF',
+    color: '#1A1A1A',
   },
   countOf: {
     fontSize: 12,
-    color: '#5A6B60',
+    color: '#888888',
     fontWeight: '600' as const,
   },
   progressBarBg: {
     width: '100%',
     height: 5,
     borderRadius: 3,
-    backgroundColor: '#222222',
+    backgroundColor: '#E0E0E0',
     marginTop: 4,
     overflow: 'hidden' as const,
   },
   progressBarFill: {
     height: 5,
     borderRadius: 3,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1A1A1A',
   },
   perksBox: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: '#F5F5F5',
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: '#E8E8E8',
     alignItems: 'center' as const,
     gap: 6,
   },
@@ -984,7 +984,7 @@ const affStyles = StyleSheet.create({
     fontWeight: '700' as const,
     color: '#FFB74D',
     alignSelf: 'flex-end' as const,
-    backgroundColor: '#222222',
+    backgroundColor: '#E8E8E8',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -993,19 +993,19 @@ const affStyles = StyleSheet.create({
   perksHeader: {
     fontSize: 13,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
     textAlign: 'center' as const,
   },
   perksValue: {
     fontSize: 11,
-    color: '#8A9B90',
+    color: '#666666',
     textAlign: 'center' as const,
   },
   discountButton: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     alignSelf: 'center' as const,
-    backgroundColor: '#222222',
+    backgroundColor: '#1A1A1A',
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 20,
@@ -1014,7 +1014,7 @@ const affStyles = StyleSheet.create({
   },
   discountLabel: {
     fontSize: 10,
-    color: '#AAAAAA',
+    color: '#CCCCCC',
     fontWeight: '600' as const,
   },
   discountCode: {
@@ -1035,38 +1035,38 @@ const affStyles = StyleSheet.create({
   categoryTitle: {
     fontSize: 15,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
   },
   categoryCard: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'space-between' as const,
-    backgroundColor: 'transparent',
+    backgroundColor: '#F5F5F5',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: '#E8E8E8',
   },
   categoryCardTitle: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.65)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     padding: 30,
   },
   modalCard: {
-    backgroundColor: 'transparent',
+    backgroundColor: '#FFFFFF',
     borderRadius: 18,
     padding: 20,
     width: '100%',
     maxWidth: 320,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: '#E8E8E8',
   },
   modalHeader: {
     flexDirection: 'row' as const,
@@ -1077,7 +1077,7 @@ const affStyles = StyleSheet.create({
   modalTitle: {
     fontSize: 17,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
   },
   modalOption: {
     flexDirection: 'row' as const,
@@ -1086,39 +1086,39 @@ const affStyles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 12,
     marginBottom: 6,
-    backgroundColor: '#000000',
+    backgroundColor: '#F5F5F5',
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: '#E8E8E8',
     gap: 14,
   },
   modalOptionActive: {
-    borderColor: '#FFFFFF',
-    backgroundColor: '#0F1D14',
+    borderColor: '#1A1A1A',
+    backgroundColor: '#E8F0FF',
   },
   modalOptionNum: {
     fontSize: 20,
     fontWeight: '900' as const,
-    color: '#5A6B60',
+    color: '#AAAAAA',
     width: 40,
     textAlign: 'center' as const,
   },
   modalOptionNumActive: {
-    color: '#FFFFFF',
+    color: '#1A1A1A',
   },
   modalOptionPerk: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
     flex: 1,
   },
   detailContainer: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#FFFFFF',
   },
   detailSafeTop: {
-    backgroundColor: '#000000',
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#222222',
+    borderBottomColor: '#E8E8E8',
   },
   detailHeader: {
     flexDirection: 'row' as const,
@@ -1139,11 +1139,11 @@ const affStyles = StyleSheet.create({
   detailHeaderTitle: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
   },
   detailHeaderSub: {
     fontSize: 11,
-    color: '#5A6B60',
+    color: '#888888',
     marginTop: 2,
   },
   detailBody: {
@@ -1246,7 +1246,7 @@ function EntertainmentContent() {
           >
             <Image source={{ uri: social.logo }} style={entStyles.socialLogo} resizeMode="contain" />
             <Text style={entStyles.socialLabel}>{social.label}</Text>
-            <ExternalLink size={12} color="#5A6B60" />
+            <ExternalLink size={12} color="#999999" />
           </TouchableOpacity>
         ))}
       </View>
@@ -1271,7 +1271,7 @@ function EntertainmentContent() {
             {section.icon}
             <Text style={entStyles.sectionCardTitle}>{section.key}</Text>
           </View>
-          <ChevronRight size={18} color="#5A6B60" />
+          <ChevronRight size={18} color="#999999" />
         </TouchableOpacity>
       ))}
     </ScrollView>
@@ -1282,13 +1282,13 @@ const entStyles = StyleSheet.create({
   pageTitle: {
     fontSize: 22,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
     marginBottom: 16,
   },
   sectionLabel: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
     marginBottom: 12,
   },
   socialRow: {
@@ -1298,13 +1298,13 @@ const entStyles = StyleSheet.create({
   },
   socialBox: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: '#F5F5F5',
     borderRadius: 14,
     paddingVertical: 18,
     paddingHorizontal: 8,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: '#E8E8E8',
     gap: 8,
   },
   socialLogo: {
@@ -1314,11 +1314,11 @@ const entStyles = StyleSheet.create({
   socialLabel: {
     fontSize: 12,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
   },
   divider: {
     height: 1,
-    backgroundColor: '#222222',
+    backgroundColor: '#E8E8E8',
     marginVertical: 20,
   },
   latestPlaceholder: {
@@ -1328,19 +1328,19 @@ const entStyles = StyleSheet.create({
   },
   latestPlaceholderText: {
     fontSize: 13,
-    color: '#3A4B40',
+    color: '#AAAAAA',
     fontStyle: 'italic' as const,
   },
   sectionCard: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'space-between' as const,
-    backgroundColor: 'transparent',
+    backgroundColor: '#F5F5F5',
     borderRadius: 14,
     padding: 18,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: '#E8E8E8',
   },
   sectionCardLeft: {
     flexDirection: 'row' as const,
@@ -1350,16 +1350,16 @@ const entStyles = StyleSheet.create({
   sectionCardTitle: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
   },
   detailContainer: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#FFFFFF',
   },
   detailSafeTop: {
-    backgroundColor: '#000000',
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#222222',
+    borderBottomColor: '#E8E8E8',
   },
   detailHeader: {
     flexDirection: 'row' as const,
@@ -1378,7 +1378,7 @@ const entStyles = StyleSheet.create({
     flex: 1,
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
     textAlign: 'center' as const,
   },
   detailBody: {
@@ -1431,7 +1431,7 @@ export default function CommunityScreen() {
         <SafeAreaView edges={['top']} style={styles.safeTop}>
           <View style={styles.header}>
             <TouchableOpacity onPress={openSidebar} style={styles.menuBtn} activeOpacity={0.7}>
-              <Menu size={24} color="#F5F7F6" />
+              <Menu size={24} color="#1A1A1A" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>{tabs.find(t => t.key === activeTab)?.label ?? 'Community'}</Text>
             <TouchableOpacity onPress={() => navigateTo('mygame')} style={styles.menuBtn} activeOpacity={0.7}>
@@ -1460,7 +1460,7 @@ export default function CommunityScreen() {
               >
                 <View style={isActive ? styles.iconActive : styles.iconInactive}>
                   {React.cloneElement(tab.icon as React.ReactElement<{ color: string }>, {
-                    color: isActive ? '#FFB74D' : '#5A6B60',
+                    color: isActive ? '#1A1A1A' : '#8A8A8A',
                   })}
                 </View>
                 <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
@@ -1478,7 +1478,7 @@ export default function CommunityScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#FFFFFF',
   },
   headerAbsolute: {
     position: 'absolute' as const,
@@ -1486,12 +1486,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 100,
-    backgroundColor: '#000000',
+    backgroundColor: 'transparent',
   },
   safeTop: {
-    backgroundColor: '#000000',
-    borderBottomWidth: 1,
-    borderBottomColor: '#222222',
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row' as const,
@@ -1513,7 +1511,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
     letterSpacing: 0.3,
   },
   body: {
@@ -1525,35 +1523,35 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   placeholderCard: {
-    backgroundColor: 'transparent',
+    backgroundColor: '#F5F5F5',
     borderRadius: 16,
     padding: 28,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: '#E8E8E8',
     marginBottom: 20,
     gap: 10,
   },
   placeholderTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
   },
   placeholderSub: {
     fontSize: 14,
-    color: '#5A6B60',
+    color: '#666666',
     textAlign: 'center' as const,
     lineHeight: 20,
   },
   listItem: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: 'transparent',
+    backgroundColor: '#F5F5F5',
     borderRadius: 12,
     padding: 16,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: '#E8E8E8',
     gap: 12,
   },
   listDot: {
@@ -1565,16 +1563,16 @@ const styles = StyleSheet.create({
   listLabel: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: '#F5F7F6',
+    color: '#1A1A1A',
     flex: 1,
   },
   listArrow: {
     fontSize: 20,
-    color: '#5A6B60',
+    color: '#999999',
     fontWeight: '600' as const,
   },
   tabBarSafe: {
-    backgroundColor: '#000000',
+    backgroundColor: '#FFFFFF',
   },
   tabBar: {
     flexDirection: 'row' as const,
@@ -1593,10 +1591,10 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 10,
     marginTop: 4,
-    color: '#5A6B60',
+    color: '#8A8A8A',
     fontWeight: '600' as const,
   },
   tabLabelActive: {
-    color: '#FFB74D',
+    color: '#1A1A1A',
   },
 });
