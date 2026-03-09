@@ -59,7 +59,7 @@ export default function Step3Page1() {
       <Text style={styles.subtitle}>Session Overview</Text>
 
       <LinearGradient
-        colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
+        colors={['#4BA35B', '#3D954D', '#2D803D']}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={styles.miniStatsRow}
@@ -86,7 +86,7 @@ export default function Step3Page1() {
       </LinearGradient>
 
       <LinearGradient
-        colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
+        colors={['#4BA35B', '#3D954D', '#2D803D']}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={[styles.toggleCard, { marginTop: 12 }]}
@@ -107,7 +107,7 @@ export default function Step3Page1() {
       </LinearGradient>
 
       <LinearGradient
-        colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
+        colors={['#4BA35B', '#3D954D', '#2D803D']}
         start={{ x: 0, y: 0 }}
         end={{ x: 0, y: 1 }}
         style={[styles.toggleCard, { marginTop: 12 }]}
