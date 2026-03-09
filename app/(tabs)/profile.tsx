@@ -535,8 +535,8 @@ export default function ProfileScreen() {
   const getToParColor = () => {
     if (!lastRound) return '#888';
     const diff = lastRound.totalScore - lastRound.totalPar;
-    if (diff < 0) return '#FFFFFF';
-    if (diff === 0) return '#1DB954';
+    if (diff < 0) return '#3D954D';
+    if (diff === 0) return '#3D954D';
     return '#FF5252';
   };
 
@@ -575,7 +575,7 @@ export default function ProfileScreen() {
             activeOpacity={0.7}
             testID="hamburger-menu"
           >
-            <Menu size={24} color="#F5F7F6" />
+            <Menu size={24} color="#1A1A1A" />
           </TouchableOpacity>
           <View style={styles.headerIcons}>
             <TouchableOpacity
@@ -595,7 +595,7 @@ export default function ProfileScreen() {
               activeOpacity={0.7}
               testID="help-menu-button"
             >
-              <HelpCircle size={22} color="#B0B0B0" />
+              <HelpCircle size={22} color="#888" />
             </TouchableOpacity>
           </View>
         </View>
@@ -765,16 +765,17 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.cardsColumn}>
-            <TouchableOpacity
-              style={styles.roundCard}
-              onPress={() => {
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setLastRoundPopupVisible(true);
-              }}
-              activeOpacity={0.8}
-            >
+            <View>
+              <Text style={styles.cardSectionHeader}>Last Round</Text>
+              <TouchableOpacity
+                style={styles.roundCard}
+                onPress={() => {
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setLastRoundPopupVisible(true);
+                }}
+                activeOpacity={0.8}
+              >
               <View style={styles.cardHeaderRow}>
-                <Text style={styles.cardTitle}>Last Round</Text>
                 {lastRound ? (
                   <Text style={[styles.cardToParBadge, { color: getToParColor() }]}>{getToParDisplay()}</Text>
                 ) : null}
@@ -791,19 +792,22 @@ export default function ProfileScreen() {
               ) : (
                 <Text style={styles.cardEmpty}>No rounds yet</Text>
               )}
-            </TouchableOpacity>
+              </TouchableOpacity>
+            </View>
 
-            <TouchableOpacity
-              style={styles.practiceCard}
-              onPress={() => {
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setLastPracticePopupVisible(true);
-              }}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.cardTitle}>Last Practice</Text>
+            <View>
+              <Text style={styles.cardSectionHeader}>Last Practice</Text>
+              <TouchableOpacity
+                style={styles.practiceCard}
+                onPress={() => {
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setLastPracticePopupVisible(true);
+                }}
+                activeOpacity={0.8}
+              >
               <UiTra />
-            </TouchableOpacity>
+              </TouchableOpacity>
+            </View>
 
             <TouchableOpacity
               style={styles.tourCard}
@@ -1184,7 +1188,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0A',
+    backgroundColor: '#FFFFFF',
   },
   loadingContainer: {
     flex: 1,
@@ -1197,7 +1201,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 100,
-    backgroundColor: '#0A0A0A',
+    backgroundColor: '#FFFFFF',
   },
   safeArea: {
     zIndex: 10,
@@ -1235,9 +1239,15 @@ const styles = StyleSheet.create({
 
   liveDivider: {
     height: 2,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#ECECEC',
     marginHorizontal: -20,
     marginBottom: 4,
+  },
+  cardSectionHeader: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: '#1A1A1A',
+    marginBottom: 8,
   },
   profileTopSection: {
     flexDirection: 'row' as const,
@@ -1256,22 +1266,22 @@ const styles = StyleSheet.create({
     height: 96,
     borderRadius: 48,
     borderWidth: 3,
-    borderColor: '#2A2A2A',
+    borderColor: '#E0E0E0',
   },
   avatarPlaceholder: {
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#F0F0F0',
     borderWidth: 3,
-    borderColor: '#2A2A2A',
+    borderColor: '#E0E0E0',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
   },
   avatarInitials: {
     fontSize: 30,
     fontWeight: '700' as const,
-    color: '#1DB954',
+    color: '#3D954D',
   },
   followRow: {
     flexDirection: 'row' as const,
@@ -1286,41 +1296,42 @@ const styles = StyleSheet.create({
   followStatNumber: {
     fontSize: 15,
     fontWeight: '800' as const,
-    color: '#EFEFEF',
+    color: '#1A1A1A',
   },
   followStatLabel: {
     fontSize: 10,
-    color: '#666',
+    color: '#888',
     marginTop: 1,
   },
   followDivider: {
     width: 1,
     height: 20,
-    backgroundColor: '#333',
+    backgroundColor: '#D0D0D0',
   },
   actionGrid: {
     flex: 1,
-    gap: 10,
+    gap: 8,
     justifyContent: 'flex-start' as const,
+    alignItems: 'flex-end' as const,
   },
   actionGridRow: {
     flexDirection: 'row' as const,
-    gap: 10,
+    gap: 8,
   },
   gridBtn: {
-    flex: 1,
+    width: 52,
+    height: 52,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    gap: 4,
-    backgroundColor: 'transparent',
+    gap: 2,
+    backgroundColor: '#F5F5F5',
     borderRadius: 12,
-    paddingVertical: 14,
     borderWidth: 1,
-    borderColor: '#1A1A1A',
+    borderColor: '#E8E8E8',
   },
   gridBtnCompare: {
-    backgroundColor: '#FF444415',
-    borderColor: '#FF444430',
+    backgroundColor: '#FFF0F0',
+    borderColor: '#FFD0D0',
   },
   gridBtnText: {
     fontSize: 11,
@@ -1328,34 +1339,34 @@ const styles = StyleSheet.create({
     color: '#D4AF37',
   },
   gridBtnLabel: {
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: '600' as const,
     color: '#888',
   },
   handicapGradientBtn: {
-    flex: 1,
+    width: 52,
+    height: 52,
     borderRadius: 12,
     overflow: 'hidden' as const,
   },
   handicapGradientInner: {
     flex: 1,
-    flexDirection: 'row' as const,
+    flexDirection: 'column' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    gap: 8,
-    paddingVertical: 14,
+    gap: 2,
     borderRadius: 12,
   },
   handicapBoldText: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '900' as const,
     color: '#FFFFFF',
     letterSpacing: -0.3,
   },
   handicapSgfIcon: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
   },
   helpMenuOverlay: {
     position: 'absolute' as const,
@@ -1371,12 +1382,17 @@ const styles = StyleSheet.create({
     bottom: -2000,
   },
   helpMenu: {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#FFFFFF',
     borderRadius: 14,
     padding: 6,
     width: 200,
     borderWidth: 1,
-    borderColor: '#2A2A2A',
+    borderColor: '#E0E0E0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
   },
   helpMenuItem: {
     flexDirection: 'row' as const,
@@ -1389,69 +1405,70 @@ const styles = StyleSheet.create({
   helpMenuText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#EFEFEF',
+    color: '#1A1A1A',
   },
   helpMenuDivider: {
     height: 1,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#ECECEC',
     marginHorizontal: 10,
     marginVertical: 4,
   },
 
   liveSection: {
-    marginBottom: 20,
+    marginBottom: 24,
+    marginTop: 12,
   },
   liveSectionTitle: {
     fontSize: 16,
     fontWeight: '800' as const,
     color: '#FF3B30',
     letterSpacing: 1,
-    marginBottom: 10,
+    marginBottom: 14,
   },
   liveEmptyState: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: 'transparent',
+    backgroundColor: '#F8F8F8',
     borderRadius: 12,
     padding: 14,
     gap: 10,
     borderWidth: 1,
-    borderColor: '#1A1A1A',
+    borderColor: '#ECECEC',
   },
   liveDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#444',
+    backgroundColor: '#CCC',
   },
   liveEmptyText: {
     fontSize: 13,
-    color: '#555',
+    color: '#999',
     fontWeight: '500' as const,
   },
 
   cardsColumn: {
-    gap: 12,
+    gap: 20,
   },
   roundCard: {
-    backgroundColor: 'transparent',
+    backgroundColor: '#F8F8F8',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#33333340',
+    borderColor: '#ECECEC',
   },
   practiceCard: {
-    backgroundColor: 'transparent',
+    backgroundColor: '#F8F8F8',
     borderRadius: 16,
     padding: 4,
     borderWidth: 1,
-    borderColor: '#33333340',
+    borderColor: '#ECECEC',
     overflow: 'hidden' as const,
   },
   cardTitle: {
     fontSize: 14,
     fontWeight: '700' as const,
-    color: '#888',
+    color: '#666',
   },
   cardHeaderRow: {
     flexDirection: 'row' as const,
@@ -1474,35 +1491,35 @@ const styles = StyleSheet.create({
   cardCourse: {
     fontSize: 14,
     fontWeight: '700' as const,
-    color: '#EFEFEF',
+    color: '#1A1A1A',
   },
   cardDate: {
     fontSize: 11,
-    color: '#666',
+    color: '#888',
     marginTop: 2,
   },
   cardScore: {
     fontSize: 36,
     fontWeight: '900' as const,
-    color: '#1DB954',
+    color: '#3D954D',
   },
   cardHoles: {
     fontSize: 11,
-    color: '#555',
+    color: '#999',
     marginTop: 2,
   },
   cardEmpty: {
     fontSize: 13,
-    color: '#444',
+    color: '#AAA',
     marginTop: 12,
   },
 
   tourCard: {
-    backgroundColor: 'transparent',
+    backgroundColor: '#F8F8F8',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#FFB74D20',
+    borderColor: '#ECECEC',
   },
   tourCardHeader: {
     flexDirection: 'row' as const,
@@ -1518,7 +1535,7 @@ const styles = StyleSheet.create({
   tourCardTitle: {
     fontSize: 14,
     fontWeight: '700' as const,
-    color: '#FFB74D',
+    color: '#1A1A1A',
   },
   tourDataGrid: {
     flexDirection: 'row' as const,
@@ -1527,19 +1544,19 @@ const styles = StyleSheet.create({
   },
   tourDataItem: {
     width: '30%' as any,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 6,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: '#ECECEC',
   },
   tourDataIconWrap: {
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#0A0A0A',
+    backgroundColor: '#F0F0F0',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     marginBottom: 5,
@@ -1547,26 +1564,26 @@ const styles = StyleSheet.create({
   tourDataIconText: {
     fontSize: 12,
     fontWeight: '800' as const,
-    color: '#1DB954',
+    color: '#3D954D',
   },
   tourDataValue: {
     fontSize: 14,
     fontWeight: '800' as const,
-    color: '#EFEFEF',
+    color: '#1A1A1A',
   },
   tourDataLabel: {
     fontSize: 9,
-    color: '#666',
+    color: '#888',
     marginTop: 2,
     textAlign: 'center' as const,
   },
 
   affiliateCard: {
-    backgroundColor: 'transparent',
+    backgroundColor: '#F8F8F8',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#4FC3F720',
+    borderColor: '#ECECEC',
   },
   affiliateCardHeader: {
     flexDirection: 'row' as const,
@@ -1582,7 +1599,7 @@ const styles = StyleSheet.create({
   affiliateCardTitle: {
     fontSize: 14,
     fontWeight: '700' as const,
-    color: '#4FC3F7',
+    color: '#1A1A1A',
   },
 
   avatarPreviewOverlay: {
@@ -1944,6 +1961,6 @@ const styles = StyleSheet.create({
   coachHeaderIcon: {
     width: 22,
     height: 22,
-    tintColor: '#B0B0B0',
+    tintColor: '#555',
   },
 });

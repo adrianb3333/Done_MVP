@@ -1,8 +1,39 @@
 import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
-import { Play, User, Target } from 'lucide-react-native';
-import Colors from '@/constants/colors';
+import { User } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSession } from '@/contexts/SessionContext';
+
+function PlayTabIcon() {
+  return (
+    <View style={tabStyles.circleWrapper}>
+      <LinearGradient
+        colors={['#4BA35B', '#3D954D', '#2D803D']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={tabStyles.circleGradient}
+      >
+        <Text style={tabStyles.circleText}>PLAY</Text>
+      </LinearGradient>
+    </View>
+  );
+}
+
+function PracticeTabIcon() {
+  return (
+    <View style={tabStyles.circleWrapper}>
+      <LinearGradient
+        colors={['#1C8CFF', '#1075E3', '#0059B2']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={tabStyles.circleGradient}
+      >
+        <Text style={tabStyles.circleText}>PRACTICE</Text>
+      </LinearGradient>
+    </View>
+  );
+}
 
 export default function TabLayout() {
   const { sessionState, startSetup } = useSession();
@@ -11,28 +42,30 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.tabInactive,
-        // Hiding the header globally so your custom UI can take over
-        headerShown: false, 
+        tabBarActiveTintColor: '#1A1A1A',
+        tabBarInactiveTintColor: '#9E9E9E',
+        headerShown: false,
         tabBarStyle: {
-          backgroundColor: Colors.background,
-          borderTopColor: Colors.border,
-          paddingTop: 8,
-          height: 85,
+          backgroundColor: '#FFFFFF',
+          borderTopColor: 'transparent',
+
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -3 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
+          elevation: 10,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
-          marginTop: 4,
+          fontSize: 0,
+          height: 0,
         },
       }}
     >
       <Tabs.Screen
         name="play"
         options={{
-          title: 'PLAY',
-          tabBarIcon: ({ color, size }) => <Play color={color} size={size} />,
+          title: '',
+          tabBarIcon: () => <PlayTabIcon />,
           href: isMinimized ? null : undefined,
         }}
         listeners={{
@@ -45,15 +78,17 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
+          title: '',
+          tabBarIcon: ({ focused }) => (
+            <User size={26} color={focused ? '#1A1A1A' : '#9E9E9E'} strokeWidth={focused ? 2.5 : 1.8} />
+          ),
         }}
       />
       <Tabs.Screen
         name="practice"
         options={{
-          title: 'PRACTICE',
-          tabBarIcon: ({ color, size }) => <Target color={color} size={size} />,
+          title: '',
+          tabBarIcon: () => <PracticeTabIcon />,
           href: isMinimized ? null : undefined,
         }}
         listeners={{
@@ -72,3 +107,25 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const tabStyles = StyleSheet.create({
+  circleWrapper: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    overflow: 'hidden' as const,
+    marginTop: -4,
+  },
+  circleGradient: {
+    flex: 1,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    borderRadius: 28,
+  },
+  circleText: {
+    fontSize: 9,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+});
