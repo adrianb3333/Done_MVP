@@ -53,9 +53,9 @@ interface TabConfig {
 }
 
 const tabs: TabConfig[] = [
-  { key: 'tour', label: 'Tour', icon: <Trophy size={18} /> },
-  { key: 'affiliate', label: 'Affiliate', icon: <Share2 size={18} /> },
-  { key: 'entertainment', label: 'Entertainment', icon: <Tv size={18} /> },
+  { key: 'tour', label: 'Tour', icon: <Trophy size={14} /> },
+  { key: 'affiliate', label: 'Affiliate', icon: <Share2 size={14} /> },
+  { key: 'entertainment', label: 'Entertainment', icon: <Tv size={14} /> },
 ];
 
 interface TourEvent {
@@ -373,21 +373,23 @@ const edStyles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: 'row' as const,
-    paddingTop: 2,
+    paddingTop: 0,
     paddingBottom: 0,
   },
   tab: {
     flex: 1,
     alignItems: 'center' as const,
-    paddingVertical: 2,
+    paddingVertical: 0,
+    paddingTop: 2,
+    paddingBottom: 2,
   },
   iconActive: {},
   iconInactive: {
     opacity: 0.6,
   },
   tabLabel: {
-    fontSize: 10,
-    marginTop: 2,
+    fontSize: 9,
+    marginTop: 1,
     color: '#8A8A8A',
     fontWeight: '600' as const,
   },
@@ -1966,21 +1968,23 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: 'row' as const,
-    paddingTop: 2,
+    paddingTop: 0,
     paddingBottom: 0,
   },
   tab: {
     flex: 1,
     alignItems: 'center' as const,
-    paddingVertical: 2,
+    paddingVertical: 0,
+    paddingTop: 2,
+    paddingBottom: 2,
   },
   iconActive: {},
   iconInactive: {
     opacity: 0.6,
   },
   tabLabel: {
-    fontSize: 10,
-    marginTop: 2,
+    fontSize: 9,
+    marginTop: 1,
     color: '#8A8A8A',
     fontWeight: '600' as const,
   },
