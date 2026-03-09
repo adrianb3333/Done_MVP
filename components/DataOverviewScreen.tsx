@@ -16,7 +16,7 @@ import {
   Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Menu, BarChart2, TrendingUp, Crosshair, List, Video, Plus, Columns2, Trash2, Flag, Target, Dumbbell, ChevronRight, MapPin, Search, Star, X } from 'lucide-react-native';
 import { useScrollHeader, ScrollHeaderProvider, useScrollHeaderContext } from '@/hooks/useScrollHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -1888,8 +1888,8 @@ function VideoContent() {
   );
 }
 
-const HEADER_BAR_HEIGHT = 52;
-const SEGMENT_HEIGHT = 48;
+const HEADER_BAR_HEIGHT = 44;
+const SEGMENT_HEIGHT = 40;
 
 const DETAIL_SEGMENTS: { key: DetailsSegment; label: string }[] = [
   { key: 'courses', label: 'Courses' },
@@ -2048,8 +2048,7 @@ export default function DataOverviewScreen() {
       end={{ x: 0, y: 1 }}
       style={styles.container}
     >
-      <Animated.View style={[styles.headerAbsolute, { transform: [{ translateY: headerTranslateY }] }]}>
-        <SafeAreaView edges={['top']} style={styles.safeTop}>
+      <Animated.View style={[styles.headerAbsolute, { transform: [{ translateY: headerTranslateY }], paddingTop: insets.top }]}>
           <View style={styles.header}>
             <TouchableOpacity onPress={openSidebar} style={styles.menuBtn} activeOpacity={0.7}>
               <Menu size={24} color="#FFFFFF" />
@@ -2060,7 +2059,6 @@ export default function DataOverviewScreen() {
             </TouchableOpacity>
           </View>
           {renderSegmentControl()}
-        </SafeAreaView>
       </Animated.View>
 
       <View style={[styles.body, { paddingTop: insets.top + totalHeaderHeight }]}>
@@ -2069,7 +2067,7 @@ export default function DataOverviewScreen() {
         </ScrollHeaderProvider>
       </View>
 
-      <SafeAreaView edges={['bottom']} style={styles.tabBarSafe}>
+      <View style={[styles.tabBarSafe, { paddingBottom: insets.bottom }]}>
         <View style={styles.tabBar}>
           {tabs.map((tab) => {
             const isActive = activeTab === tab.key;
@@ -2092,7 +2090,7 @@ export default function DataOverviewScreen() {
             );
           })}
         </View>
-      </SafeAreaView>
+      </View>
     </LinearGradient>
   );
 }
@@ -2109,15 +2107,13 @@ const styles = StyleSheet.create({
     zIndex: 100,
     backgroundColor: 'transparent',
   },
-  safeTop: {
-    backgroundColor: 'transparent',
-  },
   header: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'space-between' as const,
     paddingHorizontal: 16,
-    paddingVertical: 6,
+    paddingVertical: 2,
+    height: HEADER_BAR_HEIGHT,
   },
   menuBtn: {
     width: 40,
@@ -2142,20 +2138,20 @@ const styles = StyleSheet.create({
   },
   headerSegmentWrap: {
     paddingHorizontal: 16,
-    paddingTop: 2,
-    paddingBottom: 6,
+    paddingTop: 0,
+    paddingBottom: 4,
   },
   headerSegmentControl: {
     flexDirection: 'row' as const,
     backgroundColor: 'rgba(0,0,0,0.2)',
     borderRadius: 10,
-    padding: 3,
+    padding: 2,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.18)',
   },
   headerSegmentButton: {
     flex: 1,
-    paddingVertical: 8,
+    paddingVertical: 6,
     alignItems: 'center' as const,
     borderRadius: 8,
   },
@@ -2361,13 +2357,13 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: 'row' as const,
-    paddingTop: 4,
-    paddingBottom: 2,
+    paddingTop: 3,
+    paddingBottom: 1,
   },
   tab: {
     flex: 1,
     alignItems: 'center' as const,
-    paddingVertical: 4,
+    paddingVertical: 2,
   },
   iconActive: {},
   iconInactive: {
@@ -2375,7 +2371,7 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 10,
-    marginTop: 4,
+    marginTop: 2,
     color: 'rgba(255,255,255,0.5)',
     fontWeight: '600' as const,
   },
