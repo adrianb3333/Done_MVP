@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { StyleSheet, Text, ScrollView, View, Pressable, Modal } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+
 import { LinearGradient } from "expo-linear-gradient";
 import LiquidGlassCard from "@/components/reusables/LiquidGlassCard";
 
@@ -60,8 +60,7 @@ export default function MindTab() {
       end={{ x: 0, y: 1 }}
       style={styles.background}
     >
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
           <View style={styles.clubDataSection}>
             <View style={styles.clubDataHeaderRow}>
               <Text style={styles.clubDataHeader}>Club DATA</Text>
@@ -113,7 +112,6 @@ export default function MindTab() {
             </LiquidGlassCard>
           </Pressable>
         </ScrollView>
-      </SafeAreaView>
 
       <Modal
         visible={activeModal !== null}
@@ -130,7 +128,7 @@ export default function MindTab() {
 const styles = StyleSheet.create({
   background: { flex: 1 },
   container: { flex: 1 },
-  scrollContent: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 100 },
+  scrollContent: { paddingHorizontal: 16, paddingTop: 20, paddingBottom: 20 },
   sectionTitle: { fontSize: 28, fontWeight: "700" as const, color: '#FFFFFF', marginBottom: 16, textAlign: 'center' },
   clubDataSection: {
     marginBottom: 20,
@@ -157,12 +155,17 @@ const styles = StyleSheet.create({
   },
   clubDataButton: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.25)',
-    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    borderRadius: 14,
     paddingVertical: 14,
     paddingHorizontal: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(255,255,255,0.18)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
   },
   clubDataButtonTitle: {
     fontSize: 13,

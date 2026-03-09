@@ -507,13 +507,14 @@ function SavesSection({ sandSaves, sandAttempts, upDowns, upDownAttempts }: Save
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 0,
   },
   miniStatsRow: {
     flexDirection: 'row' as const,
     justifyContent: 'space-between' as const,
     gap: 6,
     marginBottom: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
   },
   miniStat: {
     flex: 1,
@@ -549,10 +550,10 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
   },
   scrollInner: {
-    paddingBottom: 20,
+    paddingBottom: 16,
   },
   heroRow: {
     flexDirection: 'row' as const,
@@ -846,7 +847,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center' as const,
     marginTop: 12,
-    marginHorizontal: 16,
+    marginHorizontal: 12,
     marginBottom: 8,
   },
   quitText: {
@@ -916,7 +917,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end' as const,
     alignItems: 'center' as const,
     marginBottom: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
   },
   sgButton: {
     borderWidth: 1,

@@ -87,18 +87,20 @@ function PlaySessionContent() {
           return (
             <TouchableOpacity
               key={tab.key}
-              style={[styles.tab, isActive && styles.tabActive]}
+              style={styles.tab}
               onPress={() => setActiveTab(tab.key)}
               activeOpacity={0.7}
             >
-              <View style={isActive ? styles.iconActive : styles.iconInactive}>
-                {React.cloneElement(tab.icon as React.ReactElement<{ color: string }>, {
-                  color: isActive ? GREEN_ACTIVE : GREEN_INACTIVE,
-                })}
+              <View style={isActive ? styles.tabActiveHighlight : undefined}>
+                <View style={[{ alignItems: 'center' as const }, isActive ? styles.iconActive : styles.iconInactive]}>
+                  {React.cloneElement(tab.icon as React.ReactElement<{ color: string }>, {
+                    color: isActive ? GREEN_ACTIVE : GREEN_INACTIVE,
+                  })}
+                  <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+                    {tab.label}
+                  </Text>
+                </View>
               </View>
-              <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
-                {tab.label}
-              </Text>
             </TouchableOpacity>
           );
         })}
@@ -145,25 +147,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E8E8E8',
-    paddingTop: 8,
+    paddingTop: 4,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 4,
   },
-  tabActive: {
-    borderTopWidth: 2,
-    borderTopColor: GREEN_ACTIVE,
-    marginTop: -1,
+  tabActive: {},
+  tabActiveHighlight: {
+    backgroundColor: 'rgba(61,149,77,0.08)',
+    borderRadius: 10,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
   },
   iconActive: {},
   iconInactive: {
     opacity: 0.5,
   },
   tabLabel: {
-    fontSize: 11,
-    marginTop: 4,
+    fontSize: 10,
+    marginTop: 2,
     color: GREEN_INACTIVE,
     fontWeight: '500' as const,
   },
