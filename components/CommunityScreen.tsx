@@ -39,6 +39,7 @@ import {
 } from 'lucide-react-native';
 import { Linking, Platform, Animated } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { useAppNavigation } from '@/contexts/AppNavigationContext';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -399,29 +400,346 @@ const edStyles = StyleSheet.create({
 function EventCard({
   event,
   onPress,
+  variant,
 }: {
   event: TourEvent;
   onPress: () => void;
+  variant: 'upcoming' | 'past';
 }) {
   return (
-    <TouchableOpacity style={tourStyles.eventCard} onPress={onPress} activeOpacity={0.7}>
-      <View style={tourStyles.eventCardLeft}>
-        <Text style={tourStyles.eventName}>{event.eventName}</Text>
-        <View style={tourStyles.eventMeta}>
-          <MapPin size={12} color="#888888" />
-          <Text style={tourStyles.eventCourse}>{event.courseName}</Text>
+    <TouchableOpacity onPress={onPress} activeOpacity={0.7} style={tourStyles.eventCardOuter}>
+      <LinearGradient
+        colors={['#0059B2', '#1075E3', '#1C8CFF']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={tourStyles.eventCard}
+      >
+        <View style={tourStyles.eventCardLeft}>
+          {variant === 'upcoming' ? (
+            <LinearGradient
+              colors={['#FF1C1C', '#E31010', '#B20000']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={tourStyles.eventNameGradientWrap}
+            >
+              <Text style={tourStyles.eventNameGradient}>{event.eventName}</Text>
+            </LinearGradient>
+          ) : (
+            <Text style={tourStyles.eventNamePast}>{event.eventName}</Text>
+          )}
+          <View style={tourStyles.eventMeta}>
+            <MapPin size={12} color="#FFFFFF" />
+            <Text style={tourStyles.eventCourse}>{event.courseName}</Text>
+          </View>
+          <View style={tourStyles.eventMeta}>
+            <Calendar size={12} color="#FFFFFF" />
+            <Text style={tourStyles.eventDate}>{event.date}</Text>
+          </View>
         </View>
-        <View style={tourStyles.eventMeta}>
-          <Calendar size={12} color="#888888" />
-          <Text style={tourStyles.eventDate}>{event.date}</Text>
-        </View>
-      </View>
-      <ChevronRight size={18} color="#999999" />
+        <ChevronRight size={18} color="#FFFFFF" />
+      </LinearGradient>
     </TouchableOpacity>
   );
 }
 
-function TourContent({ onOpenEvent }: { onOpenEvent: (event: TourEvent) => void }) {
+type LeaderboardPrizesTab = 'leaderboard' | 'prizes';
+
+function LeaderboardPrizesScreen({
+  onClose,
+  initialTab,
+}: {
+  onClose: () => void;
+  initialTab: LeaderboardPrizesTab;
+}) {
+  const [activeTab, setActiveTab] = useState<LeaderboardPrizesTab>(initialTab);
+  const insets = useSafeAreaInsets();
+
+  return (
+    <LinearGradient
+      colors={['#FF1C1C', '#E31010', '#B20000', '#800000']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={lbStyles.container}
+    >
+      <View style={[lbStyles.header, { paddingTop: insets.top + 8 }]}> 
+        <GlassBackButton onPress={onClose} />
+        <View style={lbStyles.segmentRow}>
+          <TouchableOpacity
+            style={lbStyles.segmentTab}
+            onPress={() => {
+              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setActiveTab('leaderboard');
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={[
+              lbStyles.segmentText,
+              activeTab === 'leaderboard' && lbStyles.segmentTextActive,
+            ]}>Leaderboard</Text>
+            {activeTab === 'leaderboard' && <View style={lbStyles.segmentUnderline} />}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={lbStyles.segmentTab}
+            onPress={() => {
+              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setActiveTab('prizes');
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={[
+              lbStyles.segmentText,
+              activeTab === 'prizes' && lbStyles.segmentTextActive,
+            ]}>Prizes & Benefits</Text>
+            {activeTab === 'prizes' && <View style={lbStyles.segmentUnderline} />}
+          </TouchableOpacity>
+        </View>
+        <View style={{ width: 44 }} />
+      </View>
+
+      <ScrollView style={lbStyles.body} showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        {activeTab === 'leaderboard' ? (
+          <>
+            <Text style={lbStyles.sectionHeader}>Rankings</Text>
+            {['Erik Svensson', 'Anna Lindberg', 'Oscar Nilsson', 'Maja Johansson', 'Karl Eriksson', 'Sofia Holm', 'Lars Pettersson'].map(
+              (name, i) => (
+                <View key={i} style={lbStyles.playerRow}>
+                  <Text style={lbStyles.playerRank}>#{i + 1}</Text>
+                  <View style={lbStyles.playerAvatar}>
+                    <User size={16} color="#FFFFFF" />
+                  </View>
+                  <View style={lbStyles.playerInfo}>
+                    <Text style={lbStyles.playerName}>{name}</Text>
+                    <Text style={lbStyles.playerHcp}>HCP {(Math.random() * 20 + 2).toFixed(1)}</Text>
+                  </View>
+                  <Text style={lbStyles.playerPoints}>{Math.floor(Math.random() * 500 + 100)} pts</Text>
+                </View>
+              )
+            )}
+          </>
+        ) : (
+          <>
+            <Text style={lbStyles.sectionHeader}>Prizes</Text>
+            {[
+              { title: 'Season Champion', desc: 'Custom trophy + 10,000 SEK' },
+              { title: 'Runner Up', desc: '5,000 SEK gift card' },
+              { title: 'Most Improved', desc: 'Full club fitting session' },
+            ].map((prize, i) => (
+              <View key={i} style={lbStyles.prizeCard}>
+                <Text style={lbStyles.prizeTitle}>{prize.title}</Text>
+                <Text style={lbStyles.prizeDesc}>{prize.desc}</Text>
+              </View>
+            ))}
+            <Text style={[lbStyles.sectionHeader, { marginTop: 24 }]}>Benefits</Text>
+            {[
+              { title: 'Priority Tee Times', desc: 'Book before non-members' },
+              { title: 'Pro Shop Discount', desc: '15% off all equipment' },
+              { title: 'Free Range Balls', desc: 'Unlimited practice sessions' },
+            ].map((benefit, i) => (
+              <View key={i} style={lbStyles.prizeCard}>
+                <Text style={lbStyles.prizeTitle}>{benefit.title}</Text>
+                <Text style={lbStyles.prizeDesc}>{benefit.desc}</Text>
+              </View>
+            ))}
+          </>
+        )}
+      </ScrollView>
+    </LinearGradient>
+  );
+}
+
+const lbStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 12,
+    paddingBottom: 12,
+    gap: 8,
+  },
+  segmentRow: {
+    flex: 1,
+    flexDirection: 'row' as const,
+    justifyContent: 'center' as const,
+    gap: 24,
+  },
+  segmentTab: {
+    alignItems: 'center' as const,
+    paddingBottom: 6,
+  },
+  segmentText: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.5)',
+  },
+  segmentTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700' as const,
+  },
+  segmentUnderline: {
+    height: 3,
+    backgroundColor: '#FF1C1C',
+    borderRadius: 1.5,
+    width: '100%',
+    marginTop: 4,
+  },
+  body: {
+    flex: 1,
+  },
+  sectionHeader: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+    marginBottom: 14,
+  },
+  playerRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    gap: 12,
+  },
+  playerRank: {
+    fontSize: 14,
+    fontWeight: '800' as const,
+    color: '#FFD700',
+    width: 30,
+    textAlign: 'center' as const,
+  },
+  playerAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  playerInfo: {
+    flex: 1,
+  },
+  playerName: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#FFFFFF',
+  },
+  playerHcp: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 2,
+  },
+  playerPoints: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: '#FFD700',
+  },
+  prizeCard: {
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  prizeTitle: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  prizeDesc: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.7)',
+  },
+});
+
+function GolfersTourScreen({ onClose }: { onClose: () => void }) {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <LinearGradient
+      colors={['#FF1C1C', '#E31010', '#B20000', '#800000']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={gtStyles.container}
+    >
+      <View style={[gtStyles.header, { paddingTop: insets.top + 8 }]}>
+        <GlassBackButton onPress={onClose} />
+        <Text style={gtStyles.headerTitle}>Golfer's Tour</Text>
+        <View style={{ width: 44 }} />
+      </View>
+      <ScrollView style={gtStyles.body} showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        <View style={gtStyles.infoCard}>
+          <Text style={gtStyles.infoTitle}>Welcome to the Tour</Text>
+          <Text style={gtStyles.infoText}>
+            Compete against golfers in your area. Play events, climb the leaderboard, and win exclusive prizes.
+          </Text>
+        </View>
+        <View style={gtStyles.infoCard}>
+          <Text style={gtStyles.infoTitle}>How it Works</Text>
+          <Text style={gtStyles.infoText}>
+            1. Register for upcoming events{"\n"}
+            2. Play your round and submit your score{"\n"}
+            3. Earn points based on your performance{"\n"}
+            4. Climb the season leaderboard
+          </Text>
+        </View>
+        <View style={gtStyles.infoCard}>
+          <Text style={gtStyles.infoTitle}>Season 2026</Text>
+          <Text style={gtStyles.infoText}>
+            The current season runs from January to December 2026. Top performers qualify for the Season Finals.
+          </Text>
+        </View>
+      </ScrollView>
+    </LinearGradient>
+  );
+}
+
+const gtStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    paddingHorizontal: 12,
+    paddingBottom: 12,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+  },
+  body: {
+    flex: 1,
+  },
+  infoCard: {
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 14,
+    padding: 18,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  infoTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  infoText: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
+    lineHeight: 22,
+  },
+});
+
+function TourContent({ onOpenEvent, onOpenTourScreen, onOpenLeaderboard }: { onOpenEvent: (event: TourEvent) => void; onOpenTourScreen: () => void; onOpenLeaderboard: (tab: LeaderboardPrizesTab) => void }) {
   const scrollHandler = useScrollHeaderContext();
   const scrollPadding = useScrollHeaderPadding();
   const { profile } = useProfile();
@@ -455,71 +773,81 @@ function TourContent({ onOpenEvent }: { onOpenEvent: (event: TourEvent) => void 
         </View>
         <View style={tourStyles.profileRight}>
           <View style={tourStyles.profileDataRow}>
-            <View style={tourStyles.profileDataItem}>
+            <LinearGradient colors={['#4BA35B', '#3D954D', '#2D803D']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={tourStyles.profileDataItem}>
               <Text style={tourStyles.profileDataValue}>3</Text>
               <Text style={tourStyles.profileDataLabel}>Events Played</Text>
-            </View>
-            <View style={tourStyles.profileDataItem}>
+            </LinearGradient>
+            <LinearGradient colors={['#4BA35B', '#3D954D', '#2D803D']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={tourStyles.profileDataItem}>
               <Text style={tourStyles.profileDataValue}>T5</Text>
               <Text style={tourStyles.profileDataLabel}>Placements</Text>
-            </View>
-            <View style={tourStyles.profileDataItem}>
+            </LinearGradient>
+            <LinearGradient colors={['#4BA35B', '#3D954D', '#2D803D']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={tourStyles.profileDataItem}>
               <Text style={tourStyles.profileDataValue}>1.2k</Text>
               <Text style={tourStyles.profileDataLabel}>Earnings</Text>
-            </View>
+            </LinearGradient>
           </View>
           <View style={tourStyles.profileDataRow}>
-            <View style={tourStyles.profileDataItem}>
+            <LinearGradient colors={['#4BA35B', '#3D954D', '#2D803D']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={tourStyles.profileDataItem}>
               <Text style={tourStyles.profileDataValue}>#42</Text>
               <Text style={tourStyles.profileDataLabel}>Rank</Text>
-            </View>
-            <View style={tourStyles.profileDataItem}>
+            </LinearGradient>
+            <LinearGradient colors={['#4BA35B', '#3D954D', '#2D803D']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={tourStyles.profileDataItem}>
               <Text style={tourStyles.profileDataValue} numberOfLines={1}>Bro Hof</Text>
               <Text style={tourStyles.profileDataLabel}>Home Course</Text>
-            </View>
-            <View style={tourStyles.profileDataItem}>
+            </LinearGradient>
+            <LinearGradient colors={['#4BA35B', '#3D954D', '#2D803D']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={tourStyles.profileDataItem}>
               <Text style={tourStyles.profileDataValue}>27</Text>
               <Text style={tourStyles.profileDataLabel}>Age</Text>
-            </View>
+            </LinearGradient>
           </View>
         </View>
       </View>
 
       <TouchableOpacity
-        style={tourStyles.joinButton}
         activeOpacity={0.8}
         onPress={() => {
           console.log('[Tour] JOIN Tour pressed');
           void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          onOpenTourScreen();
         }}
+        style={tourStyles.joinButtonOuter}
       >
-        <Text style={tourStyles.joinButtonText}>JOIN Tour</Text>
+        <LinearGradient
+          colors={['#FF1C1C', '#E31010', '#B20000', '#800000']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={tourStyles.joinButton}
+        >
+          <Text style={tourStyles.joinButtonText}>JOIN Tour</Text>
+        </LinearGradient>
       </TouchableOpacity>
 
       <View style={tourStyles.divider} />
 
       <Text style={tourStyles.sectionTitle}>Tour Stats</Text>
       <View style={tourStyles.statsBoxRow}>
-        <TouchableOpacity style={tourStyles.statsBox} activeOpacity={0.7}>
-          <Award size={24} color="#FFB74D" />
+        <TouchableOpacity style={tourStyles.statsBox} activeOpacity={0.7} onPress={() => {
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          onOpenLeaderboard('leaderboard');
+        }}>
           <Text style={tourStyles.statsBoxTitle}>Leaderboard</Text>
-          <Text style={tourStyles.statsBoxSub}>Rankings & standings</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={tourStyles.statsBox} activeOpacity={0.7}>
-          <Gift size={24} color="#1A1A1A" />
+        <TouchableOpacity style={tourStyles.statsBox} activeOpacity={0.7} onPress={() => {
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          onOpenLeaderboard('prizes');
+        }}>
           <Text style={tourStyles.statsBoxTitle}>Prizes & Benefits</Text>
-          <Text style={tourStyles.statsBoxSub}>Rewards & perks</Text>
         </TouchableOpacity>
       </View>
 
       <Text style={[tourStyles.sectionTitle, { marginTop: 24 }]}>Upcoming Events</Text>
       {UPCOMING_EVENTS.map((event) => (
-        <EventCard key={event.id} event={event} onPress={() => handleEventPress(event)} />
+        <EventCard key={event.id} event={event} onPress={() => handleEventPress(event)} variant="upcoming" />
       ))}
 
       <Text style={[tourStyles.sectionTitle, { marginTop: 24 }]}>Past Events</Text>
       {PAST_EVENTS.map((event) => (
-        <EventCard key={event.id} event={event} onPress={() => handleEventPress(event)} />
+        <EventCard key={event.id} event={event} onPress={() => handleEventPress(event)} variant="past" />
       ))}
     </ScrollView>
   );
@@ -536,6 +864,11 @@ const tourStyles = StyleSheet.create({
     flexDirection: 'row' as const,
     gap: 14,
     marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 12,
   },
   profileLeft: {
     alignItems: 'center' as const,
@@ -573,31 +906,36 @@ const tourStyles = StyleSheet.create({
   },
   profileDataItem: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
     borderRadius: 10,
     paddingVertical: 8,
     paddingHorizontal: 6,
     alignItems: 'center' as const,
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
   },
   profileDataValue: {
     fontSize: 14,
     fontWeight: '800' as const,
-    color: '#1A1A1A',
+    color: '#FFFFFF',
   },
   profileDataLabel: {
     fontSize: 9,
-    color: '#888888',
+    color: 'rgba(255,255,255,0.8)',
     marginTop: 2,
     textAlign: 'center' as const,
   },
+  joinButtonOuter: {
+    marginBottom: 16,
+    borderRadius: 10,
+    overflow: 'hidden' as const,
+    shadowColor: '#FF1C1C',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 12,
+  },
   joinButton: {
-    backgroundColor: '#1A1A1A',
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center' as const,
-    marginBottom: 16,
   },
   joinButtonText: {
     fontSize: 14,
@@ -622,40 +960,54 @@ const tourStyles = StyleSheet.create({
   },
   statsBox: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#EBF4FF',
     borderRadius: 14,
     padding: 18,
     alignItems: 'center' as const,
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
-    gap: 8,
+    justifyContent: 'center' as const,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 12,
   },
   statsBoxTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700' as const,
     color: '#1A1A1A',
     textAlign: 'center' as const,
   },
-  statsBoxSub: {
-    fontSize: 10,
-    color: '#888888',
-    textAlign: 'center' as const,
+  eventCardOuter: {
+    marginBottom: 8,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 12,
   },
   eventCard: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: '#F5F5F5',
     borderRadius: 12,
     padding: 14,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
   },
   eventCardLeft: {
     flex: 1,
     gap: 4,
   },
-  eventName: {
+  eventNameGradientWrap: {
+    alignSelf: 'flex-start' as const,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  eventNameGradient: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+  },
+  eventNamePast: {
     fontSize: 14,
     fontWeight: '700' as const,
     color: '#1A1A1A',
@@ -667,11 +1019,11 @@ const tourStyles = StyleSheet.create({
   },
   eventCourse: {
     fontSize: 12,
-    color: '#666666',
+    color: '#FFFFFF',
   },
   eventDate: {
     fontSize: 12,
-    color: '#888888',
+    color: '#FFFFFF',
   },
 });
 
@@ -1394,6 +1746,8 @@ const HEADER_BAR_HEIGHT = 52;
 export default function CommunityScreen() {
   const [activeTab, setActiveTab] = useState<CommunityTab>('tour');
   const [selectedEvent, setSelectedEvent] = useState<TourEvent | null>(null);
+  const [showTourScreen, setShowTourScreen] = useState<boolean>(false);
+  const [showLeaderboard, setShowLeaderboard] = useState<LeaderboardPrizesTab | null>(null);
   const { openSidebar, navigateTo, communityInitialTab, clearCommunityInitialTab } = useAppNavigation();
   const insets = useSafeAreaInsets();
 
@@ -1404,6 +1758,14 @@ export default function CommunityScreen() {
       clearCommunityInitialTab();
     }
   }, [communityInitialTab, clearCommunityInitialTab]);
+
+  if (showTourScreen) {
+    return <GolfersTourScreen onClose={() => setShowTourScreen(false)} />;
+  }
+
+  if (showLeaderboard) {
+    return <LeaderboardPrizesScreen onClose={() => setShowLeaderboard(null)} initialTab={showLeaderboard} />;
+  }
 
   if (selectedEvent) {
     return (
@@ -1421,7 +1783,7 @@ export default function CommunityScreen() {
   const renderContent = () => {
     switch (activeTab) {
       case 'tour':
-        return <TourContent onOpenEvent={setSelectedEvent} />;
+        return <TourContent onOpenEvent={setSelectedEvent} onOpenTourScreen={() => setShowTourScreen(true)} onOpenLeaderboard={(tab) => setShowLeaderboard(tab)} />;
       case 'affiliate':
         return <AffiliateContent />;
       case 'entertainment':
