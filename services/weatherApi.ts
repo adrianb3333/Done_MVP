@@ -21,7 +21,19 @@ export const fetchGolfWeather = async (
 ): Promise<GolfWeatherData | null> => {
   try {
     const query = `${lat},${lon}`;
-    const response = await fetch(`${BASE_URL}?key=${API_KEY}&q=${query}&aqi=no`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const response = await fetch(`${BASE_URL}?key=${API_KEY}&q=${query}&aqi=no`, {
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      console.log('weatherAPI HTTP error:', response.status, response.statusText);
+      throw new Error(`HTTP ${response.status}`);
+    }
+
     const data = await response.json();
 
     if (data.error) throw new Error(data.error.message);
@@ -56,8 +68,12 @@ export const fetchGolfWeather = async (
       cross: Math.abs(cross),
       lastUpdated: data.current.last_updated.split(' ')[1], // Returns "11:05"
     };
-  } catch (error) {
-    console.error("weatherAPI error:", error);
+  } catch (error: any) {
+    if (error?.name === 'AbortError') {
+      console.log('weatherAPI error: Request timed out');
+    } else {
+      console.log('weatherAPI error:', error?.message || error);
+    }
     return null;
   }
 };
