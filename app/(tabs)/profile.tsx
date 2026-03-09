@@ -700,19 +700,19 @@ export default function ProfileScreen() {
                 void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 router.push('/modals/recap-modal' as any);
               }}
-              style={styles.headerIconBtn}
+              style={styles.headerIconBtnLarge}
               activeOpacity={0.7}
               testID="weekly-summary-button"
             >
-              <Image source={require('@/assets/images/coach-icon.png')} style={styles.coachHeaderIcon} resizeMode="contain" />
+              <Text style={styles.coachEmojiIcon}>🎯</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={toggleHelpMenu}
-              style={styles.headerIconBtn}
+              style={styles.headerIconBtnLarge}
               activeOpacity={0.7}
               testID="help-menu-button"
             >
-              <HelpCircle size={22} color="#888" />
+              <HelpCircle size={26} color="#888" />
             </TouchableOpacity>
           </View>
         </View>
@@ -1373,6 +1373,14 @@ const styles = StyleSheet.create({
   },
   headerIconBtn: {
     padding: 6,
+  },
+  headerIconBtnLarge: {
+    padding: 10,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  coachEmojiIcon: {
+    fontSize: 24,
   },
   scrollView: {
     flex: 1,
