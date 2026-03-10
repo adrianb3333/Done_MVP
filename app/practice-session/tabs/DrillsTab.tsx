@@ -30,6 +30,9 @@ import CreateDrillScreen, { CustomDrill } from "@/components/drills/CreateDrillS
 import CreateSessionScreen, { CustomSession } from "@/components/drills/CreateSessionScreen";
 import CreateScheduleScreen, { ScheduledItem } from "@/components/drills/CreateScheduleScreen";
 import CalendarScreen from "@/components/drills/CalendarScreen";
+import CreateSensorDrillScreen, { SensorDrill } from "@/components/drills/CreateSensorDrillScreen";
+import BattleScreen from "@/components/drills/BattleScreen";
+import { Star } from "lucide-react-native";
 
 interface DrillsTabProps {
   onDrillActiveChange?: (active: boolean) => void;
@@ -57,12 +60,13 @@ function getTodayDayName(): string {
   return DAY_NAMES_SHORT[dayIndex];
 }
 
-type ScreenState = 'main' | 'createDrill' | 'createSession' | 'createSchedule' | 'calendar';
+type ScreenState = 'main' | 'createDrill' | 'createSession' | 'createSchedule' | 'calendar' | 'createSensorDrill' | 'battle';
 
 export default function DrillsTab({ onDrillActiveChange }: DrillsTabProps) {
   const [selectedDrill, setSelectedDrill] = useState<{ category: string; card: string } | null>(null);
   const [currentScreen, setCurrentScreen] = useState<ScreenState>('main');
   const [savedDrills, setSavedDrills] = useState<CustomDrill[]>([]);
+  const [savedSensorDrills, setSavedSensorDrills] = useState<SensorDrill[]>([]);
   const [savedSessions, setSavedSessions] = useState<CustomSession[]>([]);
   const [scheduledItems, setScheduledItems] = useState<ScheduledItem[]>([]);
   const insets = useSafeAreaInsets();
@@ -81,6 +85,12 @@ export default function DrillsTab({ onDrillActiveChange }: DrillsTabProps) {
   const handleSaveDrill = (drill: CustomDrill) => {
     console.log('Saving drill:', drill);
     setSavedDrills(prev => [...prev, drill]);
+    setCurrentScreen('main');
+  };
+
+  const handleSaveSensorDrill = (drill: SensorDrill) => {
+    console.log('Saving sensor drill:', drill);
+    setSavedSensorDrills(prev => [...prev, drill]);
     setCurrentScreen('main');
   };
 
@@ -173,6 +183,23 @@ export default function DrillsTab({ onDrillActiveChange }: DrillsTabProps) {
         onBack={() => setCurrentScreen('main')}
         scheduledItems={scheduledItems}
         completedItems={[]}
+      />
+    );
+  }
+
+  if (currentScreen === 'createSensorDrill') {
+    return (
+      <CreateSensorDrillScreen
+        onBack={() => setCurrentScreen('main')}
+        onSave={handleSaveSensorDrill}
+      />
+    );
+  }
+
+  if (currentScreen === 'battle') {
+    return (
+      <BattleScreen
+        onBack={() => setCurrentScreen('main')}
       />
     );
   }
@@ -272,7 +299,11 @@ export default function DrillsTab({ onDrillActiveChange }: DrillsTabProps) {
           </View>
 
           <View style={styles.sensorRow}>
-            <TouchableOpacity style={styles.sensorCard} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={styles.sensorCard}
+              activeOpacity={0.7}
+              onPress={() => setCurrentScreen('createSensorDrill')}
+            >
               <Text style={styles.sensorLabel}>SENSORS NEEDED</Text>
               <View style={styles.sensorIconCircle}>
                 <Plus size={22} color="#FFFFFF" strokeWidth={2.5} />
@@ -280,7 +311,11 @@ export default function DrillsTab({ onDrillActiveChange }: DrillsTabProps) {
               <Text style={styles.sensorCardTitle}>New Sensor Drill</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.sensorCard} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={styles.sensorCard}
+              activeOpacity={0.7}
+              onPress={() => setCurrentScreen('battle')}
+            >
               <Text style={styles.sensorLabel}>SENSORS NEEDED</Text>
               <View style={[styles.sensorIconCircle, { backgroundColor: 'rgba(230,57,70,0.2)' }]}>
                 <Swords size={20} color="#E63946" />
@@ -288,6 +323,42 @@ export default function DrillsTab({ onDrillActiveChange }: DrillsTabProps) {
               <Text style={styles.sensorCardTitle}>Battle</Text>
             </TouchableOpacity>
           </View>
+
+          {savedSensorDrills.length > 0 && (
+            <View style={styles.categorySection}>
+              <View style={styles.categoryHeaderRow}>
+                <Star size={14} color="#FFD700" fill="#FFD700" />
+                <Text style={styles.categoryTitle}>Sensor Drills</Text>
+              </View>
+              {savedSensorDrills.map((drill) => (
+                <TouchableOpacity
+                  key={drill.id}
+                  style={styles.drillCard}
+                  activeOpacity={0.7}
+                >
+                  <LinearGradient
+                    colors={['rgba(255,215,0,0.18)', 'rgba(255,215,0,0.06)']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.drillCardGradient}
+                  >
+                    <View style={styles.drillCardInner}>
+                      <View style={styles.drillCardContent}>
+                        <View style={styles.sensorDrillNameRow}>
+                          <Star size={14} color="#FFD700" fill="#FFD700" />
+                          <Text style={styles.drillCardName}>{drill.name}</Text>
+                        </View>
+                        <Text style={styles.drillCardMeta}>
+                          {drill.category} · {drill.rounds} rounds · {drill.targetsPerRound} targets · {drill.totalShots} shots
+                        </Text>
+                      </View>
+                      <ChevronRight size={20} color="rgba(255,255,255,0.5)" />
+                    </View>
+                  </LinearGradient>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
 
           {savedSessions.length > 0 && (
             <View style={styles.categorySection}>
@@ -590,6 +661,11 @@ const styles = StyleSheet.create({
     textAlign: "center" as const,
     maxWidth: 240,
     lineHeight: 20,
+  },
+  sensorDrillNameRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 6,
   },
   drillWrapper: {
     position: "absolute" as const,
