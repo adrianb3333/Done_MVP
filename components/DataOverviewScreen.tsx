@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Menu, BarChart2, TrendingUp, Crosshair, List, Video, Plus, Columns2, Trash2, Flag, Target, Dumbbell, ChevronRight, MapPin, Search, Star, X } from 'lucide-react-native';
+import { Menu, BarChart2, TrendingUp, Crosshair, List, Video, Plus, Columns2, Trash2, Dumbbell, ChevronRight, MapPin, Search, Star, X } from 'lucide-react-native';
 import { useScrollHeader, ScrollHeaderProvider, useScrollHeaderContext, useScrollHeaderPadding } from '@/hooks/useScrollHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TabCourse, { CourseTab } from '@/components/PlaSta/TabCourse';
@@ -40,8 +40,8 @@ import { useSwingStore } from '@/store/swingStore';
 import { AnalysisSession } from '@/Types';
 import { useQuery } from '@tanstack/react-query';
 import { fetchAllTimeStats } from '@/services/roundStatsService';
-import { fetchPracticeStats, DrillCategoryStats } from '@/services/practiceStatsService';
-import { fetchRoundShotCount, fetchPracticeShotCount } from '@/services/shotCountService';
+
+import { fetchRoundShotCount } from '@/services/shotCountService';
 import RoundStatsDisplay from '@/components/PlaSta/RoundStatsDisplay';
 
 type DataTab = 'stats' | 'sg' | 'shots' | 'details' | 'video';
@@ -62,78 +62,7 @@ const tabs: TabConfig[] = [
 
 type StatsSegment = 'round' | 'practice';
 
-const CATEGORY_COLORS: Record<string, string> = {
-  Putting: '#FFFFFF',
-  Wedges: '#FF9800',
-  Irons: '#42A5F5',
-  Woods: '#AB47BC',
-};
 
-const CATEGORY_ICONS: Record<string, React.ReactNode> = {
-  Putting: <Target size={18} color="#FFFFFF" />,
-  Wedges: <Flag size={18} color="#FF9800" />,
-  Irons: <Crosshair size={18} color="#42A5F5" />,
-  Woods: <Dumbbell size={18} color="#AB47BC" />,
-};
-
-function PracticeCategoryCard({ category }: { category: DrillCategoryStats }) {
-  const color = CATEGORY_COLORS[category.category] || '#4FC3F7';
-  const icon = CATEGORY_ICONS[category.category];
-
-  return (
-    <View style={statsStyles.categoryCard}>
-      <View style={statsStyles.categoryHeader}>
-        <View style={statsStyles.categoryHeaderLeft}>
-          <View style={[statsStyles.categoryIconWrap, { backgroundColor: `${color}15` }]}>
-            {icon}
-          </View>
-          <Text style={statsStyles.categoryName}>{category.category}</Text>
-        </View>
-        <View style={statsStyles.categoryBadge}>
-          <Text style={[statsStyles.categoryBadgeText, { color }]}>
-            {category.totalAttempts} sessions
-          </Text>
-        </View>
-      </View>
-
-      {category.overallAvg > 0 && (
-        <View style={statsStyles.categoryAvgRow}>
-          <Text style={statsStyles.categoryAvgLabel}>Category Avg</Text>
-          <View style={statsStyles.categoryAvgBarWrap}>
-            <View style={[statsStyles.categoryAvgBar, { width: `${Math.min(category.overallAvg, 100)}%`, backgroundColor: color }]} />
-          </View>
-          <Text style={[statsStyles.categoryAvgValue, { color }]}>{category.overallAvg}%</Text>
-        </View>
-      )}
-
-      {category.drills.map((drill) => (
-        <View key={drill.name} style={statsStyles.drillRow}>
-          <View style={statsStyles.drillNameWrap}>
-            <Text style={statsStyles.drillName}>{drill.name}</Text>
-            <Text style={statsStyles.drillAttempts}>
-              {drill.totalAttempts > 0 ? `${drill.totalAttempts} attempts` : 'No data'}
-            </Text>
-          </View>
-          {drill.totalAttempts > 0 ? (
-            <View style={statsStyles.drillScores}>
-              <View style={statsStyles.drillScoreItem}>
-                <Text style={statsStyles.drillScoreLabel}>Avg</Text>
-                <Text style={statsStyles.drillScoreValue}>{drill.avgScore}%</Text>
-              </View>
-              <View style={statsStyles.drillScoreDivider} />
-              <View style={statsStyles.drillScoreItem}>
-                <Text style={statsStyles.drillScoreLabel}>Best</Text>
-                <Text style={[statsStyles.drillScoreValue, { color }]}>{drill.bestScore}%</Text>
-              </View>
-            </View>
-          ) : (
-            <Text style={statsStyles.drillNoData}>--</Text>
-          )}
-        </View>
-      ))}
-    </View>
-  );
-}
 
 function StatsContent({ segment }: { segment: StatsSegment }) {
   const scrollHandler = useScrollHeaderContext();
@@ -142,11 +71,6 @@ function StatsContent({ segment }: { segment: StatsSegment }) {
   const roundQuery = useQuery({
     queryKey: ['allTimeRoundStats'],
     queryFn: fetchAllTimeStats,
-  });
-
-  const practiceQuery = useQuery({
-    queryKey: ['practiceStats'],
-    queryFn: fetchPracticeStats,
   });
 
   return (
@@ -170,22 +94,11 @@ function StatsContent({ segment }: { segment: StatsSegment }) {
         </ScrollView>
       ) : (
         <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30, paddingTop: topPadding }} onScroll={scrollHandler} scrollEventThrottle={16}>
-          {practiceQuery.isLoading ? (
-            <View style={statsStyles.loadingWrap}>
-              <ActivityIndicator size="large" color="#FFFFFF" />
-              <Text style={statsStyles.loadingText}>Loading practice stats...</Text>
-            </View>
-          ) : practiceQuery.data && practiceQuery.data.length > 0 ? (
-            practiceQuery.data.map((cat) => (
-              <PracticeCategoryCard key={cat.category} category={cat} />
-            ))
-          ) : (
-            <View style={styles.placeholderCard}>
-              <Dumbbell size={32} color="#FFFFFF" />
-              <Text style={styles.placeholderTitle}>No Practice Data</Text>
-              <Text style={styles.placeholderSub}>Complete drills during practice to see your statistics here</Text>
-            </View>
-          )}
+          <View style={styles.placeholderCard}>
+            <Dumbbell size={32} color="#FFFFFF" />
+            <Text style={styles.placeholderTitle}>No Practice Data</Text>
+            <Text style={styles.placeholderSub}>No data for practice yet</Text>
+          </View>
         </ScrollView>
       )}
     </View>
@@ -1016,26 +929,25 @@ function ShotsContent({ segment }: { segment: ShotsSegment }) {
     queryFn: fetchRoundShotCount,
   });
 
-  const practiceShotsQuery = useQuery({
-    queryKey: ['totalPracticeShots'],
-    queryFn: fetchPracticeShotCount,
-  });
-
-  const isLoading = segment === 'round' ? roundShotsQuery.isLoading : practiceShotsQuery.isLoading;
-  const totalShots = segment === 'round' ? (roundShotsQuery.data ?? 0) : (practiceShotsQuery.data ?? 0);
-
   return (
     <View style={{ flex: 1 }}>
-      <View style={[shotsStyles.totalContainer, { paddingTop: topPadding + 20 }]}>
-        {isLoading ? (
-          <ActivityIndicator size="large" color="#FFFFFF" />
-        ) : (
-          <View style={shotsStyles.totalValueWrap}>
-            <Text style={shotsStyles.totalValue}>{totalShots}</Text>
-            <Text style={shotsStyles.totalLabel}>Total Shots</Text>
-          </View>
-        )}
-      </View>
+      {segment === 'round' ? (
+        <View style={[shotsStyles.totalContainer, { paddingTop: topPadding + 20 }]}>
+          {roundShotsQuery.isLoading ? (
+            <ActivityIndicator size="large" color="#FFFFFF" />
+          ) : (
+            <View style={shotsStyles.totalValueWrap}>
+              <Text style={shotsStyles.totalValue}>{roundShotsQuery.data ?? 0}</Text>
+              <Text style={shotsStyles.totalLabel}>Total Shots</Text>
+            </View>
+          )}
+        </View>
+      ) : (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <Dumbbell size={32} color="rgba(255,255,255,0.3)" />
+          <Text style={{ color: 'rgba(255,255,255,0.35)', fontSize: 15, fontWeight: '600' as const, marginTop: 12 }}>No data for practice yet</Text>
+        </View>
+      )}
     </View>
   );
 }
