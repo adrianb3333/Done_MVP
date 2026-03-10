@@ -1,10 +1,13 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import {
   StyleSheet,
   Text,
   ScrollView,
   View,
   TouchableOpacity,
+  Animated,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -196,7 +199,8 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize }: DrillsTab
     console.log('Opening drill overview:', drill.name);
     setActiveDrillItem(drill);
     setCurrentScreen('drillOverview');
-  }, []);
+    onDrillActiveChange?.(true);
+  }, [onDrillActiveChange]);
 
   const handleStartDrill = useCallback(() => {
     console.log('Starting drill:', activeDrillItem?.name);
@@ -208,7 +212,7 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize }: DrillsTab
     console.log('Drill finished:', result);
     setLastDrillResult(result);
     setCurrentScreen('drillSummary');
-    onDrillActiveChange?.(false);
+    onDrillActiveChange?.(true);
 
     if (activeDrillItem) {
       const entry: DrillHistoryEntry = {
@@ -234,7 +238,7 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize }: DrillsTab
     setLastDrillResult(null);
     setCurrentScreen('activeDrill');
     onDrillActiveChange?.(true);
-  }, [activeDrillItem, onDrillActiveChange]);
+  }, [activeDrillItem?.name, onDrillActiveChange]);
 
   const handleDrillHome = useCallback(() => {
     console.log('Going back to drills home');
@@ -265,6 +269,45 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize }: DrillsTab
       keys.filter(cat => !CATEGORY_ORDER.includes(cat))
     );
   }, [drillsByCategory]);
+
+  const HEADER_HEIGHT = 60;
+  const scrollYRef = useRef(0);
+  const headerTranslateY = useRef(new Animated.Value(0)).current;
+  const isHeaderVisible = useRef(true);
+
+  const onMainScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const currentY = event.nativeEvent.contentOffset.y;
+    const diff = currentY - scrollYRef.current;
+
+    if (currentY <= 0) {
+      if (!isHeaderVisible.current) {
+        isHeaderVisible.current = true;
+        Animated.spring(headerTranslateY, {
+          toValue: 0,
+          useNativeDriver: true,
+          friction: 20,
+          tension: 80,
+        }).start();
+      }
+    } else if (diff > 10 && isHeaderVisible.current) {
+      isHeaderVisible.current = false;
+      Animated.timing(headerTranslateY, {
+        toValue: -(HEADER_HEIGHT + insets.top + 20),
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    } else if (diff < -3 && !isHeaderVisible.current) {
+      isHeaderVisible.current = true;
+      Animated.spring(headerTranslateY, {
+        toValue: 0,
+        useNativeDriver: true,
+        friction: 20,
+        tension: 80,
+      }).start();
+    }
+
+    scrollYRef.current = currentY;
+  }, [headerTranslateY, insets.top]);
 
   const renderDrillComponent = () => {
     if (!selectedDrill) return null;
@@ -408,40 +451,11 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize }: DrillsTab
         end={{ x: 0, y: 1 }}
         style={styles.gradient}
       >
-        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.headerTitle}>Drills</Text>
-            {onMinimize && (
-              <TouchableOpacity
-                onPress={onMinimize}
-                style={styles.minimizeBtn}
-                activeOpacity={0.7}
-              >
-                <ChevronDown size={26} color="#FFFFFF" strokeWidth={2.5} />
-              </TouchableOpacity>
-            )}
-          </View>
-          <View style={styles.headerIcons}>
-            <TouchableOpacity
-              style={styles.headerIconBtn}
-              activeOpacity={0.7}
-              onPress={() => setCurrentScreen('calendar')}
-            >
-              <CalendarDays size={20} color="#FFFFFF" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.headerIconBtn}
-              activeOpacity={0.7}
-              onPress={() => setCurrentScreen('history')}
-            >
-              <CalendarCheck size={20} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + HEADER_HEIGHT + 8 }]}
           showsVerticalScrollIndicator={false}
+          onScroll={onMainScroll}
+          scrollEventThrottle={16}
         >
           {todaysSchedule.length > 0 && (
             <View style={styles.todaySection}>
@@ -652,6 +666,45 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize }: DrillsTab
             )
           )}
         </ScrollView>
+
+        <Animated.View
+          style={[
+            styles.floatingHeader,
+            {
+              paddingTop: insets.top + 8,
+              transform: [{ translateY: headerTranslateY }],
+            },
+          ]}
+        >
+          <View style={styles.headerLeft}>
+            <Text style={styles.headerTitle}>Drills</Text>
+            {onMinimize && (
+              <TouchableOpacity
+                onPress={onMinimize}
+                style={styles.minimizeBtn}
+                activeOpacity={0.7}
+              >
+                <ChevronDown size={26} color="#FFFFFF" strokeWidth={2.5} />
+              </TouchableOpacity>
+            )}
+          </View>
+          <View style={styles.headerIcons}>
+            <TouchableOpacity
+              style={styles.headerIconBtnTransparent}
+              activeOpacity={0.7}
+              onPress={() => setCurrentScreen('calendar')}
+            >
+              <CalendarDays size={22} color="#FFFFFF" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.headerIconBtnTransparent}
+              activeOpacity={0.7}
+              onPress={() => setCurrentScreen('history')}
+            >
+              <CalendarCheck size={22} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
       </LinearGradient>
     </View>
   );
@@ -897,5 +950,23 @@ const styles = StyleSheet.create({
     bottom: 0,
     zIndex: 9999,
     backgroundColor: "#000",
+  },
+  floatingHeader: {
+    position: "absolute" as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "space-between" as const,
+    paddingHorizontal: 18,
+    paddingBottom: 14,
+  },
+  headerIconBtnTransparent: {
+    width: 38,
+    height: 38,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
   },
 });
