@@ -53,7 +53,7 @@ export default function PracticeSessionTabs() {
 
   return (
     <View style={styles.root}>
-      {!isDrillFullScreen && (
+      {!isDrillFullScreen && activeTab !== 'drills' && (
         <TouchableOpacity
           onPress={minimizeSession}
           style={[styles.minimizeButton, { top: insets.top + 4 }]}
@@ -69,7 +69,7 @@ export default function PracticeSessionTabs() {
       )}
 
       <View style={activeTab === 'drills' ? (isDrillFullScreen ? styles.fullScreenDrill : styles.drillInline) : styles.hidden}>
-        <DrillsTab onDrillActiveChange={handleDrillActiveChange} />
+        <DrillsTab onDrillActiveChange={handleDrillActiveChange} onMinimize={minimizeSession} />
       </View>
 
       {!isDrillFullScreen && (

@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { Plus, Layers, CalendarDays, CalendarCheck, Swords, Dumbbell, ChevronRight, Clock as ClockIcon } from "lucide-react-native";
+import { Plus, Layers, CalendarDays, CalendarCheck, Swords, Dumbbell, ChevronRight, Clock as ClockIcon, ChevronDown } from "lucide-react-native";
 
 import Clock from "@/components/ovningar/Clock";
 import Gate from "@/components/ovningar/Gate";
@@ -36,6 +36,7 @@ import { Star } from "lucide-react-native";
 
 interface DrillsTabProps {
   onDrillActiveChange?: (active: boolean) => void;
+  onMinimize?: () => void;
 }
 
 const dedicatedComponents = [
@@ -62,7 +63,7 @@ function getTodayDayName(): string {
 
 type ScreenState = 'main' | 'createDrill' | 'createSession' | 'createSchedule' | 'calendar' | 'createSensorDrill' | 'battle';
 
-export default function DrillsTab({ onDrillActiveChange }: DrillsTabProps) {
+export default function DrillsTab({ onDrillActiveChange, onMinimize }: DrillsTabProps) {
   const [selectedDrill, setSelectedDrill] = useState<{ category: string; card: string } | null>(null);
   const [currentScreen, setCurrentScreen] = useState<ScreenState>('main');
   const [savedDrills, setSavedDrills] = useState<CustomDrill[]>([]);
@@ -215,7 +216,18 @@ export default function DrillsTab({ onDrillActiveChange }: DrillsTabProps) {
         style={styles.gradient}
       >
         <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-          <Text style={styles.headerTitle}>Drills</Text>
+          <View style={styles.headerLeft}>
+            <Text style={styles.headerTitle}>Drills</Text>
+            {onMinimize && (
+              <TouchableOpacity
+                onPress={onMinimize}
+                style={styles.minimizeBtn}
+                activeOpacity={0.7}
+              >
+                <ChevronDown size={26} color="#FFFFFF" strokeWidth={2.5} />
+              </TouchableOpacity>
+            )}
+          </View>
           <View style={styles.headerIcons}>
             <TouchableOpacity
               style={styles.headerIconBtn}
@@ -666,6 +678,17 @@ const styles = StyleSheet.create({
     flexDirection: "row" as const,
     alignItems: "center" as const,
     gap: 6,
+  },
+  headerLeft: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 6,
+  },
+  minimizeBtn: {
+    width: 36,
+    height: 36,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
   },
   drillWrapper: {
     position: "absolute" as const,
