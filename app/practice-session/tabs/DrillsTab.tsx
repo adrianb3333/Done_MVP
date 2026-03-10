@@ -32,6 +32,7 @@ import CreateScheduleScreen, { ScheduledItem } from "@/components/drills/CreateS
 import CalendarScreen from "@/components/drills/CalendarScreen";
 import CreateSensorDrillScreen, { SensorDrill } from "@/components/drills/CreateSensorDrillScreen";
 import BattleScreen from "@/components/drills/BattleScreen";
+import DrillHistoryScreen, { DrillHistoryEntry } from "@/components/drills/DrillHistoryScreen";
 import { Star } from "lucide-react-native";
 
 interface DrillsTabProps {
@@ -61,7 +62,7 @@ function getTodayDayName(): string {
   return DAY_NAMES_SHORT[dayIndex];
 }
 
-type ScreenState = 'main' | 'createDrill' | 'createSession' | 'createSchedule' | 'calendar' | 'createSensorDrill' | 'battle';
+type ScreenState = 'main' | 'createDrill' | 'createSession' | 'createSchedule' | 'calendar' | 'createSensorDrill' | 'battle' | 'history';
 
 export default function DrillsTab({ onDrillActiveChange, onMinimize }: DrillsTabProps) {
   const [selectedDrill, setSelectedDrill] = useState<{ category: string; card: string } | null>(null);
@@ -70,6 +71,7 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize }: DrillsTab
   const [savedSensorDrills, setSavedSensorDrills] = useState<SensorDrill[]>([]);
   const [savedSessions, setSavedSessions] = useState<CustomSession[]>([]);
   const [scheduledItems, setScheduledItems] = useState<ScheduledItem[]>([]);
+  const [drillHistory, _setDrillHistory] = useState<DrillHistoryEntry[]>([]);
   const insets = useSafeAreaInsets();
 
   const todayName = getTodayDayName();
@@ -205,6 +207,15 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize }: DrillsTab
     );
   }
 
+  if (currentScreen === 'history') {
+    return (
+      <DrillHistoryScreen
+        onBack={() => setCurrentScreen('main')}
+        history={drillHistory}
+      />
+    );
+  }
+
   const categoryOrder = Object.keys(drillsByCategory);
 
   return (
@@ -236,7 +247,11 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize }: DrillsTab
             >
               <CalendarDays size={20} color="#FFFFFF" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.headerIconBtn} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={styles.headerIconBtn}
+              activeOpacity={0.7}
+              onPress={() => setCurrentScreen('history')}
+            >
               <CalendarCheck size={20} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
