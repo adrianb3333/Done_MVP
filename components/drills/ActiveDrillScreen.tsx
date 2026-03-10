@@ -6,8 +6,9 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight, ArrowLeft } from 'lucide-react-native';
 import type { CustomDrill } from './CreateDrillScreen';
 import type { SensorDrill } from './CreateSensorDrillScreen';
 
@@ -26,23 +27,26 @@ interface ActiveDrillScreenProps {
   onFinish: (result: DrillResult) => void;
 }
 
+const GLASS_BG = 'rgba(0,0,0,0.28)';
+const GLASS_BORDER = 'rgba(255,255,255,0.12)';
+
 export default function ActiveDrillScreen({ drill, onBack, onFinish }: ActiveDrillScreenProps) {
   const insets = useSafeAreaInsets();
   const [currentRound, setCurrentRound] = useState(0);
-  const [roundScores, setRoundScores] = useState<number[][]>(
-    Array.from({ length: drill.rounds }, () => Array.from({ length: drill.targetsPerRound }, () => 0))
+  const [roundHighest, setRoundHighest] = useState<number[]>(
+    Array.from({ length: drill.rounds }, () => 0)
   );
 
   const currentHits = useMemo(() => {
-    return roundScores[currentRound]?.reduce((sum, v) => sum + v, 0) ?? 0;
-  }, [roundScores, currentRound]);
+    return roundHighest[currentRound] ?? 0;
+  }, [roundHighest, currentRound]);
 
   const totalHitsAllRounds = useMemo(() => {
-    return roundScores.reduce((sum, round) => sum + round.reduce((s, v) => s + v, 0), 0);
-  }, [roundScores]);
+    return roundHighest.reduce((sum, h) => sum + h, 0);
+  }, [roundHighest]);
 
   const totalShotsSoFar = useMemo(() => {
-    return (currentRound * drill.targetsPerRound) + drill.targetsPerRound;
+    return (currentRound + 1) * drill.targetsPerRound;
   }, [currentRound, drill.targetsPerRound]);
 
   const liveAvg = useMemo(() => {
@@ -53,21 +57,26 @@ export default function ActiveDrillScreen({ drill, onBack, onFinish }: ActiveDri
   const isLastRound = currentRound === drill.rounds - 1;
 
   const toggleTarget = useCallback((targetIndex: number) => {
-    setRoundScores(prev => {
-      const updated = prev.map(r => [...r]);
-      updated[currentRound][targetIndex] = updated[currentRound][targetIndex] === 1 ? 0 : 1;
+    const targetNumber = targetIndex + 1;
+    setRoundHighest(prev => {
+      const updated = [...prev];
+      const currentHighest = updated[currentRound];
+      if (targetNumber === currentHighest) {
+        updated[currentRound] = targetNumber - 1;
+      } else {
+        updated[currentRound] = targetNumber;
+      }
       return updated;
     });
   }, [currentRound]);
 
   const handleNextRound = useCallback(() => {
     if (isLastRound) {
-      const allHits = roundScores.reduce((sum, round) => sum + round.reduce((s, v) => s + v, 0), 0);
+      const allHits = roundHighest.reduce((sum, h) => sum + h, 0);
       const total = drill.rounds * drill.targetsPerRound;
       const pct = total > 0 ? Math.round((allHits / total) * 100) : 0;
-      const perRound = roundScores.map(r => r.reduce((s, v) => s + v, 0));
       onFinish({
-        roundScores: perRound,
+        roundScores: roundHighest,
         totalHits: allHits,
         totalShots: total,
         percentage: pct,
@@ -75,13 +84,22 @@ export default function ActiveDrillScreen({ drill, onBack, onFinish }: ActiveDri
     } else {
       setCurrentRound(prev => prev + 1);
     }
-  }, [isLastRound, roundScores, drill, onFinish]);
+  }, [isLastRound, roundHighest, drill, onFinish]);
+
+  const highestInRound = roundHighest[currentRound] ?? 0;
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
+    <LinearGradient
+      colors={['#0059B2', '#1075E3', '#1C8CFF']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.container}
+    >
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity onPress={onBack} activeOpacity={0.7}>
-          <Text style={styles.backText}>Back</Text>
+          <View style={styles.backCircle}>
+            <ArrowLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
+          </View>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{drill.name}</Text>
         <View style={styles.headerSpacer} />
@@ -119,11 +137,12 @@ export default function ActiveDrillScreen({ drill, onBack, onFinish }: ActiveDri
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.tapInstruction}>Tap targets you hit</Text>
+        <Text style={styles.tapInstruction}>Tap the highest target you hit</Text>
 
         <View style={styles.targetsGrid}>
           {Array.from({ length: drill.targetsPerRound }).map((_, idx) => {
-            const isHit = roundScores[currentRound][idx] === 1;
+            const targetNumber = idx + 1;
+            const isHit = targetNumber <= highestInRound;
             return (
               <TouchableOpacity
                 key={idx}
@@ -132,7 +151,7 @@ export default function ActiveDrillScreen({ drill, onBack, onFinish }: ActiveDri
                 activeOpacity={0.7}
               >
                 <Text style={[styles.targetText, isHit && styles.targetTextHit]}>
-                  {idx + 1}
+                  {targetNumber}
                 </Text>
               </TouchableOpacity>
             );
@@ -143,44 +162,57 @@ export default function ActiveDrillScreen({ drill, onBack, onFinish }: ActiveDri
       <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
         <TouchableOpacity
           onPress={handleNextRound}
-          style={styles.nextButton}
           activeOpacity={0.8}
         >
-          <Text style={styles.nextButtonText}>
-            {isLastRound ? 'Finish Drill' : 'Next Round'}
-          </Text>
-          <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />
+          <View style={styles.nextButtonOuter}>
+            <LinearGradient
+              colors={['rgba(0,0,0,0.32)', 'rgba(0,0,0,0.22)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.nextButton}
+            >
+              <Text style={styles.nextButtonText}>
+                {isLastRound ? 'Finish Drill' : 'Next Round'}
+              </Text>
+              <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />
+            </LinearGradient>
+          </View>
         </TouchableOpacity>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F0E8',
   },
   header: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+    gap: 12,
   },
-  backText: {
-    fontSize: 17,
-    fontWeight: '500' as const,
-    color: '#3478F6',
+  backCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: GLASS_BG,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
   },
   headerTitle: {
     flex: 1,
     textAlign: 'center' as const,
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800' as const,
-    color: '#1a1a1a',
+    color: '#FFFFFF',
   },
   headerSpacer: {
-    width: 40,
+    width: 38,
   },
   progressBarContainer: {
     flexDirection: 'row' as const,
@@ -193,15 +225,17 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   progressSegmentActive: {
-    backgroundColor: '#3478F6',
+    backgroundColor: '#FFFFFF',
   },
   progressSegmentInactive: {
-    backgroundColor: '#D1D1D6',
+    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   statsBar: {
     flexDirection: 'row' as const,
     marginHorizontal: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: GLASS_BG,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
     borderRadius: 14,
     overflow: 'hidden' as const,
     marginBottom: 20,
@@ -214,24 +248,24 @@ const styles = StyleSheet.create({
   statItemBorder: {
     borderLeftWidth: 1,
     borderRightWidth: 1,
-    borderColor: '#EAEAEA',
+    borderColor: GLASS_BORDER,
   },
   statItemLabel: {
     fontSize: 12,
     fontWeight: '500' as const,
-    color: '#888',
+    color: 'rgba(255,255,255,0.55)',
     marginBottom: 4,
   },
   statItemValue: {
     fontSize: 20,
     fontWeight: '800' as const,
-    color: '#1a1a1a',
+    color: '#FFFFFF',
   },
   statItemHits: {
-    color: '#1B5E20',
+    color: '#7AE582',
   },
   statItemAvg: {
-    color: '#C0392B',
+    color: '#FFD166',
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -240,7 +274,7 @@ const styles = StyleSheet.create({
   tapInstruction: {
     fontSize: 14,
     fontWeight: '500' as const,
-    color: '#888',
+    color: 'rgba(255,255,255,0.55)',
     textAlign: 'center' as const,
     marginBottom: 24,
   },
@@ -254,9 +288,9 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: GLASS_BG,
     borderWidth: 2,
-    borderColor: '#D1D1D6',
+    borderColor: GLASS_BORDER,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
@@ -267,7 +301,7 @@ const styles = StyleSheet.create({
   targetText: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#555',
+    color: 'rgba(255,255,255,0.55)',
   },
   targetTextHit: {
     color: '#FFFFFF',
@@ -275,9 +309,14 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: 20,
   },
+  nextButtonOuter: {
+    borderRadius: 16,
+    overflow: 'hidden' as const,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+  },
   nextButton: {
     flexDirection: 'row' as const,
-    backgroundColor: '#3478F6',
     borderRadius: 16,
     paddingVertical: 18,
     alignItems: 'center' as const,

@@ -6,8 +6,9 @@ import {
   TouchableOpacity,
   Animated,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Flag, Play, RotateCcw, Target } from 'lucide-react-native';
+import { Flag, Play, RotateCcw, Target, ArrowLeft } from 'lucide-react-native';
 import type { CustomDrill } from './CreateDrillScreen';
 import type { SensorDrill } from './CreateSensorDrillScreen';
 
@@ -19,6 +20,9 @@ interface DrillOverviewScreenProps {
   onStart: () => void;
   onSetPin: () => void;
 }
+
+const GLASS_BG = 'rgba(0,0,0,0.28)';
+const GLASS_BORDER = 'rgba(255,255,255,0.12)';
 
 const CATEGORY_COLORS: Record<string, string> = {
   Putting: '#2D6A4F',
@@ -62,11 +66,19 @@ export default function DrillOverviewScreen({ drill, onCancel, onStart, onSetPin
   const catColor = CATEGORY_COLORS[drill.category] || '#2D6A4F';
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <View style={styles.header}>
+    <LinearGradient
+      colors={['#0059B2', '#1075E3', '#1C8CFF']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.container}
+    >
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity onPress={onCancel} activeOpacity={0.7}>
-          <Text style={styles.cancelText}>Cancel</Text>
+          <View style={styles.backCircle}>
+            <ArrowLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
+          </View>
         </TouchableOpacity>
+        <Text style={styles.headerTitle}>Drill Overview</Text>
         <Animated.View style={{ transform: [{ translateX: shakeAnim }] }}>
           <TouchableOpacity
             onPress={handleSetPin}
@@ -86,8 +98,8 @@ export default function DrillOverviewScreen({ drill, onCancel, onStart, onSetPin
       )}
 
       <View style={styles.body}>
-        <View style={[styles.categoryBadge, { backgroundColor: catColor + '20' }]}>
-          <Text style={[styles.categoryText, { color: catColor }]}>{drill.category}</Text>
+        <View style={[styles.categoryBadge, { backgroundColor: catColor + '30' }]}>
+          <Text style={[styles.categoryText, { color: '#FFFFFF' }]}>{drill.category}</Text>
         </View>
 
         <Text style={styles.drillName}>{drill.name}</Text>
@@ -113,7 +125,7 @@ export default function DrillOverviewScreen({ drill, onCancel, onStart, onSetPin
         <View style={styles.howItWorks}>
           <Text style={styles.howTitle}>How it works</Text>
           <Text style={styles.howText}>
-            Each round shows {drill.targetsPerRound} targets. Tap each target you hit. After all rounds, you'll see your score summary.
+            Each round shows {drill.targetsPerRound} targets. Tap the highest target you hit — all below it count as made. After all rounds, you'll see your score summary.
           </Text>
         </View>
       </View>
@@ -121,33 +133,50 @@ export default function DrillOverviewScreen({ drill, onCancel, onStart, onSetPin
       <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
         <TouchableOpacity
           onPress={handleStart}
-          style={styles.startButton}
           activeOpacity={0.8}
         >
-          <Play size={20} color="#FFFFFF" fill="#FFFFFF" />
-          <Text style={styles.startButtonText}>Start Drill</Text>
+          <View style={styles.startButtonOuter}>
+            <LinearGradient
+              colors={['rgba(0,0,0,0.32)', 'rgba(0,0,0,0.22)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.startButton}
+            >
+              <Play size={20} color="#FFFFFF" fill="#FFFFFF" />
+              <Text style={styles.startButtonText}>Start Drill</Text>
+            </LinearGradient>
+          </View>
         </TouchableOpacity>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F0E8',
   },
   header: {
     flexDirection: 'row' as const,
     justifyContent: 'space-between' as const,
     alignItems: 'center' as const,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingHorizontal: 16,
+    paddingBottom: 14,
   },
-  cancelText: {
-    fontSize: 17,
-    fontWeight: '500' as const,
-    color: '#3478F6',
+  backCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: GLASS_BG,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
   },
   setPinBtn: {
     flexDirection: 'row' as const,
@@ -167,7 +196,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   warningBanner: {
-    backgroundColor: '#FFF3CD',
+    backgroundColor: 'rgba(255,243,205,0.9)',
     marginHorizontal: 20,
     borderRadius: 10,
     paddingVertical: 10,
@@ -199,7 +228,7 @@ const styles = StyleSheet.create({
   drillName: {
     fontSize: 28,
     fontWeight: '900' as const,
-    color: '#1a1a1a',
+    color: '#FFFFFF',
     marginBottom: 28,
     textAlign: 'center' as const,
   },
@@ -210,7 +239,9 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#1B3A2A',
+    backgroundColor: GLASS_BG,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
     borderRadius: 16,
     paddingVertical: 18,
     alignItems: 'center' as const,
@@ -224,33 +255,40 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: 'rgba(255,255,255,0.65)',
+    color: 'rgba(255,255,255,0.55)',
     textAlign: 'center' as const,
   },
   howItWorks: {
-    backgroundColor: 'rgba(0,0,0,0.04)',
+    backgroundColor: GLASS_BG,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
     borderRadius: 16,
     padding: 20,
-    width: '100%',
+    width: '100%' as const,
   },
   howTitle: {
     fontSize: 16,
     fontWeight: '800' as const,
-    color: '#1a1a1a',
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   howText: {
     fontSize: 15,
     fontWeight: '400' as const,
-    color: '#555',
+    color: 'rgba(255,255,255,0.7)',
     lineHeight: 22,
   },
   footer: {
     paddingHorizontal: 20,
   },
+  startButtonOuter: {
+    borderRadius: 16,
+    overflow: 'hidden' as const,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+  },
   startButton: {
     flexDirection: 'row' as const,
-    backgroundColor: '#3478F6',
     borderRadius: 16,
     paddingVertical: 18,
     alignItems: 'center' as const,
