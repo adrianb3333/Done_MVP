@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   StyleSheet,
   Text,
@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { Plus, Layers, CalendarDays, CalendarCheck, Swords, Dumbbell, ChevronRight } from "lucide-react-native";
+import { Plus, Layers, CalendarDays, CalendarCheck, Swords, Dumbbell, ChevronRight, Clock as ClockIcon } from "lucide-react-native";
 
 import Clock from "@/components/ovningar/Clock";
 import Gate from "@/components/ovningar/Gate";
@@ -27,6 +27,9 @@ import Fade from "@/components/ovningar/Fade";
 import Accuracy from "@/components/ovningar/Accuracy";
 import Draw from "@/components/ovningar/Draw";
 import CreateDrillScreen, { CustomDrill } from "@/components/drills/CreateDrillScreen";
+import CreateSessionScreen, { CustomSession } from "@/components/drills/CreateSessionScreen";
+import CreateScheduleScreen, { ScheduledItem } from "@/components/drills/CreateScheduleScreen";
+import CalendarScreen from "@/components/drills/CalendarScreen";
 
 interface DrillsTabProps {
   onDrillActiveChange?: (active: boolean) => void;
@@ -46,11 +49,29 @@ const CATEGORY_COLORS: Record<string, string> = {
   Woods: '#40916C',
 };
 
+const DAY_NAMES_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function getTodayDayName(): string {
+  const now = new Date();
+  const dayIndex = now.getDay();
+  return DAY_NAMES_SHORT[dayIndex];
+}
+
+type ScreenState = 'main' | 'createDrill' | 'createSession' | 'createSchedule' | 'calendar';
+
 export default function DrillsTab({ onDrillActiveChange }: DrillsTabProps) {
   const [selectedDrill, setSelectedDrill] = useState<{ category: string; card: string } | null>(null);
-  const [showCreateDrill, setShowCreateDrill] = useState(false);
+  const [currentScreen, setCurrentScreen] = useState<ScreenState>('main');
   const [savedDrills, setSavedDrills] = useState<CustomDrill[]>([]);
+  const [savedSessions, setSavedSessions] = useState<CustomSession[]>([]);
+  const [scheduledItems, setScheduledItems] = useState<ScheduledItem[]>([]);
   const insets = useSafeAreaInsets();
+
+  const todayName = getTodayDayName();
+
+  const todaysSchedule = useMemo(() => {
+    return scheduledItems.filter(item => item.days.includes(todayName));
+  }, [scheduledItems, todayName]);
 
   const handleBack = () => {
     setSelectedDrill(null);
@@ -60,7 +81,19 @@ export default function DrillsTab({ onDrillActiveChange }: DrillsTabProps) {
   const handleSaveDrill = (drill: CustomDrill) => {
     console.log('Saving drill:', drill);
     setSavedDrills(prev => [...prev, drill]);
-    setShowCreateDrill(false);
+    setCurrentScreen('main');
+  };
+
+  const handleSaveSession = (session: CustomSession) => {
+    console.log('Saving session:', session);
+    setSavedSessions(prev => [...prev, session]);
+    setCurrentScreen('main');
+  };
+
+  const handleSaveSchedule = (item: ScheduledItem) => {
+    console.log('Saving schedule:', item);
+    setScheduledItems(prev => [...prev, item]);
+    setCurrentScreen('main');
   };
 
   const drillsByCategory = savedDrills.reduce<Record<string, CustomDrill[]>>((acc, drill) => {
@@ -104,11 +137,42 @@ export default function DrillsTab({ onDrillActiveChange }: DrillsTabProps) {
     );
   }
 
-  if (showCreateDrill) {
+  if (currentScreen === 'createDrill') {
     return (
       <CreateDrillScreen
-        onBack={() => setShowCreateDrill(false)}
+        onBack={() => setCurrentScreen('main')}
         onSave={handleSaveDrill}
+      />
+    );
+  }
+
+  if (currentScreen === 'createSession') {
+    return (
+      <CreateSessionScreen
+        onBack={() => setCurrentScreen('main')}
+        onSave={handleSaveSession}
+        drills={savedDrills}
+      />
+    );
+  }
+
+  if (currentScreen === 'createSchedule') {
+    return (
+      <CreateScheduleScreen
+        onBack={() => setCurrentScreen('main')}
+        onSave={handleSaveSchedule}
+        drills={savedDrills}
+        sessions={savedSessions}
+      />
+    );
+  }
+
+  if (currentScreen === 'calendar') {
+    return (
+      <CalendarScreen
+        onBack={() => setCurrentScreen('main')}
+        scheduledItems={scheduledItems}
+        completedItems={[]}
       />
     );
   }
@@ -126,7 +190,11 @@ export default function DrillsTab({ onDrillActiveChange }: DrillsTabProps) {
         <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
           <Text style={styles.headerTitle}>Drills</Text>
           <View style={styles.headerIcons}>
-            <TouchableOpacity style={styles.headerIconBtn} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={styles.headerIconBtn}
+              activeOpacity={0.7}
+              onPress={() => setCurrentScreen('calendar')}
+            >
               <CalendarDays size={20} color="#FFFFFF" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.headerIconBtn} activeOpacity={0.7}>
@@ -139,11 +207,40 @@ export default function DrillsTab({ onDrillActiveChange }: DrillsTabProps) {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          {todaysSchedule.length > 0 && (
+            <View style={styles.todaySection}>
+              <View style={styles.todaySectionHeader}>
+                <ClockIcon size={16} color="#FFFFFF" />
+                <Text style={styles.todaySectionTitle}>Today's Schedule</Text>
+              </View>
+              {todaysSchedule.map((item) => (
+                <View key={item.id} style={styles.todayCard}>
+                  <LinearGradient
+                    colors={['rgba(46,125,50,0.35)', 'rgba(46,125,50,0.18)']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.todayCardGradient}
+                  >
+                    <View style={styles.todayCardInner}>
+                      <View style={styles.todayCardContent}>
+                        <Text style={styles.todayCardName}>{item.itemName}</Text>
+                        <Text style={styles.todayCardType}>
+                          {item.type === 'drill' ? 'Drill' : 'Session'}
+                        </Text>
+                      </View>
+                      <ChevronRight size={18} color="rgba(255,255,255,0.5)" />
+                    </View>
+                  </LinearGradient>
+                </View>
+              ))}
+            </View>
+          )}
+
           <View style={styles.topRow}>
             <TouchableOpacity
               style={styles.topCard}
               activeOpacity={0.7}
-              onPress={() => setShowCreateDrill(true)}
+              onPress={() => setCurrentScreen('createDrill')}
             >
               <View style={styles.topIconCircle}>
                 <Plus size={24} color="#FFFFFF" strokeWidth={2.5} />
@@ -151,14 +248,22 @@ export default function DrillsTab({ onDrillActiveChange }: DrillsTabProps) {
               <Text style={styles.topCardLabel}>New Drill</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.topCard} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={styles.topCard}
+              activeOpacity={0.7}
+              onPress={() => setCurrentScreen('createSession')}
+            >
               <View style={[styles.topIconCircle, { backgroundColor: 'rgba(255,140,50,0.25)' }]}>
                 <Layers size={22} color="#FF8C32" />
               </View>
               <Text style={styles.topCardLabel}>New Session</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.topCard} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={styles.topCard}
+              activeOpacity={0.7}
+              onPress={() => setCurrentScreen('createSchedule')}
+            >
               <View style={[styles.topIconCircle, { backgroundColor: 'rgba(80,160,255,0.25)' }]}>
                 <CalendarDays size={22} color="#50A0FF" />
               </View>
@@ -183,6 +288,42 @@ export default function DrillsTab({ onDrillActiveChange }: DrillsTabProps) {
               <Text style={styles.sensorCardTitle}>Battle</Text>
             </TouchableOpacity>
           </View>
+
+          {savedSessions.length > 0 && (
+            <View style={styles.categorySection}>
+              <View style={styles.categoryHeaderRow}>
+                <View style={[styles.categoryDot, { backgroundColor: '#FF8C32' }]} />
+                <Text style={styles.categoryTitle}>Sessions</Text>
+              </View>
+              {savedSessions.map((session) => {
+                const sessionDrills = savedDrills.filter(d => session.drillIds.includes(d.id));
+                return (
+                  <TouchableOpacity
+                    key={session.id}
+                    style={styles.drillCard}
+                    activeOpacity={0.7}
+                  >
+                    <LinearGradient
+                      colors={['rgba(255,255,255,0.14)', 'rgba(255,255,255,0.04)']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.drillCardGradient}
+                    >
+                      <View style={styles.drillCardInner}>
+                        <View style={styles.drillCardContent}>
+                          <Text style={styles.drillCardName}>{session.name}</Text>
+                          <Text style={styles.drillCardMeta}>
+                            {sessionDrills.length} drill{sessionDrills.length !== 1 ? 's' : ''} · {sessionDrills.map(d => d.name).join(', ')}
+                          </Text>
+                        </View>
+                        <ChevronRight size={20} color="rgba(255,255,255,0.5)" />
+                      </View>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
 
           {categoryOrder.length > 0 ? (
             categoryOrder.map((category) => (
@@ -218,13 +359,15 @@ export default function DrillsTab({ onDrillActiveChange }: DrillsTabProps) {
               </View>
             ))
           ) : (
-            <View style={styles.emptyState}>
-              <Dumbbell size={36} color="rgba(255,255,255,0.35)" />
-              <Text style={styles.emptyTitle}>No drills yet</Text>
-              <Text style={styles.emptySubtitle}>
-                Tap "New Drill" to create your first practice drill
-              </Text>
-            </View>
+            savedSessions.length === 0 && (
+              <View style={styles.emptyState}>
+                <Dumbbell size={36} color="rgba(255,255,255,0.35)" />
+                <Text style={styles.emptyTitle}>No drills yet</Text>
+                <Text style={styles.emptySubtitle}>
+                  Tap "New Drill" to create your first practice drill
+                </Text>
+              </View>
+            )
           )}
         </ScrollView>
       </LinearGradient>
@@ -271,6 +414,51 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingBottom: 40,
+  },
+  todaySection: {
+    marginBottom: 16,
+  },
+  todaySectionHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+    marginBottom: 10,
+  },
+  todaySectionTitle: {
+    fontSize: 16,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+  },
+  todayCard: {
+    borderRadius: 14,
+    overflow: 'hidden' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(46,125,50,0.3)',
+    marginBottom: 6,
+  },
+  todayCardGradient: {
+    borderRadius: 14,
+  },
+  todayCardInner: {
+    borderRadius: 13,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+  },
+  todayCardContent: {
+    flex: 1,
+    gap: 2,
+  },
+  todayCardName: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+  },
+  todayCardType: {
+    fontSize: 12,
+    fontWeight: '500' as const,
+    color: 'rgba(255,255,255,0.55)',
   },
   topRow: {
     flexDirection: "row" as const,
