@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { Plus, Layers, CalendarDays, CalendarCheck, Swords, Dumbbell } from "lucide-react-native";
+import { Plus, Layers, CalendarDays, CalendarCheck, Swords, Dumbbell, ChevronRight } from "lucide-react-native";
 
 import Clock from "@/components/ovningar/Clock";
 import Gate from "@/components/ovningar/Gate";
@@ -26,8 +26,7 @@ import PowerLine from "@/components/ovningar/PowerLine";
 import Fade from "@/components/ovningar/Fade";
 import Accuracy from "@/components/ovningar/Accuracy";
 import Draw from "@/components/ovningar/Draw";
-
-
+import CreateDrillScreen, { CustomDrill } from "@/components/drills/CreateDrillScreen";
 
 interface DrillsTabProps {
   onDrillActiveChange?: (active: boolean) => void;
@@ -40,14 +39,37 @@ const dedicatedComponents = [
   "Power Line", "Fade", "Accuracy", "Draw",
 ];
 
+const CATEGORY_COLORS: Record<string, string> = {
+  Putting: '#2D6A4F',
+  Wedges: '#E76F51',
+  Irons: '#7B2CBF',
+  Woods: '#40916C',
+};
+
 export default function DrillsTab({ onDrillActiveChange }: DrillsTabProps) {
   const [selectedDrill, setSelectedDrill] = useState<{ category: string; card: string } | null>(null);
+  const [showCreateDrill, setShowCreateDrill] = useState(false);
+  const [savedDrills, setSavedDrills] = useState<CustomDrill[]>([]);
   const insets = useSafeAreaInsets();
 
   const handleBack = () => {
     setSelectedDrill(null);
     onDrillActiveChange?.(false);
   };
+
+  const handleSaveDrill = (drill: CustomDrill) => {
+    console.log('Saving drill:', drill);
+    setSavedDrills(prev => [...prev, drill]);
+    setShowCreateDrill(false);
+  };
+
+  const drillsByCategory = savedDrills.reduce<Record<string, CustomDrill[]>>((acc, drill) => {
+    if (!acc[drill.category]) {
+      acc[drill.category] = [];
+    }
+    acc[drill.category].push(drill);
+    return acc;
+  }, {});
 
   const renderDrillComponent = () => {
     if (!selectedDrill) return null;
@@ -82,6 +104,17 @@ export default function DrillsTab({ onDrillActiveChange }: DrillsTabProps) {
     );
   }
 
+  if (showCreateDrill) {
+    return (
+      <CreateDrillScreen
+        onBack={() => setShowCreateDrill(false)}
+        onSave={handleSaveDrill}
+      />
+    );
+  }
+
+  const categoryOrder = Object.keys(drillsByCategory);
+
   return (
     <View style={styles.mainContainer}>
       <LinearGradient
@@ -107,7 +140,11 @@ export default function DrillsTab({ onDrillActiveChange }: DrillsTabProps) {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.topRow}>
-            <TouchableOpacity style={styles.topCard} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={styles.topCard}
+              activeOpacity={0.7}
+              onPress={() => setShowCreateDrill(true)}
+            >
               <View style={styles.topIconCircle}>
                 <Plus size={24} color="#FFFFFF" strokeWidth={2.5} />
               </View>
@@ -147,13 +184,48 @@ export default function DrillsTab({ onDrillActiveChange }: DrillsTabProps) {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.emptyState}>
-            <Dumbbell size={36} color="rgba(255,255,255,0.35)" />
-            <Text style={styles.emptyTitle}>No drills yet</Text>
-            <Text style={styles.emptySubtitle}>
-              Tap "New Drill" to create your first practice drill
-            </Text>
-          </View>
+          {categoryOrder.length > 0 ? (
+            categoryOrder.map((category) => (
+              <View key={category} style={styles.categorySection}>
+                <View style={styles.categoryHeaderRow}>
+                  <View style={[styles.categoryDot, { backgroundColor: CATEGORY_COLORS[category] || '#2D6A4F' }]} />
+                  <Text style={styles.categoryTitle}>{category}</Text>
+                </View>
+                {drillsByCategory[category].map((drill) => (
+                  <TouchableOpacity
+                    key={drill.id}
+                    style={styles.drillCard}
+                    activeOpacity={0.7}
+                  >
+                    <LinearGradient
+                      colors={['rgba(255,255,255,0.14)', 'rgba(255,255,255,0.04)']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.drillCardGradient}
+                    >
+                      <View style={styles.drillCardInner}>
+                        <View style={styles.drillCardContent}>
+                          <Text style={styles.drillCardName}>{drill.name}</Text>
+                          <Text style={styles.drillCardMeta}>
+                            {drill.rounds} rounds · {drill.targetsPerRound} targets · {drill.totalShots} shots
+                          </Text>
+                        </View>
+                        <ChevronRight size={20} color="rgba(255,255,255,0.5)" />
+                      </View>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ))
+          ) : (
+            <View style={styles.emptyState}>
+              <Dumbbell size={36} color="rgba(255,255,255,0.35)" />
+              <Text style={styles.emptyTitle}>No drills yet</Text>
+              <Text style={styles.emptySubtitle}>
+                Tap "New Drill" to create your first practice drill
+              </Text>
+            </View>
+          )}
         </ScrollView>
       </LinearGradient>
     </View>
@@ -231,7 +303,7 @@ const styles = StyleSheet.create({
   sensorRow: {
     flexDirection: "row" as const,
     gap: 10,
-    marginBottom: 40,
+    marginBottom: 24,
   },
   sensorCard: {
     flex: 1,
@@ -261,6 +333,58 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "700" as const,
+  },
+  categorySection: {
+    marginBottom: 20,
+  },
+  categoryHeaderRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+    marginBottom: 10,
+  },
+  categoryDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  categoryTitle: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
+  },
+  drillCard: {
+    borderRadius: 16,
+    overflow: 'hidden' as const,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+    marginBottom: 8,
+  },
+  drillCardGradient: {
+    borderRadius: 16,
+  },
+  drillCardInner: {
+    backgroundColor: 'rgba(0,0,0,0.22)',
+    borderRadius: 15,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+  },
+  drillCardContent: {
+    flex: 1,
+    gap: 4,
+  },
+  drillCardName: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+  },
+  drillCardMeta: {
+    fontSize: 13,
+    fontWeight: '500' as const,
+    color: 'rgba(255,255,255,0.55)',
   },
   emptyState: {
     alignItems: "center" as const,
