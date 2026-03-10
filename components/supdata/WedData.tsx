@@ -9,7 +9,6 @@ import {
   Platform, 
   UIManager,
 } from 'react-native';
-import { supabase } from '@/lib/supabase';
 
 // Enable LayoutAnimation for Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -68,60 +67,23 @@ export default function WedData() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchHistory();
+    const emptyStats: Record<string, DrillStats> = {};
+    DRILL_TYPES.forEach((drill) => {
+      emptyStats[drill.id] = {
+        latest: '-',
+        avg: 0,
+        best: 0,
+        subDrills: drill.subLabels.map(subLabel => ({
+          name: subLabel,
+          score: 0,
+          avg: 0,
+          best: 0,
+        })),
+      };
+    });
+    setStats(emptyStats);
+    setLoading(false);
   }, []);
-
-  const fetchHistory = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('golf_drills')
-        .select('drill_name, score, created_at')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const processedStats: Record<string, DrillStats> = {};
-
-      DRILL_TYPES.forEach((drill) => {
-        // Matches the "Drill Name - Subname" pattern in your components
-        const drillRows = data?.filter(row => row.drill_name.startsWith(drill.id)) || [];
-        
-        const subDrills = drill.subLabels.map(subLabel => {
-          const specificRows = drillRows.filter(r => r.drill_name.includes(subLabel));
-          const scores = specificRows.map(r => r.score);
-          
-          return {
-            name: subLabel,
-            score: specificRows[0]?.score ?? 0,
-            avg: scores.length ? parseFloat((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)) : 0,
-            best: scores.length ? Math.max(...scores) : 0,
-          };
-        });
-
-        if (drillRows.length > 0) {
-          const allScores = drillRows.map(r => r.score);
-          processedStats[drill.id] = {
-            latest: drillRows[0].score, // Score from the very last sub-drill completed
-            avg: parseFloat((allScores.reduce((a, b) => a + b, 0) / allScores.length).toFixed(1)),
-            best: Math.max(...allScores),
-            subDrills
-          };
-        } else {
-          processedStats[drill.id] = { latest: '-', avg: 0, best: 0, subDrills };
-        }
-      });
-
-      setStats(processedStats);
-    } catch (err) {
-      console.error('Error fetching wedge history:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const toggleExpand = (id: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);

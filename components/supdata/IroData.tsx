@@ -9,7 +9,6 @@ import {
   Platform, 
   UIManager,
 } from 'react-native';
-import { supabase } from '@/lib/supabase';
 
 // Enable LayoutAnimation for Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -68,81 +67,23 @@ export default function IroData() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchHistory();
-
-    // REALTIME LISTENER: Immediately refreshes UI when a new drill is saved to Supabase
-    const subscription = supabase
-      .channel('iron_updates')
-      .on('postgres_changes', { 
-        event: 'INSERT', 
-        schema: 'public', 
-        table: 'golf_drills' 
-      }, () => {
-        fetchHistory();
-      })
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    const emptyStats: Record<string, DrillStats> = {};
+    IRON_DRILL_TYPES.forEach((drill) => {
+      emptyStats[drill.id] = {
+        latest: '-',
+        avg: 0,
+        best: 0,
+        subDrills: drill.subLabels.map(subLabel => ({
+          name: subLabel,
+          score: 0,
+          avg: 0,
+          best: 0,
+        })),
+      };
+    });
+    setStats(emptyStats);
+    setLoading(false);
   }, []);
-
-  const fetchHistory = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('golf_drills')
-        .select('drill_name, score, created_at')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const processedStats: Record<string, DrillStats> = {};
-
-      IRON_DRILL_TYPES.forEach((drill) => {
-        // Find all rows that contain the drill name (case-insensitive)
-        const drillRows = data?.filter(row => 
-          row.drill_name.toLowerCase().includes(drill.id.toLowerCase())
-        ) || [];
-        
-        const subDrills = drill.subLabels.map(subLabel => {
-          // Find specific sub-type rows (e.g., "Low") within this drill category
-          const specificRows = drillRows.filter(r => 
-            r.drill_name.toLowerCase().includes(subLabel.toLowerCase())
-          );
-          const scores = specificRows.map(r => r.score);
-          
-          return {
-            name: subLabel,
-            score: specificRows[0]?.score ?? 0,
-            avg: scores.length ? parseFloat((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)) : 0,
-            best: scores.length ? Math.max(...scores) : 0,
-          };
-        });
-
-        if (drillRows.length > 0) {
-          const allScores = drillRows.map(r => r.score);
-          processedStats[drill.id] = {
-            latest: drillRows[0].score,
-            avg: parseFloat((allScores.reduce((a, b) => a + b, 0) / allScores.length).toFixed(1)),
-            best: Math.max(...allScores),
-            subDrills
-          };
-        } else {
-          processedStats[drill.id] = { latest: '-', avg: 0, best: 0, subDrills };
-        }
-      });
-
-      setStats(processedStats);
-    } catch (err) {
-      console.error('Error fetching iron history:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const toggleExpand = (id: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
