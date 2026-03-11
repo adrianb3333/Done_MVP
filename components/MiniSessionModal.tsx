@@ -177,13 +177,13 @@ const styles = StyleSheet.create({
   },
   confirmNo: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#FFFFFF',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center' as const,
   },
   confirmNoText: {
-    color: '#FFFFFF',
+    color: '#000000',
     fontSize: 16,
     fontWeight: '600' as const,
   },

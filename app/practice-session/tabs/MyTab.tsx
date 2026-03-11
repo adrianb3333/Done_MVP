@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
   },
   confirmNo: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center' as const,
@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
   confirmNoText: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#FFFFFF',
+    color: '#000000',
   },
   confirmYes: {
     flex: 1,
