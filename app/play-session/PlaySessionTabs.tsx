@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -32,9 +32,14 @@ const tabConfig: { key: PlayTab; label: string; icon: React.ReactNode }[] = [
 
 function PlaySessionContent() {
   const [activeTab, setActiveTab] = useState<PlayTab>('score');
+  const [gpsDistance, setGpsDistance] = useState<number>(0);
   const { minimizeSession } = useSession();
   const { showScoreboard, setShowScoreboard } = useScoring();
   const insets = useSafeAreaInsets();
+
+  const handleGpsDistanceChange = useCallback((dist: number) => {
+    setGpsDistance(dist);
+  }, []);
 
   const isScoreTab = activeTab === 'score';
   const isFullScreenTab = activeTab === 'wind' || activeTab === 'mind' || activeTab === 'gps' || activeTab === 'data';
@@ -42,8 +47,8 @@ function PlaySessionContent() {
   const renderContent = () => {
     switch (activeTab) {
       case 'score': return <ScoreTab />;
-      case 'gps': return <GPSTab />;
-      case 'wind': return <WindTab />;
+      case 'gps': return <GPSTab onDistanceChange={handleGpsDistanceChange} />;
+      case 'wind': return <WindTab externalDistance={gpsDistance} />;
       case 'mind': return <MindTab />;
       case 'data': return <DataTab />;
     }

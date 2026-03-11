@@ -15,7 +15,11 @@ import Colors from '@/constants/colors';
 
 type FlightOption = 'Low' | 'Normal' | 'High';
 
-export default function WindTab() {
+interface WindTabProps {
+  externalDistance?: number;
+}
+
+export default function WindTab({ externalDistance }: WindTabProps) {
   const [ballFlight, setBallFlight] = useState<FlightOption>('Normal');
   const [distance, setDistance] = useState<string>('');
   const [targetHeading] = useState<number>(0);
@@ -23,6 +27,12 @@ export default function WindTab() {
   
   const { weather, loading } = useWeather(userLocation?.lat || null, userLocation?.lon || null, targetHeading);
   const [calculation, setCalculation] = useState<GolfCalculationResult | null>(null);
+
+  useEffect(() => {
+    if (externalDistance && externalDistance > 0) {
+      setDistance(String(externalDistance));
+    }
+  }, [externalDistance]);
 
   useEffect(() => {
     const distanceNum = parseFloat(distance);

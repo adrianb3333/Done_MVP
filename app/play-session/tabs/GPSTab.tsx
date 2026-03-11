@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, Platform, Linking, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { MapPin, Move, RotateCcw } from 'lucide-react-native';
 
-
 interface Coordinate {
   latitude: number;
   longitude: number;
 }
+
+const DEFAULT_START: Coordinate = { latitude: 57.698483, longitude: 12.580719 };
+const DEFAULT_END: Coordinate = { latitude: 57.701442, longitude: 12.581172 };
 
 function haversineDistance(coord1: Coordinate, coord2: Coordinate): number {
   const R = 6371000;
@@ -23,16 +25,12 @@ function haversineDistance(coord1: Coordinate, coord2: Coordinate): number {
   return R * c;
 }
 
-function offsetCoordinate(coord: Coordinate, meters: number): Coordinate {
-  const earthRadius = 6371000;
-  const dLat = meters / earthRadius;
-  return {
-    latitude: coord.latitude + (dLat * 180) / Math.PI,
-    longitude: coord.longitude,
-  };
+
+interface GPSTabProps {
+  onDistanceChange?: (distance: number) => void;
 }
 
-function NativeMap() {
+function NativeMap({ onDistanceChange }: GPSTabProps) {
   const MapView = require('react-native-maps').default;
   const { Marker, Polyline } = require('react-native-maps');
   const Location = require('expo-location');
@@ -40,7 +38,7 @@ function NativeMap() {
   const mapRef = useRef<any>(null);
   const [userLocation, setUserLocation] = useState<Coordinate | null>(null);
   const [dragEnd, setDragEnd] = useState<Coordinate | null>(null);
-  const [distance, setDistance] = useState<number>(100);
+  const [distance, setDistance] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [permissionDenied, setPermissionDenied] = useState<boolean>(false);
 
@@ -62,14 +60,11 @@ function NativeMap() {
         });
         console.log('Got user location:', loc.coords.latitude, loc.coords.longitude);
         if (mounted) {
-          const coords: Coordinate = {
-            latitude: loc.coords.latitude,
-            longitude: loc.coords.longitude,
-          };
-          setUserLocation(coords);
-          const initialDragEnd = offsetCoordinate(coords, 100);
-          setDragEnd(initialDragEnd);
-          setDistance(100);
+          setUserLocation(DEFAULT_START);
+          setDragEnd(DEFAULT_END);
+          const initialDist = Math.round(haversineDistance(DEFAULT_START, DEFAULT_END));
+          setDistance(initialDist);
+          onDistanceChange?.(initialDist);
           setLoading(false);
         }
       } catch (err) {
@@ -89,24 +84,26 @@ function NativeMap() {
     console.log('Drag ended at:', newCoord.latitude, newCoord.longitude);
     setDragEnd(newCoord);
     if (userLocation) {
-      const dist = haversineDistance(userLocation, newCoord);
-      setDistance(Math.round(dist));
+      const dist = Math.round(haversineDistance(userLocation, newCoord));
+      setDistance(dist);
+      onDistanceChange?.(dist);
     }
-  }, [userLocation]);
+  }, [userLocation, onDistanceChange]);
 
   const handleReset = useCallback(() => {
     if (userLocation) {
-      const resetEnd = offsetCoordinate(userLocation, 100);
-      setDragEnd(resetEnd);
-      setDistance(100);
+      setDragEnd(DEFAULT_END);
+      const resetDist = Math.round(haversineDistance(DEFAULT_START, DEFAULT_END));
+      setDistance(resetDist);
+      onDistanceChange?.(resetDist);
       mapRef.current?.animateToRegion({
-        latitude: userLocation.latitude,
-        longitude: userLocation.longitude,
-        latitudeDelta: 0.003,
-        longitudeDelta: 0.003,
+        latitude: DEFAULT_START.latitude,
+        longitude: DEFAULT_START.longitude,
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005,
       }, 500);
     }
-  }, [userLocation]);
+  }, [userLocation, onDistanceChange]);
 
   if (loading) {
     return (
@@ -130,8 +127,8 @@ function NativeMap() {
   const region = {
     latitude: userLocation.latitude,
     longitude: userLocation.longitude,
-    latitudeDelta: 0.003,
-    longitudeDelta: 0.003,
+    latitudeDelta: 0.005,
+    longitudeDelta: 0.005,
   };
 
   return (
@@ -170,9 +167,9 @@ function NativeMap() {
               anchor={{ x: 0.5, y: 0.5 }}
               tracksViewChanges={false}
             >
-              <View style={styles.dragMarker}>
-                <View style={styles.dragMarkerInner}>
-                  <Move size={14} color="#fff" />
+              <View style={styles.dragMarkerHitArea}>
+                <View style={styles.dragMarkerOuter}>
+                  <Move size={20} color="rgba(255,255,255,0.9)" />
                 </View>
               </View>
             </Marker>
@@ -221,11 +218,11 @@ function WebMapFallback() {
   );
 }
 
-export default function GPSTab() {
+export default function GPSTab({ onDistanceChange }: GPSTabProps) {
   if (Platform.OS === 'web') {
     return <WebMapFallback />;
   }
-  return <NativeMap />;
+  return <NativeMap onDistanceChange={onDistanceChange} />;
 }
 
 const styles = StyleSheet.create({
@@ -268,21 +265,19 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#fff',
   },
-  dragMarker: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,59,48,0.25)',
+  dragMarkerHitArea: {
+    width: 90,
+    height: 90,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
-  dragMarkerInner: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#FF3B30',
-    borderWidth: 2,
-    borderColor: '#fff',
+  dragMarkerOuter: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.6)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },

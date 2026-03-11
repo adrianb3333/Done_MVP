@@ -3,21 +3,23 @@ import { StyleSheet, ImageBackground, View, ScrollView, ActivityIndicator, Platf
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from 'expo-location';
 
-// Updated Import Paths
 import WindCompass from "@/components/WinCom/Index";
 import BallFlightToggle from "@/components/WinCom/BallFlightToggle";
 import DistanceInput from "@/components/WinCom/DistanceInput";
 import AdjustedDistance from "@/components/WinCom/AdjustedDistance";
 import StatCard from "@/components/reusables/StatCard";
 
-// Hooks and Services
 import { useWeather } from "@/hooks/useWeather";
 import { calculateGolfShot, GolfCalculationResult } from "@/services/golfCalculations";
 import Colors from '@/constants/colors';
 
 type FlightOption = 'Low' | 'Normal' | 'High';
 
-export default function FlightTab() {
+interface FlightTabProps {
+  externalDistance?: number;
+}
+
+export default function FlightTab({ externalDistance }: FlightTabProps) {
   const [ballFlight, setBallFlight] = useState<FlightOption>('Normal');
   const [distance, setDistance] = useState<string>('');
   const [targetHeading] = useState<number>(0);
@@ -25,6 +27,12 @@ export default function FlightTab() {
   
   const { weather, loading } = useWeather(userLocation?.lat || null, userLocation?.lon || null, targetHeading);
   const [calculation, setCalculation] = useState<GolfCalculationResult | null>(null);
+
+  useEffect(() => {
+    if (externalDistance && externalDistance > 0) {
+      setDistance(String(externalDistance));
+    }
+  }, [externalDistance]);
 
   useEffect(() => {
     const distanceNum = parseFloat(distance);
@@ -62,12 +70,12 @@ export default function FlightTab() {
           lat: location.coords.latitude,
           lon: location.coords.longitude,
         });
-      } catch (error) {
+      } catch {
         setUserLocation({ lat: 59.3293, lon: 18.0686 });
       }
     };
 
-    getLocation();
+    void getLocation();
     const interval = setInterval(getLocation, 60000);
     return () => clearInterval(interval);
   }, []); 
@@ -84,7 +92,6 @@ export default function FlightTab() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* CENTER: Compass */}
           <View style={styles.compassWrapper}>
             {loading ? (
               <ActivityIndicator size="large" color={Colors.white || "#ffffff"} />
@@ -93,7 +100,6 @@ export default function FlightTab() {
             )}
           </View>
 
-          {/* Controls */}
           <BallFlightToggle 
             selected={ballFlight} 
             onSelect={setBallFlight} 
@@ -121,7 +127,6 @@ export default function FlightTab() {
             )}
           </View>
 
-          {/* Stats Grid */}
           <View style={styles.statsContainer}>
             <View style={styles.statsRow}>
               <StatCard label="Wind💨" value={weather ? `${weather.windMs} m/s` : '-- m/s'} />
@@ -164,8 +169,8 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   compassWrapper: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
     paddingVertical: 30,
   },
   statsContainer: {
@@ -173,19 +178,19 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   statsRow: {
-    flexDirection: 'row',
+    flexDirection: 'row' as const,
     marginBottom: 8,
   },
   bottomSpacer: {
     height: 20,
   },
   distanceRow: {
-    width: '100%',
+    width: '100%' as const,
   },
   distanceInputWrapper: {
-    width: '100%',
+    width: '100%' as const,
   },
   adjustedDistanceWrapper: {
-    width: '100%',
+    width: '100%' as const,
   },
 });

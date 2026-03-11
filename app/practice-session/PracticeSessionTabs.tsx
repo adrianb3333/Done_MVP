@@ -31,8 +31,13 @@ const tabsConfig: { key: PracticeTab; label: string; icon: React.ReactNode }[] =
 export default function PracticeSessionTabs() {
   const [activeTab, setActiveTab] = useState<PracticeTab>('my');
   const [isDrillActive, setIsDrillActive] = useState(false);
+  const [positionDistance, setPositionDistance] = useState<number>(0);
   const { minimizeSession } = useSession();
   const insets = useSafeAreaInsets();
+
+  const handlePositionDistanceChange = useCallback((dist: number) => {
+    setPositionDistance(dist);
+  }, []);
 
   const handleDrillActiveChange = useCallback((active: boolean) => {
     setIsDrillActive(active);
@@ -41,8 +46,8 @@ export default function PracticeSessionTabs() {
   const renderContent = () => {
     switch (activeTab) {
       case 'my': return <MyTab />;
-      case 'position': return <PositionTab />;
-      case 'flight': return <FlightTab />;
+      case 'position': return <PositionTab onDistanceChange={handlePositionDistanceChange} />;
+      case 'flight': return <FlightTab externalDistance={positionDistance} />;
       case 'notes': return <NotesTab />;
       default: return null;
     }
