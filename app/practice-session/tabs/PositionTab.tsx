@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, Platform, Linking, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { MapPin, Move, RotateCcw, Wind, ArrowUp, ZoomIn, Navigation } from 'lucide-react-native';
+import { MapPin, Wind, ArrowUp, Navigation, Crosshair } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/colors';
 import { useWeather } from '@/hooks/useWeather';
@@ -10,9 +10,6 @@ interface Coordinate {
   latitude: number;
   longitude: number;
 }
-
-const DEFAULT_START: Coordinate = { latitude: 57.698483, longitude: 12.580719 };
-const DEFAULT_END: Coordinate = { latitude: 57.701442, longitude: 12.581172 };
 
 function haversineDistance(coord1: Coordinate, coord2: Coordinate): number {
   const R = 6371000;
@@ -65,14 +62,14 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
   const Location = require('expo-location');
 
   const mapRef = useRef<any>(null);
-  const [startPosition, setStartPosition] = useState<Coordinate>(DEFAULT_START);
-  const [dragEnd, setDragEnd] = useState<Coordinate | null>(null);
+  const locationSubRef = useRef<any>(null);
+
+  const [userPosition, setUserPosition] = useState<Coordinate | null>(null);
+  const [pinnedPosition, setPinnedPosition] = useState<Coordinate | null>(null);
   const [distance, setDistance] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [permissionDenied, setPermissionDenied] = useState<boolean>(false);
   const [geoLocation, setGeoLocation] = useState<{ lat: number; lon: number } | null>(null);
-  const [gpsActive, setGpsActive] = useState<boolean>(false);
-  const [_liveUserLocation, setLiveUserLocation] = useState<Coordinate | null>(null);
 
   const { weather } = useWeather(geoLocation?.lat || null, geoLocation?.lon || null, 0);
 
@@ -82,14 +79,14 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
   }, [weather, distance]);
 
   const weatherLine = useMemo(() => {
-    if (!adjustedDistance || !dragEnd) return null;
-    const bearing = computeBearing(startPosition, dragEnd);
-    const adjEnd = destinationPoint(startPosition, bearing, adjustedDistance.adjustedDistance);
+    if (!adjustedDistance || !pinnedPosition || !userPosition) return null;
+    const bearing = computeBearing(pinnedPosition, userPosition);
+    const adjEnd = destinationPoint(pinnedPosition, bearing, adjustedDistance.adjustedDistance);
     const OFFSET = 8;
-    const startOffset = offsetCoordinate(startPosition, bearing, OFFSET);
+    const startOffset = offsetCoordinate(pinnedPosition, bearing, OFFSET);
     const endOffset = offsetCoordinate(adjEnd, bearing, OFFSET);
     return { start: startOffset, end: endOffset };
-  }, [adjustedDistance, startPosition, dragEnd]);
+  }, [adjustedDistance, pinnedPosition, userPosition]);
 
   useEffect(() => {
     let mounted = true;
@@ -109,13 +106,9 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
         });
         console.log('Got user location:', loc.coords.latitude, loc.coords.longitude);
         if (mounted) {
+          const pos: Coordinate = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
+          setUserPosition(pos);
           setGeoLocation({ lat: loc.coords.latitude, lon: loc.coords.longitude });
-          setLiveUserLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
-          setStartPosition(DEFAULT_START);
-          setDragEnd(DEFAULT_END);
-          const initialDist = Math.round(haversineDistance(DEFAULT_START, DEFAULT_END));
-          setDistance(initialDist);
-          onDistanceChange?.(initialDist);
           setLoading(false);
         }
       } catch (err) {
@@ -127,80 +120,56 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
       }
     })();
     return () => { mounted = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const toggleGps = useCallback(async () => {
-    const Location = require('expo-location');
-    if (!gpsActive) {
+  useEffect(() => {
+    let sub: any = null;
+    void (async () => {
       try {
-        const loc = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.High,
-        });
-        const newStart: Coordinate = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
-        console.log('GPS ON - using live position:', newStart.latitude, newStart.longitude);
-        setLiveUserLocation(newStart);
-        setStartPosition(newStart);
-        setGpsActive(true);
-        if (dragEnd) {
-          const dist = Math.round(haversineDistance(newStart, dragEnd));
-          setDistance(dist);
-          onDistanceChange?.(dist);
-          mapRef.current?.fitToCoordinates(
-            [newStart, dragEnd],
-            { edgePadding: { top: 100, right: 60, bottom: 80, left: 60 }, animated: true }
-          );
-        }
-      } catch (err) {
-        console.log('Error getting GPS position:', err);
-      }
-    } else {
-      console.log('GPS OFF - reverting to default coordinates');
-      setStartPosition(DEFAULT_START);
-      setGpsActive(false);
-      if (dragEnd) {
-        const dist = Math.round(haversineDistance(DEFAULT_START, dragEnd));
-        setDistance(dist);
-        onDistanceChange?.(dist);
-        mapRef.current?.fitToCoordinates(
-          [DEFAULT_START, dragEnd],
-          { edgePadding: { top: 100, right: 60, bottom: 80, left: 60 }, animated: true }
+        const Loc = require('expo-location');
+        sub = await Loc.watchPositionAsync(
+          { accuracy: Loc.Accuracy.High, distanceInterval: 1, timeInterval: 1000 },
+          (loc: any) => {
+            const newPos: Coordinate = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
+            setUserPosition(newPos);
+            setGeoLocation({ lat: loc.coords.latitude, lon: loc.coords.longitude });
+          }
         );
+        locationSubRef.current = sub;
+      } catch (err) {
+        console.log('Error watching position:', err);
       }
-    }
-  }, [gpsActive, dragEnd, onDistanceChange]);
+    })();
+    return () => {
+      if (locationSubRef.current?.remove) {
+        locationSubRef.current.remove();
+      }
+    };
+  }, []);
 
-  const handleDrag = useCallback((e: any) => {
-    const newCoord: Coordinate = e.nativeEvent.coordinate;
-    setDragEnd(newCoord);
-    const dist = Math.round(haversineDistance(startPosition, newCoord));
+  useEffect(() => {
+    if (pinnedPosition && userPosition) {
+      const dist = Math.round(haversineDistance(pinnedPosition, userPosition));
+      setDistance(dist);
+      onDistanceChange?.(dist);
+    }
+  }, [pinnedPosition, userPosition, onDistanceChange]);
+
+  const handleSetPin = useCallback(() => {
+    if (!userPosition) return;
+    console.log('Set Pin at:', userPosition.latitude, userPosition.longitude);
+    setPinnedPosition({ ...userPosition });
+    const dist = 0;
     setDistance(dist);
     onDistanceChange?.(dist);
-  }, [startPosition, onDistanceChange]);
+  }, [userPosition, onDistanceChange]);
 
-  const handleDragEnd = useCallback((e: any) => {
-    const newCoord: Coordinate = e.nativeEvent.coordinate;
-    console.log('Drag ended at:', newCoord.latitude, newCoord.longitude);
-    setDragEnd(newCoord);
-    const dist = Math.round(haversineDistance(startPosition, newCoord));
-    setDistance(dist);
-    onDistanceChange?.(dist);
-  }, [startPosition, onDistanceChange]);
-
-  const handleReset = useCallback(() => {
-    setDragEnd(DEFAULT_END);
-    if (!gpsActive) {
-      setStartPosition(DEFAULT_START);
-    }
-    const start = gpsActive ? startPosition : DEFAULT_START;
-    const resetDist = Math.round(haversineDistance(start, DEFAULT_END));
-    setDistance(resetDist);
-    onDistanceChange?.(resetDist);
-    mapRef.current?.fitToCoordinates(
-      [start, DEFAULT_END],
-      { edgePadding: { top: 100, right: 60, bottom: 80, left: 60 }, animated: true }
-    );
-  }, [gpsActive, startPosition, onDistanceChange]);
+  const handleClearPin = useCallback(() => {
+    console.log('Clearing pin');
+    setPinnedPosition(null);
+    setDistance(0);
+    onDistanceChange?.(0);
+  }, [onDistanceChange]);
 
   if (loading) {
     return (
@@ -221,23 +190,33 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
     );
   }
 
+  const centerCoord = userPosition ?? { latitude: 0, longitude: 0 };
+
+  const initialRegion = {
+    latitude: centerCoord.latitude,
+    longitude: centerCoord.longitude,
+    latitudeDelta: 0.005,
+    longitudeDelta: 0.005,
+  };
+
   const handleMapReady = () => {
-    if (mapRef.current && dragEnd) {
-      mapRef.current.fitToCoordinates(
-        [startPosition, dragEnd],
-        {
-          edgePadding: { top: 100, right: 60, bottom: 80, left: 60 },
-          animated: false,
-        }
-      );
+    if (mapRef.current && userPosition) {
+      mapRef.current.animateToRegion({
+        latitude: userPosition.latitude,
+        longitude: userPosition.longitude,
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005,
+      }, 300);
     }
   };
 
-  const initialRegion = {
-    latitude: (startPosition.latitude + (dragEnd?.latitude ?? startPosition.latitude)) / 2,
-    longitude: (startPosition.longitude + (dragEnd?.longitude ?? startPosition.longitude)) / 2,
-    latitudeDelta: Math.abs((dragEnd?.latitude ?? startPosition.latitude) - startPosition.latitude) * 2.5 + 0.002,
-    longitudeDelta: Math.abs((dragEnd?.longitude ?? startPosition.longitude) - startPosition.longitude) * 2.5 + 0.002,
+  const fitToBoth = () => {
+    if (mapRef.current && pinnedPosition && userPosition) {
+      mapRef.current.fitToCoordinates(
+        [pinnedPosition, userPosition],
+        { edgePadding: { top: 120, right: 60, bottom: 80, left: 60 }, animated: true }
+      );
+    }
   };
 
   const windDistText = adjustedDistance ? Math.round(adjustedDistance.adjustedDistance) : null;
@@ -255,132 +234,134 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
         showsCompass={true}
         showsScale={true}
       >
-        {dragEnd && (
+        {pinnedPosition && (
           <>
-            <Polyline
-              coordinates={[startPosition, dragEnd]}
-              strokeColor="#FFFFFF"
-              strokeWidth={3}
-            />
-            {weatherLine && (
+            <Marker
+              coordinate={pinnedPosition}
+              anchor={{ x: 0.5, y: 0.5 }}
+              tracksViewChanges={false}
+            >
+              <View style={styles.pinMarker}>
+                <View style={styles.pinMarkerInner} />
+              </View>
+            </Marker>
+
+            {userPosition && (
               <>
                 <Polyline
-                  coordinates={[weatherLine.start, weatherLine.end]}
-                  strokeColor="#FF9500"
-                  strokeWidth={2}
+                  coordinates={[pinnedPosition, userPosition]}
+                  strokeColor="#FFFFFF"
+                  strokeWidth={3}
                 />
-                <Marker
-                  coordinate={weatherLine.end}
-                  anchor={{ x: 0.5, y: 0.5 }}
-                  tracksViewChanges={false}
-                >
-                  <View style={styles.orangeEndMarker}>
-                    <View style={styles.orangeEndMarkerInner} />
-                  </View>
-                </Marker>
+                {weatherLine && (
+                  <>
+                    <Polyline
+                      coordinates={[weatherLine.start, weatherLine.end]}
+                      strokeColor="#FF9500"
+                      strokeWidth={2}
+                    />
+                    <Marker
+                      coordinate={weatherLine.end}
+                      anchor={{ x: 0.5, y: 0.5 }}
+                      tracksViewChanges={false}
+                    >
+                      <View style={styles.orangeEndMarker}>
+                        <View style={styles.orangeEndMarkerInner} />
+                      </View>
+                    </Marker>
+                  </>
+                )}
               </>
             )}
-            <Marker
-              coordinate={startPosition}
-              anchor={{ x: 0.5, y: 0.5 }}
-              tracksViewChanges={false}
-            >
-              <View style={styles.startMarker}>
-                <View style={styles.startMarkerInner} />
-              </View>
-            </Marker>
-            <Marker
-              coordinate={dragEnd}
-              draggable
-              onDrag={handleDrag}
-              onDragEnd={handleDragEnd}
-              anchor={{ x: 0.5, y: 0.5 }}
-              tracksViewChanges={false}
-            >
-              <View style={styles.dragMarkerHitArea}>
-                <View style={styles.dragMarkerOuter}>
-                  <Move size={20} color="rgba(255,255,255,0.9)" />
-                </View>
-              </View>
-            </Marker>
           </>
         )}
       </MapView>
 
       <TouchableOpacity
-        style={[styles.gpsToggle, gpsActive && styles.gpsToggleActive]}
-        onPress={toggleGps}
-        activeOpacity={0.7}
-      >
-        <Navigation size={18} color={gpsActive ? '#34C759' : '#FFFFFF'} fill={gpsActive ? '#34C759' : 'transparent'} />
-        <Text style={[styles.gpsToggleText, gpsActive && styles.gpsToggleTextActive]}>
-          GPS {gpsActive ? 'ON' : 'OFF'}
-        </Text>
-      </TouchableOpacity>
-
-      <View style={styles.distanceOverlay}>
-        <Text style={styles.distanceMainValue}>{distance}</Text>
-        <Text style={styles.distanceMainUnit}>m</Text>
-        {windDistText !== null && (
-          <View style={styles.windDistRow}>
-            <LinearGradient
-              colors={['#FF9500', '#FF6B00', '#FF9500']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.windDistGradientBg}
-            >
-              <Text style={styles.windDistValue}>{windDistText}</Text>
-              <Text style={styles.windDistUnit}>m</Text>
-            </LinearGradient>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.toolLabel}>
-        <Move size={14} color="#34C759" />
-        <Text style={styles.toolLabelText}>Drag to measure</Text>
-      </View>
-
-      <TouchableOpacity style={styles.resetBtn} onPress={handleReset} activeOpacity={0.7}>
-        <RotateCcw size={18} color="#fff" />
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.zoomBtn}
+        style={[styles.gpsToggle]}
         onPress={() => {
-          if (dragEnd && mapRef.current) {
+          if (userPosition && mapRef.current) {
             mapRef.current.animateToRegion({
-              latitude: dragEnd.latitude,
-              longitude: dragEnd.longitude,
-              latitudeDelta: 0.001,
-              longitudeDelta: 0.001,
-            }, 600);
+              latitude: userPosition.latitude,
+              longitude: userPosition.longitude,
+              latitudeDelta: 0.003,
+              longitudeDelta: 0.003,
+            }, 500);
           }
         }}
         activeOpacity={0.7}
       >
-        <ZoomIn size={18} color="#fff" />
+        <Navigation size={18} color="#34C759" fill="#34C759" />
+        <Text style={[styles.gpsToggleText, { color: '#34C759' }]}>My Location</Text>
       </TouchableOpacity>
 
-      {weather && (
-        <View style={styles.windBox}>
-          <View style={styles.windArrowRow}>
-            <View style={{ transform: [{ rotate: `${weather.windDeg}deg` }] }}>
-              <ArrowUp size={16} color="#4FC3F7" />
+      {pinnedPosition && (
+        <View style={styles.distanceOverlay}>
+          <Text style={styles.distanceMainValue}>{distance}</Text>
+          <Text style={styles.distanceMainUnit}>m</Text>
+          {windDistText !== null && (
+            <View style={styles.windDistRow}>
+              <LinearGradient
+                colors={['#FF9500', '#FF6B00', '#FF9500']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.windDistGradientBg}
+              >
+                <Text style={styles.windDistValue}>{windDistText}</Text>
+                <Text style={styles.windDistUnit}>m</Text>
+              </LinearGradient>
             </View>
-            <Text style={styles.windSpeedText}>{weather.windMs} m/s</Text>
-          </View>
-          <View style={styles.windDivider} />
-          {adjustedDistance ? (
-            <View style={styles.windDistInfoRow}>
-              <Wind size={12} color="#FF9500" />
-              <Text style={styles.windAdjText}>{Math.round(adjustedDistance.adjustedDistance)}m</Text>
-            </View>
-          ) : (
-            <Text style={styles.windNoData}>--</Text>
           )}
         </View>
       )}
+
+      {!pinnedPosition && (
+        <View style={styles.toolLabel}>
+          <Crosshair size={14} color="#34C759" />
+          <Text style={styles.toolLabelText}>Tap "Set Pin" to start measuring</Text>
+        </View>
+      )}
+
+      {pinnedPosition && (
+        <TouchableOpacity style={styles.fitBtn} onPress={fitToBoth} activeOpacity={0.7}>
+          <MapPin size={16} color="#fff" />
+          <Text style={styles.fitBtnText}>Fit</Text>
+        </TouchableOpacity>
+      )}
+
+      <View style={styles.setPinContainer}>
+        {weather && (
+          <View style={styles.windBox}>
+            <View style={styles.windArrowRow}>
+              <View style={{ transform: [{ rotate: `${weather.windDeg}deg` }] }}>
+                <ArrowUp size={16} color="#4FC3F7" />
+              </View>
+              <Text style={styles.windSpeedText}>{weather.windMs} m/s</Text>
+            </View>
+            <View style={styles.windDivider} />
+            {adjustedDistance ? (
+              <View style={styles.windDistInfoRow}>
+                <Wind size={12} color="#FF9500" />
+                <Text style={styles.windAdjText}>{Math.round(adjustedDistance.adjustedDistance)}m</Text>
+              </View>
+            ) : (
+              <Text style={styles.windNoData}>--</Text>
+            )}
+          </View>
+        )}
+
+        {!pinnedPosition ? (
+          <TouchableOpacity style={styles.setPinBtn} onPress={handleSetPin} activeOpacity={0.7}>
+            <MapPin size={16} color="#fff" />
+            <Text style={styles.setPinText}>Set Pin</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.clearPinBtn} onPress={handleClearPin} activeOpacity={0.7}>
+            <MapPin size={16} color="#FF5252" />
+            <Text style={styles.clearPinText}>Clear Pin</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 }
@@ -440,37 +421,39 @@ const styles = StyleSheet.create({
     color: '#888',
     fontSize: 13,
   },
-  startMarker: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+  pinMarker: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: 'rgba(52,199,89,0.3)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
+    borderWidth: 2,
+    borderColor: 'rgba(52,199,89,0.6)',
   },
-  startMarkerInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  pinMarkerInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     backgroundColor: '#34C759',
     borderWidth: 2,
     borderColor: '#fff',
   },
-  dragMarkerHitArea: {
-    width: 90,
-    height: 90,
+  orangeEndMarker: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: 'rgba(255,149,0,0.25)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
-  dragMarkerOuter: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderWidth: 3,
-    borderColor: 'rgba(255,255,255,0.6)',
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+  orangeEndMarkerInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#FF9500',
+    borderWidth: 2,
+    borderColor: 'rgba(255,149,0,0.6)',
   },
   gpsToggle: {
     position: 'absolute' as const,
@@ -484,19 +467,12 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     gap: 6,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-  },
-  gpsToggleActive: {
-    borderColor: 'rgba(52,199,89,0.5)',
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    borderColor: 'rgba(52,199,89,0.4)',
   },
   gpsToggleText: {
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '700' as const,
-  },
-  gpsToggleTextActive: {
-    color: '#34C759',
   },
   distanceOverlay: {
     position: 'absolute' as const,
@@ -560,52 +536,33 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500' as const,
   },
-  resetBtn: {
+  fitBtn: {
     position: 'absolute' as const,
     bottom: 20,
     right: 16,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
     backgroundColor: 'rgba(0,0,0,0.75)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+    gap: 5,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.15)',
   },
-  orangeEndMarker: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: 'rgba(255,149,0,0.25)',
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+  fitBtnText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600' as const,
   },
-  orangeEndMarkerInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#FF9500',
-    borderWidth: 2,
-    borderColor: 'rgba(255,149,0,0.6)',
-  },
-  zoomBtn: {
-    position: 'absolute' as const,
-    bottom: 70,
-    right: 16,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(0,0,0,0.75)',
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-  },
-  windBox: {
+  setPinContainer: {
     position: 'absolute' as const,
     top: 16,
     right: 16,
+    alignItems: 'center' as const,
+    gap: 10,
+  },
+  windBox: {
     backgroundColor: 'rgba(0,0,0,0.82)',
     borderRadius: 14,
     paddingHorizontal: 12,
@@ -645,6 +602,38 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 12,
     fontWeight: '600' as const,
+  },
+  setPinBtn: {
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(52,199,89,0.5)',
+  },
+  setPinText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '700' as const,
+  },
+  clearPinBtn: {
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,82,82,0.5)',
+  },
+  clearPinText: {
+    color: '#FF5252',
+    fontSize: 13,
+    fontWeight: '700' as const,
   },
   webFallback: {
     flex: 1,
