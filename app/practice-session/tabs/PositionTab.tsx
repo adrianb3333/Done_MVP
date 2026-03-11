@@ -170,9 +170,11 @@ function NativeMap() {
               anchor={{ x: 0.5, y: 0.5 }}
               tracksViewChanges={false}
             >
-              <View style={styles.dragMarker}>
-                <View style={styles.dragMarkerInner}>
-                  <Move size={14} color="#fff" />
+              <View style={styles.dragMarkerHitArea}>
+                <View style={styles.dragMarker}>
+                  <View style={styles.dragMarkerInner}>
+                    <Move size={18} color="#fff" />
+                  </View>
                 </View>
               </View>
             </Marker>
@@ -268,20 +270,26 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#fff',
   },
+  dragMarkerHitArea: {
+    width: 72,
+    height: 72,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
   dragMarker: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,59,48,0.25)',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,59,48,0.3)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
   dragMarkerInner: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: '#FF3B30',
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: '#fff',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
