@@ -11,7 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ChevronDown, Bluetooth, ChevronRight, ChevronLeft, Zap, BarChart3, Target } from 'lucide-react-native';
+import { ChevronLeft, Bluetooth, ChevronRight, Zap, BarChart3, Target } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -171,7 +171,7 @@ export default function PairImpactModal() {
             activeOpacity={0.7}
             testID="pair-close-button"
           >
-            <ChevronDown size={22} color="#fff" strokeWidth={2.5} />
+            <ChevronLeft size={22} color="#fff" strokeWidth={2.5} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Pair Sensors</Text>
           <View style={styles.headerSpacer} />
@@ -481,7 +481,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  safeTop: {},
+  safeTop: {
+    backgroundColor: 'transparent',
+  },
   safeBottom: {},
   header: {
     flexDirection: 'row' as const,

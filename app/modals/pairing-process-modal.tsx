@@ -9,7 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, ChevronRight, Check, ChevronDown } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -186,7 +186,7 @@ export default function PairingProcessModal() {
             style={styles.cancelBtn}
             activeOpacity={0.7}
           >
-            <ChevronDown size={20} color="#fff" strokeWidth={2.5} />
+            <ChevronLeft size={20} color="#fff" strokeWidth={2.5} />
           </TouchableOpacity>
           <Text style={styles.headerCounter}>
             {currentIndex + 1} / {clubs.length}
