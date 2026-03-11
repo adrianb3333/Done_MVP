@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, Platform, Linking, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { MapPin, Move, RotateCcw, Wind, ArrowUp } from 'lucide-react-native';
+import { MapPin, Move, RotateCcw, Wind, ArrowUp, ZoomIn } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useWeather } from '@/hooks/useWeather';
 import { calculateGolfShot } from '@/services/golfCalculations';
@@ -82,7 +82,7 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
     if (!adjustedDistance || !userLocation || !dragEnd) return null;
     const bearing = computeBearing(userLocation, dragEnd);
     const adjEnd = destinationPoint(userLocation, bearing, adjustedDistance.adjustedDistance);
-    const OFFSET = 3;
+    const OFFSET = 8;
     const startOffset = offsetCoordinate(userLocation, bearing, OFFSET);
     const endOffset = offsetCoordinate(adjEnd, bearing, OFFSET);
     return { start: startOffset, end: endOffset };
@@ -206,15 +206,24 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
               coordinates={[userLocation, dragEnd]}
               strokeColor="#FFFFFF"
               strokeWidth={3}
-              lineDashPattern={[8, 6]}
             />
             {weatherLine && (
-              <Polyline
-                coordinates={[weatherLine.start, weatherLine.end]}
-                strokeColor="#4FC3F7"
-                strokeWidth={2}
-                lineDashPattern={[6, 4]}
-              />
+              <>
+                <Polyline
+                  coordinates={[weatherLine.start, weatherLine.end]}
+                  strokeColor="#FF9500"
+                  strokeWidth={2}
+                />
+                <Marker
+                  coordinate={weatherLine.end}
+                  anchor={{ x: 0.5, y: 0.5 }}
+                  tracksViewChanges={false}
+                >
+                  <View style={styles.orangeEndMarker}>
+                    <View style={styles.orangeEndMarkerInner} />
+                  </View>
+                </Marker>
+              </>
             )}
             <Marker
               coordinate={userLocation}
@@ -255,6 +264,23 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
 
       <TouchableOpacity style={styles.resetBtn} onPress={handleReset} activeOpacity={0.7}>
         <RotateCcw size={18} color="#fff" />
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.zoomBtn}
+        onPress={() => {
+          if (dragEnd && mapRef.current) {
+            mapRef.current.animateToRegion({
+              latitude: dragEnd.latitude,
+              longitude: dragEnd.longitude,
+              latitudeDelta: 0.001,
+              longitudeDelta: 0.001,
+            }, 600);
+          }
+        }}
+        activeOpacity={0.7}
+      >
+        <ZoomIn size={18} color="#fff" />
       </TouchableOpacity>
 
       {weather && (
@@ -412,6 +438,35 @@ const styles = StyleSheet.create({
   resetBtn: {
     position: 'absolute' as const,
     bottom: 20,
+    right: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  orangeEndMarker: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: 'rgba(255,149,0,0.25)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  orangeEndMarkerInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#FF9500',
+    borderWidth: 2,
+    borderColor: 'rgba(255,149,0,0.6)',
+  },
+  zoomBtn: {
+    position: 'absolute' as const,
+    bottom: 70,
     right: 16,
     width: 44,
     height: 44,
