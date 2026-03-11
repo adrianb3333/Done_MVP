@@ -8,6 +8,7 @@ import { SessionProvider, useSession } from "@/contexts/SessionContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
 import { AppNavigationProvider, useAppNavigation } from "@/contexts/AppNavigationContext";
 import { UserDataProvider } from "@/hooks/useUserData";
+import { SensorProvider } from "@/contexts/SensorContext";
 import PlaySessionTabs from "@/app/play-session/PlaySessionTabs";
 import PracticeSessionTabs from "@/app/practice-session/PracticeSessionTabs";
 import MiniSessionModal from "@/components/MiniSessionModal";
@@ -334,13 +335,15 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView style={styles.container}>
         <SessionProvider>
-          <ProfileProvider>
-            <AppNavigationProvider>
-              <UserDataProvider>
-                <RootLayoutNav />
-              </UserDataProvider>
-            </AppNavigationProvider>
-          </ProfileProvider>
+          <SensorProvider>
+            <ProfileProvider>
+              <AppNavigationProvider>
+                <UserDataProvider>
+                  <RootLayoutNav />
+                </UserDataProvider>
+              </AppNavigationProvider>
+            </ProfileProvider>
+          </SensorProvider>
         </SessionProvider>
       </GestureHandlerRootView>
     </QueryClientProvider>

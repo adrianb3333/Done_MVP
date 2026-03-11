@@ -40,6 +40,8 @@ import { useSwingStore } from '@/store/swingStore';
 import { AnalysisSession } from '@/Types';
 import { useQuery } from '@tanstack/react-query';
 import { fetchAllTimeStats } from '@/services/roundStatsService';
+import { useSensor } from '@/contexts/SensorContext';
+import SensorLockOverlay from '@/components/SensorLockOverlay';
 
 import { fetchRoundShotCount } from '@/services/shotCountService';
 import RoundStatsDisplay from '@/components/PlaSta/RoundStatsDisplay';
@@ -559,8 +561,10 @@ function SGContent({ sgSegment, selectedHandicap, showHandicapPicker, setShowHan
   setShowHandicapPicker: (v: boolean) => void;
   setSelectedHandicap: (v: string) => void;
 }) {
+  const { isPaired } = useSensor();
   return (
     <View style={{ flex: 1 }}>
+      {!isPaired && <SensorLockOverlay />}
       {sgSegment === 'ovve' ? (
         <SGOverallView selectedHandicap={selectedHandicap} />
       ) : (
@@ -924,6 +928,7 @@ type ShotsSegment = 'round' | 'practice';
 
 function ShotsContent({ segment }: { segment: ShotsSegment }) {
   const topPadding = useScrollHeaderPadding();
+  const { isPaired } = useSensor();
   const roundShotsQuery = useQuery({
     queryKey: ['totalRoundShots'],
     queryFn: fetchRoundShotCount,
@@ -931,6 +936,7 @@ function ShotsContent({ segment }: { segment: ShotsSegment }) {
 
   return (
     <View style={{ flex: 1 }}>
+      {!isPaired && <SensorLockOverlay />}
       {segment === 'round' ? (
         <View style={[shotsStyles.totalContainer, { paddingTop: topPadding + 20 }]}>
           {roundShotsQuery.isLoading ? (

@@ -7,6 +7,8 @@ import { useSession } from '@/contexts/SessionContext';
 import { useScoring } from '@/contexts/ScoringContext';
 import { fetchGolfWeather } from '@/services/weatherApi';
 import { computeRoundStats, getToParString, pctOf } from '@/services/statsHelper';
+import { useSensor } from '@/contexts/SensorContext';
+import SensorLockOverlay from '@/components/SensorLockOverlay';
 
 const SG_SEGMENTS: { key: string; label: string }[] = [
   { key: 'ovve', label: 'Ovve' },
@@ -35,6 +37,7 @@ const SG_TITLES: Record<string, string> = {
 export default function DataTab() {
   const { quitSession, sessionStartTime } = useSession();
   const { allScores, holes } = useScoring();
+  const { isPaired } = useSensor();
 
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const [showSGModal, setShowSGModal] = useState(false);
@@ -181,6 +184,7 @@ export default function DataTab() {
       >
         <View style={styles.sgModalOverlay}>
           <View style={styles.sgModalCard}>
+            {!isPaired && <SensorLockOverlay />}
             <View style={styles.sgModalHeader}>
               <TouchableOpacity onPress={() => setShowSGModal(false)} activeOpacity={0.7}>
                 <X size={22} color="#FFFFFF" />

@@ -4,6 +4,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { ArrowLeft } from "lucide-react-native";
 import { useRouter } from "expo-router";
+import { useSensor } from '@/contexts/SensorContext';
+import SensorLockOverlay from '@/components/SensorLockOverlay';
 
 type Segment = 'approach' | 'around';
 
@@ -49,6 +51,7 @@ function getMaxAbsValue(data: BarData[]): number {
 export default function StrokesGainedModal({ onClose }: { onClose?: () => void }) {
   const router = useRouter();
   const [segment, setSegment] = useState<Segment>('approach');
+  const { isPaired } = useSensor();
   const handleClose = () => { if (onClose) { onClose(); } else { router.back(); } };
 
   const data = segment === 'approach' ? APPROACH_DATA : AROUND_DATA;
@@ -59,6 +62,7 @@ export default function StrokesGainedModal({ onClose }: { onClose?: () => void }
   return (
     <View style={styles.background}>
       <StatusBar style="light" />
+      {!isPaired && <SensorLockOverlay />}
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <Pressable onPress={handleClose} hitSlop={12} style={styles.backButton}>

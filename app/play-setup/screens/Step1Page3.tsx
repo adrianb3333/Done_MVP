@@ -1,5 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { useSensor } from '@/contexts/SensorContext';
+import SensorLockOverlay from '@/components/SensorLockOverlay';
 
 interface StrokesGainedSection {
   title: string;
@@ -15,7 +17,10 @@ const SECTIONS: StrokesGainedSection[] = [
 ];
 
 export default function Step1Page3() {
+  const { isPaired } = useSensor();
   return (
+    <View style={{ flex: 1, position: 'relative' as const }}>
+    {!isPaired && <SensorLockOverlay />}
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.scrollContent}
@@ -56,6 +61,7 @@ export default function Step1Page3() {
 
       <View style={{ height: 40 }} />
     </ScrollView>
+    </View>
   );
 }
 

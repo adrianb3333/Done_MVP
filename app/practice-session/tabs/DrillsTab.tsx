@@ -41,6 +41,8 @@ import DrillOverviewScreen from "@/components/drills/DrillOverviewScreen";
 import ActiveDrillScreen, { DrillResult } from "@/components/drills/ActiveDrillScreen";
 import DrillSummaryScreen from "@/components/drills/DrillSummaryScreen";
 import { Star } from "lucide-react-native";
+import { useSensor } from '@/contexts/SensorContext';
+import SensorLockOverlay from '@/components/SensorLockOverlay';
 
 interface DrillsTabProps {
   onDrillActiveChange?: (active: boolean) => void;
@@ -96,6 +98,7 @@ type ScreenState =
   | 'drillSummary';
 
 export default function DrillsTab({ onDrillActiveChange, onMinimize }: DrillsTabProps) {
+  const { isPaired: sensorsPaired } = useSensor();
   const [selectedDrill, setSelectedDrill] = useState<{ category: string; card: string } | null>(null);
   const [currentScreen, setCurrentScreen] = useState<ScreenState>('main');
   const [savedDrills, setSavedDrills] = useState<CustomDrill[]>([]);
@@ -525,8 +528,9 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize }: DrillsTab
             <TouchableOpacity
               style={styles.sensorCard}
               activeOpacity={0.7}
-              onPress={() => setCurrentScreen('createSensorDrill')}
+              onPress={() => sensorsPaired ? setCurrentScreen('createSensorDrill') : undefined}
             >
+              {!sensorsPaired && <SensorLockOverlay compact />}
               <Text style={styles.sensorLabel}>SENSORS NEEDED</Text>
               <View style={styles.sensorIconCircle}>
                 <Plus size={22} color="#FFFFFF" strokeWidth={2.5} />
@@ -537,8 +541,9 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize }: DrillsTab
             <TouchableOpacity
               style={styles.sensorCard}
               activeOpacity={0.7}
-              onPress={() => setCurrentScreen('battle')}
+              onPress={() => sensorsPaired ? setCurrentScreen('battle') : undefined}
             >
+              {!sensorsPaired && <SensorLockOverlay compact />}
               <Text style={styles.sensorLabel}>SENSORS NEEDED</Text>
               <View style={[styles.sensorIconCircle, { backgroundColor: 'rgba(230,57,70,0.2)' }]}>
                 <Swords size={20} color="#E63946" />

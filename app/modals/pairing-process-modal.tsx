@@ -13,6 +13,7 @@ import { ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { useSensor } from '@/contexts/SensorContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -22,6 +23,7 @@ export default function PairingProcessModal() {
   const router = useRouter();
   const params = useLocalSearchParams<{ clubs: string }>();
   const clubs: string[] = params.clubs ? JSON.parse(params.clubs) : [];
+  const { markPaired } = useSensor();
 
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [isPairing, setIsPairing] = useState<boolean>(true);
@@ -102,6 +104,7 @@ export default function PairingProcessModal() {
   useEffect(() => {
     if (allDone) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      markPaired();
       Animated.spring(checkScaleAnim, {
         toValue: 1,
         friction: 4,
@@ -117,7 +120,7 @@ export default function PairingProcessModal() {
       }, 2500);
       return () => clearTimeout(timer);
     }
-  }, [allDone, checkScaleAnim, router, params.clubs]);
+  }, [allDone, checkScaleAnim, router, params.clubs, markPaired]);
 
   const getClubDisplayName = useCallback((club: string): string => {
     if (club === 'Pu') return 'Putter';
