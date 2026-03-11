@@ -5,10 +5,39 @@ import {
   StyleSheet,
   TouchableOpacity,
   Modal,
+  Platform,
 } from 'react-native';
 import { ChevronUp } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import MaskedView from '@react-native-masked-view/masked-view';
 import Colors from '@/constants/colors';
 import { useSession } from '@/contexts/SessionContext';
+
+const PRACTICE_GRADIENT: [string, string, string] = ['#0059B2', '#1075E3', '#1C8CFF'];
+const PLAY_GRADIENT: [string, string, string] = ['#4BA35B', '#3D954D', '#2D803D'];
+
+function GradientText({ text, colors }: { text: string; colors: [string, string, string] }) {
+  if (Platform.OS === 'web') {
+    return (
+      <Text style={[styles.sessionLabel, { color: colors[0] }]}>{text}</Text>
+    );
+  }
+  return (
+    <MaskedView
+      maskElement={
+        <Text style={[styles.sessionLabel, { color: '#000' }]}>{text}</Text>
+      }
+    >
+      <LinearGradient
+        colors={colors}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+      >
+        <Text style={[styles.sessionLabel, { opacity: 0 }]}>{text}</Text>
+      </LinearGradient>
+    </MaskedView>
+  );
+}
 
 export default function MiniSessionModal() {
   const { sessionType, expandSession, finishSession } = useSession();
@@ -29,25 +58,52 @@ export default function MiniSessionModal() {
     setShowConfirm(false);
   };
 
+  const isPlay = sessionType === 'play';
+
   return (
     <View style={styles.container}>
-      <View style={styles.modal}>
-        <TouchableOpacity
-          style={styles.expandButton}
-          onPress={expandSession}
-          activeOpacity={0.7}
+      {isPlay ? (
+        <LinearGradient
+          colors={PLAY_GRADIENT}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.modal}
         >
-          <ChevronUp size={28} color={Colors.primary} strokeWidth={2.5} />
-          <Text style={styles.sessionLabel}>{sessionLabel}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.finishButton}
-          onPress={handleFinishPress}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.finishText}>Finish</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={styles.expandButton}
+            onPress={expandSession}
+            activeOpacity={0.7}
+          >
+            <ChevronUp size={28} color="#fff" strokeWidth={2.5} />
+            <Text style={styles.sessionLabel}>{sessionLabel}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.finishButton}
+            onPress={handleFinishPress}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.finishText}>Finish</Text>
+          </TouchableOpacity>
+        </LinearGradient>
+      ) : (
+        <View style={[styles.modal, styles.practiceModal]}>
+          <TouchableOpacity
+            style={styles.expandButton}
+            onPress={expandSession}
+            activeOpacity={0.7}
+          >
+            <ChevronUp size={28} color="#0059B2" strokeWidth={2.5} />
+            <GradientText text={sessionLabel} colors={PRACTICE_GRADIENT} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.finishButton}
+            onPress={handleFinishPress}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.finishText}>Finish</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <Modal
         visible={showConfirm}
@@ -95,19 +151,19 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   modal: {
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
+  },
+  practiceModal: {
+    backgroundColor: '#FFFFFF',
   },
   expandButton: {
     flexDirection: 'row',
