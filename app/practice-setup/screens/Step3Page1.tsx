@@ -4,6 +4,8 @@ import { Clock, Thermometer, Timer, Radio, Smartphone } from 'lucide-react-nativ
 
 import { fetchGolfWeather } from '@/services/weatherApi';
 import { useSession } from '@/contexts/SessionContext';
+import { useSensor } from '@/contexts/SensorContext';
+import SensorLockOverlay from '@/components/SensorLockOverlay';
 
 export default function Step3Page1() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -11,6 +13,7 @@ export default function Step3Page1() {
   const [tempLoading, setTempLoading] = useState(true);
   const { sensorsEnabled, setSensorsEnabled } = useSession();
   const [deviceEnabled, setDeviceEnabled] = useState<boolean>(false);
+  const { isPaired: sensorsPaired } = useSensor();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -82,9 +85,8 @@ export default function Step3Page1() {
         </View>
       </View>
 
-      <View
-        style={[styles.toggleCard, { marginTop: 12 }]}
-      >
+      <View style={[styles.toggleCard, { marginTop: 12 }]}>
+        {!sensorsPaired && <SensorLockOverlay compact />}
         <View style={styles.toggleLeft}>
           <View style={styles.toggleIcon}>
             <Radio size={20} color="#FFFFFF" strokeWidth={2} />
@@ -93,16 +95,16 @@ export default function Step3Page1() {
         </View>
         <Switch
           value={sensorsEnabled}
-          onValueChange={setSensorsEnabled}
+          onValueChange={sensorsPaired ? setSensorsEnabled : undefined}
           trackColor={{ false: 'rgba(255,255,255,0.2)', true: '#1075E3' }}
           thumbColor={sensorsEnabled ? '#FFFFFF' : '#CCC'}
           ios_backgroundColor="rgba(255,255,255,0.2)"
+          disabled={!sensorsPaired}
         />
       </View>
 
-      <View
-        style={[styles.toggleCard, { marginTop: 12 }]}
-      >
+      <View style={[styles.toggleCard, { marginTop: 12 }]}>
+        {!sensorsPaired && <SensorLockOverlay compact />}
         <View style={styles.toggleLeft}>
           <View style={styles.toggleIcon}>
             <Smartphone size={20} color="#FFFFFF" strokeWidth={2} />
@@ -111,10 +113,11 @@ export default function Step3Page1() {
         </View>
         <Switch
           value={deviceEnabled}
-          onValueChange={setDeviceEnabled}
+          onValueChange={sensorsPaired ? setDeviceEnabled : undefined}
           trackColor={{ false: 'rgba(255,255,255,0.2)', true: '#1075E3' }}
           thumbColor={deviceEnabled ? '#FFFFFF' : '#CCC'}
           ios_backgroundColor="rgba(255,255,255,0.2)"
+          disabled={!sensorsPaired}
         />
       </View>
     </View>
@@ -173,6 +176,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.35)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.12)',
+    overflow: 'hidden' as const,
   },
   toggleLeft: {
     flexDirection: 'row' as const,

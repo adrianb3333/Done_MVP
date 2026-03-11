@@ -7,7 +7,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronDown, User, Navigation, Plane, FileText, Dumbbell } from 'lucide-react-native';
+import { ChevronDown, User, Navigation, Plane, FileText, Dumbbell, ArrowLeft } from 'lucide-react-native';
 import { useSession } from '@/contexts/SessionContext';
 
 const BLUE_ACTIVE = '#0059B2';
@@ -19,6 +19,11 @@ import NotesTab from './tabs/NotesTab';
 import DrillsTab from './tabs/DrillsTab';
 
 type PracticeTab = 'my' | 'position' | 'flight' | 'notes' | 'drills';
+
+interface PinnedCoordinate {
+  latitude: number;
+  longitude: number;
+}
 
 const tabsConfig: { key: PracticeTab; label: string; icon: React.ReactNode }[] = [
   { key: 'my', label: 'My', icon: <User size={20} /> },
@@ -32,6 +37,10 @@ export default function PracticeSessionTabs() {
   const [activeTab, setActiveTab] = useState<PracticeTab>('my');
   const [isDrillActive, setIsDrillActive] = useState(false);
   const [positionDistance, setPositionDistance] = useState<number>(0);
+  const [pinnedPosition, setPinnedPosition] = useState<PinnedCoordinate | null>(null);
+  const [drillFullScreenTab, setDrillFullScreenTab] = useState<'flight' | 'position' | null>(null);
+
+  const [drillSetPinCallback, setDrillSetPinCallback] = useState<(() => void) | null>(null);
   const { minimizeSession } = useSession();
   const insets = useSafeAreaInsets();
 
@@ -43,10 +52,44 @@ export default function PracticeSessionTabs() {
     setIsDrillActive(active);
   }, []);
 
+  const handlePinChange = useCallback((pin: PinnedCoordinate | null) => {
+    console.log('[PracticeSessionTabs] Pin changed:', pin);
+    setPinnedPosition(pin);
+    if (pin && drillSetPinCallback) {
+      setTimeout(() => {
+        drillSetPinCallback();
+        setDrillSetPinCallback(null);
+        setActiveTab('drills');
+      }, 600);
+    }
+  }, [drillSetPinCallback]);
+
+  const handleDrillRequestSetPin = useCallback((onPinDone: () => void) => {
+    console.log('[PracticeSessionTabs] Drill requests Set Pin - navigating to Position');
+    setDrillSetPinCallback(() => onPinDone);
+    setActiveTab('position');
+  }, []);
+
+  const handleDrillNavigateToTab = useCallback((tab: 'flight' | 'position') => {
+    console.log('[PracticeSessionTabs] Drill navigates to full-screen tab:', tab);
+    setDrillFullScreenTab(tab);
+  }, []);
+
+  const handleDrillFullScreenBack = useCallback(() => {
+    console.log('[PracticeSessionTabs] Back from drill full-screen tab');
+    setDrillFullScreenTab(null);
+  }, []);
+
   const renderContent = () => {
     switch (activeTab) {
       case 'my': return <MyTab />;
-      case 'position': return <PositionTab onDistanceChange={handlePositionDistanceChange} />;
+      case 'position': return (
+        <PositionTab
+          onDistanceChange={handlePositionDistanceChange}
+          externalPinnedPosition={pinnedPosition}
+          onPinChange={handlePinChange}
+        />
+      );
       case 'flight': return <FlightTab externalDistance={positionDistance} />;
       case 'notes': return <NotesTab />;
       default: return null;
@@ -55,6 +98,34 @@ export default function PracticeSessionTabs() {
 
   const isDrillFullScreen = isDrillActive && activeTab === 'drills';
   const isContentTab = activeTab !== 'drills';
+
+  if (drillFullScreenTab) {
+    return (
+      <View style={styles.root}>
+        <TouchableOpacity
+          onPress={handleDrillFullScreenBack}
+          style={[styles.drillFullScreenBackBtn, { top: insets.top + 8 }]}
+          activeOpacity={0.7}
+        >
+          <View style={styles.drillFullScreenBackCircle}>
+            <ArrowLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
+          </View>
+        </TouchableOpacity>
+        <View style={styles.content}>
+          {drillFullScreenTab === 'flight' && (
+            <FlightTab externalDistance={positionDistance} />
+          )}
+          {drillFullScreenTab === 'position' && (
+            <PositionTab
+              onDistanceChange={handlePositionDistanceChange}
+              externalPinnedPosition={pinnedPosition}
+              onPinChange={handlePinChange}
+            />
+          )}
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.root}>
@@ -74,7 +145,12 @@ export default function PracticeSessionTabs() {
       )}
 
       <View style={activeTab === 'drills' ? (isDrillFullScreen ? styles.fullScreenDrill : styles.drillInline) : styles.hidden}>
-        <DrillsTab onDrillActiveChange={handleDrillActiveChange} onMinimize={minimizeSession} />
+        <DrillsTab
+          onDrillActiveChange={handleDrillActiveChange}
+          onMinimize={minimizeSession}
+          onRequestSetPin={handleDrillRequestSetPin}
+          onNavigateToTab={handleDrillNavigateToTab}
+        />
       </View>
 
       {!isDrillFullScreen && (
@@ -123,7 +199,6 @@ export default function PracticeSessionTabs() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    // Set background to the specific dark color to prevent white bars
     backgroundColor: '#020d12', 
   },
   container: {
@@ -154,7 +229,21 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-
+  drillFullScreenBackBtn: {
+    position: 'absolute' as const,
+    left: 14,
+    zIndex: 100,
+  },
+  drillFullScreenBackCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
   tabBar: {
     flexDirection: 'row' as const,
     backgroundColor: '#FFFFFF',

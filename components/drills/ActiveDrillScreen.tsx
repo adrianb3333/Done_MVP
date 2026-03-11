@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronRight, ArrowLeft } from 'lucide-react-native';
+import { ChevronRight, ArrowLeft, Plane, Navigation } from 'lucide-react-native';
 import type { CustomDrill } from './CreateDrillScreen';
 import type { SensorDrill } from './CreateSensorDrillScreen';
 
@@ -25,12 +25,13 @@ interface ActiveDrillScreenProps {
   drill: DrillItem;
   onBack: () => void;
   onFinish: (result: DrillResult) => void;
+  onNavigateToTab?: (tab: 'flight' | 'position') => void;
 }
 
 const GLASS_BG = 'rgba(0,0,0,0.28)';
 const GLASS_BORDER = 'rgba(255,255,255,0.12)';
 
-export default function ActiveDrillScreen({ drill, onBack, onFinish }: ActiveDrillScreenProps) {
+export default function ActiveDrillScreen({ drill, onBack, onFinish, onNavigateToTab }: ActiveDrillScreenProps) {
   const insets = useSafeAreaInsets();
   const [currentRound, setCurrentRound] = useState(0);
   const [roundHighest, setRoundHighest] = useState<number[]>(
@@ -160,24 +161,54 @@ export default function ActiveDrillScreen({ drill, onBack, onFinish }: ActiveDri
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
-        <TouchableOpacity
-          onPress={handleNextRound}
-          activeOpacity={0.8}
-        >
-          <View style={styles.nextButtonOuter}>
-            <LinearGradient
-              colors={['rgba(0,0,0,0.32)', 'rgba(0,0,0,0.22)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.nextButton}
+        <View style={styles.footerRow}>
+          {onNavigateToTab && (
+            <TouchableOpacity
+              onPress={() => onNavigateToTab('flight')}
+              activeOpacity={0.7}
+              style={styles.navCircleWrap}
             >
-              <Text style={styles.nextButtonText}>
-                {isLastRound ? 'Finish Drill' : 'Next Round'}
-              </Text>
-              <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />
-            </LinearGradient>
+              <View style={styles.navCircle}>
+                <Plane size={20} color="#FFFFFF" />
+              </View>
+              <Text style={styles.navCircleLabel}>Flight</Text>
+            </TouchableOpacity>
+          )}
+
+          <View style={styles.nextButtonFlex}>
+            <TouchableOpacity
+              onPress={handleNextRound}
+              activeOpacity={0.8}
+            >
+              <View style={styles.nextButtonOuter}>
+                <LinearGradient
+                  colors={['rgba(0,0,0,0.32)', 'rgba(0,0,0,0.22)']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.nextButton}
+                >
+                  <Text style={styles.nextButtonText}>
+                    {isLastRound ? 'Finish Drill' : 'Next Round'}
+                  </Text>
+                  <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />
+                </LinearGradient>
+              </View>
+            </TouchableOpacity>
           </View>
-        </TouchableOpacity>
+
+          {onNavigateToTab && (
+            <TouchableOpacity
+              onPress={() => onNavigateToTab('position')}
+              activeOpacity={0.7}
+              style={styles.navCircleWrap}
+            >
+              <View style={styles.navCircle}>
+                <Navigation size={20} color="#FFFFFF" />
+              </View>
+              <Text style={styles.navCircleLabel}>Position</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
     </LinearGradient>
   );
@@ -307,7 +338,34 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   footer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
+  },
+  footerRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 12,
+  },
+  navCircleWrap: {
+    alignItems: 'center' as const,
+    gap: 4,
+  },
+  navCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: GLASS_BG,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  navCircleLabel: {
+    fontSize: 10,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.6)',
+  },
+  nextButtonFlex: {
+    flex: 1,
   },
   nextButtonOuter: {
     borderRadius: 16,

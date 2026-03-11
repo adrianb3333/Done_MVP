@@ -5,6 +5,8 @@ import { Clock, Thermometer, Timer, Wifi, Smartphone } from 'lucide-react-native
 import { useSession } from '@/contexts/SessionContext';
 import { fetchGolfWeather } from '@/services/weatherApi';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSensor } from '@/contexts/SensorContext';
+import SensorLockOverlay from '@/components/SensorLockOverlay';
 
 export default function MyTab() {
   const { quitSession, sessionStartTime } = useSession();
@@ -82,6 +84,7 @@ export default function MyTab() {
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const [sensorsEnabled, setSensorsEnabled] = useState(false);
   const [deviceEnabled, setDeviceEnabled] = useState(false);
+  const { isPaired: sensorsPaired } = useSensor();
 
   return (
     <LinearGradient
@@ -149,6 +152,7 @@ export default function MyTab() {
         </View>
 
         <View style={styles.toggleCardWrapper}>
+          {!sensorsPaired && <SensorLockOverlay compact />}
           <LinearGradient
             colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0.04)']}
             start={{ x: 0, y: 0 }}
@@ -163,9 +167,10 @@ export default function MyTab() {
                 </View>
                 <Switch
                   value={sensorsEnabled}
-                  onValueChange={setSensorsEnabled}
+                  onValueChange={sensorsPaired ? setSensorsEnabled : undefined}
                   trackColor={{ false: 'rgba(255,255,255,0.2)', true: 'rgba(255, 255, 255, 0.35)' }}
                   thumbColor={sensorsEnabled ? '#FFFFFF' : 'rgba(255,255,255,0.6)'}
+                  disabled={!sensorsPaired}
                 />
               </View>
               <View style={styles.toggleDivider} />
@@ -176,9 +181,10 @@ export default function MyTab() {
                 </View>
                 <Switch
                   value={deviceEnabled}
-                  onValueChange={setDeviceEnabled}
+                  onValueChange={sensorsPaired ? setDeviceEnabled : undefined}
                   trackColor={{ false: 'rgba(255,255,255,0.2)', true: 'rgba(255, 255, 255, 0.35)' }}
                   thumbColor={deviceEnabled ? '#FFFFFF' : 'rgba(255,255,255,0.6)'}
+                  disabled={!sensorsPaired}
                 />
               </View>
             </View>

@@ -47,6 +47,8 @@ import SensorLockOverlay from '@/components/SensorLockOverlay';
 interface DrillsTabProps {
   onDrillActiveChange?: (active: boolean) => void;
   onMinimize?: () => void;
+  onRequestSetPin?: (onPinDone: () => void) => void;
+  onNavigateToTab?: (tab: 'flight' | 'position') => void;
 }
 
 const dedicatedComponents = [
@@ -97,7 +99,7 @@ type ScreenState =
   | 'activeDrill'
   | 'drillSummary';
 
-export default function DrillsTab({ onDrillActiveChange, onMinimize }: DrillsTabProps) {
+export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSetPin, onNavigateToTab }: DrillsTabProps) {
   const { isPaired: sensorsPaired } = useSensor();
   const [selectedDrill, setSelectedDrill] = useState<{ category: string; card: string } | null>(null);
   const [currentScreen, setCurrentScreen] = useState<ScreenState>('main');
@@ -253,7 +255,16 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize }: DrillsTab
 
   const handleSetPin = useCallback(() => {
     console.log('Set Pin pressed - navigate to Position tab');
-  }, []);
+    if (onRequestSetPin) {
+      onRequestSetPin(() => {
+        console.log('Pin set from Position tab - returning to drill and auto-starting');
+        if (activeDrillItem) {
+          setCurrentScreen('activeDrill');
+          onDrillActiveChange?.(true);
+        }
+      });
+    }
+  }, [onRequestSetPin, activeDrillItem, onDrillActiveChange]);
 
   const drillsByCategory = useMemo(() => {
     const grouped = savedDrills.reduce<Record<string, CustomDrill[]>>((acc, drill) => {
@@ -365,6 +376,7 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize }: DrillsTab
           onDrillActiveChange?.(false);
         }}
         onFinish={handleFinishDrill}
+        onNavigateToTab={onNavigateToTab}
       />
     );
   }
