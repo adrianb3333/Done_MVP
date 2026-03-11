@@ -223,6 +223,14 @@ function AppContent() {
           }} 
         />
         <Stack.Screen 
+          name="modals/pairing-process-modal" 
+          options={{ 
+            presentation: "fullScreenModal",
+            headerShown: false,
+            animation: "slide_from_bottom"
+          }} 
+        />
+        <Stack.Screen 
           name="modals/handicap-modal" 
           options={{ 
             presentation: "fullScreenModal",
