@@ -21,7 +21,9 @@ import type { Session } from "@supabase/supabase-js";
 import PracticeSummary from "@/components/PracticeSummary";
 
 if (Platform.OS !== 'web') {
-  SplashScreen.preventAutoHideAsync().catch(() => {});
+  SplashScreen.preventAutoHideAsync().catch(() => {
+    console.log('SplashScreen.preventAutoHideAsync failed');
+  });
 }
 
 const queryClient = new QueryClient();
