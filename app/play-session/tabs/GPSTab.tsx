@@ -182,11 +182,23 @@ function NativeMap({ onDistanceChange }: GPSTabProps) {
     );
   }
 
-  const region = {
-    latitude: userLocation.latitude,
-    longitude: userLocation.longitude,
-    latitudeDelta: 0.005,
-    longitudeDelta: 0.005,
+  const handleMapReady = useCallback(() => {
+    if (mapRef.current && userLocation && dragEnd) {
+      mapRef.current.fitToCoordinates(
+        [userLocation, dragEnd],
+        {
+          edgePadding: { top: 100, right: 60, bottom: 80, left: 60 },
+          animated: false,
+        }
+      );
+    }
+  }, [userLocation, dragEnd]);
+
+  const initialRegion = {
+    latitude: (userLocation.latitude + (dragEnd?.latitude ?? userLocation.latitude)) / 2,
+    longitude: (userLocation.longitude + (dragEnd?.longitude ?? userLocation.longitude)) / 2,
+    latitudeDelta: Math.abs((dragEnd?.latitude ?? userLocation.latitude) - userLocation.latitude) * 2.5 + 0.002,
+    longitudeDelta: Math.abs((dragEnd?.longitude ?? userLocation.longitude) - userLocation.longitude) * 2.5 + 0.002,
   };
 
   return (
@@ -194,7 +206,8 @@ function NativeMap({ onDistanceChange }: GPSTabProps) {
       <MapView
         ref={mapRef}
         style={styles.map}
-        initialRegion={region}
+        initialRegion={initialRegion}
+        onMapReady={handleMapReady}
         mapType="hybrid"
         showsUserLocation={true}
         showsMyLocationButton={true}
