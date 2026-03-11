@@ -5,9 +5,11 @@ import {
   StyleSheet,
   Dimensions,
   Animated,
+  TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, ChevronRight, Check } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Check, ChevronDown } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -108,14 +110,14 @@ export default function PairingProcessModal() {
       }).start();
 
       const timer = setTimeout(() => {
-        router.dismiss();
-        setTimeout(() => {
-          router.dismiss();
-        }, 100);
+        router.push({
+          pathname: '/modals/my-bag-modal',
+          params: { clubs: params.clubs },
+        });
       }, 2500);
       return () => clearTimeout(timer);
     }
-  }, [allDone, checkScaleAnim, router]);
+  }, [allDone, checkScaleAnim, router, params.clubs]);
 
   const getClubDisplayName = useCallback((club: string): string => {
     if (club === 'Pu') return 'Putter';
@@ -170,9 +172,26 @@ export default function PairingProcessModal() {
     >
       <SafeAreaView edges={['top']} style={styles.safeTop}>
         <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => {
+              Alert.alert(
+                'Cancel Pairing',
+                'Are you sure you want to cancel?',
+                [
+                  { text: 'No', style: 'cancel' },
+                  { text: 'Yes', style: 'destructive', onPress: () => router.back() },
+                ]
+              );
+            }}
+            style={styles.cancelBtn}
+            activeOpacity={0.7}
+          >
+            <ChevronDown size={20} color="#fff" strokeWidth={2.5} />
+          </TouchableOpacity>
           <Text style={styles.headerCounter}>
             {currentIndex + 1} / {clubs.length}
           </Text>
+          <View style={styles.headerSpacer} />
         </View>
       </SafeAreaView>
 
@@ -222,8 +241,24 @@ const styles = StyleSheet.create({
   safeTop: {},
   safeBottom: {},
   header: {
+    flexDirection: 'row' as const,
     alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
     paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
+  cancelBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  headerSpacer: {
+    width: 40,
   },
   headerCounter: {
     fontSize: 16,

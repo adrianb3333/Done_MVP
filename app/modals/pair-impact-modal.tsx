@@ -11,7 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { X, Bluetooth, ChevronRight, ChevronLeft, Zap, BarChart3, Target } from 'lucide-react-native';
+import { ChevronDown, Bluetooth, ChevronRight, ChevronLeft, Zap, BarChart3, Target } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -96,7 +96,7 @@ export default function PairImpactModal() {
   const scrollRef = useRef<ScrollView>(null);
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [selectedClubs, setSelectedClubs] = useState<Set<string>>(new Set());
-  const [visibleCategories, setVisibleCategories] = useState<Record<string, boolean>>(() => {
+  const [visibleCategories] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     CLUB_CATEGORIES.forEach((cat) => {
       initial[cat.name] = cat.defaultVisible;
@@ -137,9 +137,6 @@ export default function PairImpactModal() {
     });
   }, []);
 
-  const toggleCategory = useCallback((name: string) => {
-    setVisibleCategories((prev) => ({ ...prev, [name]: !prev[name] }));
-  }, []);
 
   const handleStartPairing = useCallback(() => {
     if (selectedClubs.size < REQUIRED_CLUBS) {
@@ -174,9 +171,9 @@ export default function PairImpactModal() {
             activeOpacity={0.7}
             testID="pair-close-button"
           >
-            <X size={22} color="rgba(255,255,255,0.7)" />
+            <ChevronDown size={22} color="#fff" strokeWidth={2.5} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Pair Impact Products</Text>
+          <Text style={styles.headerTitle}>Pair Sensors</Text>
           <View style={styles.headerSpacer} />
         </View>
       </SafeAreaView>
@@ -226,7 +223,6 @@ export default function PairImpactModal() {
             selectedClubs={selectedClubs}
             visibleCategories={visibleCategories}
             onToggleClub={toggleClub}
-            onToggleCategory={toggleCategory}
           />
         </View>
       </ScrollView>
@@ -312,10 +308,9 @@ interface ClubSelectionPageProps {
   selectedClubs: Set<string>;
   visibleCategories: Record<string, boolean>;
   onToggleClub: (club: string) => void;
-  onToggleCategory: (name: string) => void;
 }
 
-function ClubSelectionPage({ selectedClubs, visibleCategories, onToggleClub, onToggleCategory }: ClubSelectionPageProps) {
+function ClubSelectionPage({ selectedClubs, visibleCategories, onToggleClub }: ClubSelectionPageProps) {
   return (
     <View style={clubStyles.container}>
       <View style={clubStyles.topRow}>
@@ -344,11 +339,6 @@ function ClubSelectionPage({ selectedClubs, visibleCategories, onToggleClub, onT
           <View key={category.name} style={clubStyles.categoryBlock}>
             <View style={clubStyles.categoryHeader}>
               <Text style={clubStyles.categoryName}>{category.name}</Text>
-              <TouchableOpacity onPress={() => onToggleCategory(category.name)} activeOpacity={0.7}>
-                <Text style={clubStyles.toggleText}>
-                  {visibleCategories[category.name] ? 'Hide' : 'Show'}
-                </Text>
-              </TouchableOpacity>
             </View>
             {visibleCategories[category.name] && category.clubs.length > 0 && (
               <View style={clubStyles.clubGrid}>
@@ -505,9 +495,9 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    backgroundColor: 'rgba(0,0,0,0.35)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
