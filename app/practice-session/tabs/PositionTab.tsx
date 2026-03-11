@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, Platform, Linking, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { MapPin, Move, RotateCcw, Wind, ArrowUp, ZoomIn } from 'lucide-react-native';
+import { MapPin, Move, RotateCcw, Wind, ArrowUp, ZoomIn, Navigation } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/colors';
 import { useWeather } from '@/hooks/useWeather';
 import { calculateGolfShot } from '@/services/golfCalculations';
@@ -64,12 +65,14 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
   const Location = require('expo-location');
 
   const mapRef = useRef<any>(null);
-  const [userLocation, setUserLocation] = useState<Coordinate | null>(null);
+  const [startPosition, setStartPosition] = useState<Coordinate>(DEFAULT_START);
   const [dragEnd, setDragEnd] = useState<Coordinate | null>(null);
   const [distance, setDistance] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [permissionDenied, setPermissionDenied] = useState<boolean>(false);
   const [geoLocation, setGeoLocation] = useState<{ lat: number; lon: number } | null>(null);
+  const [gpsActive, setGpsActive] = useState<boolean>(false);
+  const [_liveUserLocation, setLiveUserLocation] = useState<Coordinate | null>(null);
 
   const { weather } = useWeather(geoLocation?.lat || null, geoLocation?.lon || null, 0);
 
@@ -79,14 +82,14 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
   }, [weather, distance]);
 
   const weatherLine = useMemo(() => {
-    if (!adjustedDistance || !userLocation || !dragEnd) return null;
-    const bearing = computeBearing(userLocation, dragEnd);
-    const adjEnd = destinationPoint(userLocation, bearing, adjustedDistance.adjustedDistance);
+    if (!adjustedDistance || !dragEnd) return null;
+    const bearing = computeBearing(startPosition, dragEnd);
+    const adjEnd = destinationPoint(startPosition, bearing, adjustedDistance.adjustedDistance);
     const OFFSET = 8;
-    const startOffset = offsetCoordinate(userLocation, bearing, OFFSET);
+    const startOffset = offsetCoordinate(startPosition, bearing, OFFSET);
     const endOffset = offsetCoordinate(adjEnd, bearing, OFFSET);
     return { start: startOffset, end: endOffset };
-  }, [adjustedDistance, userLocation, dragEnd]);
+  }, [adjustedDistance, startPosition, dragEnd]);
 
   useEffect(() => {
     let mounted = true;
@@ -107,7 +110,8 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
         console.log('Got user location:', loc.coords.latitude, loc.coords.longitude);
         if (mounted) {
           setGeoLocation({ lat: loc.coords.latitude, lon: loc.coords.longitude });
-          setUserLocation(DEFAULT_START);
+          setLiveUserLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
+          setStartPosition(DEFAULT_START);
           setDragEnd(DEFAULT_END);
           const initialDist = Math.round(haversineDistance(DEFAULT_START, DEFAULT_END));
           setDistance(initialDist);
@@ -126,41 +130,77 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const toggleGps = useCallback(async () => {
+    const Location = require('expo-location');
+    if (!gpsActive) {
+      try {
+        const loc = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+        });
+        const newStart: Coordinate = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
+        console.log('GPS ON - using live position:', newStart.latitude, newStart.longitude);
+        setLiveUserLocation(newStart);
+        setStartPosition(newStart);
+        setGpsActive(true);
+        if (dragEnd) {
+          const dist = Math.round(haversineDistance(newStart, dragEnd));
+          setDistance(dist);
+          onDistanceChange?.(dist);
+          mapRef.current?.fitToCoordinates(
+            [newStart, dragEnd],
+            { edgePadding: { top: 100, right: 60, bottom: 80, left: 60 }, animated: true }
+          );
+        }
+      } catch (err) {
+        console.log('Error getting GPS position:', err);
+      }
+    } else {
+      console.log('GPS OFF - reverting to default coordinates');
+      setStartPosition(DEFAULT_START);
+      setGpsActive(false);
+      if (dragEnd) {
+        const dist = Math.round(haversineDistance(DEFAULT_START, dragEnd));
+        setDistance(dist);
+        onDistanceChange?.(dist);
+        mapRef.current?.fitToCoordinates(
+          [DEFAULT_START, dragEnd],
+          { edgePadding: { top: 100, right: 60, bottom: 80, left: 60 }, animated: true }
+        );
+      }
+    }
+  }, [gpsActive, dragEnd, onDistanceChange]);
+
   const handleDrag = useCallback((e: any) => {
     const newCoord: Coordinate = e.nativeEvent.coordinate;
     setDragEnd(newCoord);
-    if (userLocation) {
-      const dist = Math.round(haversineDistance(userLocation, newCoord));
-      setDistance(dist);
-      onDistanceChange?.(dist);
-    }
-  }, [userLocation, onDistanceChange]);
+    const dist = Math.round(haversineDistance(startPosition, newCoord));
+    setDistance(dist);
+    onDistanceChange?.(dist);
+  }, [startPosition, onDistanceChange]);
 
   const handleDragEnd = useCallback((e: any) => {
     const newCoord: Coordinate = e.nativeEvent.coordinate;
     console.log('Drag ended at:', newCoord.latitude, newCoord.longitude);
     setDragEnd(newCoord);
-    if (userLocation) {
-      const dist = Math.round(haversineDistance(userLocation, newCoord));
-      setDistance(dist);
-      onDistanceChange?.(dist);
-    }
-  }, [userLocation, onDistanceChange]);
+    const dist = Math.round(haversineDistance(startPosition, newCoord));
+    setDistance(dist);
+    onDistanceChange?.(dist);
+  }, [startPosition, onDistanceChange]);
 
   const handleReset = useCallback(() => {
-    if (userLocation) {
-      setDragEnd(DEFAULT_END);
-      const resetDist = Math.round(haversineDistance(DEFAULT_START, DEFAULT_END));
-      setDistance(resetDist);
-      onDistanceChange?.(resetDist);
-      mapRef.current?.animateToRegion({
-        latitude: DEFAULT_START.latitude,
-        longitude: DEFAULT_START.longitude,
-        latitudeDelta: 0.005,
-        longitudeDelta: 0.005,
-      }, 500);
+    setDragEnd(DEFAULT_END);
+    if (!gpsActive) {
+      setStartPosition(DEFAULT_START);
     }
-  }, [userLocation, onDistanceChange]);
+    const start = gpsActive ? startPosition : DEFAULT_START;
+    const resetDist = Math.round(haversineDistance(start, DEFAULT_END));
+    setDistance(resetDist);
+    onDistanceChange?.(resetDist);
+    mapRef.current?.fitToCoordinates(
+      [start, DEFAULT_END],
+      { edgePadding: { top: 100, right: 60, bottom: 80, left: 60 }, animated: true }
+    );
+  }, [gpsActive, startPosition, onDistanceChange]);
 
   if (loading) {
     return (
@@ -171,7 +211,7 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
     );
   }
 
-  if (permissionDenied || !userLocation) {
+  if (permissionDenied) {
     return (
       <View style={styles.loadingContainer}>
         <MapPin size={40} color="#FF5252" />
@@ -181,24 +221,26 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
     );
   }
 
-  const handleMapReady = useCallback(() => {
-    if (mapRef.current && userLocation && dragEnd) {
+  const handleMapReady = () => {
+    if (mapRef.current && dragEnd) {
       mapRef.current.fitToCoordinates(
-        [userLocation, dragEnd],
+        [startPosition, dragEnd],
         {
           edgePadding: { top: 100, right: 60, bottom: 80, left: 60 },
           animated: false,
         }
       );
     }
-  }, [userLocation, dragEnd]);
+  };
 
   const initialRegion = {
-    latitude: (userLocation.latitude + (dragEnd?.latitude ?? userLocation.latitude)) / 2,
-    longitude: (userLocation.longitude + (dragEnd?.longitude ?? userLocation.longitude)) / 2,
-    latitudeDelta: Math.abs((dragEnd?.latitude ?? userLocation.latitude) - userLocation.latitude) * 2.5 + 0.002,
-    longitudeDelta: Math.abs((dragEnd?.longitude ?? userLocation.longitude) - userLocation.longitude) * 2.5 + 0.002,
+    latitude: (startPosition.latitude + (dragEnd?.latitude ?? startPosition.latitude)) / 2,
+    longitude: (startPosition.longitude + (dragEnd?.longitude ?? startPosition.longitude)) / 2,
+    latitudeDelta: Math.abs((dragEnd?.latitude ?? startPosition.latitude) - startPosition.latitude) * 2.5 + 0.002,
+    longitudeDelta: Math.abs((dragEnd?.longitude ?? startPosition.longitude) - startPosition.longitude) * 2.5 + 0.002,
   };
+
+  const windDistText = adjustedDistance ? Math.round(adjustedDistance.adjustedDistance) : null;
 
   return (
     <View style={styles.container}>
@@ -209,14 +251,14 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
         onMapReady={handleMapReady}
         mapType="hybrid"
         showsUserLocation={true}
-        showsMyLocationButton={true}
+        showsMyLocationButton={false}
         showsCompass={true}
         showsScale={true}
       >
         {dragEnd && (
           <>
             <Polyline
-              coordinates={[userLocation, dragEnd]}
+              coordinates={[startPosition, dragEnd]}
               strokeColor="#FFFFFF"
               strokeWidth={3}
             />
@@ -239,7 +281,7 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
               </>
             )}
             <Marker
-              coordinate={userLocation}
+              coordinate={startPosition}
               anchor={{ x: 0.5, y: 0.5 }}
               tracksViewChanges={false}
             >
@@ -265,9 +307,33 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
         )}
       </MapView>
 
-      <View style={styles.distanceBadge}>
-        <Text style={styles.distanceValue}>{distance}</Text>
-        <Text style={styles.distanceUnit}>m</Text>
+      <TouchableOpacity
+        style={[styles.gpsToggle, gpsActive && styles.gpsToggleActive]}
+        onPress={toggleGps}
+        activeOpacity={0.7}
+      >
+        <Navigation size={18} color={gpsActive ? '#34C759' : '#FFFFFF'} fill={gpsActive ? '#34C759' : 'transparent'} />
+        <Text style={[styles.gpsToggleText, gpsActive && styles.gpsToggleTextActive]}>
+          GPS {gpsActive ? 'ON' : 'OFF'}
+        </Text>
+      </TouchableOpacity>
+
+      <View style={styles.distanceOverlay}>
+        <Text style={styles.distanceMainValue}>{distance}</Text>
+        <Text style={styles.distanceMainUnit}>m</Text>
+        {windDistText !== null && (
+          <View style={styles.windDistRow}>
+            <LinearGradient
+              colors={['#FF9500', '#FF6B00', '#FF9500']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.windDistGradientBg}
+            >
+              <Text style={styles.windDistValue}>{windDistText}</Text>
+              <Text style={styles.windDistUnit}>m</Text>
+            </LinearGradient>
+          </View>
+        )}
       </View>
 
       <View style={styles.toolLabel}>
@@ -306,8 +372,8 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
           </View>
           <View style={styles.windDivider} />
           {adjustedDistance ? (
-            <View style={styles.windDistRow}>
-              <Wind size={12} color="#34C759" />
+            <View style={styles.windDistInfoRow}>
+              <Wind size={12} color="#FF9500" />
               <Text style={styles.windAdjText}>{Math.round(adjustedDistance.adjustedDistance)}m</Text>
             </View>
           ) : (
@@ -406,30 +472,76 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
-  distanceBadge: {
+  gpsToggle: {
     position: 'absolute' as const,
     top: 16,
-    alignSelf: 'center' as const,
+    left: 16,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  gpsToggleActive: {
+    borderColor: 'rgba(52,199,89,0.5)',
     backgroundColor: 'rgba(0,0,0,0.8)',
-    borderRadius: 16,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+  },
+  gpsToggleText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700' as const,
+  },
+  gpsToggleTextActive: {
+    color: '#34C759',
+  },
+  distanceOverlay: {
+    position: 'absolute' as const,
+    left: 16,
+    top: 60,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  distanceMainValue: {
+    color: '#FFFFFF',
+    fontSize: 48,
+    fontWeight: '900' as const,
+    lineHeight: 52,
+    letterSpacing: -1,
+  },
+  distanceMainUnit: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 18,
+    fontWeight: '700' as const,
+    marginTop: -4,
+  },
+  windDistRow: {
+    marginTop: 8,
+  },
+  windDistGradientBg: {
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     flexDirection: 'row' as const,
     alignItems: 'baseline' as const,
-    borderWidth: 1,
-    borderColor: 'rgba(52,199,89,0.4)',
   },
-  distanceValue: {
-    color: '#34C759',
-    fontSize: 32,
-    fontWeight: '800' as const,
+  windDistValue: {
+    color: '#FFFFFF',
+    fontSize: 36,
+    fontWeight: '900' as const,
+    lineHeight: 40,
+    letterSpacing: -1,
   },
-  distanceUnit: {
-    color: '#34C759',
+  windDistUnit: {
+    color: 'rgba(255,255,255,0.85)',
     fontSize: 16,
-    fontWeight: '600' as const,
-    marginLeft: 4,
-    opacity: 0.8,
+    fontWeight: '700' as const,
+    marginLeft: 3,
   },
   toolLabel: {
     position: 'absolute' as const,
@@ -519,13 +631,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.12)',
     marginVertical: 6,
   },
-  windDistRow: {
+  windDistInfoRow: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     gap: 4,
   },
   windAdjText: {
-    color: '#34C759',
+    color: '#FF9500',
     fontSize: 13,
     fontWeight: '800' as const,
   },
