@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, Platform, Linking, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { MapPin, Wind, ArrowUp, Navigation, Crosshair } from 'lucide-react-native';
+import { MapPin, Navigation, Crosshair } from 'lucide-react-native';
+import Svg, { Circle, Line, Text as SvgText, Polygon } from 'react-native-svg';
 import Colors from '@/constants/colors';
 import { useWeather } from '@/hooks/useWeather';
 import { calculateGolfShot } from '@/services/golfCalculations';
@@ -200,6 +201,7 @@ function NativeMap({ onDistanceChange, externalPinnedPosition, onPinChange }: Po
   };
 
   const windDistText = adjustedDistance ? Math.round(adjustedDistance.adjustedDistance) : null;
+  const windDeg = weather?.windDeg ?? 0;
 
   return (
     <View style={styles.container}>
@@ -257,13 +259,15 @@ function NativeMap({ onDistanceChange, externalPinnedPosition, onPinChange }: Po
 
       {pinnedPosition && (
         <View style={styles.distanceOverlay}>
-          <Text style={styles.distanceMainValue}>{distance}</Text>
-          <Text style={styles.distanceMainUnit}>m</Text>
+          <View style={styles.distanceRow}>
+            <Text style={styles.distanceMainValue}>{distance}</Text>
+            <Text style={styles.distanceMainUnit}>Meters</Text>
+          </View>
           <Text style={styles.distanceLabel}>GPS Distance</Text>
           {windDistText !== null && (
             <View style={styles.windDistRow}>
               <Text style={styles.windDistValueOrange}>{windDistText}</Text>
-              <Text style={styles.windDistUnitOrange}>m</Text>
+              <Text style={styles.windDistUnitOrange}>Meters</Text>
             </View>
           )}
           {windDistText !== null && (
@@ -288,22 +292,28 @@ function NativeMap({ onDistanceChange, externalPinnedPosition, onPinChange }: Po
 
       <View style={styles.setPinContainer}>
         {weather && (
-          <View style={styles.windBox}>
-            <View style={styles.windArrowRow}>
-              <View style={{ transform: [{ rotate: `${weather.windDeg}deg` }] }}>
-                <ArrowUp size={16} color="#4FC3F7" />
-              </View>
-              <Text style={styles.windSpeedText}>{weather.windMs} m/s</Text>
+          <View style={styles.miniCompassContainer}>
+            <View style={{ transform: [{ rotate: `${-windDeg}deg` }] }}>
+              <Svg height={64} width={64} viewBox="0 0 100 100">
+                <Circle cx={50} cy={50} r={46} stroke="rgba(255,255,255,0.25)" strokeWidth={1.5} fill="none" />
+                <Circle cx={50} cy={50} r={38} stroke="rgba(255,255,255,0.12)" strokeWidth={0.8} fill="none" />
+                <Line x1={50} y1={4} x2={50} y2={14} stroke="white" strokeWidth={2} />
+                <Line x1={96} y1={50} x2={86} y2={50} stroke="rgba(255,255,255,0.5)" strokeWidth={1.5} />
+                <Line x1={50} y1={96} x2={50} y2={86} stroke="rgba(255,255,255,0.5)" strokeWidth={1.5} />
+                <Line x1={4} y1={50} x2={14} y2={50} stroke="rgba(255,255,255,0.5)" strokeWidth={1.5} />
+                <SvgText x={50} y={22} fill="white" fontSize={10} fontWeight="bold" textAnchor="middle" alignmentBaseline="middle">N</SvgText>
+                <SvgText x={82} y={52} fill="rgba(255,255,255,0.5)" fontSize={8} textAnchor="middle" alignmentBaseline="middle">E</SvgText>
+                <SvgText x={50} y={82} fill="rgba(255,255,255,0.5)" fontSize={8} textAnchor="middle" alignmentBaseline="middle">S</SvgText>
+                <SvgText x={18} y={52} fill="rgba(255,255,255,0.5)" fontSize={8} textAnchor="middle" alignmentBaseline="middle">W</SvgText>
+              </Svg>
             </View>
-            <View style={styles.windDivider} />
-            {adjustedDistance ? (
-              <View style={styles.windDistInfoRow}>
-                <Wind size={12} color="#FF9500" />
-                <Text style={styles.windAdjText}>{Math.round(adjustedDistance.adjustedDistance)}m</Text>
+            <View style={styles.miniArrowOverlay}>
+              <View style={{ transform: [{ rotate: `${windDeg}deg` }] }}>
+                <Svg height={64} width={64} viewBox="0 0 100 100">
+                  <Polygon points="50,22 60,70 40,70" fill="white" opacity={0.85} />
+                </Svg>
               </View>
-            ) : (
-              <Text style={styles.windNoData}>--</Text>
-            )}
+            </View>
           </View>
         )}
 
@@ -442,6 +452,11 @@ const styles = StyleSheet.create({
     left: 16,
     top: 90,
   },
+  distanceRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'baseline' as const,
+    gap: 6,
+  },
   distanceMainValue: {
     color: '#FFFFFF',
     fontSize: 48,
@@ -451,9 +466,8 @@ const styles = StyleSheet.create({
   },
   distanceMainUnit: {
     color: 'rgba(255,255,255,0.7)',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700' as const,
-    marginTop: -4,
   },
   distanceLabel: {
     color: 'rgba(255,255,255,0.5)',
@@ -475,9 +489,9 @@ const styles = StyleSheet.create({
   },
   windDistUnitOrange: {
     color: '#FF9500',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700' as const,
-    marginLeft: 3,
+    marginLeft: 4,
   },
   windDistLabel: {
     color: 'rgba(255,149,0,0.6)',
@@ -528,62 +542,34 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     gap: 10,
   },
-  windBox: {
-    backgroundColor: 'rgba(0,0,0,0.82)',
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(79,195,247,0.3)',
-    minWidth: 72,
+  miniCompassContainer: {
+    width: 64,
+    height: 64,
     alignItems: 'center' as const,
+    justifyContent: 'center' as const,
   },
-  windArrowRow: {
-    flexDirection: 'row' as const,
+  miniArrowOverlay: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    width: 64,
+    height: 64,
     alignItems: 'center' as const,
-    gap: 5,
-  },
-  windSpeedText: {
-    color: '#4FC3F7',
-    fontSize: 12,
-    fontWeight: '700' as const,
-  },
-  windDivider: {
-    width: '100%' as const,
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    marginVertical: 6,
-  },
-  windDistInfoRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 4,
-  },
-  windAdjText: {
-    color: '#FF9500',
-    fontSize: 13,
-    fontWeight: '800' as const,
-  },
-  windNoData: {
-    color: '#666',
-    fontSize: 12,
-    fontWeight: '600' as const,
+    justifyContent: 'center' as const,
   },
   setPinBtn: {
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: 'transparent',
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     gap: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(52,199,89,0.5)',
   },
   setPinText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '700' as const,
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800' as const,
   },
   clearPinBtn: {
     backgroundColor: 'rgba(0,0,0,0.8)',

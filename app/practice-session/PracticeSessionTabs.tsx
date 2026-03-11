@@ -75,6 +75,12 @@ export default function PracticeSessionTabs() {
     setDrillFullScreenTab(tab);
   }, []);
 
+  const handleClearPinForDrill = useCallback(() => {
+    console.log('[PracticeSessionTabs] Clearing pin for new drill');
+    setPinnedPosition(null);
+    setPositionDistance(0);
+  }, []);
+
   const handleDrillFullScreenBack = useCallback(() => {
     console.log('[PracticeSessionTabs] Back from drill full-screen tab');
     setDrillFullScreenTab(null);
@@ -150,6 +156,7 @@ export default function PracticeSessionTabs() {
           onMinimize={minimizeSession}
           onRequestSetPin={handleDrillRequestSetPin}
           onNavigateToTab={handleDrillNavigateToTab}
+          onClearPin={handleClearPinForDrill}
         />
       </View>
 

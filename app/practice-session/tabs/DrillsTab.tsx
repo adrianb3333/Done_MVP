@@ -49,6 +49,7 @@ interface DrillsTabProps {
   onMinimize?: () => void;
   onRequestSetPin?: (onPinDone: () => void) => void;
   onNavigateToTab?: (tab: 'flight' | 'position') => void;
+  onClearPin?: () => void;
 }
 
 const dedicatedComponents = [
@@ -99,7 +100,7 @@ type ScreenState =
   | 'activeDrill'
   | 'drillSummary';
 
-export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSetPin, onNavigateToTab }: DrillsTabProps) {
+export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSetPin, onNavigateToTab, onClearPin }: DrillsTabProps) {
   const { isPaired: sensorsPaired } = useSensor();
   const [selectedDrill, setSelectedDrill] = useState<{ category: string; card: string } | null>(null);
   const [currentScreen, setCurrentScreen] = useState<ScreenState>('main');
@@ -254,7 +255,8 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
   }, [onDrillActiveChange]);
 
   const handleSetPin = useCallback(() => {
-    console.log('Set Pin pressed - navigate to Position tab');
+    console.log('Set Pin pressed - clearing old pin and navigating to Position tab');
+    onClearPin?.();
     if (onRequestSetPin) {
       onRequestSetPin(() => {
         console.log('Pin set from Position tab - returning to drill and auto-starting');
@@ -264,7 +266,7 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
         }
       });
     }
-  }, [onRequestSetPin, activeDrillItem, onDrillActiveChange]);
+  }, [onRequestSetPin, onClearPin, activeDrillItem, onDrillActiveChange]);
 
   const drillsByCategory = useMemo(() => {
     const grouped = savedDrills.reduce<Record<string, CustomDrill[]>>((acc, drill) => {
