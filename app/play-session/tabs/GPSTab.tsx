@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, Platform, Linking, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MapPin, Move, RotateCcw, Wind, ArrowUp, ZoomIn, Navigation } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useWeather } from '@/hooks/useWeather';
@@ -62,6 +63,7 @@ function NativeMap({ onDistanceChange }: GPSTabProps) {
   const MapView = require('react-native-maps').default;
   const { Marker, Polyline } = require('react-native-maps');
   const Location = require('expo-location');
+  const insets = useSafeAreaInsets();
 
   const mapRef = useRef<any>(null);
   const [startPosition, setStartPosition] = useState<Coordinate>(DEFAULT_START);
@@ -307,7 +309,7 @@ function NativeMap({ onDistanceChange }: GPSTabProps) {
       </MapView>
 
       <TouchableOpacity
-        style={[styles.gpsToggle, gpsActive && styles.gpsToggleActive]}
+        style={[styles.gpsToggle, gpsActive && styles.gpsToggleActive, { top: insets.top + 12 }]}
         onPress={toggleGps}
         activeOpacity={0.7}
       >
@@ -317,7 +319,7 @@ function NativeMap({ onDistanceChange }: GPSTabProps) {
         </Text>
       </TouchableOpacity>
 
-      <View style={styles.distanceOverlay}>
+      <View style={[styles.distanceOverlay, { top: insets.top + 52 }]}>
         <Text style={styles.distanceMainValue}>{distance}</Text>
         <Text style={styles.distanceMainUnit}>m</Text>
         {windDistText !== null && (
@@ -362,7 +364,7 @@ function NativeMap({ onDistanceChange }: GPSTabProps) {
       </TouchableOpacity>
 
       {weather && (
-        <View style={styles.windBox}>
+        <View style={[styles.windBox, { top: insets.top + 12 }]}>
           <View style={styles.windArrowRow}>
             <View style={{ transform: [{ rotate: `${weather.windDeg}deg` }] }}>
               <ArrowUp size={16} color="#4FC3F7" />
