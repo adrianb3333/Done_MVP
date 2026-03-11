@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, Platform, Linking, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { MapPin, Move, RotateCcw } from 'lucide-react-native';
+import { MapPin, Move, RotateCcw, Wind, ArrowUp } from 'lucide-react-native';
 import Colors from '@/constants/colors';
+import { useWeather } from '@/hooks/useWeather';
+import { calculateGolfShot } from '@/services/golfCalculations';
 
 interface Coordinate {
   latitude: number;
@@ -41,6 +43,14 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
   const [distance, setDistance] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [permissionDenied, setPermissionDenied] = useState<boolean>(false);
+  const [geoLocation, setGeoLocation] = useState<{ lat: number; lon: number } | null>(null);
+
+  const { weather } = useWeather(geoLocation?.lat || null, geoLocation?.lon || null, 0);
+
+  const adjustedDistance = useMemo(() => {
+    if (!weather || distance <= 0) return null;
+    return calculateGolfShot(distance, 'Normal', weather.windMs, weather.headTail, weather.cross, weather.temp);
+  }, [weather, distance]);
 
   useEffect(() => {
     let mounted = true;
@@ -60,6 +70,7 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
         });
         console.log('Got user location:', loc.coords.latitude, loc.coords.longitude);
         if (mounted) {
+          setGeoLocation({ lat: loc.coords.latitude, lon: loc.coords.longitude });
           setUserLocation(DEFAULT_START);
           setDragEnd(DEFAULT_END);
           const initialDist = Math.round(haversineDistance(DEFAULT_START, DEFAULT_END));
@@ -78,6 +89,16 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
     return () => { mounted = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleDrag = useCallback((e: any) => {
+    const newCoord: Coordinate = e.nativeEvent.coordinate;
+    setDragEnd(newCoord);
+    if (userLocation) {
+      const dist = Math.round(haversineDistance(userLocation, newCoord));
+      setDistance(dist);
+      onDistanceChange?.(dist);
+    }
+  }, [userLocation, onDistanceChange]);
 
   const handleDragEnd = useCallback((e: any) => {
     const newCoord: Coordinate = e.nativeEvent.coordinate;
@@ -163,6 +184,7 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
             <Marker
               coordinate={dragEnd}
               draggable
+              onDrag={handleDrag}
               onDragEnd={handleDragEnd}
               anchor={{ x: 0.5, y: 0.5 }}
               tracksViewChanges={false}
@@ -190,6 +212,26 @@ function NativeMap({ onDistanceChange }: PositionTabProps) {
       <TouchableOpacity style={styles.resetBtn} onPress={handleReset} activeOpacity={0.7}>
         <RotateCcw size={18} color="#fff" />
       </TouchableOpacity>
+
+      {weather && (
+        <View style={styles.windBox}>
+          <View style={styles.windArrowRow}>
+            <View style={{ transform: [{ rotate: `${weather.windDeg}deg` }] }}>
+              <ArrowUp size={16} color="#4FC3F7" />
+            </View>
+            <Text style={styles.windSpeedText}>{weather.windMs} m/s</Text>
+          </View>
+          <View style={styles.windDivider} />
+          {adjustedDistance ? (
+            <View style={styles.windDistRow}>
+              <Wind size={12} color="#34C759" />
+              <Text style={styles.windAdjText}>{Math.round(adjustedDistance.adjustedDistance)}m</Text>
+            </View>
+          ) : (
+            <Text style={styles.windNoData}>--</Text>
+          )}
+        </View>
+      )}
     </View>
   );
 }
@@ -335,6 +377,50 @@ const styles = StyleSheet.create({
     justifyContent: 'center' as const,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.15)',
+  },
+  windBox: {
+    position: 'absolute' as const,
+    top: 16,
+    right: 16,
+    backgroundColor: 'rgba(0,0,0,0.82)',
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(79,195,247,0.3)',
+    minWidth: 72,
+    alignItems: 'center' as const,
+  },
+  windArrowRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 5,
+  },
+  windSpeedText: {
+    color: '#4FC3F7',
+    fontSize: 12,
+    fontWeight: '700' as const,
+  },
+  windDivider: {
+    width: '100%' as const,
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    marginVertical: 6,
+  },
+  windDistRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 4,
+  },
+  windAdjText: {
+    color: '#34C759',
+    fontSize: 13,
+    fontWeight: '800' as const,
+  },
+  windNoData: {
+    color: '#666',
+    fontSize: 12,
+    fontWeight: '600' as const,
   },
   webFallback: {
     flex: 1,
