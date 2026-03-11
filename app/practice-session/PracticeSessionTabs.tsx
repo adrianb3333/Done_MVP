@@ -105,37 +105,9 @@ export default function PracticeSessionTabs() {
   const isDrillFullScreen = isDrillActive && activeTab === 'drills';
   const isContentTab = activeTab !== 'drills';
 
-  if (drillFullScreenTab) {
-    return (
-      <View style={styles.root}>
-        <TouchableOpacity
-          onPress={handleDrillFullScreenBack}
-          style={[styles.drillFullScreenBackBtn, { top: insets.top + 8 }]}
-          activeOpacity={0.7}
-        >
-          <View style={styles.drillFullScreenBackCircle}>
-            <ArrowLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
-          </View>
-        </TouchableOpacity>
-        <View style={styles.content}>
-          {drillFullScreenTab === 'flight' && (
-            <FlightTab externalDistance={positionDistance} />
-          )}
-          {drillFullScreenTab === 'position' && (
-            <PositionTab
-              onDistanceChange={handlePositionDistanceChange}
-              externalPinnedPosition={pinnedPosition}
-              onPinChange={handlePinChange}
-            />
-          )}
-        </View>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.root}>
-      {!isDrillFullScreen && activeTab !== 'drills' && (
+      {!isDrillFullScreen && !drillFullScreenTab && activeTab !== 'drills' && (
         <TouchableOpacity
           onPress={minimizeSession}
           style={[styles.minimizeButton, { top: insets.top + 4 }]}
@@ -144,13 +116,13 @@ export default function PracticeSessionTabs() {
         </TouchableOpacity>
       )}
 
-      {isContentTab && !isDrillFullScreen && (
+      {isContentTab && !isDrillFullScreen && !drillFullScreenTab && (
         <View style={styles.content}>
           {renderContent()}
         </View>
       )}
 
-      <View style={activeTab === 'drills' ? (isDrillFullScreen ? styles.fullScreenDrill : styles.drillInline) : styles.hidden}>
+      <View style={activeTab === 'drills' || drillFullScreenTab ? (isDrillFullScreen || drillFullScreenTab ? styles.fullScreenDrill : styles.drillInline) : styles.hidden}>
         <DrillsTab
           onDrillActiveChange={handleDrillActiveChange}
           onMinimize={minimizeSession}
@@ -160,7 +132,33 @@ export default function PracticeSessionTabs() {
         />
       </View>
 
-      {!isDrillFullScreen && (
+      {drillFullScreenTab && (
+        <View style={styles.drillFullScreenOverlay}>
+          <TouchableOpacity
+            onPress={handleDrillFullScreenBack}
+            style={[styles.drillFullScreenBackBtn, { top: insets.top + 8 }]}
+            activeOpacity={0.7}
+          >
+            <View style={styles.drillFullScreenBackCircle}>
+              <ArrowLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
+            </View>
+          </TouchableOpacity>
+          <View style={styles.content}>
+            {drillFullScreenTab === 'flight' && (
+              <FlightTab externalDistance={positionDistance} />
+            )}
+            {drillFullScreenTab === 'position' && (
+              <PositionTab
+                onDistanceChange={handlePositionDistanceChange}
+                externalPinnedPosition={pinnedPosition}
+                onPinChange={handlePinChange}
+              />
+            )}
+          </View>
+        </View>
+      )}
+
+      {!isDrillFullScreen && !drillFullScreenTab && (
         <View style={[styles.tabBar, { paddingBottom: insets.bottom > 0 ? insets.bottom : 20 }]}>
           {tabsConfig.map((tab) => {
             const isActive = activeTab === tab.key;
@@ -235,6 +233,15 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  drillFullScreenOverlay: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 50,
+    backgroundColor: '#020d12',
   },
   drillFullScreenBackBtn: {
     position: 'absolute' as const,
