@@ -33,6 +33,7 @@ const tabConfig: { key: PlayTab; label: string; icon: React.ReactNode }[] = [
 function PlaySessionContent() {
   const [activeTab, setActiveTab] = useState<PlayTab>('score');
   const [gpsDistance, setGpsDistance] = useState<number>(0);
+  const [gpsAdjustedDistance, setGpsAdjustedDistance] = useState<number>(0);
   const { minimizeSession } = useSession();
   const { showScoreboard, setShowScoreboard } = useScoring();
   const insets = useSafeAreaInsets();
@@ -41,14 +42,18 @@ function PlaySessionContent() {
     setGpsDistance(dist);
   }, []);
 
+  const handleGpsAdjustedDistanceChange = useCallback((dist: number) => {
+    setGpsAdjustedDistance(dist);
+  }, []);
+
   const isScoreTab = activeTab === 'score';
   const isFullScreenTab = activeTab === 'wind' || activeTab === 'mind' || activeTab === 'gps' || activeTab === 'data';
 
   const renderContent = () => {
     switch (activeTab) {
       case 'score': return <ScoreTab />;
-      case 'gps': return <GPSTab onDistanceChange={handleGpsDistanceChange} />;
-      case 'wind': return <WindTab externalDistance={gpsDistance} />;
+      case 'gps': return <GPSTab onDistanceChange={handleGpsDistanceChange} onAdjustedDistanceChange={handleGpsAdjustedDistanceChange} />;
+      case 'wind': return <WindTab externalDistance={gpsDistance} externalAdjustedDistance={gpsAdjustedDistance} />;
       case 'mind': return <MindTab />;
       case 'data': return <DataTab />;
     }

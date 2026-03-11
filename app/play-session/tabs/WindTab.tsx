@@ -17,9 +17,10 @@ type FlightOption = 'Low' | 'Normal' | 'High';
 
 interface WindTabProps {
   externalDistance?: number;
+  externalAdjustedDistance?: number;
 }
 
-export default function WindTab({ externalDistance }: WindTabProps) {
+export default function WindTab({ externalDistance, externalAdjustedDistance }: WindTabProps) {
   const [ballFlight, setBallFlight] = useState<FlightOption>('Normal');
   const [distance, setDistance] = useState<string>('');
   const [targetHeading] = useState<number>(0);
@@ -30,9 +31,16 @@ export default function WindTab({ externalDistance }: WindTabProps) {
 
   useEffect(() => {
     if (externalDistance && externalDistance > 0) {
+      console.log('[WindTab] Received live distance from GPS:', externalDistance);
       setDistance(String(externalDistance));
     }
   }, [externalDistance]);
+
+  useEffect(() => {
+    if (externalAdjustedDistance && externalAdjustedDistance > 0) {
+      console.log('[WindTab] Received adjusted distance from GPS:', externalAdjustedDistance);
+    }
+  }, [externalAdjustedDistance]);
 
   useEffect(() => {
     const distanceNum = parseFloat(distance);
