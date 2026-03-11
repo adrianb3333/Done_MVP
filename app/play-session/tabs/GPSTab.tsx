@@ -27,6 +27,32 @@ function haversineDistance(coord1: Coordinate, coord2: Coordinate): number {
   return R * c;
 }
 
+function computeBearing(from: Coordinate, to: Coordinate): number {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const dLon = toRad(to.longitude - from.longitude);
+  const y = Math.sin(dLon) * Math.cos(toRad(to.latitude));
+  const x = Math.cos(toRad(from.latitude)) * Math.sin(toRad(to.latitude)) -
+    Math.sin(toRad(from.latitude)) * Math.cos(toRad(to.latitude)) * Math.cos(dLon);
+  return Math.atan2(y, x);
+}
+
+function destinationPoint(from: Coordinate, bearingRad: number, distanceM: number): Coordinate {
+  const R = 6371000;
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const toDeg = (rad: number) => (rad * 180) / Math.PI;
+  const lat1 = toRad(from.latitude);
+  const lon1 = toRad(from.longitude);
+  const angDist = distanceM / R;
+  const lat2 = Math.asin(Math.sin(lat1) * Math.cos(angDist) + Math.cos(lat1) * Math.sin(angDist) * Math.cos(bearingRad));
+  const lon2 = lon1 + Math.atan2(Math.sin(bearingRad) * Math.sin(angDist) * Math.cos(lat1), Math.cos(angDist) - Math.sin(lat1) * Math.sin(lat2));
+  return { latitude: toDeg(lat2), longitude: toDeg(lon2) };
+}
+
+function offsetCoordinate(coord: Coordinate, bearingRad: number, offsetM: number): Coordinate {
+  const perpBearing = bearingRad + Math.PI / 2;
+  return destinationPoint(coord, perpBearing, offsetM);
+}
+
 
 interface GPSTabProps {
   onDistanceChange?: (distance: number) => void;
@@ -52,6 +78,16 @@ function NativeMap({ onDistanceChange }: GPSTabProps) {
     const result = calculateGolfShot(distance, 'Normal', weather.windMs, weather.headTail, weather.cross, weather.temp);
     return result;
   }, [weather, distance]);
+
+  const weatherLine = React.useMemo(() => {
+    if (!adjustedDistance || !userLocation || !dragEnd) return null;
+    const bearing = computeBearing(userLocation, dragEnd);
+    const adjEnd = destinationPoint(userLocation, bearing, adjustedDistance.adjustedDistance);
+    const OFFSET = 3;
+    const startOffset = offsetCoordinate(userLocation, bearing, OFFSET);
+    const endOffset = offsetCoordinate(adjEnd, bearing, OFFSET);
+    return { start: startOffset, end: endOffset };
+  }, [adjustedDistance, userLocation, dragEnd]);
 
   useEffect(() => {
     let mounted = true;
@@ -169,10 +205,18 @@ function NativeMap({ onDistanceChange }: GPSTabProps) {
           <>
             <Polyline
               coordinates={[userLocation, dragEnd]}
-              strokeColor="#34C759"
+              strokeColor="#FFFFFF"
               strokeWidth={3}
               lineDashPattern={[8, 6]}
             />
+            {weatherLine && (
+              <Polyline
+                coordinates={[weatherLine.start, weatherLine.end]}
+                strokeColor="#4FC3F7"
+                strokeWidth={2}
+                lineDashPattern={[6, 4]}
+              />
+            )}
             <Marker
               coordinate={userLocation}
               anchor={{ x: 0.5, y: 0.5 }}
