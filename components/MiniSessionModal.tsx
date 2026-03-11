@@ -5,45 +5,20 @@ import {
   StyleSheet,
   TouchableOpacity,
   Modal,
-  Platform,
 } from 'react-native';
 import { ChevronUp } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import MaskedView from '@react-native-masked-view/masked-view';
 import Colors from '@/constants/colors';
 import { useSession } from '@/contexts/SessionContext';
 
 const PRACTICE_GRADIENT: [string, string, string] = ['#0059B2', '#1075E3', '#1C8CFF'];
 const PLAY_GRADIENT: [string, string, string] = ['#4BA35B', '#3D954D', '#2D803D'];
 
-function GradientText({ text, colors }: { text: string; colors: [string, string, string] }) {
-  if (Platform.OS === 'web') {
-    return (
-      <Text style={[styles.sessionLabel, { color: colors[0] }]}>{text}</Text>
-    );
-  }
-  return (
-    <MaskedView
-      maskElement={
-        <Text style={[styles.sessionLabel, { color: '#000' }]}>{text}</Text>
-      }
-    >
-      <LinearGradient
-        colors={colors}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-      >
-        <Text style={[styles.sessionLabel, { opacity: 0 }]}>{text}</Text>
-      </LinearGradient>
-    </MaskedView>
-  );
-}
-
 export default function MiniSessionModal() {
   const { sessionType, expandSession, finishSession } = useSession();
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const sessionLabel = sessionType === 'play' ? 'Round in Progress' : 'Practice Session';
+  const sessionLabel = sessionType === 'play' ? 'Round in Progress' : 'Practice in Progress';
 
   const handleFinishPress = () => {
     setShowConfirm(true);
@@ -62,48 +37,28 @@ export default function MiniSessionModal() {
 
   return (
     <View style={styles.container}>
-      {isPlay ? (
-        <LinearGradient
-          colors={PLAY_GRADIENT}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.modal}
+      <LinearGradient
+        colors={isPlay ? PLAY_GRADIENT : PRACTICE_GRADIENT}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.modal}
+      >
+        <TouchableOpacity
+          style={styles.expandButton}
+          onPress={expandSession}
+          activeOpacity={0.7}
         >
-          <TouchableOpacity
-            style={styles.expandButton}
-            onPress={expandSession}
-            activeOpacity={0.7}
-          >
-            <ChevronUp size={28} color="#fff" strokeWidth={2.5} />
-            <Text style={styles.sessionLabel}>{sessionLabel}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.finishButton}
-            onPress={handleFinishPress}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.finishText}>Finish</Text>
-          </TouchableOpacity>
-        </LinearGradient>
-      ) : (
-        <View style={[styles.modal, styles.practiceModal]}>
-          <TouchableOpacity
-            style={styles.expandButton}
-            onPress={expandSession}
-            activeOpacity={0.7}
-          >
-            <ChevronUp size={28} color="#0059B2" strokeWidth={2.5} />
-            <GradientText text={sessionLabel} colors={PRACTICE_GRADIENT} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.finishButton}
-            onPress={handleFinishPress}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.finishText}>Finish</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+          <ChevronUp size={28} color="#fff" strokeWidth={2.5} />
+          <Text style={styles.sessionLabel}>{sessionLabel}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.finishButton}
+          onPress={handleFinishPress}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.finishText}>Finish</Text>
+        </TouchableOpacity>
+      </LinearGradient>
 
       <Modal
         visible={showConfirm}
@@ -112,7 +67,12 @@ export default function MiniSessionModal() {
         onRequestClose={handleConfirmNo}
       >
         <View style={styles.confirmOverlay}>
-          <View style={styles.confirmBox}>
+          <LinearGradient
+            colors={isPlay ? PLAY_GRADIENT : PRACTICE_GRADIENT}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.confirmBox}
+          >
             <Text style={styles.confirmTitle}>Are you sure?</Text>
             <Text style={styles.confirmMessage}>
               {sessionType === 'play'
@@ -135,7 +95,7 @@ export default function MiniSessionModal() {
                 <Text style={styles.confirmYesText}>Yes</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </LinearGradient>
         </View>
       </Modal>
     </View>
@@ -162,9 +122,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
-  practiceModal: {
-    backgroundColor: '#FFFFFF',
-  },
+
   expandButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -194,13 +152,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   confirmBox: {
-    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 24,
     width: '80%',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
+    alignItems: 'center' as const,
+    overflow: 'hidden' as const,
   },
   confirmTitle: {
     fontSize: 18,
@@ -210,7 +166,7 @@ const styles = StyleSheet.create({
   },
   confirmMessage: {
     fontSize: 15,
-    color: '#aaa',
+    color: '#FFFFFF',
     textAlign: 'center' as const,
     marginBottom: 24,
   },
@@ -221,7 +177,7 @@ const styles = StyleSheet.create({
   },
   confirmNo: {
     flex: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: '#000000',
     paddingVertical: 12,
     borderRadius: 10,
     alignItems: 'center' as const,
