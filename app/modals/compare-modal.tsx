@@ -14,24 +14,28 @@ import {
 import { useRouter } from 'expo-router';
 import { User, Search } from 'lucide-react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useScrollHeader } from '@/hooks/useScrollHeader';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const TABS = ['Stats', 'Strokes Gained', 'Distance'] as const;
+const FLOATING_HEADER_HEIGHT = 90;
 
 export default function CompareModal() {
   const router = useRouter();
   const { profile, following } = useProfile();
+  const insets = useSafeAreaInsets();
   const username = profile?.display_name || profile?.username || 'User';
 
   const [activeTab, setActiveTab] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
   const indicatorAnim = useRef(new Animated.Value(0)).current;
+  const { headerTranslateY, onScroll: onVerticalScroll } = useScrollHeader(FLOATING_HEADER_HEIGHT + insets.top);
 
-  const handleScroll = useCallback(
+  const handleHorizontalScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const offsetX = event.nativeEvent.contentOffset.x;
       const index = Math.round(offsetX / SCREEN_WIDTH);
@@ -133,11 +137,15 @@ export default function CompareModal() {
     'Handicap Trend',
   ];
 
+  const contentPaddingTop = FLOATING_HEADER_HEIGHT + insets.top + 8;
+
   const renderStatsTab = () => (
     <ScrollView
       style={styles.tabPage}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.tabPageContent}
+      contentContainerStyle={[styles.tabPageContent, { paddingTop: contentPaddingTop }]}
+      onScroll={onVerticalScroll}
+      scrollEventThrottle={16}
     >
       {renderVSCard()}
       {renderFriendsList()}
@@ -161,7 +169,9 @@ export default function CompareModal() {
     <ScrollView
       style={styles.tabPage}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.tabPageContent}
+      contentContainerStyle={[styles.tabPageContent, { paddingTop: contentPaddingTop }]}
+      onScroll={onVerticalScroll}
+      scrollEventThrottle={16}
     >
       {renderVSCard()}
 
@@ -178,7 +188,9 @@ export default function CompareModal() {
     <ScrollView
       style={styles.tabPage}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.tabPageContent}
+      contentContainerStyle={[styles.tabPageContent, { paddingTop: contentPaddingTop }]}
+      onScroll={onVerticalScroll}
+      scrollEventThrottle={16}
     >
       {renderVSCard()}
 
@@ -198,14 +210,36 @@ export default function CompareModal() {
       end={{ x: 0, y: 1 }}
       style={styles.container}
     >
-      <SafeAreaView edges={['top']} style={styles.safeTop}>
-        <View style={styles.header}>
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onScroll={handleHorizontalScroll}
+        scrollEventThrottle={16}
+        style={styles.pagerScroll}
+      >
+        <View style={{ width: SCREEN_WIDTH }}>{renderStatsTab()}</View>
+        <View style={{ width: SCREEN_WIDTH }}>{renderStrokesGainedTab()}</View>
+        <View style={{ width: SCREEN_WIDTH }}>{renderDistanceTab()}</View>
+      </ScrollView>
+
+      <Animated.View
+        style={[
+          styles.floatingHeader,
+          {
+            paddingTop: insets.top,
+            transform: [{ translateY: headerTranslateY }],
+          },
+        ]}
+        pointerEvents="box-none"
+      >
+        <View style={styles.headerRow} pointerEvents="box-none">
           <GlassBackButton onPress={() => router.back()} />
-          <Text style={styles.headerTitle}>{username} VS</Text>
           <View style={styles.headerSpacer} />
         </View>
 
-        <View style={styles.segmentContainer}>
+        <View style={styles.segmentContainer} pointerEvents="box-none">
           <View style={styles.segmentRow}>
             {TABS.map((tab, index) => (
               <TouchableOpacity
@@ -235,21 +269,7 @@ export default function CompareModal() {
             ]}
           />
         </View>
-      </SafeAreaView>
-
-      <ScrollView
-        ref={scrollRef}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-        style={styles.pagerScroll}
-      >
-        <View style={{ width: SCREEN_WIDTH }}>{renderStatsTab()}</View>
-        <View style={{ width: SCREEN_WIDTH }}>{renderStrokesGainedTab()}</View>
-        <View style={{ width: SCREEN_WIDTH }}>{renderDistanceTab()}</View>
-      </ScrollView>
+      </Animated.View>
     </LinearGradient>
   );
 }
@@ -258,22 +278,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  safeTop: {},
-  header: {
+  floatingHeader: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+  },
+  headerRow: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
     paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: '700' as const,
-    color: '#FFFFFF',
-    letterSpacing: 0.3,
+    paddingTop: 8,
+    paddingBottom: 4,
   },
   headerSpacer: {
-    width: 40,
+    flex: 1,
   },
   segmentContainer: {
     paddingHorizontal: 20,
@@ -312,7 +332,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   vsSection: {
-    marginTop: 16,
+    marginTop: 8,
   },
   vsCard: {
     backgroundColor: 'rgba(0,0,0,0.25)',
