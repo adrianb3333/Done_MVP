@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Flag } from 'lucide-react-native';
 import { useSession } from '@/contexts/SessionContext';
 import { useScoring } from '@/contexts/ScoringContext';
@@ -49,7 +50,12 @@ export default function RoundSumModal({ onClose, roundData }: RoundSumModalProps
   const maxScoreCount = Math.max(...stats.scoreCategories.map((c) => c.count), 1);
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#4BA35B', '#3D954D', '#2D803D']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.container}
+    >
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <Text style={styles.headerTitle}>Round Summary</Text>
         <Text style={styles.headerSubtitle}>{roundData.courseName}</Text>
@@ -116,11 +122,10 @@ export default function RoundSumModal({ onClose, roundData }: RoundSumModalProps
               <View style={styles.barChart}>
                 {stats.scoreCategories.map((cat) => {
                   const barH = Math.max((cat.count / maxScoreCount) * 80, 6);
-                  const isWhite = cat.color === '#FFFFFF';
                   return (
                     <View key={cat.label} style={styles.barColumn}>
                       <Text style={styles.barPct}>{cat.percentage}%</Text>
-                      <View style={[styles.bar, { height: barH, backgroundColor: cat.color, borderWidth: isWhite ? 1 : 0, borderColor: isWhite ? '#555' : 'transparent' }]} />
+                      <View style={[styles.bar, { height: barH, backgroundColor: cat.color === '#FFFFFF' ? 'rgba(255,255,255,0.9)' : cat.color }]} />
                       <Text style={styles.barLabel}>{cat.label}</Text>
                       <Text style={styles.barCount}>{cat.count}</Text>
                     </View>
@@ -143,8 +148,8 @@ export default function RoundSumModal({ onClose, roundData }: RoundSumModalProps
                   <Text style={styles.fairwayStatCount}>{stats.fairwayMissLeft}</Text>
                 </View>
                 <View style={styles.fairwayStat}>
-                  <Text style={styles.fairwayPctGreen}>{pctOf(stats.fairwayHit, stats.fairwayTotal)}%</Text>
-                  <Text style={styles.fairwayStatLabelGreen}>Fairway</Text>
+                  <Text style={styles.fairwayPctWhite}>{pctOf(stats.fairwayHit, stats.fairwayTotal)}%</Text>
+                  <Text style={styles.fairwayStatLabelWhite}>Fairway</Text>
                   <Text style={styles.fairwayStatCount}>{stats.fairwayHit}</Text>
                 </View>
                 <View style={styles.fairwayStat}>
@@ -168,7 +173,7 @@ export default function RoundSumModal({ onClose, roundData }: RoundSumModalProps
                     <Text style={styles.girPct}>{pctOf(stats.girMissLeft, stats.girTotal)}%</Text>
                   </View>
                   <View style={styles.girGreen}>
-                    <Flag size={18} color="#e53935" />
+                    <Flag size={18} color="#FFFFFF" />
                   </View>
                   <View style={styles.girSide}>
                     <Text style={styles.girLabel}>Right</Text>
@@ -200,9 +205,9 @@ export default function RoundSumModal({ onClose, roundData }: RoundSumModalProps
               <View style={styles.barChart}>
                 {[
                   { label: '1-Putt', count: stats.putts1, color: '#FFFFFF' },
-                  { label: '2-Putt', count: stats.putts2, color: '#888888' },
-                  { label: '3-Putt', count: stats.putts3, color: '#e53935' },
-                  { label: '4+', count: stats.putts4Plus, color: '#B71C1C' },
+                  { label: '2-Putt', count: stats.putts2, color: 'rgba(255,255,255,0.6)' },
+                  { label: '3-Putt', count: stats.putts3, color: '#FF6B6B' },
+                  { label: '4+', count: stats.putts4Plus, color: '#FF3B3B' },
                 ].filter((d) => d.count > 0).map((item) => {
                   const maxP = Math.max(stats.putts1, stats.putts2, stats.putts3, stats.putts4Plus, 1);
                   const barH = Math.max((item.count / maxP) * 60, 6);
@@ -251,6 +256,8 @@ export default function RoundSumModal({ onClose, roundData }: RoundSumModalProps
             </View>
           </>
         )}
+
+        <View style={{ height: 20 }} />
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom > 0 ? insets.bottom : 24 }]}>
@@ -258,29 +265,28 @@ export default function RoundSumModal({ onClose, roundData }: RoundSumModalProps
           <Text style={styles.finishButtonText}>Finish</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0F0D',
   },
   header: {
     alignItems: 'center' as const,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#243028',
+    borderBottomColor: 'rgba(255,255,255,0.15)',
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 4,
   },
   scrollContent: {
@@ -294,14 +300,14 @@ const styles = StyleSheet.create({
   scoreHeroLabel: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     textTransform: 'uppercase' as const,
     letterSpacing: 1,
   },
   scoreHeroValue: {
     fontSize: 72,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     marginTop: 4,
   },
   toParBadge: {
@@ -312,15 +318,15 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   toParUnder: {
-    backgroundColor: '#222222',
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
   toParEven: {
-    backgroundColor: '#222222',
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
   toParText: {
     fontSize: 18,
     fontWeight: '800' as const,
-    color: '#fff',
+    color: '#FFFFFF',
   },
   statsGrid: {
     flexDirection: 'row' as const,
@@ -331,23 +337,23 @@ const styles = StyleSheet.create({
   statGridBox: {
     flex: 1,
     minWidth: '45%' as unknown as number,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   statLabel: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     textTransform: 'uppercase' as const,
   },
   statValue: {
     fontSize: 20,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     marginTop: 4,
   },
   dateRow: {
@@ -355,16 +361,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between' as const,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#1C2922',
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   dateLabel: {
     fontSize: 14,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     fontWeight: '500' as const,
   },
   dateValue: {
     fontSize: 14,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     fontWeight: '600' as const,
   },
   playersSection: {
@@ -374,7 +380,7 @@ const styles = StyleSheet.create({
   playersSectionTitle: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.8)',
     marginBottom: 12,
     textTransform: 'uppercase' as const,
     letterSpacing: 0.5,
@@ -382,30 +388,30 @@ const styles = StyleSheet.create({
   playerRow: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     padding: 14,
     borderRadius: 10,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   playerPosition: {
     width: 28,
     fontSize: 15,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
   },
   playerName: {
     flex: 1,
     fontSize: 15,
     fontWeight: '600' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   playerScore: {
     width: 50,
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     textAlign: 'center' as const,
   },
   playerToPar: {
@@ -417,28 +423,28 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: '#222222',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     marginBottom: 20,
   },
   detailedTitle: {
     fontSize: 20,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     textAlign: 'center' as const,
     marginBottom: 16,
   },
   sectionCard: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 14,
     padding: 16,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     marginBottom: 12,
     textAlign: 'center' as const,
   },
@@ -457,7 +463,7 @@ const styles = StyleSheet.create({
   barPct: {
     fontSize: 9,
     fontWeight: '700' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     marginBottom: 4,
   },
   bar: {
@@ -468,14 +474,14 @@ const styles = StyleSheet.create({
   barLabel: {
     fontSize: 7,
     fontWeight: '700' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 4,
     textAlign: 'center' as const,
   },
   barCount: {
     fontSize: 10,
     fontWeight: '600' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     marginTop: 1,
   },
   fairwayArc: {
@@ -490,7 +496,7 @@ const styles = StyleSheet.create({
   },
   fairwaySegLeft: {
     flex: 1,
-    backgroundColor: '#e53935',
+    backgroundColor: '#FF6B6B',
     borderTopLeftRadius: 90,
   },
   fairwaySegCenter: {
@@ -499,7 +505,7 @@ const styles = StyleSheet.create({
   },
   fairwaySegRight: {
     flex: 1,
-    backgroundColor: '#e53935',
+    backgroundColor: '#FF6B6B',
     borderTopRightRadius: 90,
   },
   fairwayStats: {
@@ -513,9 +519,9 @@ const styles = StyleSheet.create({
   fairwayPctRed: {
     fontSize: 18,
     fontWeight: '800' as const,
-    color: '#e53935',
+    color: '#FF6B6B',
   },
-  fairwayPctGreen: {
+  fairwayPctWhite: {
     fontSize: 18,
     fontWeight: '800' as const,
     color: '#FFFFFF',
@@ -523,10 +529,10 @@ const styles = StyleSheet.create({
   fairwayStatLabel: {
     fontSize: 11,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 2,
   },
-  fairwayStatLabelGreen: {
+  fairwayStatLabelWhite: {
     fontSize: 11,
     fontWeight: '600' as const,
     color: '#FFFFFF',
@@ -535,7 +541,7 @@ const styles = StyleSheet.create({
   fairwayStatCount: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
     marginTop: 1,
   },
   girVisual: {
@@ -572,24 +578,24 @@ const styles = StyleSheet.create({
   girLabel: {
     fontSize: 12,
     fontWeight: '700' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
   },
   girPct: {
     fontSize: 18,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   girSummary: {
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#243028',
+    borderTopColor: 'rgba(255,255,255,0.15)',
     marginTop: 8,
     alignItems: 'center' as const,
   },
   girSummaryText: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.8)',
   },
   puttSummary: {
     flexDirection: 'row' as const,
@@ -602,12 +608,12 @@ const styles = StyleSheet.create({
   puttValue: {
     fontSize: 24,
     fontWeight: '800' as const,
-    color: '#F5F7F6',
+    color: '#FFFFFF',
   },
   puttLabel: {
     fontSize: 11,
     fontWeight: '600' as const,
-    color: '#8A9B90',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 2,
   },
   boxRow: {
@@ -616,21 +622,21 @@ const styles = StyleSheet.create({
   },
   miniBox: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 10,
     padding: 12,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   miniBoxWide: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 10,
     padding: 12,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   miniBoxValue: {
     fontSize: 18,
@@ -646,15 +652,16 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: 24,
     paddingTop: 12,
-    backgroundColor: '#0A0F0D',
     borderTopWidth: 1,
-    borderTopColor: '#243028',
+    borderTopColor: 'rgba(255,255,255,0.1)',
   },
   finishButton: {
-    backgroundColor: '#222222',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   finishButtonText: {
     color: '#FFFFFF',
