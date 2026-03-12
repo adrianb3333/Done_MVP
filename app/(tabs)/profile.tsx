@@ -535,6 +535,9 @@ export default function ProfileScreen() {
 
   const randomHcp = useRef((Math.random() * 20 + 5).toFixed(1)).current;
 
+  const hasUnreadNotifications = followers.length > 0;
+  const hasNewNews = true;
+
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -747,7 +750,8 @@ export default function ProfileScreen() {
               activeOpacity={0.7}
             >
               <Newspaper size={18} color="#B0B0B0" />
-              <Text style={styles.helpMenuText}>News</Text>
+              <Text style={styles.helpMenuText}>Information</Text>
+              {hasNewNews && <View style={styles.helpMenuRedDot} />}
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.helpMenuItem}
@@ -764,7 +768,8 @@ export default function ProfileScreen() {
               activeOpacity={0.7}
             >
               <Bell size={18} color="#B0B0B0" />
-              <Text style={styles.helpMenuText}>Friends</Text>
+              <Text style={styles.helpMenuText}>Notifications</Text>
+              {hasUnreadNotifications && <View style={styles.helpMenuRedDot} />}
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -1666,6 +1671,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 14,
     borderRadius: 10,
+    position: 'relative' as const,
   },
   helpMenuText: {
     fontSize: 14,
@@ -2391,5 +2397,14 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     tintColor: '#555',
+  },
+  helpMenuRedDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#FF3B30',
+    position: 'absolute' as const,
+    top: 10,
+    right: 10,
   },
 });

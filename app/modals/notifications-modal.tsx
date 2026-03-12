@@ -11,6 +11,7 @@ import { UserPlus, Heart, MessageCircle, Bell } from 'lucide-react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useProfile } from '@/contexts/ProfileContext';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface Notification {
   id: string;
@@ -43,13 +44,13 @@ export default function NotificationsModal() {
   const getIcon = (type: Notification['type']) => {
     switch (type) {
       case 'follow':
-        return <UserPlus size={18} color="#1DB954" />;
+        return <UserPlus size={18} color="#2D803D" />;
       case 'like':
         return <Heart size={18} color="#FF5252" />;
       case 'comment':
-        return <MessageCircle size={18} color="#4FC3F7" />;
+        return <MessageCircle size={18} color="#0059B2" />;
       default:
-        return <Bell size={18} color="#B0B0B0" />;
+        return <Bell size={18} color="#666" />;
     }
   };
 
@@ -85,23 +86,28 @@ export default function NotificationsModal() {
   );
 
   return (
-    <View style={s.container}>
+    <LinearGradient
+      colors={['#EBF4FF', '#D6EAFF', '#C2DFFF', '#EBF4FF']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={s.gradientContainer}
+    >
       <SafeAreaView edges={['top']} style={s.safeTop}>
         <View style={s.header}>
           <GlassBackButton onPress={() => router.back()} />
-          <Text style={s.headerTitle}>Aviseringar</Text>
+          <Text style={s.headerTitle}>Notifications</Text>
           <View style={s.headerSpacer} />
         </View>
       </SafeAreaView>
 
       {loading ? (
         <View style={s.centered}>
-          <ActivityIndicator size="small" color="#1DB954" />
+          <ActivityIndicator size="small" color="rgba(0,0,0,0.4)" />
         </View>
       ) : notifications.length === 0 ? (
         <View style={s.emptyState}>
-          <Bell size={40} color="#333" />
-          <Text style={s.emptyTitle}>Inga aviseringar</Text>
+          <Bell size={40} color="rgba(0,0,0,0.2)" />
+          <Text style={s.emptyTitle}>No notifications</Text>
           <Text style={s.emptySubtext}>When someone follows you or interacts, it will show up here</Text>
         </View>
       ) : (
@@ -113,17 +119,16 @@ export default function NotificationsModal() {
           showsVerticalScrollIndicator={false}
         />
       )}
-    </View>
+    </LinearGradient>
   );
 }
 
 const s = StyleSheet.create({
-  container: {
+  gradientContainer: {
     flex: 1,
-    backgroundColor: '#0A0A0A',
   },
   safeTop: {
-    backgroundColor: '#0A0A0A',
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row' as const,
@@ -132,18 +137,12 @@ const s = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#1A1A1A',
-  },
-  backBtnUnused: {
-    width: 36,
-    height: 36,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+    borderBottomColor: 'rgba(0,0,0,0.06)',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#EFEFEF',
+    color: '#1A1A1A',
   },
   headerSpacer: {
     width: 36,
@@ -163,12 +162,12 @@ const s = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#555',
+    color: '#1A1A1A',
     marginTop: 4,
   },
   emptySubtext: {
     fontSize: 13,
-    color: '#444',
+    color: 'rgba(0,0,0,0.45)',
     textAlign: 'center' as const,
     lineHeight: 18,
   },
@@ -182,42 +181,44 @@ const s = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#141414',
+    borderBottomColor: 'rgba(0,0,0,0.05)',
   },
   notifUnread: {
-    backgroundColor: '#1DB95408',
+    backgroundColor: 'rgba(0,0,0,0.04)',
   },
   notifIconWrap: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'rgba(0,0,0,0.12)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     marginRight: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
   },
   notifContent: {
     flex: 1,
   },
   notifText: {
     fontSize: 14,
-    color: '#CCCCCC',
+    color: '#1A1A1A',
     lineHeight: 20,
   },
   notifUsername: {
     fontWeight: '700' as const,
-    color: '#EFEFEF',
+    color: '#000000',
   },
   notifTime: {
     fontSize: 11,
-    color: '#555',
+    color: 'rgba(0,0,0,0.4)',
     marginTop: 3,
   },
   unreadDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#1DB954',
+    backgroundColor: '#FF3B30',
     marginLeft: 8,
   },
 });

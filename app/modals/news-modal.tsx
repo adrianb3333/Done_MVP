@@ -6,6 +6,8 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { sanityFetch, sanityImageUrl } from '@/lib/sanity';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 
 const SEGMENTS = ['News', 'Onboarding', 'Tutorials'] as const;
 
@@ -35,7 +37,7 @@ function NewsContent() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FFFFFF" />
+        <ActivityIndicator size="large" color="rgba(0,0,0,0.5)" />
       </View>
     );
   }
@@ -44,7 +46,7 @@ function NewsContent() {
     return (
       <ScrollView style={styles.contentScroll} contentContainerStyle={styles.contentContainer}>
         <View style={styles.emptyState}>
-          <Newspaper size={48} color="#333" />
+          <Newspaper size={48} color="rgba(0,0,0,0.25)" />
           <Text style={styles.emptyTitle}>Something went wrong</Text>
           <Text style={styles.emptySubtitle}>Could not load news. Pull down to retry.</Text>
           <TouchableOpacity onPress={() => refetch()} style={styles.retryButton} activeOpacity={0.7}>
@@ -59,7 +61,7 @@ function NewsContent() {
     return (
       <ScrollView style={styles.contentScroll} contentContainerStyle={styles.contentContainer}>
         <View style={styles.emptyState}>
-          <Newspaper size={48} color="#333" />
+          <Newspaper size={48} color="rgba(0,0,0,0.25)" />
           <Text style={styles.emptyTitle}>News</Text>
           <Text style={styles.emptySubtitle}>Latest updates and announcements will appear here</Text>
         </View>
@@ -189,7 +191,7 @@ function TutorialsContent() {
   return (
     <ScrollView style={styles.contentScroll} contentContainerStyle={styles.contentContainer}>
       <View style={styles.emptyState}>
-        <Play size={48} color="#333" />
+        <Play size={48} color="rgba(0,0,0,0.25)" />
         <Text style={styles.emptyTitle}>Tutorials</Text>
         <Text style={styles.emptySubtitle}>Step-by-step tutorials to improve your game</Text>
       </View>
@@ -200,23 +202,29 @@ function TutorialsContent() {
 export default function NewsModal() {
   const insets = useSafeAreaInsets();
   const [activeSegment, setActiveSegment] = useState<number>(0);
-  const slideAnim = useRef(new Animated.Value(0)).current;
+  const underlineAnim = useRef(new Animated.Value(0)).current;
 
   const handleSegmentPress = useCallback((index: number) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setActiveSegment(index);
-    Animated.spring(slideAnim, {
+    Animated.spring(underlineAnim, {
       toValue: index,
       useNativeDriver: true,
       tension: 300,
       friction: 30,
     }).start();
-  }, [slideAnim]);
+  }, [underlineAnim]);
 
   const segmentWidth = (SCREEN_WIDTH - 48) / SEGMENTS.length;
+  const underlineWidth = 40;
 
-  const translateX = slideAnim.interpolate({
+  const translateX = underlineAnim.interpolate({
     inputRange: [0, 1, 2],
-    outputRange: [0, segmentWidth, segmentWidth * 2],
+    outputRange: [
+      (segmentWidth - underlineWidth) / 2,
+      segmentWidth + (segmentWidth - underlineWidth) / 2,
+      segmentWidth * 2 + (segmentWidth - underlineWidth) / 2,
+    ],
   });
 
   const renderContent = () => {
@@ -233,23 +241,20 @@ export default function NewsModal() {
   };
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#EBF4FF', '#D6EAFF', '#C2DFFF', '#EBF4FF']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.container}
+    >
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <GlassBackButton onPress={() => router.back()} />
-        <Text style={styles.title}>News & Announcements</Text>
+        <Text style={styles.title}>Information</Text>
+        <View style={{ width: 44 }} />
       </View>
 
       <View style={styles.segmentContainer}>
-        <View style={styles.segmentTrack}>
-          <Animated.View
-            style={[
-              styles.segmentIndicator,
-              {
-                width: segmentWidth,
-                transform: [{ translateX }],
-              },
-            ]}
-          />
+        <View style={styles.segmentRow}>
           {SEGMENTS.map((segment, index) => (
             <TouchableOpacity
               key={segment}
@@ -268,52 +273,47 @@ export default function NewsModal() {
             </TouchableOpacity>
           ))}
         </View>
+        <Animated.View
+          style={[
+            styles.segmentUnderline,
+            {
+              width: underlineWidth,
+              transform: [{ translateX }],
+            },
+          ]}
+        />
       </View>
 
       <View style={styles.contentArea}>
         {renderContent()}
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0A',
   },
   header: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
     paddingHorizontal: 16,
     paddingBottom: 12,
-    gap: 8,
   },
-
   title: {
     fontSize: 20,
     fontWeight: '700' as const,
-    color: '#FFFFFF',
+    color: '#1A1A1A',
   },
   segmentContainer: {
     paddingHorizontal: 24,
     paddingTop: 4,
     paddingBottom: 16,
   },
-  segmentTrack: {
+  segmentRow: {
     flexDirection: 'row' as const,
-    backgroundColor: '#1A1A1A',
-    borderRadius: 10,
-    padding: 3,
-    position: 'relative' as const,
-  },
-  segmentIndicator: {
-    position: 'absolute' as const,
-    top: 3,
-    left: 3,
-    bottom: 3,
-    backgroundColor: '#2A2A2A',
-    borderRadius: 8,
   },
   segmentButton: {
     paddingVertical: 10,
@@ -324,10 +324,16 @@ const styles = StyleSheet.create({
   segmentText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#666',
+    color: 'rgba(0,0,0,0.35)',
   },
   segmentTextActive: {
-    color: '#FFFFFF',
+    color: '#1A1A1A',
+    fontWeight: '700' as const,
+  },
+  segmentUnderline: {
+    height: 3,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 1.5,
   },
   contentArea: {
     flex: 1,
@@ -349,12 +355,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#FFFFFF',
+    color: '#1A1A1A',
     marginTop: 8,
   },
   emptySubtitle: {
     fontSize: 14,
-    color: '#666',
+    color: 'rgba(0,0,0,0.45)',
     textAlign: 'center' as const,
     lineHeight: 20,
   },
@@ -365,7 +371,7 @@ const styles = StyleSheet.create({
   },
   retryButton: {
     marginTop: 16,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: 'rgba(0,0,0,0.15)',
     paddingHorizontal: 24,
     paddingVertical: 10,
     borderRadius: 8,
@@ -373,7 +379,7 @@ const styles = StyleSheet.create({
   retryText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#FFFFFF',
+    color: '#1A1A1A',
   },
   newsListContainer: {
     paddingHorizontal: 20,
@@ -381,12 +387,12 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   newsCard: {
-    backgroundColor: '#141414',
+    backgroundColor: 'rgba(0,0,0,0.18)',
     borderRadius: 14,
     overflow: 'hidden' as const,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#1F1F1F',
+    borderColor: 'rgba(0,0,0,0.06)',
   },
   newsCardImage: {
     width: '100%' as const,
@@ -399,16 +405,16 @@ const styles = StyleSheet.create({
   newsCardTitle: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#FFFFFF',
+    color: '#1A1A1A',
   },
   newsCardCaption: {
     fontSize: 13,
-    color: '#999',
+    color: 'rgba(0,0,0,0.55)',
     lineHeight: 19,
   },
   newsCardDate: {
     fontSize: 11,
-    color: '#555',
+    color: 'rgba(0,0,0,0.35)',
     marginTop: 4,
   },
   onboardingContainer: {
@@ -423,7 +429,7 @@ const styles = StyleSheet.create({
   cardHeader: {
     fontSize: 14,
     fontWeight: '700' as const,
-    color: '#FFFFFF',
+    color: '#1A1A1A',
     marginBottom: 8,
     paddingHorizontal: 8,
   },
@@ -444,9 +450,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden' as const,
   },
   cardBack: {
-    backgroundColor: '#000000',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
+    backgroundColor: 'rgba(0,0,0,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.08)',
   },
   cardImage: {
     width: '100%' as const,
@@ -459,7 +465,7 @@ const styles = StyleSheet.create({
     left: 18,
     fontSize: 28,
     fontWeight: '900' as const,
-    color: '#FFFFFF',
+    color: '#1A1A1A',
     zIndex: 2,
   },
   cardBackContent: {
@@ -472,14 +478,14 @@ const styles = StyleSheet.create({
   cardBackHeader: {
     fontSize: 22,
     fontWeight: '800' as const,
-    color: '#FFFFFF',
+    color: '#1A1A1A',
     marginBottom: 16,
     textAlign: 'center' as const,
   },
   cardBackDescription: {
     fontSize: 15,
     fontWeight: '400' as const,
-    color: '#B0B0B0',
+    color: 'rgba(0,0,0,0.55)',
     textAlign: 'center' as const,
     lineHeight: 22,
   },
