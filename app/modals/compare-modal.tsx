@@ -92,27 +92,42 @@ const SG_MOCK_DATA: Record<SGCategory, { parts: SGPartData[]; userOverall: numbe
   },
 };
 
-interface ClubDistanceData {
+interface ClubBagEntry {
   club: string;
   category: string;
-  userDistance: number;
-  opponentDistance: number;
+  distance: number;
 }
 
-const CLUB_DISTANCES: ClubDistanceData[] = [
-  { club: 'Driver', category: 'Woods', userDistance: 245, opponentDistance: 260 },
-  { club: '3 Wood', category: 'Woods', userDistance: 225, opponentDistance: 235 },
-  { club: '5 Wood', category: 'Woods', userDistance: 210, opponentDistance: 218 },
-  { club: '3 Iron', category: 'Irons', userDistance: 200, opponentDistance: 205 },
-  { club: '4 Iron', category: 'Irons', userDistance: 190, opponentDistance: 195 },
-  { club: '5 Iron', category: 'Irons', userDistance: 180, opponentDistance: 185 },
-  { club: '6 Iron', category: 'Irons', userDistance: 170, opponentDistance: 175 },
-  { club: '7 Iron', category: 'Irons', userDistance: 160, opponentDistance: 163 },
-  { club: '8 Iron', category: 'Irons', userDistance: 148, opponentDistance: 152 },
-  { club: '9 Iron', category: 'Irons', userDistance: 137, opponentDistance: 140 },
-  { club: 'PW', category: 'Wedges', userDistance: 125, opponentDistance: 128 },
-  { club: 'GW', category: 'Wedges', userDistance: 110, opponentDistance: 112 },
-  { club: 'SW', category: 'Wedges', userDistance: 90, opponentDistance: 95 },
+const USER_BAG: ClubBagEntry[] = [
+  { club: 'Driver', category: 'Woods', distance: 245 },
+  { club: '3 Wood', category: 'Woods', distance: 225 },
+  { club: '5 Wood', category: 'Woods', distance: 210 },
+  { club: '4 Iron', category: 'Irons', distance: 190 },
+  { club: '5 Iron', category: 'Irons', distance: 180 },
+  { club: '6 Iron', category: 'Irons', distance: 170 },
+  { club: '7 Iron', category: 'Irons', distance: 160 },
+  { club: '8 Iron', category: 'Irons', distance: 148 },
+  { club: '9 Iron', category: 'Irons', distance: 137 },
+  { club: 'PW', category: 'Wedges', distance: 125 },
+  { club: 'GW', category: 'Wedges', distance: 110 },
+  { club: 'SW', category: 'Wedges', distance: 90 },
+  { club: 'LW', category: 'Wedges', distance: 70 },
+];
+
+const OPPONENT_BAG: ClubBagEntry[] = [
+  { club: 'Driver', category: 'Woods', distance: 260 },
+  { club: '3 Wood', category: 'Woods', distance: 235 },
+  { club: '7 Wood', category: 'Woods', distance: 200 },
+  { club: '3 Hybrid', category: 'Hybrids', distance: 210 },
+  { club: '5 Iron', category: 'Irons', distance: 185 },
+  { club: '6 Iron', category: 'Irons', distance: 175 },
+  { club: '7 Iron', category: 'Irons', distance: 163 },
+  { club: '8 Iron', category: 'Irons', distance: 152 },
+  { club: '9 Iron', category: 'Irons', distance: 140 },
+  { club: 'PW', category: 'Wedges', distance: 128 },
+  { club: 'GW', category: 'Wedges', distance: 112 },
+  { club: 'SW', category: 'Wedges', distance: 95 },
+  { club: 'LW', category: 'Wedges', distance: 75 },
 ];
 
 export default function CompareModal() {
@@ -277,108 +292,141 @@ export default function CompareModal() {
     return `${prefix}${val.toFixed(1)}`;
   };
 
-  const renderStrokesGainedTab = () => (
-    <ScrollView
-      style={styles.tabPage}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={[styles.tabPageContent, { paddingTop: contentPaddingTop }]}
-      onScroll={onVerticalScroll}
-      scrollEventThrottle={16}
-    >
-      {renderVSCard()}
+  const renderStrokesGainedTab = () => {
+    const isOverall = selectedSG === 'sg';
 
-      <View style={styles.sgDropdownSection}>
-        <TouchableOpacity
-          style={styles.sgDropdownBtn}
-          activeOpacity={0.7}
-          onPress={() => setShowSGDropdown(!showSGDropdown)}
-        >
-          <Text style={styles.sgDropdownLabel}>{currentSGOption.label}</Text>
-          <Text style={styles.sgDropdownSublabel}>{currentSGOption.fullLabel}</Text>
-          <ChevronDown size={18} color="rgba(255,255,255,0.6)" />
-        </TouchableOpacity>
+    return (
+      <ScrollView
+        style={styles.tabPage}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.tabPageContent, { paddingTop: contentPaddingTop }]}
+        onScroll={onVerticalScroll}
+        scrollEventThrottle={16}
+      >
+        {renderVSCard()}
 
-        {showSGDropdown && (
-          <View style={styles.sgDropdownMenu}>
-            {SG_OPTIONS.map((opt) => (
-              <TouchableOpacity
-                key={opt.key}
-                style={[
-                  styles.sgDropdownItem,
-                  selectedSG === opt.key && styles.sgDropdownItemActive,
-                ]}
-                activeOpacity={0.7}
-                onPress={() => {
-                  setSelectedSG(opt.key);
-                  setShowSGDropdown(false);
-                }}
-              >
-                <Text style={[
-                  styles.sgDropdownItemLabel,
-                  selectedSG === opt.key && styles.sgDropdownItemLabelActive,
-                ]}>
-                  {opt.label}
-                </Text>
-                <Text style={[
-                  styles.sgDropdownItemSub,
-                  selectedSG === opt.key && styles.sgDropdownItemSubActive,
-                ]}>
-                  {opt.fullLabel}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </View>
+        <View style={styles.sgDropdownSection}>
+          <TouchableOpacity
+            style={styles.sgDropdownBtn}
+            activeOpacity={0.7}
+            onPress={() => setShowSGDropdown(!showSGDropdown)}
+          >
+            <Text style={styles.sgDropdownLabel}>{currentSGOption.label}</Text>
+            <Text style={styles.sgDropdownSublabel}>{currentSGOption.fullLabel}</Text>
+            <ChevronDown size={18} color="rgba(255,255,255,0.6)" />
+          </TouchableOpacity>
 
-      <View style={styles.sgCompareSection}>
-        <View style={styles.sgHeaderRow}>
-          <Text style={styles.sgHeaderSide} numberOfLines={1}>{username}</Text>
-          <Text style={styles.sgHeaderMiddle}>Category</Text>
-          <Text style={styles.sgHeaderSide} numberOfLines={1}>
-            {selectedOpponent ? (selectedOpponent.display_name || selectedOpponent.username) : '—'}
-          </Text>
+          {showSGDropdown && (
+            <View style={styles.sgDropdownMenu}>
+              {SG_OPTIONS.map((opt) => (
+                <TouchableOpacity
+                  key={opt.key}
+                  style={[
+                    styles.sgDropdownItem,
+                    selectedSG === opt.key && styles.sgDropdownItemActive,
+                  ]}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setSelectedSG(opt.key);
+                    setShowSGDropdown(false);
+                  }}
+                >
+                  <Text style={[
+                    styles.sgDropdownItemLabel,
+                    selectedSG === opt.key && styles.sgDropdownItemLabelActive,
+                  ]}>
+                    {opt.label}
+                  </Text>
+                  <Text style={[
+                    styles.sgDropdownItemSub,
+                    selectedSG === opt.key && styles.sgDropdownItemSubActive,
+                  ]}>
+                    {opt.fullLabel}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
 
-        {sgData.parts.map((part, i) => {
-          const userColor = part.userValue >= 0 ? '#22C55E' : '#EF4444';
-          const oppColor = part.opponentValue >= 0 ? '#22C55E' : '#EF4444';
-          return (
-            <View key={i} style={styles.sgRow}>
-              <Text style={[styles.sgValue, { color: selectedOpponent ? userColor : 'rgba(255,255,255,0.4)' }]}>
-                {selectedOpponent ? formatSG(part.userValue) : '—'}
-              </Text>
-              <Text style={styles.sgPartLabel}>{part.label}</Text>
-              <Text style={[styles.sgValue, { color: selectedOpponent ? oppColor : 'rgba(255,255,255,0.4)' }]}>
-                {selectedOpponent ? formatSG(part.opponentValue) : '—'}
+        {isOverall ? (
+          <View style={styles.sgCompareSection}>
+            <View style={styles.sgHeaderRow}>
+              <Text style={styles.sgHeaderSide} numberOfLines={1}>{username}</Text>
+              <Text style={styles.sgHeaderMiddle}>Category</Text>
+              <Text style={styles.sgHeaderSide} numberOfLines={1}>
+                {selectedOpponent ? (selectedOpponent.display_name || selectedOpponent.username) : '—'}
               </Text>
             </View>
-          );
-        })}
 
-        <View style={styles.sgOverallRow}>
-          <Text style={[
-            styles.sgOverallValue,
-            { color: selectedOpponent ? (sgData.userOverall >= 0 ? '#22C55E' : '#EF4444') : 'rgba(255,255,255,0.4)' },
-          ]}>
-            {selectedOpponent ? formatSG(sgData.userOverall) : '—'}
-          </Text>
-          <Text style={styles.sgOverallLabel}>Overall</Text>
-          <Text style={[
-            styles.sgOverallValue,
-            { color: selectedOpponent ? (sgData.opponentOverall >= 0 ? '#22C55E' : '#EF4444') : 'rgba(255,255,255,0.4)' },
-          ]}>
-            {selectedOpponent ? formatSG(sgData.opponentOverall) : '—'}
-          </Text>
-        </View>
-      </View>
-    </ScrollView>
-  );
+            {sgData.parts.map((part, i) => {
+              const userColor = part.userValue >= 0 ? '#22C55E' : '#EF4444';
+              const oppColor = part.opponentValue >= 0 ? '#22C55E' : '#EF4444';
+              return (
+                <View key={i} style={styles.sgRow}>
+                  <Text style={[styles.sgValue, { color: selectedOpponent ? userColor : 'rgba(255,255,255,0.4)' }]}>
+                    {selectedOpponent ? formatSG(part.userValue) : '—'}
+                  </Text>
+                  <Text style={styles.sgPartLabel}>{part.label}</Text>
+                  <Text style={[styles.sgValue, { color: selectedOpponent ? oppColor : 'rgba(255,255,255,0.4)' }]}>
+                    {selectedOpponent ? formatSG(part.opponentValue) : '—'}
+                  </Text>
+                </View>
+              );
+            })}
 
-  const groupedClubs = useMemo(() => {
-    const groups: { category: string; clubs: ClubDistanceData[] }[] = [];
+            <View style={styles.sgOverallRow}>
+              <Text style={[
+                styles.sgOverallValue,
+                { color: selectedOpponent ? (sgData.userOverall >= 0 ? '#22C55E' : '#EF4444') : 'rgba(255,255,255,0.4)' },
+              ]}>
+                {selectedOpponent ? formatSG(sgData.userOverall) : '—'}
+              </Text>
+              <Text style={styles.sgOverallLabel}>Overall</Text>
+              <Text style={[
+                styles.sgOverallValue,
+                { color: selectedOpponent ? (sgData.opponentOverall >= 0 ? '#22C55E' : '#EF4444') : 'rgba(255,255,255,0.4)' },
+              ]}>
+                {selectedOpponent ? formatSG(sgData.opponentOverall) : '—'}
+              </Text>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.sgSingleSection}>
+            <View style={styles.sgSingleRow}>
+              <View style={styles.sgSingleSide}>
+                <Text style={[
+                  styles.sgSingleBigNumber,
+                  { color: selectedOpponent ? (sgData.userOverall >= 0 ? '#22C55E' : '#EF4444') : 'rgba(255,255,255,0.3)' },
+                ]}>
+                  {selectedOpponent ? formatSG(sgData.userOverall) : '—'}
+                </Text>
+              </View>
+
+              <View style={styles.sgSingleCenter}>
+                <Text style={styles.sgSingleLabel}>{currentSGOption.label}</Text>
+                <Text style={styles.sgSingleSublabel}>{currentSGOption.fullLabel}</Text>
+              </View>
+
+              <View style={styles.sgSingleSide}>
+                <Text style={[
+                  styles.sgSingleBigNumber,
+                  { color: selectedOpponent ? (sgData.opponentOverall >= 0 ? '#22C55E' : '#EF4444') : 'rgba(255,255,255,0.3)' },
+                ]}>
+                  {selectedOpponent ? formatSG(sgData.opponentOverall) : '—'}
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
+      </ScrollView>
+    );
+  };
+
+  const groupBag = useCallback((bag: ClubBagEntry[]) => {
+    const groups: { category: string; clubs: ClubBagEntry[] }[] = [];
     let currentCat = '';
-    CLUB_DISTANCES.forEach((club) => {
+    bag.forEach((club) => {
       if (club.category !== currentCat) {
         groups.push({ category: club.category, clubs: [] });
         currentCat = club.category;
@@ -388,57 +436,99 @@ export default function CompareModal() {
     return groups;
   }, []);
 
-  const renderDistanceTab = () => (
-    <ScrollView
-      style={styles.tabPage}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={[styles.tabPageContent, { paddingTop: contentPaddingTop }]}
-      onScroll={onVerticalScroll}
-      scrollEventThrottle={16}
-    >
-      {renderVSCard()}
+  const userGrouped = useMemo(() => groupBag(USER_BAG), [groupBag]);
+  const opponentGrouped = useMemo(() => groupBag(OPPONENT_BAG), [groupBag]);
 
-      <View style={styles.distSection}>
-        <View style={styles.distHeaderRow}>
-          <Text style={styles.distHeaderSide} numberOfLines={1}>{username}</Text>
-          <Text style={styles.distHeaderMiddle}>Club</Text>
-          <Text style={styles.distHeaderSide} numberOfLines={1}>
-            {selectedOpponent ? (selectedOpponent.display_name || selectedOpponent.username) : '—'}
-          </Text>
-        </View>
+  const maxRows = useMemo(() => {
+    const allCats = new Set<string>();
+    USER_BAG.forEach(c => allCats.add(c.category));
+    OPPONENT_BAG.forEach(c => allCats.add(c.category));
+    return Array.from(allCats);
+  }, []);
 
-        {groupedClubs.map((group) => (
-          <View key={group.category}>
-            <View style={styles.distCatRow}>
-              <Text style={styles.distCatLabel}>{group.category}</Text>
-            </View>
-            {group.clubs.map((club, i) => {
-              const userHigher = club.userDistance >= club.opponentDistance;
-              return (
-                <View key={i} style={styles.distRow}>
-                  <Text style={[
-                    styles.distValue,
-                    selectedOpponent && userHigher && styles.distValueHighlight,
-                    !selectedOpponent && styles.distValueDim,
-                  ]}>
-                    {selectedOpponent ? `${club.userDistance}m` : '—'}
-                  </Text>
-                  <Text style={styles.distClubName}>{club.club}</Text>
-                  <Text style={[
-                    styles.distValue,
-                    selectedOpponent && !userHigher && styles.distValueHighlight,
-                    !selectedOpponent && styles.distValueDim,
-                  ]}>
-                    {selectedOpponent ? `${club.opponentDistance}m` : '—'}
-                  </Text>
-                </View>
-              );
-            })}
+  const renderDistanceTab = () => {
+    const getUserClubsForCat = (cat: string) => userGrouped.find(g => g.category === cat)?.clubs ?? [];
+    const getOppClubsForCat = (cat: string) => opponentGrouped.find(g => g.category === cat)?.clubs ?? [];
+
+    return (
+      <ScrollView
+        style={styles.tabPage}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.tabPageContent, { paddingTop: contentPaddingTop }]}
+        onScroll={onVerticalScroll}
+        scrollEventThrottle={16}
+      >
+        {renderVSCard()}
+
+        <View style={styles.distSection}>
+          <View style={styles.distDualHeader}>
+            <Text style={styles.distDualHeaderName} numberOfLines={1}>{username}</Text>
+            <Text style={styles.distDualHeaderName} numberOfLines={1}>
+              {selectedOpponent ? (selectedOpponent.display_name || selectedOpponent.username) : '—'}
+            </Text>
           </View>
-        ))}
-      </View>
-    </ScrollView>
-  );
+
+          {maxRows.map((cat) => {
+            const userClubs = getUserClubsForCat(cat);
+            const oppClubs = getOppClubsForCat(cat);
+            const rowCount = Math.max(userClubs.length, oppClubs.length);
+
+            return (
+              <View key={cat}>
+                <View style={styles.distCatRow}>
+                  <Text style={styles.distCatLabel}>{cat}</Text>
+                </View>
+
+                <View style={styles.distDualColumnHeader}>
+                  <View style={styles.distDualColHalf}>
+                    <Text style={styles.distDualColLabel}>Club</Text>
+                    <Text style={styles.distDualColLabel}>Dist</Text>
+                  </View>
+                  <View style={styles.distDualDivider} />
+                  <View style={styles.distDualColHalf}>
+                    <Text style={styles.distDualColLabel}>Dist</Text>
+                    <Text style={styles.distDualColLabel}>Club</Text>
+                  </View>
+                </View>
+
+                {Array.from({ length: rowCount }).map((_, i) => {
+                  const uClub = userClubs[i];
+                  const oClub = oppClubs[i];
+                  return (
+                    <View key={i} style={styles.distDualRow}>
+                      <View style={styles.distDualColHalf}>
+                        <Text style={styles.distDualClubName}>
+                          {uClub ? uClub.club : ''}
+                        </Text>
+                        <Text style={[
+                          styles.distDualValue,
+                          !uClub && styles.distValueDim,
+                        ]}>
+                          {uClub ? `${uClub.distance}m` : ''}
+                        </Text>
+                      </View>
+                      <View style={styles.distDualDivider} />
+                      <View style={styles.distDualColHalf}>
+                        <Text style={[
+                          styles.distDualValue,
+                          (!oClub || !selectedOpponent) && styles.distValueDim,
+                        ]}>
+                          {selectedOpponent && oClub ? `${oClub.distance}m` : (oClub ? '—' : '')}
+                        </Text>
+                        <Text style={styles.distDualClubName}>
+                          {oClub ? oClub.club : ''}
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            );
+          })}
+        </View>
+      </ScrollView>
+    );
+  };
 
   const renderPlayerPickerItem = useCallback(({ item }: { item: UserProfile }) => (
     <TouchableOpacity
@@ -890,27 +980,57 @@ const styles = StyleSheet.create({
     textAlign: 'center' as const,
   },
 
+  sgSingleSection: {
+    marginTop: 40,
+    alignItems: 'center' as const,
+  },
+  sgSingleRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    width: '100%' as const,
+  },
+  sgSingleSide: {
+    flex: 1,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  sgSingleBigNumber: {
+    fontSize: 42,
+    fontWeight: '900' as const,
+    textAlign: 'center' as const,
+  },
+  sgSingleCenter: {
+    alignItems: 'center' as const,
+    paddingHorizontal: 12,
+  },
+  sgSingleLabel: {
+    fontSize: 22,
+    fontWeight: '900' as const,
+    color: '#FFFFFF',
+    textAlign: 'center' as const,
+  },
+  sgSingleSublabel: {
+    fontSize: 10,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.45)',
+    marginTop: 2,
+    textAlign: 'center' as const,
+  },
+
   distSection: {
     marginTop: 16,
   },
-  distHeaderRow: {
+  distDualHeader: {
     flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
     paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.12)',
   },
-  distHeaderSide: {
+  distDualHeaderName: {
     flex: 1,
-    fontSize: 11,
-    fontWeight: '700' as const,
-    color: 'rgba(255,255,255,0.5)',
-    textAlign: 'center' as const,
-    textTransform: 'uppercase' as const,
-  },
-  distHeaderMiddle: {
-    flex: 1.2,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700' as const,
     color: 'rgba(255,255,255,0.5)',
     textAlign: 'center' as const,
@@ -929,32 +1049,52 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textAlign: 'center' as const,
   },
-  distRow: {
+  distDualColumnHeader: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    paddingVertical: 12,
+    paddingVertical: 6,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.06)',
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
-  distValue: {
+  distDualColHalf: {
     flex: 1,
-    fontSize: 14,
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    paddingHorizontal: 10,
+  },
+  distDualColLabel: {
+    fontSize: 10,
+    fontWeight: '700' as const,
+    color: 'rgba(255,255,255,0.35)',
+    textTransform: 'uppercase' as const,
+  },
+  distDualDivider: {
+    width: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignSelf: 'stretch' as const,
+  },
+  distDualRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  distDualClubName: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: '#FFFFFF',
+  },
+  distDualValue: {
+    fontSize: 13,
     fontWeight: '700' as const,
     color: 'rgba(255,255,255,0.7)',
-    textAlign: 'center' as const,
   },
   distValueHighlight: {
     color: '#22C55E',
   },
   distValueDim: {
     color: 'rgba(255,255,255,0.3)',
-  },
-  distClubName: {
-    flex: 1.2,
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: '#FFFFFF',
-    textAlign: 'center' as const,
   },
 
   pickerOverlay: {
