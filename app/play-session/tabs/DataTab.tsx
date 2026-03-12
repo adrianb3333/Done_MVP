@@ -234,7 +234,12 @@ export default function DataTab() {
         onRequestClose={() => setShowQuitConfirm(false)}
       >
         <View style={styles.confirmOverlay}>
-          <View style={styles.confirmBox}>
+          <LinearGradient
+            colors={['#4BA35B', '#3D954D', '#2D803D']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.confirmBox}
+          >
             <Text style={styles.confirmTitle}>End Round?</Text>
             <Text style={styles.confirmMessage}>Are you sure you want to quit this round?</Text>
             <View style={styles.confirmButtons}>
@@ -256,7 +261,7 @@ export default function DataTab() {
                 <Text style={styles.confirmYesText}>Yes</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </LinearGradient>
         </View>
       </Modal>
     </LinearGradient>
@@ -866,13 +871,11 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
   },
   confirmBox: {
-    backgroundColor: 'rgba(0,0,0,0.6)',
     borderRadius: 20,
     padding: 28,
     width: '80%' as unknown as number,
     alignItems: 'center' as const,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    overflow: 'hidden' as const,
   },
   confirmTitle: {
     fontSize: 20,
@@ -882,7 +885,7 @@ const styles = StyleSheet.create({
   },
   confirmMessage: {
     fontSize: 15,
-    color: 'rgba(255,255,255,0.7)',
+    color: '#FFFFFF',
     textAlign: 'center' as const,
     marginBottom: 24,
     lineHeight: 21,
