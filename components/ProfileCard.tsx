@@ -36,6 +36,7 @@ const MOCK_TOUR_DATA: TourData = {
 interface ProfileCardProps {
   visible: boolean;
   onClose: () => void;
+  onNavigateAway?: () => void;
   user: UserProfile | null;
   isFollowingUser?: boolean;
   onToggleFollow?: () => void;
@@ -102,6 +103,7 @@ function useUserSocialCounts(userId: string | null, visible: boolean) {
 export default function ProfileCard({
   visible,
   onClose,
+  onNavigateAway,
   user,
   isFollowingUser = false,
   onToggleFollow,
@@ -117,16 +119,21 @@ export default function ProfileCard({
     if (!user) return;
     console.log('[ProfileCard] Opening chat with:', user.username);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push({
-      pathname: '/modals/chat-conversation-modal',
-      params: {
-        otherUserId: user.id,
-        otherUsername: user.username || user.display_name || 'User',
-        otherAvatar: user.avatar_url || '',
-      },
-    });
     onClose();
-  }, [user, onClose, router]);
+    if (onNavigateAway) {
+      onNavigateAway();
+    }
+    setTimeout(() => {
+      router.push({
+        pathname: '/modals/chat-conversation-modal',
+        params: {
+          otherUserId: user.id,
+          otherUsername: user.username || user.display_name || 'User',
+          otherAvatar: user.avatar_url || '',
+        },
+      });
+    }, 100);
+  }, [user, onClose, onNavigateAway, router]);
 
   if (!user) return null;
 

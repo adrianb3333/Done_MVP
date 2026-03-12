@@ -178,6 +178,9 @@ export default function NotificationsModal() {
           setProfileCardVisible(false);
           setProfileCardUser(null);
         }}
+        onNavigateAway={() => {
+          router.back();
+        }}
         user={profileCardUser}
         isFollowingUser={profileCardUser ? isFollowing(profileCardUser.id) : false}
         onToggleFollow={profileCardUser ? () => handleToggleFollow(profileCardUser.id) : undefined}

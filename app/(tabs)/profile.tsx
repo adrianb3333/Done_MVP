@@ -1254,6 +1254,9 @@ export default function ProfileScreen() {
               setProfileCardVisible(false);
               setProfileCardUser(null);
             }}
+            onNavigateAway={() => {
+              setFollowsModalVisible(false);
+            }}
             user={profileCardUser}
             isFollowingUser={profileCardUser ? isFollowing(profileCardUser.id) : false}
             onToggleFollow={profileCardUser ? () => handleToggleFollow(profileCardUser.id) : undefined}
