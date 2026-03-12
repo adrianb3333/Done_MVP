@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, Image, ActivityIndicator, Modal, Pressable } from 'react-native';
+import { X } from 'lucide-react-native';
 import { Newspaper, Play } from 'lucide-react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { router } from 'expo-router';
@@ -25,7 +26,44 @@ interface SanityPost {
   _createdAt: string;
 }
 
+function NewsDetailModal({ post, visible, onClose }: { post: SanityPost | null; visible: boolean; onClose: () => void }) {
+  if (!post) return null;
+
+  const imageUrl = post.mainImage?.asset?._ref
+    ? sanityImageUrl(post.mainImage.asset._ref)
+    : null;
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Pressable style={styles.modalOverlay} onPress={onClose}>
+        <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+          <TouchableOpacity style={styles.modalCloseButton} onPress={onClose} activeOpacity={0.7}>
+            <X size={20} color="#1A1A1A" />
+          </TouchableOpacity>
+          {imageUrl ? (
+            <Image source={{ uri: imageUrl }} style={styles.modalImage} resizeMode="cover" />
+          ) : null}
+          <ScrollView style={styles.modalBodyScroll} contentContainerStyle={styles.modalBody} bounces={false}>
+            <Text style={styles.modalTitle}>{post.title}</Text>
+            {post.caption ? (
+              <Text style={styles.modalCaption}>{post.caption}</Text>
+            ) : null}
+            <Text style={styles.modalDate}>
+              {new Date(post._createdAt).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </Text>
+          </ScrollView>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
 function NewsContent() {
+  const [selectedPost, setSelectedPost] = useState<SanityPost | null>(null);
   const { data: posts, isLoading, isError, refetch } = useQuery<SanityPost[]>({
     queryKey: ['sanity-news-posts'],
     queryFn: () =>
@@ -70,34 +108,49 @@ function NewsContent() {
   }
 
   return (
-    <ScrollView style={styles.contentScroll} contentContainerStyle={styles.newsListContainer}>
-      {posts.map((post) => {
-        const imageUrl = post.mainImage?.asset?._ref
-          ? sanityImageUrl(post.mainImage.asset._ref)
-          : null;
+    <>
+      <ScrollView style={styles.contentScroll} contentContainerStyle={styles.newsListContainer}>
+        {posts.map((post) => {
+          const imageUrl = post.mainImage?.asset?._ref
+            ? sanityImageUrl(post.mainImage.asset._ref)
+            : null;
 
-        return (
-          <View key={post._id} style={styles.newsCard}>
-            {imageUrl ? (
-              <Image source={{ uri: imageUrl }} style={styles.newsCardImage} resizeMode="cover" />
-            ) : null}
-            <View style={styles.newsCardBody}>
-              <Text style={styles.newsCardTitle} numberOfLines={2}>{post.title}</Text>
-              {post.caption ? (
-                <Text style={styles.newsCardCaption} numberOfLines={3}>{post.caption}</Text>
+          return (
+            <TouchableOpacity
+              key={post._id}
+              style={styles.newsCard}
+              activeOpacity={0.8}
+              onPress={() => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setSelectedPost(post);
+              }}
+            >
+              {imageUrl ? (
+                <Image source={{ uri: imageUrl }} style={styles.newsCardImage} resizeMode="cover" />
               ) : null}
-              <Text style={styles.newsCardDate}>
-                {new Date(post._createdAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric',
-                })}
-              </Text>
-            </View>
-          </View>
-        );
-      })}
-    </ScrollView>
+              <View style={styles.newsCardBody}>
+                <Text style={styles.newsCardTitle} numberOfLines={2}>{post.title}</Text>
+                {post.caption ? (
+                  <Text style={styles.newsCardCaption} numberOfLines={3}>{post.caption}</Text>
+                ) : null}
+                <Text style={styles.newsCardDate}>
+                  {new Date(post._createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+      <NewsDetailModal
+        post={selectedPost}
+        visible={selectedPost !== null}
+        onClose={() => setSelectedPost(null)}
+      />
+    </>
   );
 }
 
@@ -414,6 +467,63 @@ const styles = StyleSheet.create({
   },
   newsCardDate: {
     fontSize: 11,
+    color: 'rgba(0,0,0,0.35)',
+    marginTop: 4,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: '#F0F6FF',
+    borderRadius: 20,
+    width: '100%' as const,
+    maxHeight: '85%' as const,
+    overflow: 'hidden' as const,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  modalCloseButton: {
+    position: 'absolute' as const,
+    top: 12,
+    right: 12,
+    zIndex: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  modalImage: {
+    width: '100%' as const,
+    height: 240,
+  },
+  modalBodyScroll: {
+    maxHeight: 300,
+  },
+  modalBody: {
+    padding: 20,
+    gap: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '800' as const,
+    color: '#1A1A1A',
+  },
+  modalCaption: {
+    fontSize: 15,
+    color: 'rgba(0,0,0,0.6)',
+    lineHeight: 22,
+  },
+  modalDate: {
+    fontSize: 12,
     color: 'rgba(0,0,0,0.35)',
     marginTop: 4,
   },
