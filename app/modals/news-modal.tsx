@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, Image, ActivityIndicator, Modal, Pressable } from 'react-native';
-import { X } from 'lucide-react-native';
+import { ArrowLeft } from 'lucide-react-native';
 import { Newspaper, Play } from 'lucide-react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { router } from 'expo-router';
@@ -38,24 +38,31 @@ function NewsDetailModal({ post, visible, onClose }: { post: SanityPost | null; 
       <Pressable style={styles.modalOverlay} onPress={onClose}>
         <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
           <TouchableOpacity style={styles.modalCloseButton} onPress={onClose} activeOpacity={0.7}>
-            <X size={20} color="#1A1A1A" />
+            <ArrowLeft size={18} color="#FFFFFF" />
           </TouchableOpacity>
           {imageUrl ? (
             <Image source={{ uri: imageUrl }} style={styles.modalImage} resizeMode="cover" />
           ) : null}
-          <ScrollView style={styles.modalBodyScroll} contentContainerStyle={styles.modalBody} bounces={false}>
-            <Text style={styles.modalTitle}>{post.title}</Text>
-            {post.caption ? (
-              <Text style={styles.modalCaption}>{post.caption}</Text>
-            ) : null}
-            <Text style={styles.modalDate}>
-              {new Date(post._createdAt).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </Text>
-          </ScrollView>
+          <LinearGradient
+            colors={['#EBF4FF', '#D6EAFF', '#C2DFFF', '#EBF4FF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.modalBodyGradient}
+          >
+            <ScrollView style={styles.modalBodyScroll} contentContainerStyle={styles.modalBody} bounces={false}>
+              <Text style={styles.modalTitle}>{post.title}</Text>
+              {post.caption ? (
+                <Text style={styles.modalCaption}>{post.caption}</Text>
+              ) : null}
+              <Text style={styles.modalDate}>
+                {new Date(post._createdAt).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </Text>
+            </ScrollView>
+          </LinearGradient>
         </Pressable>
       </Pressable>
     </Modal>
@@ -478,7 +485,6 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   modalContent: {
-    backgroundColor: '#F0F6FF',
     borderRadius: 20,
     width: '100%' as const,
     maxHeight: '85%' as const,
@@ -488,16 +494,20 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 24,
     elevation: 12,
+    backgroundColor: '#D6EAFF',
+  },
+  modalBodyGradient: {
+    width: '100%' as const,
   },
   modalCloseButton: {
     position: 'absolute' as const,
     top: 12,
-    right: 12,
+    left: 12,
     zIndex: 10,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.85)',
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: 'rgba(0,0,0,0.35)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
@@ -515,16 +525,16 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: '800' as const,
-    color: '#1A1A1A',
+    color: '#000000',
   },
   modalCaption: {
     fontSize: 15,
-    color: 'rgba(0,0,0,0.6)',
+    color: '#000000',
     lineHeight: 22,
   },
   modalDate: {
     fontSize: 12,
-    color: 'rgba(0,0,0,0.35)',
+    color: '#000000',
     marginTop: 4,
   },
   onboardingContainer: {
