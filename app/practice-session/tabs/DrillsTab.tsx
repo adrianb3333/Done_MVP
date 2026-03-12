@@ -43,6 +43,7 @@ import DrillSummaryScreen from "@/components/drills/DrillSummaryScreen";
 import { Star } from "lucide-react-native";
 import { useSensor } from '@/contexts/SensorContext';
 import SensorLockOverlay from '@/components/SensorLockOverlay';
+import { saveDrillResult, fetchDrillHistory } from '@/services/drillResultsService';
 
 interface DrillsTabProps {
   onDrillActiveChange?: (active: boolean) => void;
@@ -128,7 +129,37 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
         if (sensorRaw) setSavedSensorDrills(JSON.parse(sensorRaw));
         if (sessionsRaw) setSavedSessions(JSON.parse(sessionsRaw));
         if (scheduledRaw) setScheduledItems(JSON.parse(scheduledRaw));
-        if (historyRaw) setDrillHistory(JSON.parse(historyRaw));
+
+        const localHistory: DrillHistoryEntry[] = historyRaw ? JSON.parse(historyRaw) : [];
+
+        try {
+          const supabaseRows = await fetchDrillHistory();
+          if (supabaseRows.length > 0) {
+            const supabaseEntries: DrillHistoryEntry[] = supabaseRows.map(row => ({
+              id: row.id,
+              drillName: row.drill_name,
+              date: new Date(row.completed_at).getTime(),
+              rounds: row.rounds,
+              targetsPerRound: row.targets_per_round,
+              roundScores: row.round_scores,
+              totalHits: row.total_hits,
+              totalShots: row.total_shots,
+              percentage: row.percentage,
+            }));
+            const existingIds = new Set(supabaseEntries.map(e => e.id));
+            const localOnly = localHistory.filter(e => !existingIds.has(e.id));
+            const merged = [...supabaseEntries, ...localOnly];
+            setDrillHistory(merged);
+            console.log('Drill history loaded from Supabase:', supabaseEntries.length, '+ local-only:', localOnly.length);
+          } else {
+            setDrillHistory(localHistory);
+            console.log('No Supabase history, using local:', localHistory.length);
+          }
+        } catch (sbErr) {
+          console.log('Supabase history fetch failed, using local:', sbErr);
+          setDrillHistory(localHistory);
+        }
+
         console.log('Drill data loaded from storage');
       } catch (e) {
         console.log('Error loading drill data:', e);
@@ -221,6 +252,8 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
     onDrillActiveChange?.(true);
 
     if (activeDrillItem) {
+      const isSensor = 'isSensorDrill' in activeDrillItem && activeDrillItem.isSensorDrill === true;
+
       const entry: DrillHistoryEntry = {
         id: Date.now().toString(),
         drillName: activeDrillItem.name,
@@ -235,7 +268,19 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
       const updatedHistory = [...drillHistory, entry];
       setDrillHistory(updatedHistory);
       void persistHistory(updatedHistory);
-      console.log('History entry saved, total shots:', result.totalShots);
+      console.log('History entry saved locally, total shots:', result.totalShots);
+
+      void saveDrillResult({
+        drillName: activeDrillItem.name,
+        category: activeDrillItem.category,
+        isSensorDrill: isSensor,
+        rounds: activeDrillItem.rounds,
+        targetsPerRound: activeDrillItem.targetsPerRound,
+        totalShots: result.totalShots,
+        roundScores: result.roundScores,
+        totalHits: result.totalHits,
+        percentage: result.percentage,
+      });
     }
   }, [activeDrillItem, drillHistory, persistHistory, onDrillActiveChange]);
 
