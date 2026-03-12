@@ -51,7 +51,8 @@ export default function WindTab({ externalDistance, externalAdjustedDistance }: 
         weather.windMs,
         weather.headTail,
         weather.cross,
-        weather.temp
+        weather.temp,
+        weather.pressureMb
       );
       setCalculation(result);
     } else {

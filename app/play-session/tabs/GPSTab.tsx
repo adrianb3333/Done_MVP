@@ -144,7 +144,7 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
 
   const adjustedDistance = useMemo(() => {
     if (!weather || distance <= 0) return null;
-    return calculateGolfShot(distance, 'Normal', weather.windMs, weather.headTail, weather.cross, weather.temp);
+    return calculateGolfShot(distance, 'Normal', weather.windMs, weather.headTail, weather.cross, weather.temp, weather.pressureMb);
   }, [weather, distance]);
 
   useEffect(() => {

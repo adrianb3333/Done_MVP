@@ -43,7 +43,8 @@ export default function FlightTab({ externalDistance }: FlightTabProps) {
         weather.windMs,
         weather.headTail,
         weather.cross,
-        weather.temp
+        weather.temp,
+        weather.pressureMb
       );
       setCalculation(result);
     } else {

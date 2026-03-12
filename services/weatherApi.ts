@@ -9,6 +9,7 @@ export interface GolfWeatherData {
   windDeg: number;
   windDir: string;
   seaLevel: number;
+  pressureMb: number;
   headTail: number;
   cross: number;
   lastUpdated: string;
@@ -64,6 +65,7 @@ export const fetchGolfWeather = async (
       windDeg,
       windDir: data.current.wind_dir, // e.g., "East"
       seaLevel: seaLevelEstimate,
+      pressureMb: data.current.pressure_mb,
       headTail: -headTail, // Inverting so negative shows as a "Head" force
       cross: Math.abs(cross),
       lastUpdated: data.current.last_updated.split(' ')[1], // Returns "11:05"
