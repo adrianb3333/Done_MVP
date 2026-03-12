@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,10 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+  Animated,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { User, Search } from 'lucide-react-native';
@@ -14,10 +18,178 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useProfile } from '@/contexts/ProfileContext';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+const TABS = ['Stats', 'Strokes Gained', 'Distance'] as const;
+
 export default function CompareModal() {
   const router = useRouter();
   const { profile, following } = useProfile();
   const username = profile?.display_name || profile?.username || 'User';
+
+  const [activeTab, setActiveTab] = useState(0);
+  const scrollRef = useRef<ScrollView>(null);
+  const indicatorAnim = useRef(new Animated.Value(0)).current;
+
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const offsetX = event.nativeEvent.contentOffset.x;
+      const index = Math.round(offsetX / SCREEN_WIDTH);
+      if (index >= 0 && index < TABS.length && index !== activeTab) {
+        setActiveTab(index);
+      }
+      const progress = offsetX / SCREEN_WIDTH;
+      indicatorAnim.setValue(progress);
+    },
+    [activeTab, indicatorAnim]
+  );
+
+  const handleTabPress = useCallback((index: number) => {
+    setActiveTab(index);
+    scrollRef.current?.scrollTo({ x: index * SCREEN_WIDTH, animated: true });
+  }, []);
+
+  const tabWidth = (SCREEN_WIDTH - 40) / TABS.length;
+  const underlineWidth = 40;
+
+  const translateX = indicatorAnim.interpolate({
+    inputRange: TABS.map((_, i) => i),
+    outputRange: TABS.map((_, i) => i * tabWidth + (tabWidth - underlineWidth) / 2),
+    extrapolate: 'clamp',
+  });
+
+  const renderVSCard = () => (
+    <View style={styles.vsSection}>
+      <View style={styles.vsCard}>
+        <View style={styles.vsPlayer}>
+          {profile?.avatar_url ? (
+            <Image source={{ uri: profile.avatar_url }} style={styles.vsAvatar} />
+          ) : (
+            <View style={styles.vsAvatarPlaceholder}>
+              <User size={28} color="#FFFFFF" />
+            </View>
+          )}
+          <Text style={styles.vsName}>{username}</Text>
+          <Text style={styles.vsHcp}>HCP 14.2</Text>
+        </View>
+
+        <View style={styles.vsBadge}>
+          <Text style={styles.vsText}>VS</Text>
+        </View>
+
+        <View style={styles.vsPlayer}>
+          <View style={styles.vsAvatarEmpty}>
+            <Search size={24} color="rgba(255,255,255,0.5)" />
+          </View>
+          <Text style={styles.vsNameEmpty}>Select Player</Text>
+          <Text style={styles.vsHcpEmpty}>—</Text>
+        </View>
+      </View>
+    </View>
+  );
+
+  const renderFriendsList = () => (
+    <View style={styles.selectSection}>
+      <Text style={styles.selectTitle}>Choose opponent</Text>
+      <Text style={styles.selectSubtitle}>Select a friend to compare stats</Text>
+
+      {following.length > 0 ? (
+        following.map((user) => (
+          <TouchableOpacity key={user.id} style={styles.friendRow} activeOpacity={0.7}>
+            {user.avatar_url ? (
+              <Image source={{ uri: user.avatar_url }} style={styles.friendAvatar} />
+            ) : (
+              <View style={styles.friendAvatarPlaceholder}>
+                <User size={18} color="rgba(255,255,255,0.6)" />
+              </View>
+            )}
+            <View style={styles.friendInfo}>
+              <Text style={styles.friendName}>{user.display_name || user.username}</Text>
+              <Text style={styles.friendUsername}>@{user.username}</Text>
+            </View>
+            <View style={styles.selectBtn}>
+              <Text style={styles.selectBtnText}>Compare</Text>
+            </View>
+          </TouchableOpacity>
+        ))
+      ) : (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyText}>Follow other players to compare stats</Text>
+        </View>
+      )}
+    </View>
+  );
+
+  const statsCategories = [
+    'Avg Score',
+    'Best Round',
+    'Fairways Hit %',
+    'GIR %',
+    'Putts per Round',
+    'Longest Drive',
+    'Up & Downs',
+    'Sand Saves',
+    'Penalty Shots',
+    'Handicap Trend',
+  ];
+
+  const renderStatsTab = () => (
+    <ScrollView
+      style={styles.tabPage}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.tabPageContent}
+    >
+      {renderVSCard()}
+      {renderFriendsList()}
+
+      <View style={styles.statsPreview}>
+        <Text style={styles.statsPreviewTitle}>Stats Categories</Text>
+        {statsCategories.map((stat, i) => (
+          <View key={i} style={styles.statRow}>
+            <Text style={styles.statName}>{stat}</Text>
+            <View style={styles.statBar}>
+              <View style={[styles.statBarFill, { width: '50%' }]} />
+            </View>
+            <Text style={styles.statDash}>—</Text>
+          </View>
+        ))}
+      </View>
+    </ScrollView>
+  );
+
+  const renderStrokesGainedTab = () => (
+    <ScrollView
+      style={styles.tabPage}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.tabPageContent}
+    >
+      {renderVSCard()}
+
+      <View style={styles.emptyTabSection}>
+        <View style={styles.emptyTabCard}>
+          <Text style={styles.emptyTabTitle}>Strokes Gained</Text>
+          <Text style={styles.emptyTabSubtitle}>Coming soon — compare strokes gained metrics</Text>
+        </View>
+      </View>
+    </ScrollView>
+  );
+
+  const renderDistanceTab = () => (
+    <ScrollView
+      style={styles.tabPage}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.tabPageContent}
+    >
+      {renderVSCard()}
+
+      <View style={styles.emptyTabSection}>
+        <View style={styles.emptyTabCard}>
+          <Text style={styles.emptyTabTitle}>Distance</Text>
+          <Text style={styles.emptyTabSubtitle}>Coming soon — compare distance metrics</Text>
+        </View>
+      </View>
+    </ScrollView>
+  );
 
   return (
     <LinearGradient
@@ -32,79 +204,51 @@ export default function CompareModal() {
           <Text style={styles.headerTitle}>{username} VS</Text>
           <View style={styles.headerSpacer} />
         </View>
+
+        <View style={styles.segmentContainer}>
+          <View style={styles.segmentRow}>
+            {TABS.map((tab, index) => (
+              <TouchableOpacity
+                key={tab}
+                style={styles.segmentTab}
+                onPress={() => handleTabPress(index)}
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.segmentLabel,
+                    activeTab === index && styles.segmentLabelActive,
+                  ]}
+                >
+                  {tab}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <Animated.View
+            style={[
+              styles.segmentUnderline,
+              {
+                width: underlineWidth,
+                transform: [{ translateX }],
+              },
+            ]}
+          />
+        </View>
       </SafeAreaView>
 
-      <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
-        <View style={styles.vsSection}>
-          <View style={styles.vsCard}>
-            <View style={styles.vsPlayer}>
-              {profile?.avatar_url ? (
-                <Image source={{ uri: profile.avatar_url }} style={styles.vsAvatar} />
-              ) : (
-                <View style={styles.vsAvatarPlaceholder}>
-                  <User size={28} color="#FFFFFF" />
-                </View>
-              )}
-              <Text style={styles.vsName}>{username}</Text>
-              <Text style={styles.vsHcp}>HCP 14.2</Text>
-            </View>
-
-            <View style={styles.vsBadge}>
-              <Text style={styles.vsText}>VS</Text>
-            </View>
-
-            <View style={styles.vsPlayer}>
-              <View style={styles.vsAvatarEmpty}>
-                <Search size={24} color="rgba(255,255,255,0.5)" />
-              </View>
-              <Text style={styles.vsNameEmpty}>Select Player</Text>
-              <Text style={styles.vsHcpEmpty}>—</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.selectSection}>
-          <Text style={styles.selectTitle}>Choose opponent</Text>
-          <Text style={styles.selectSubtitle}>Select a friend to compare stats</Text>
-
-          {following.length > 0 ? (
-            following.map((user) => (
-              <TouchableOpacity key={user.id} style={styles.friendRow} activeOpacity={0.7}>
-                {user.avatar_url ? (
-                  <Image source={{ uri: user.avatar_url }} style={styles.friendAvatar} />
-                ) : (
-                  <View style={styles.friendAvatarPlaceholder}>
-                    <User size={18} color="rgba(255,255,255,0.6)" />
-                  </View>
-                )}
-                <View style={styles.friendInfo}>
-                  <Text style={styles.friendName}>{user.display_name || user.username}</Text>
-                  <Text style={styles.friendUsername}>@{user.username}</Text>
-                </View>
-                <View style={styles.selectBtn}>
-                  <Text style={styles.selectBtnText}>Compare</Text>
-                </View>
-              </TouchableOpacity>
-            ))
-          ) : (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>Follow other players to compare stats</Text>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.statsPreview}>
-          <Text style={styles.statsPreviewTitle}>Stats Categories</Text>
-          {['Avg Score', 'Best Round', 'Fairways Hit %', 'GIR %', 'Putts per Round', 'Handicap Trend'].map((stat, i) => (
-            <View key={i} style={styles.statRow}>
-              <Text style={styles.statName}>{stat}</Text>
-              <View style={styles.statBar}>
-                <View style={[styles.statBarFill, { width: '50%' }]} />
-              </View>
-              <Text style={styles.statDash}>—</Text>
-            </View>
-          ))}
-        </View>
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        style={styles.pagerScroll}
+      >
+        <View style={{ width: SCREEN_WIDTH }}>{renderStatsTab()}</View>
+        <View style={{ width: SCREEN_WIDTH }}>{renderStrokesGainedTab()}</View>
+        <View style={{ width: SCREEN_WIDTH }}>{renderDistanceTab()}</View>
       </ScrollView>
     </LinearGradient>
   );
@@ -131,9 +275,41 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 40,
   },
-  body: {
+  segmentContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 4,
+  },
+  segmentRow: {
+    flexDirection: 'row' as const,
+  },
+  segmentTab: {
+    flex: 1,
+    alignItems: 'center' as const,
+    paddingVertical: 10,
+  },
+  segmentLabel: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.45)',
+  },
+  segmentLabelActive: {
+    color: '#FFFFFF',
+    fontWeight: '700' as const,
+  },
+  segmentUnderline: {
+    height: 3,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 1.5,
+  },
+  pagerScroll: {
+    flex: 1,
+  },
+  tabPage: {
     flex: 1,
     paddingHorizontal: 20,
+  },
+  tabPageContent: {
+    paddingBottom: 40,
   },
   vsSection: {
     marginTop: 16,
@@ -297,7 +473,6 @@ const styles = StyleSheet.create({
   },
   statsPreview: {
     marginTop: 28,
-    marginBottom: 40,
   },
   statsPreviewTitle: {
     fontSize: 16,
@@ -333,5 +508,28 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.3)',
     width: 30,
     textAlign: 'right' as const,
+  },
+  emptyTabSection: {
+    marginTop: 28,
+    flex: 1,
+  },
+  emptyTabCard: {
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderRadius: 20,
+    padding: 32,
+    alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  emptyTabTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  emptyTabSubtitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.55)',
+    textAlign: 'center' as const,
   },
 });
