@@ -277,7 +277,12 @@ export default function RecapModal() {
   };
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#4BA35B', '#3D954D', '#2D803D']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.container}
+    >
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <GlassBackButton onPress={() => router.back()} />
         <Text style={styles.title}>Coach</Text>
@@ -289,10 +294,7 @@ export default function RecapModal() {
 
       <Animated.View style={[styles.body, { opacity: fadeAnim }]}>
         <View style={styles.topRow}>
-          <LinearGradient
-            colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
+          <View
             style={styles.handicapBox}
           >
             <Image
@@ -313,13 +315,10 @@ export default function RecapModal() {
                 <Text style={styles.handicapLabel}>Year Progress</Text>
               </View>
             </View>
-          </LinearGradient>
+          </View>
 
           <TouchableOpacity onPress={openGoalModal} activeOpacity={0.8} style={styles.goalSquareWrap}>
-            <LinearGradient
-              colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
+            <View
               style={styles.goalSquare}
             >
               {savedGoal ? (
@@ -333,7 +332,7 @@ export default function RecapModal() {
                   <Text style={styles.goalSquareHint}>Goal</Text>
                 </>
               )}
-            </LinearGradient>
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -355,7 +354,7 @@ export default function RecapModal() {
       <ScrollView style={styles.summariesScroll} contentContainerStyle={styles.summariesContent} showsVerticalScrollIndicator={false}>
         {isGenerating && summaries.length === 0 && (
           <View style={styles.generatingRow}>
-            <ActivityIndicator size="small" color="#5BBF7F" />
+            <ActivityIndicator size="small" color="#FFFFFF" />
             <Text style={styles.generatingText}>Analyzing your latest activity...</Text>
           </View>
         )}
@@ -389,9 +388,9 @@ export default function RecapModal() {
             disabled={isGenerating}
           >
             {isGenerating ? (
-              <ActivityIndicator size="small" color="#5BBF7F" />
+              <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
-              <RefreshCw size={16} color="#5BBF7F" />
+              <RefreshCw size={16} color="#FFFFFF" />
             )}
             <Text style={styles.refreshBtnText}>{isGenerating ? 'Analyzing...' : 'Check for new activity'}</Text>
           </TouchableOpacity>
@@ -478,14 +477,13 @@ export default function RecapModal() {
           </LinearGradient>
         </View>
       </Modal>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0A',
   },
   header: {
     flexDirection: 'row' as const,
@@ -515,6 +513,10 @@ const styles = StyleSheet.create({
     position: 'relative' as const,
     minHeight: 90,
     justifyContent: 'center' as const,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    overflow: 'hidden' as const,
   },
   sgfIcon: {
     width: 24,
@@ -572,6 +574,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center' as const,
     borderRadius: 16,
     gap: 4,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   goalSquareNumber: {
     fontSize: 24,
@@ -623,9 +628,11 @@ const styles = StyleSheet.create({
   },
   goalLockedSection: {
     marginTop: 16,
-    backgroundColor: 'rgba(0,0,0,0.15)',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 12,
     padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   goalLockedText: {
     fontSize: 15,
@@ -694,7 +701,7 @@ const styles = StyleSheet.create({
   },
   dividerLine: {
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     marginTop: 20,
     marginBottom: 14,
   },
@@ -711,12 +718,12 @@ const styles = StyleSheet.create({
   weekDayDot: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(255,255,255,0.5)',
   },
   coachAnalysisHeader: {
     fontSize: 16,
     fontWeight: '800' as const,
-    color: '#5BBF7F',
+    color: '#FFFFFF',
   },
   summariesScroll: {
     flex: 1,
@@ -736,7 +743,7 @@ const styles = StyleSheet.create({
   generatingText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: 'rgba(255,255,255,0.5)',
+    color: 'rgba(255,255,255,0.8)',
   },
   emptySummaries: {
     paddingVertical: 40,
@@ -745,17 +752,17 @@ const styles = StyleSheet.create({
   emptySummariesText: {
     fontSize: 14,
     fontWeight: '500' as const,
-    color: 'rgba(255,255,255,0.35)',
+    color: 'rgba(255,255,255,0.7)',
     textAlign: 'center' as const,
     lineHeight: 20,
   },
   summaryCard: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 14,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   summaryCardHeader: {
     flexDirection: 'row' as const,
@@ -769,10 +776,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   summaryTypeBadgeRound: {
-    backgroundColor: 'rgba(91,191,127,0.2)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
   summaryTypeBadgeDrill: {
-    backgroundColor: 'rgba(79,195,247,0.2)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
   summaryTypeBadgeText: {
     fontSize: 11,
@@ -784,7 +791,7 @@ const styles = StyleSheet.create({
   summaryDate: {
     fontSize: 11,
     fontWeight: '500' as const,
-    color: 'rgba(255,255,255,0.35)',
+    color: 'rgba(255,255,255,0.7)',
   },
   summaryText: {
     fontSize: 14,
@@ -803,6 +810,6 @@ const styles = StyleSheet.create({
   refreshBtnText: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(255,255,255,0.7)',
   },
 });
