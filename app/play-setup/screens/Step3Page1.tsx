@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TextInput, Pressable, Switch, Platform } from 'react-native';
-import { Lock, Clock, Thermometer, Timer, Radio, Smartphone } from 'lucide-react-native';
+import { Lock, Clock, Thermometer, Timer, Radio, Smartphone, BarChart3 } from 'lucide-react-native';
 import { fetchGolfWeather } from '@/services/weatherApi';
 import { useSensor } from '@/contexts/SensorContext';
 import SensorLockOverlay from '@/components/SensorLockOverlay';
@@ -9,14 +9,16 @@ interface Step3Page1Props {
   onRoundNameChange?: (name: string) => void;
   roundDate: string;
   onPrivateChange?: (isPrivate: boolean) => void;
+  onAdvancedDataChange?: (enabled: boolean) => void;
 }
 
-export default function Step3Page1({ onRoundNameChange, roundDate, onPrivateChange }: Step3Page1Props) {
+export default function Step3Page1({ onRoundNameChange, roundDate, onPrivateChange, onAdvancedDataChange }: Step3Page1Props) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [roundName, setRoundName] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
   const [sensorsEnabled, setSensorsEnabled] = useState<boolean>(false);
   const [deviceEnabled, setDeviceEnabled] = useState<boolean>(false);
+  const [advancedData, setAdvancedData] = useState<boolean>(false);
   const { isPaired: sensorsPaired } = useSensor();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [temperature, setTemperature] = useState<number | null>(null);
@@ -141,6 +143,30 @@ export default function Step3Page1({ onRoundNameChange, roundDate, onPrivateChan
           onValueChange={handlePrivateToggle}
           trackColor={{ false: 'rgba(255,255,255,0.2)', true: 'rgba(255,255,255,0.35)' }}
           thumbColor={isPrivate ? '#FFFFFF' : '#CCC'}
+          ios_backgroundColor="rgba(255,255,255,0.2)"
+        />
+      </View>
+
+      <View style={styles.toggleCard}>
+        <View style={styles.toggleLeft}>
+          <View style={styles.toggleIcon}>
+            <BarChart3 size={20} color={advancedData ? '#FFFFFF' : 'rgba(255,255,255,0.6)'} strokeWidth={2} />
+          </View>
+          <View>
+            <View style={styles.advancedRow}>
+              <Text style={styles.toggleText}>ADVANCED DATA</Text>
+              <Text style={styles.advancedMiniText}>For all players</Text>
+            </View>
+          </View>
+        </View>
+        <Switch
+          value={advancedData}
+          onValueChange={(val: boolean) => {
+            setAdvancedData(val);
+            onAdvancedDataChange?.(val);
+          }}
+          trackColor={{ false: 'rgba(255,255,255,0.2)', true: 'rgba(255,255,255,0.35)' }}
+          thumbColor={advancedData ? '#FFFFFF' : '#CCC'}
           ios_backgroundColor="rgba(255,255,255,0.2)"
         />
       </View>
@@ -306,5 +332,16 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: '#FFFFFF',
     letterSpacing: 0.5,
+  },
+  advancedRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+  },
+  advancedMiniText: {
+    fontSize: 11,
+    fontWeight: '500' as const,
+    color: 'rgba(255,255,255,0.5)',
+    fontStyle: 'italic' as const,
   },
 });

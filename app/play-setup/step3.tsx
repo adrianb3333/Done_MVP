@@ -20,6 +20,7 @@ export default function PlayStep3Screen() {
   const insets = useSafeAreaInsets();
   const [roundName, setRoundName] = useState<string>('');  
   const [isPrivate, setIsPrivate] = useState<boolean>(false);
+  const [advancedData, setAdvancedData] = useState<boolean>(false);
   const today = new Date().toISOString().split('T')[0];
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -43,7 +44,11 @@ export default function PlayStep3Screen() {
     setIsPrivate(val);
   }, []);
 
-  const pages = [<Step3Page1 key="1" onRoundNameChange={handleNameChange} roundDate={today} onPrivateChange={handlePrivateChange} />];
+  const handleAdvancedDataChange = useCallback((val: boolean) => {
+    setAdvancedData(val);
+  }, []);
+
+  const pages = [<Step3Page1 key="1" onRoundNameChange={handleNameChange} roundDate={today} onPrivateChange={handlePrivateChange} onAdvancedDataChange={handleAdvancedDataChange} />];
 
   const handleBack = () => {
     router.back();
@@ -51,6 +56,7 @@ export default function PlayStep3Screen() {
 
   const handleStart = async () => {
     await AsyncStorage.setItem('play_round_private', JSON.stringify(isPrivate));
+    await AsyncStorage.setItem('play_setup_advanced_data', JSON.stringify(advancedData));
     startSession(roundName, today);
   };
 

@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Modal, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Modal, Platform, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronLeft, ChevronRight, List } from 'lucide-react-native';
 import { useScoring } from '@/contexts/ScoringContext';
@@ -35,6 +35,14 @@ export default function ScoreTab() {
     goBackStep,
     clearHoleScore,
     setShowScoreboard,
+    allScoringPlayers,
+    currentScoringPlayerIndex,
+    currentScoringPlayer,
+    isCreatorScoring,
+    advancedDataEnabled,
+    getPlayerTotalScore,
+    getPlayerTotalPar,
+    getPlayerHolesPlayed,
   } = useScoring();
 
   const { profile } = useProfile();
@@ -66,6 +74,14 @@ export default function ScoreTab() {
   const toParDisplay = holesPlayed > 0 ? getToPar(totalScore, totalPar) : 'E';
 
   const allHolesScored = holesPlayed >= holes.length && holes.length > 0;
+
+  const getPlayerToParDisplay = useCallback((playerId: string): string => {
+    const pScore = getPlayerTotalScore(playerId);
+    const pPar = getPlayerTotalPar(playerId);
+    const pPlayed = getPlayerHolesPlayed(playerId);
+    if (pPlayed > 0) return getToPar(pScore, pPar);
+    return 'E';
+  }, [getPlayerTotalScore, getPlayerTotalPar, getPlayerHolesPlayed]);
 
   const formatDuration = () => {
     if (!sessionStartTime) return '0:00';
@@ -135,10 +151,13 @@ export default function ScoreTab() {
     totalPar,
     holesPlayed,
     courseName,
-    players: [
-      { name: playerName, score: totalScore, toPar: toParDisplay },
-      ...players.map((p) => ({ name: p.name, score: 0, toPar: 'E' })),
-    ],
+    players: allScoringPlayers.map((sp, idx) => {
+      const isCreator = idx === 0;
+      const name = isCreator ? playerName : sp.name;
+      const score = getPlayerTotalScore(sp.id);
+      const toPar = getPlayerToParDisplay(sp.id);
+      return { name, score, toPar };
+    }),
     roundDate,
     roundName,
     duration: formatDuration(),
@@ -172,15 +191,42 @@ export default function ScoreTab() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.playerCard}>
-        <View style={styles.playerInfo}>
-          <Text style={styles.playerName}>{playerName}</Text>
-          <Text style={styles.playerHcp}>HCP {playerHcp}</Text>
-        </View>
-        <View style={styles.toParBadge}>
-          <Text style={styles.toParText}>{toParDisplay}</Text>
-        </View>
-      </View>
+      <ScrollView 
+        style={styles.playerCardsScroll} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.playerCardsContent}
+      >
+        {allScoringPlayers.map((sp, idx) => {
+          const isActive = idx === currentScoringPlayerIndex;
+          const isCreator = idx === 0;
+          const displayName = isCreator ? playerName : sp.name;
+          const displayHcp = isCreator ? playerHcp : sp.hcp;
+          const pToParDisplay = isCreator ? toParDisplay : getPlayerToParDisplay(sp.id);
+
+          return (
+            <View 
+              key={sp.id} 
+              style={[
+                styles.playerCard, 
+                isActive && styles.playerCardActive,
+                !isActive && styles.playerCardInactive,
+              ]}
+            >
+              <View style={styles.playerInfo}>
+                <Text style={[styles.playerName, !isActive && styles.playerNameInactive]}>
+                  {displayName}
+                </Text>
+                <Text style={[styles.playerHcp, !isActive && styles.playerHcpInactive]}>
+                  HCP {displayHcp}
+                </Text>
+              </View>
+              <View style={[styles.toParBadge, isActive && styles.toParBadgeActive]}>
+                <Text style={[styles.toParText, isActive && styles.toParTextActive]}>{pToParDisplay}</Text>
+              </View>
+            </View>
+          );
+        })}
+      </ScrollView>
 
       {inputStep === 'digit' && (
         <View style={styles.digitArea}>
@@ -193,6 +239,13 @@ export default function ScoreTab() {
               <List size={22} color="#333" />
               <Text style={styles.scoreboardLabel}>Leaderboard</Text>
             </TouchableOpacity>
+
+            {!isCreatorScoring && (
+              <View style={styles.scoringForBadge}>
+                <Text style={styles.scoringForText}>Scoring for</Text>
+                <Text style={styles.scoringForName}>{currentScoringPlayer.name}</Text>
+              </View>
+            )}
 
             {allHolesScored && (
               <TouchableOpacity
@@ -211,6 +264,9 @@ export default function ScoreTab() {
       {inputStep === 'fairway' && (
         <View style={styles.inputArea}>
           <View style={styles.scoreCircleRow}>
+            {!isCreatorScoring && (
+              <Text style={styles.inputPlayerLabel}>{currentScoringPlayer.name}</Text>
+            )}
             <View style={styles.scoreCircle}>
               <Text style={styles.scoreCircleText}>{currentHoleScore.score}</Text>
             </View>
@@ -228,6 +284,9 @@ export default function ScoreTab() {
       {inputStep === 'green' && (
         <View style={styles.inputArea}>
           <View style={styles.scoreCircleRow}>
+            {!isCreatorScoring && (
+              <Text style={styles.inputPlayerLabel}>{currentScoringPlayer.name}</Text>
+            )}
             <View style={styles.scoreCircle}>
               <Text style={styles.scoreCircleText}>{currentHoleScore.score}</Text>
             </View>
@@ -243,6 +302,9 @@ export default function ScoreTab() {
       {inputStep === 'extrashot' && (
         <View style={styles.inputArea}>
           <View style={styles.scoreCircleRow}>
+            {!isCreatorScoring && (
+              <Text style={styles.inputPlayerLabel}>{currentScoringPlayer.name}</Text>
+            )}
             <View style={styles.scoreCircle}>
               <Text style={styles.scoreCircleText}>{currentHoleScore.score}</Text>
             </View>
@@ -309,18 +371,32 @@ const styles = StyleSheet.create({
     color: '#fff',
     letterSpacing: 1,
   },
+  playerCardsScroll: {
+    maxHeight: 180,
+    marginTop: 8,
+  },
+  playerCardsContent: {
+    paddingHorizontal: 16,
+    gap: 6,
+  },
   playerCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: 'rgba(0,0,0,0.25)',
-    marginHorizontal: 16,
-    marginTop: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.12)',
+  },
+  playerCardActive: {
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    borderColor: 'rgba(255,255,255,0.3)',
+    borderWidth: 2,
+  },
+  playerCardInactive: {
+    opacity: 0.5,
   },
   playerInfo: {},
   playerName: {
@@ -328,10 +404,16 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: '#fff',
   },
+  playerNameInactive: {
+    color: 'rgba(255,255,255,0.7)',
+  },
   playerHcp: {
     fontSize: 13,
     color: '#CCCCCC',
     fontWeight: '500' as const,
+  },
+  playerHcpInactive: {
+    color: 'rgba(255,255,255,0.5)',
   },
   toParBadge: {
     width: 44,
@@ -341,10 +423,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  toParBadgeActive: {
+    backgroundColor: '#fff',
+  },
   toParText: {
     fontSize: 18,
     fontWeight: '800' as const,
     color: '#333333',
+  },
+  toParTextActive: {
+    color: '#2D803D',
   },
   digitArea: {
     flex: 1,
@@ -410,5 +498,29 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '800' as const,
     color: '#1a1a1a',
+  },
+  scoringForBadge: {
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  scoringForText: {
+    fontSize: 10,
+    fontWeight: '500' as const,
+    color: 'rgba(255,255,255,0.6)',
+  },
+  scoringForName: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+  },
+  inputPlayerLabel: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: 'rgba(255,255,255,0.8)',
+    marginBottom: 4,
   },
 });
