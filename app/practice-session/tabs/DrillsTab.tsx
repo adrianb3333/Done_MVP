@@ -847,13 +847,15 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
             >
               <BarChart3 size={22} color="#FFFFFF" />
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.headerIconBtnTransparent}
-              activeOpacity={0.7}
-              onPress={toggleDeleteMode}
-            >
-              <Trash2 size={22} color={isDeleteMode ? '#FF5252' : '#FFFFFF'} />
-            </TouchableOpacity>
+            {(savedDrills.length > 0 || savedSensorDrills.length > 0) && (
+              <TouchableOpacity
+                style={styles.headerIconBtnTransparent}
+                activeOpacity={0.7}
+                onPress={toggleDeleteMode}
+              >
+                <Trash2 size={22} color={isDeleteMode ? '#FF5252' : '#FFFFFF'} />
+              </TouchableOpacity>
+            )}
           </View>
         </Animated.View>
       </LinearGradient>
