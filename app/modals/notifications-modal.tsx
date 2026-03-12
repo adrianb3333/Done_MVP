@@ -9,7 +9,7 @@ import {
   Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Bell, User } from 'lucide-react-native';
+import { Bell, User, MessageCircle } from 'lucide-react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useProfile, UserProfile } from '@/contexts/ProfileContext';
@@ -119,7 +119,18 @@ export default function NotificationsModal() {
         <View style={s.header}>
           <GlassBackButton onPress={() => router.back()} />
           <Text style={s.headerTitle}>Notifications</Text>
-          <View style={s.headerSpacer} />
+          <TouchableOpacity
+            style={s.chatIconButton}
+            activeOpacity={0.7}
+            onPress={() => {
+              console.log('[Notifications] Opening chat list');
+              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.push('/modals/chat-list-modal');
+            }}
+            testID="notifications-chat-icon"
+          >
+            <MessageCircle size={22} color="#1A1A1A" strokeWidth={2} />
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
 
@@ -178,8 +189,13 @@ const s = StyleSheet.create({
     fontWeight: '700' as const,
     color: '#1A1A1A',
   },
-  headerSpacer: {
+  chatIconButton: {
     width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0,0,0,0.06)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
   },
   centered: {
     flex: 1,

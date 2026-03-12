@@ -9,6 +9,7 @@ import { ProfileProvider } from "@/contexts/ProfileContext";
 import { AppNavigationProvider, useAppNavigation } from "@/contexts/AppNavigationContext";
 import { UserDataProvider } from "@/hooks/useUserData";
 import { SensorProvider } from "@/contexts/SensorContext";
+import { ChatProvider } from "@/contexts/ChatContext";
 import PlaySessionTabs from "@/app/play-session/PlaySessionTabs";
 import PracticeSessionTabs from "@/app/practice-session/PracticeSessionTabs";
 import MiniSessionModal from "@/components/MiniSessionModal";
@@ -289,6 +290,22 @@ function AppContent() {
             animation: "slide_from_bottom"
           }} 
         />
+        <Stack.Screen 
+          name="modals/chat-list-modal" 
+          options={{ 
+            presentation: "fullScreenModal",
+            headerShown: false,
+            animation: "slide_from_bottom"
+          }} 
+        />
+        <Stack.Screen 
+          name="modals/chat-conversation-modal" 
+          options={{ 
+            presentation: "fullScreenModal",
+            headerShown: false,
+            animation: "slide_from_right"
+          }} 
+        />
         {/* End Modals */}
 
         <Stack.Screen 
@@ -340,9 +357,11 @@ export default function RootLayout() {
           <SensorProvider>
             <ProfileProvider>
               <AppNavigationProvider>
-                <UserDataProvider>
-                  <RootLayoutNav />
-                </UserDataProvider>
+                <ChatProvider>
+                  <UserDataProvider>
+                    <RootLayoutNav />
+                  </UserDataProvider>
+                </ChatProvider>
               </AppNavigationProvider>
             </ProfileProvider>
           </SensorProvider>

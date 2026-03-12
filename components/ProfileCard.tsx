@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,11 +9,13 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
-import { Trophy } from 'lucide-react-native';
+import { Trophy, MessageSquare } from 'lucide-react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { LinearGradient } from 'expo-linear-gradient';
 import { UserProfile } from '@/contexts/ProfileContext';
 import { supabase } from '@/lib/supabase';
+import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 
 interface TourData {
   eventsPlayed: number;
@@ -96,11 +98,29 @@ export default function ProfileCard({
   isFollowingUser = false,
   onToggleFollow,
 }: ProfileCardProps) {
+  const router = useRouter();
   const [tourModalVisible, setTourModalVisible] = useState<boolean>(false);
   const { followersCount, followingCount, loading: socialLoading } = useUserSocialCounts(
     user?.id ?? null,
     visible
   );
+
+  const handleOpenChat = useCallback(() => {
+    if (!user) return;
+    console.log('[ProfileCard] Opening chat with:', user.username);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    onClose();
+    setTimeout(() => {
+      router.push({
+        pathname: '/modals/chat-conversation-modal',
+        params: {
+          otherUserId: user.id,
+          otherUsername: user.username || user.display_name || 'User',
+          otherAvatar: user.avatar_url || '',
+        },
+      });
+    }, 350);
+  }, [user, onClose, router]);
 
   if (!user) return null;
 
@@ -137,35 +157,59 @@ export default function ProfileCard({
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          <View style={styles.avatarSection}>
-            {user.avatar_url ? (
-              <Image source={{ uri: user.avatar_url }} style={styles.avatar} />
-            ) : (
-              <View style={styles.avatarPlaceholder}>
-                <Text style={styles.avatarInitials}>{initials}</Text>
+          <View style={styles.topRow}>
+            <View style={styles.profileCardHalf}>
+              <View style={styles.miniAvatarSection}>
+                {user.avatar_url ? (
+                  <Image source={{ uri: user.avatar_url }} style={styles.miniAvatar} />
+                ) : (
+                  <View style={styles.miniAvatarPlaceholder}>
+                    <Text style={styles.miniAvatarInitials}>{initials}</Text>
+                  </View>
+                )}
+                <Text style={styles.miniHomeCourse} numberOfLines={1}>{homeCourse}</Text>
               </View>
-            )}
-            <Text style={styles.homeCourse}>{homeCourse}</Text>
-          </View>
 
-          <View style={styles.statsRow}>
-            {socialLoading ? (
-              <View style={styles.statsLoading}>
-                <ActivityIndicator size="small" color="rgba(0,0,0,0.3)" />
+              <View style={styles.miniStatsRow}>
+                {socialLoading ? (
+                  <ActivityIndicator size="small" color="rgba(0,0,0,0.3)" />
+                ) : (
+                  <>
+                    <View style={styles.miniStatItem}>
+                      <Text style={styles.miniStatNumber}>{followersCount}</Text>
+                      <Text style={styles.miniStatLabel}>Followers</Text>
+                    </View>
+                    <View style={styles.miniStatSep} />
+                    <View style={styles.miniStatItem}>
+                      <Text style={styles.miniStatNumber}>{followingCount}</Text>
+                      <Text style={styles.miniStatLabel}>Following</Text>
+                    </View>
+                  </>
+                )}
               </View>
-            ) : (
-              <>
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>{followersCount}</Text>
-                  <Text style={styles.statLabel}>Followers</Text>
-                </View>
-                <View style={styles.statSeparator} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>{followingCount}</Text>
-                  <Text style={styles.statLabel}>Following</Text>
-                </View>
-              </>
-            )}
+
+              {onToggleFollow && (
+                <TouchableOpacity
+                  style={[styles.miniFollowBtn, isFollowingUser && styles.miniFollowBtnActive]}
+                  onPress={onToggleFollow}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.miniFollowBtnText, isFollowingUser && styles.miniFollowBtnTextActive]}>
+                    {isFollowingUser ? 'Following' : 'Follow'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <TouchableOpacity
+              style={styles.textButtonHalf}
+              activeOpacity={0.8}
+              onPress={handleOpenChat}
+              testID="profile-card-text-button"
+            >
+              <MessageSquare size={28} color="#1A1A1A" strokeWidth={2} />
+              <Text style={styles.textButtonLabel}>Text</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.badgeRow}>
@@ -195,18 +239,6 @@ export default function ProfileCard({
               <Text style={styles.tourButtonText}>TOUR</Text>
             </TouchableOpacity>
           </View>
-
-          {onToggleFollow && (
-            <TouchableOpacity
-              style={[styles.followButton, isFollowingUser && styles.followButtonActive]}
-              onPress={onToggleFollow}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.followButtonText, isFollowingUser && styles.followButtonTextActive]}>
-                {isFollowingUser ? 'Following' : 'Follow'}
-              </Text>
-            </TouchableOpacity>
-          )}
 
           <View style={styles.infoSection}>
             <Text style={styles.infoTitle}>Last Round</Text>
@@ -300,75 +332,118 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 40,
   },
-  avatarSection: {
+  topRow: {
+    flexDirection: 'row' as const,
+    gap: 12,
+    marginBottom: 16,
+    paddingTop: 10,
+  },
+  profileCardHalf: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    borderRadius: 20,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
     alignItems: 'center' as const,
-    paddingTop: 20,
-    marginBottom: 24,
+    justifyContent: 'center' as const,
   },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 3,
+  miniAvatarSection: {
+    alignItems: 'center' as const,
+    marginBottom: 10,
+  },
+  miniAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 2,
     borderColor: 'rgba(0,0,0,0.08)',
-    marginBottom: 14,
+    marginBottom: 6,
   },
-  avatarPlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+  miniAvatarPlaceholder: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: 'rgba(0,0,0,0.08)',
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: 'rgba(0,0,0,0.06)',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
-    marginBottom: 14,
+    marginBottom: 6,
   },
-  avatarInitials: {
-    fontSize: 32,
+  miniAvatarInitials: {
+    fontSize: 20,
     fontWeight: '700' as const,
     color: '#1A1A1A',
   },
-  homeCourse: {
-    fontSize: 15,
+  miniHomeCourse: {
+    fontSize: 11,
     fontWeight: '600' as const,
-    color: 'rgba(0,0,0,0.45)',
-    marginTop: 4,
+    color: 'rgba(0,0,0,0.4)',
+    textAlign: 'center' as const,
   },
-  statsRow: {
+  miniStatsRow: {
     flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    alignItems: 'center' as const,
-    backgroundColor: 'rgba(0,0,0,0.06)',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.04)',
+    marginBottom: 10,
+    gap: 8,
   },
-  statsLoading: {
-    paddingVertical: 8,
-    alignItems: 'center' as const,
-    width: '100%' as const,
-  },
-  statItem: {
-    flex: 1,
+  miniStatItem: {
     alignItems: 'center' as const,
   },
-  statNumber: {
-    fontSize: 22,
+  miniStatNumber: {
+    fontSize: 16,
     fontWeight: '800' as const,
     color: '#1A1A1A',
   },
-  statLabel: {
-    fontSize: 12,
-    color: 'rgba(0,0,0,0.45)',
-    marginTop: 4,
+  miniStatLabel: {
+    fontSize: 9,
+    color: 'rgba(0,0,0,0.4)',
+    marginTop: 1,
   },
-  statSeparator: {
+  miniStatSep: {
     width: 1,
-    height: 30,
+    height: 20,
     backgroundColor: 'rgba(0,0,0,0.12)',
+  },
+  miniFollowBtn: {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    alignItems: 'center' as const,
+    width: '100%' as const,
+  },
+  miniFollowBtnActive: {
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.12)',
+  },
+  miniFollowBtnText: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: '#fff',
+  },
+  miniFollowBtnTextActive: {
+    color: '#1A1A1A',
+  },
+  textButtonHalf: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    borderRadius: 20,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 10,
+  },
+  textButtonLabel: {
+    fontSize: 17,
+    fontWeight: '800' as const,
+    color: '#1A1A1A',
+    letterSpacing: 0.3,
   },
   badgeRow: {
     flexDirection: 'row' as const,
@@ -412,26 +487,6 @@ const styles = StyleSheet.create({
     fontWeight: '800' as const,
     color: '#FFB74D',
     letterSpacing: 1,
-  },
-  followButton: {
-    backgroundColor: '#1A1A1A',
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center' as const,
-    marginBottom: 24,
-  },
-  followButtonActive: {
-    backgroundColor: 'rgba(0,0,0,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.12)',
-  },
-  followButtonText: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: '#fff',
-  },
-  followButtonTextActive: {
-    color: '#1A1A1A',
   },
   infoSection: {
     marginBottom: 16,
