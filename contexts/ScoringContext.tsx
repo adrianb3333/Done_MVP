@@ -465,7 +465,7 @@ export const [ScoringProvider, useScoring] = createContextHook(() => {
     getPlayerHolesPlayed,
     getPlayerHoleScore,
     moveToNextScoringPlayer,
-  })), [
+  }), [
     holeOption, holes, currentHole, currentHoleIndex, currentHoleScore,
     inputStep, scores, players, totalScore, totalPar, holesPlayed,
     showScoreboard, setShowScoreboard, setScore, setFairwayData,
