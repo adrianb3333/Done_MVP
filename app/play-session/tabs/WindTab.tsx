@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { StyleSheet, ImageBackground, View, ScrollView, ActivityIndicator, Platform } from "react-native";
+import { StyleSheet, View, ScrollView, ActivityIndicator, Platform } from "react-native";
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from 'expo-location';
 
@@ -91,10 +92,11 @@ export default function WindTab({ externalDistance, externalAdjustedDistance }: 
   }, []); 
 
   return (
-    <ImageBackground
-      source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/2og1gfzbpfgrdjyzujhyg' }}
+    <LinearGradient
+      colors={['#4BA35B', '#3D954D', '#2D803D']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
       style={styles.background}
-      resizeMode="cover"
     >
       <SafeAreaView style={styles.container} edges={['top']}>
         <ScrollView 
@@ -160,7 +162,7 @@ export default function WindTab({ externalDistance, externalAdjustedDistance }: 
           <View style={styles.bottomSpacer} />
         </ScrollView>
       </SafeAreaView>
-    </ImageBackground>
+    </LinearGradient>
   );
 }
 

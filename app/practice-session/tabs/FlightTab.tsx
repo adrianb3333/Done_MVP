@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { StyleSheet, ImageBackground, View, ScrollView, ActivityIndicator, Platform } from "react-native";
+import { StyleSheet, View, ScrollView, ActivityIndicator, Platform } from "react-native";
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from 'expo-location';
 
@@ -83,10 +84,11 @@ export default function FlightTab({ externalDistance }: FlightTabProps) {
   }, []); 
 
   return (
-    <ImageBackground
-      source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/2og1gfzbpfgrdjyzujhyg' }}
+    <LinearGradient
+      colors={['#0059B2', '#1075E3', '#1C8CFF']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
       style={styles.background}
-      resizeMode="cover"
     >
       <SafeAreaView style={styles.container} edges={['top']}>
         <ScrollView 
@@ -152,7 +154,7 @@ export default function FlightTab({ externalDistance }: FlightTabProps) {
           <View style={styles.bottomSpacer} />
         </ScrollView>
       </SafeAreaView>
-    </ImageBackground>
+    </LinearGradient>
   );
 }
 
