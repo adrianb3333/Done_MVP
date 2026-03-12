@@ -24,7 +24,6 @@ export default function ScoreTab() {
     totalScore,
     totalPar,
     holesPlayed,
-    players,
     courseName,
     setScore,
     setFairwayData,
@@ -39,7 +38,6 @@ export default function ScoreTab() {
     currentScoringPlayerIndex,
     currentScoringPlayer,
     isCreatorScoring,
-    advancedDataEnabled,
     getPlayerTotalScore,
     getPlayerTotalPar,
     getPlayerHolesPlayed,
@@ -70,7 +68,7 @@ export default function ScoreTab() {
   }, []);
 
   const playerName = profile?.display_name || profile?.username || 'Spelare';
-  const playerHcp = 9;
+  const playerHcp = 0;
   const toParDisplay = holesPlayed > 0 ? getToPar(totalScore, totalPar) : 'E';
 
   const allHolesScored = holesPlayed >= holes.length && holes.length > 0;

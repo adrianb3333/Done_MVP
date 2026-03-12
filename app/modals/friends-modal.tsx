@@ -8,10 +8,11 @@ import {
   FlatList,
   Image,
   SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { Search, X, Plus } from 'lucide-react-native';
+import { Search, X } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useProfile } from '@/contexts/ProfileContext';
 
@@ -25,61 +26,42 @@ interface PlayerItem {
 
 const STORAGE_KEY_PLAYERS = 'play_setup_selected_players';
 
-const MOCK_RECENT: PlayerItem[] = [
-  { id: 'r1', name: 'Leo Selin', avatar_url: null, club: 'Borås Golfklubb', hcp: 14.0 },
-  { id: 'r2', name: 'Olof Lord Anderén', avatar_url: null, club: 'Hulta Golfklubb', hcp: 14.9 },
-  { id: 'r3', name: 'Adam Larsson', avatar_url: null, club: 'Forsgårdens Golfklubb', hcp: 2.1 },
-  { id: 'r4', name: 'Kris -', avatar_url: null, club: 'Hulta Golfklubb', hcp: 1.7 },
-  { id: 'r5', name: 'William Skarland', avatar_url: null, club: 'Hulta Golfklubb', hcp: 3.1 },
-  { id: 'r6', name: 'Melker Boman', avatar_url: null, club: 'Borås Golfklubb', hcp: 15.8 },
-];
-
 export default function FriendsModal() {
-  const { profile, allUsers, following } = useProfile();
+  const { profile, allUsers, following, isLoadingAllUsers } = useProfile();
   const [searchQuery, setSearchQuery] = useState('');
   const [selected, setSelected] = useState<PlayerItem[]>([]);
 
   const currentUserName = profile?.display_name || profile?.username || 'Du';
 
   const friendsList = useMemo<PlayerItem[]>(() => {
-    if (following.length > 0) {
-      return following.map((f) => ({
-        id: f.id,
-        name: f.display_name || f.username,
-        avatar_url: f.avatar_url,
-        club: undefined,
-        hcp: undefined,
-      }));
-    }
-    return [];
+    return following.map((f) => ({
+      id: f.id,
+      name: f.display_name || f.username,
+      avatar_url: f.avatar_url,
+      club: undefined,
+      hcp: undefined,
+    }));
   }, [following]);
 
-  const recentList = useMemo<PlayerItem[]>(() => {
-    const supabaseUsers: PlayerItem[] = allUsers.map((u) => ({
+  const allUsersList = useMemo<PlayerItem[]>(() => {
+    return allUsers.map((u) => ({
       id: u.id,
       name: u.display_name || u.username,
       avatar_url: u.avatar_url,
       club: undefined,
       hcp: undefined,
     }));
-    const merged = [...MOCK_RECENT];
-    for (const su of supabaseUsers) {
-      if (!merged.find((m) => m.id === su.id) && su.id !== profile?.id) {
-        merged.push(su);
-      }
-    }
-    return merged;
-  }, [allUsers, profile?.id]);
+  }, [allUsers]);
 
-  const filteredRecent = useMemo(() => {
-    if (!searchQuery.trim()) return recentList;
+  const filteredAllUsers = useMemo(() => {
+    if (!searchQuery.trim()) return allUsersList;
     const q = searchQuery.toLowerCase();
-    return recentList.filter(
+    return allUsersList.filter(
       (p) =>
         p.name.toLowerCase().includes(q) ||
         (p.club && p.club.toLowerCase().includes(q))
     );
-  }, [recentList, searchQuery]);
+  }, [allUsersList, searchQuery]);
 
   const filteredFriends = useMemo(() => {
     if (!searchQuery.trim()) return friendsList;
@@ -210,14 +192,17 @@ export default function FriendsModal() {
 
   const sections = useMemo(() => {
     const data: { key: string; title: string; data: PlayerItem[] }[] = [];
-    if (filteredRecent.length > 0) {
-      data.push({ key: 'recent', title: 'Nyligen spelat med', data: filteredRecent });
-    }
     if (filteredFriends.length > 0) {
       data.push({ key: 'friends', title: 'Vänner', data: filteredFriends });
     }
+    const nonFriendUsers = filteredAllUsers.filter(
+      (u) => !friendsList.some((f) => f.id === u.id)
+    );
+    if (nonFriendUsers.length > 0) {
+      data.push({ key: 'all', title: 'Alla användare', data: nonFriendUsers });
+    }
     return data;
-  }, [filteredRecent, filteredFriends]);
+  }, [filteredFriends, filteredAllUsers, friendsList]);
 
   const flatData = useMemo(() => {
     const items: ({ type: 'header'; title: string } | { type: 'player'; player: PlayerItem })[] = [];
@@ -267,30 +252,35 @@ export default function FriendsModal() {
 
       {renderSlots()}
 
-      <TouchableOpacity style={styles.createRow} activeOpacity={0.7}>
-        <View style={styles.createIcon}>
-          <Plus size={18} color="#FFFFFF" />
-        </View>
-        <Text style={styles.createText}>Skapa oregistrerad spelare</Text>
-      </TouchableOpacity>
-
       <View style={styles.divider} />
 
-      <FlatList
-        data={flatData}
-        keyExtractor={(item, index) => {
-          if (item.type === 'header') return `header-${item.title}`;
-          return item.player.id + '-' + index;
-        }}
-        renderItem={({ item }) => {
-          if (item.type === 'header') {
-            return <Text style={styles.sectionTitle}>{item.title}</Text>;
+      {isLoadingAllUsers ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="rgba(255,255,255,0.5)" />
+          <Text style={styles.loadingText}>Loading users...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={flatData}
+          keyExtractor={(item, index) => {
+            if (item.type === 'header') return `header-${item.title}`;
+            return item.player.id + '-' + index;
+          }}
+          renderItem={({ item }) => {
+            if (item.type === 'header') {
+              return <Text style={styles.sectionTitle}>{item.title}</Text>;
+            }
+            return renderPlayerRow({ item: item.player });
+          }}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No users found in the app yet</Text>
+            </View>
           }
-          return renderPlayerRow({ item: item.player });
-        }}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
-      />
+        />
+      )}
     </SafeAreaView>
     </LinearGradient>
   );
@@ -422,26 +412,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center' as const,
   },
-  createRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    gap: 10,
-  },
-  createIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  createText: {
-    fontSize: 15,
-    fontWeight: '500' as const,
-    color: '#FFFFFF',
-  },
   divider: {
     height: 1,
     backgroundColor: 'rgba(255,255,255,0.12)',
@@ -511,5 +481,24 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 12,
+  },
+  loadingText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 14,
+  },
+  emptyContainer: {
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    paddingTop: 60,
+  },
+  emptyText: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 15,
   },
 });

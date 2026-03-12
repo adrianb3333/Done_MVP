@@ -83,8 +83,6 @@ export default function Step2Page1() {
         id: profile.id,
         name: profile.display_name || profile.username,
         avatar_url: profile.avatar_url,
-        hcp: 9,
-        tee: 57,
       }
     : null;
 

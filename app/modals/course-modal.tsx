@@ -8,6 +8,7 @@ import {
   FlatList,
   SafeAreaView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
 import { MapPin, Search, Star } from 'lucide-react-native';
@@ -15,46 +16,32 @@ import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TabCourse, { CourseTab } from '@/components/PlaSta/TabCourse';
-
-interface GolfCourse {
-  id: string;
-  name: string;
-  clubName: string;
-  holes: number;
-  par: number;
-  city: string;
-  country: string;
-  rating: number;
-  distance: number;
-  played: boolean;
-}
+import { searchGolfCourses, getGolfCourseDetail, getDefaultMaleTee } from '@/services/golfCourseApi';
 
 const STORAGE_KEY_COURSE = 'play_setup_selected_course';
+const STORAGE_KEY_COURSE_HOLES = 'play_setup_course_holes';
+const STORAGE_KEY_COURSE_LOCATION = 'play_setup_course_location';
 const STORAGE_KEY_FAVORITES = 'play_setup_favorite_courses';
 
-const MOCK_COURSES: GolfCourse[] = [
-  { id: 'c1', name: 'Hulta Golfklubb', clubName: 'Hulta GK', holes: 18, par: 72, city: 'Bollebygd', country: 'Sweden', rating: 4.0, distance: 2.0, played: true },
-  { id: 'c2', name: 'Chalmers Golfklubb', clubName: 'Chalmers Golfklubb', holes: 18, par: 71, city: 'Landvetter', country: 'Sweden', rating: 4.0, distance: 18.7, played: true },
-  { id: 'c3', name: 'Borås Golfklubb', clubName: 'Norra Banan', holes: 18, par: 72, city: 'Borås', country: 'Sweden', rating: 4.5, distance: 21.2, played: true },
-  { id: 'c4', name: 'Borås Golfklubb', clubName: 'Södra Banan', holes: 18, par: 69, city: 'Borås', country: 'Sweden', rating: 3.5, distance: 21.3, played: false },
-  { id: 'c5', name: 'Marks Golfklubb', clubName: 'Kinnaborg', holes: 18, par: 70, city: 'Kinna', country: 'Sweden', rating: 4.0, distance: 21.3, played: false },
-  { id: 'c6', name: 'Göteborg Golfklubb', clubName: 'Hovås', holes: 18, par: 72, city: 'Göteborg', country: 'Sweden', rating: 4.5, distance: 35.1, played: true },
-  { id: 'c7', name: 'Kungsbacka Golfklubb', clubName: 'Hamra', holes: 18, par: 71, city: 'Kungsbacka', country: 'Sweden', rating: 3.5, distance: 42.0, played: false },
-  { id: 'c8', name: 'Varberg Golfklubb', clubName: 'Varberg GK', holes: 18, par: 72, city: 'Varberg', country: 'Sweden', rating: 4.0, distance: 55.8, played: true },
-  { id: 'c9', name: 'Falsterbo Golfklubb', clubName: 'Falsterbo GK', holes: 18, par: 71, city: 'Falsterbo', country: 'Sweden', rating: 5.0, distance: 280.0, played: false },
-  { id: 'c10', name: 'Barsebäck Golf & CC', clubName: 'Masters Course', holes: 18, par: 73, city: 'Barsebäck', country: 'Sweden', rating: 4.5, distance: 260.0, played: true },
-  { id: 'c11', name: 'Quinta do Lago', clubName: 'South Course', holes: 18, par: 72, city: 'Almancil', country: 'Portugal', rating: 4.5, distance: 3100.0, played: false },
-  { id: 'c12', name: 'Valderrama Golf Club', clubName: 'Valderrama', holes: 18, par: 71, city: 'Sotogrande', country: 'Spain', rating: 5.0, distance: 3400.0, played: false },
-];
-
-const COUNTRIES = ['Alla länder', 'Sweden', 'Portugal', 'Spain'];
+interface DisplayCourse {
+  id: string;
+  apiId: number;
+  name: string;
+  clubName: string;
+  city: string;
+  country: string;
+  holes: number;
+  par: number;
+}
 
 export default function CourseModal() {
   const [activeTab, setActiveTab] = useState<CourseTab>('nearby');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCountry, setSelectedCountry] = useState('Alla länder');
   const [favorites, setFavorites] = useState<string[]>([]);
-  const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const [searchResults, setSearchResults] = useState<DisplayCourse[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   React.useEffect(() => {
     void loadFavorites();
@@ -79,94 +66,117 @@ export default function CourseModal() {
     });
   }, []);
 
-  const playedCount = useMemo(
-    () => MOCK_COURSES.filter((c) => c.played).length,
-    []
-  );
-
-  const filteredCourses = useMemo(() => {
-    let list = [...MOCK_COURSES];
-
-    if (selectedCountry !== 'Alla länder') {
-      list = list.filter((c) => c.country === selectedCountry);
-    }
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      list = list.filter(
-        (c) =>
-          c.name.toLowerCase().includes(q) ||
-          c.clubName.toLowerCase().includes(q) ||
-          c.city.toLowerCase().includes(q)
-      );
-    }
-
-    if (activeTab === 'played') {
-      list = list.filter((c) => c.played);
-    } else if (activeTab === 'favorite') {
-      list = list.filter((c) => favorites.includes(c.id));
-    } else {
-      list.sort((a, b) => a.distance - b.distance);
-    }
-
-    return list;
-  }, [activeTab, searchQuery, selectedCountry, favorites]);
-
-  const handleSelectCourse = async (course: GolfCourse) => {
+  const handleSearch = useCallback(async () => {
+    if (!searchQuery.trim()) return;
+    setIsSearching(true);
+    setHasSearched(true);
     try {
-      const toStore = {
-        id: course.id,
-        name: course.name,
-        clubName: course.clubName,
-        holes: course.holes,
-        par: course.par,
-        city: course.city,
-        country: course.country,
-      };
-      await AsyncStorage.setItem(STORAGE_KEY_COURSE, JSON.stringify(toStore));
-      console.log('[CourseModal] Selected course:', course.name);
+      const results = await searchGolfCourses(searchQuery.trim());
+      const mapped: DisplayCourse[] = results.map((r) => ({
+        id: `api-${r.id}`,
+        apiId: r.id,
+        name: r.course_name,
+        clubName: r.club_name,
+        city: r.location?.city ?? '',
+        country: r.location?.country ?? '',
+        holes: 18,
+        par: 72,
+      }));
+      setSearchResults(mapped);
+      console.log('[CourseModal] Search found:', mapped.length, 'courses');
+    } catch (e) {
+      console.log('[CourseModal] Search error:', e);
+    } finally {
+      setIsSearching(false);
+    }
+  }, [searchQuery]);
+
+  const handleSelectCourse = async (course: DisplayCourse) => {
+    setIsSelecting(true);
+    try {
+      const detail = await getGolfCourseDetail(course.apiId);
+      if (detail) {
+        const tee = getDefaultMaleTee(detail);
+        const holeData = tee?.holes ?? [];
+        const parTotal = tee?.par_total ?? 72;
+        const numHoles = tee?.number_of_holes ?? 18;
+
+        const toStore = {
+          id: course.id,
+          apiId: course.apiId,
+          name: detail.course_name,
+          clubName: detail.club_name,
+          holes: numHoles,
+          par: parTotal,
+          city: detail.location?.city ?? '',
+          country: detail.location?.country ?? '',
+        };
+        await AsyncStorage.setItem(STORAGE_KEY_COURSE, JSON.stringify(toStore));
+
+        const holesArray = holeData.map((h, idx) => ({
+          number: idx + 1,
+          par: h.par,
+          yardage: h.yardage,
+          handicap: h.handicap,
+        }));
+        await AsyncStorage.setItem(STORAGE_KEY_COURSE_HOLES, JSON.stringify(holesArray));
+
+        const locationData = {
+          latitude: detail.location?.latitude ?? null,
+          longitude: detail.location?.longitude ?? null,
+          address: detail.location?.address ?? '',
+        };
+        await AsyncStorage.setItem(STORAGE_KEY_COURSE_LOCATION, JSON.stringify(locationData));
+
+        console.log('[CourseModal] Selected course:', detail.course_name, 'with', holesArray.length, 'holes');
+      } else {
+        const toStore = {
+          id: course.id,
+          apiId: course.apiId,
+          name: course.name,
+          clubName: course.clubName,
+          holes: course.holes,
+          par: course.par,
+          city: course.city,
+          country: course.country,
+        };
+        await AsyncStorage.setItem(STORAGE_KEY_COURSE, JSON.stringify(toStore));
+      }
     } catch (e) {
       console.log('[CourseModal] Error saving course:', e);
+    } finally {
+      setIsSelecting(false);
     }
     router.back();
   };
 
-  const renderStars = (rating: number) => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <Star
-          key={i}
-          size={14}
-          color={i <= Math.floor(rating) ? '#FFB74D' : '#ccc'}
-          fill={i <= Math.floor(rating) ? '#FFB74D' : 'transparent'}
-        />
-      );
+  const filteredCourses = useMemo(() => {
+    if (activeTab === 'favorite') {
+      return searchResults.filter((c) => favorites.includes(c.id));
     }
-    return <View style={styles.starsRow}>{stars}</View>;
-  };
+    return searchResults;
+  }, [activeTab, searchResults, favorites]);
 
-  const renderCourseItem = ({ item }: { item: GolfCourse }) => {
+  const renderCourseItem = ({ item }: { item: DisplayCourse }) => {
     const isFav = favorites.includes(item.id);
     return (
       <TouchableOpacity
         style={styles.courseRow}
         onPress={() => handleSelectCourse(item)}
         activeOpacity={0.6}
+        disabled={isSelecting}
       >
         <View style={styles.courseInfo}>
           <Text style={styles.courseName}>{item.name}</Text>
           <View style={styles.courseSubRow}>
-            <Text style={styles.courseClub}>
-              {item.clubName}, {item.holes}/{item.par}
-            </Text>
+            <Text style={styles.courseClub}>{item.clubName}</Text>
             <MapPin size={12} color="#999" />
           </View>
-          <Text style={styles.courseCity}>{item.city}, {item.country}</Text>
-          <View style={styles.courseBottom}>
-            {renderStars(item.rating)}
-            <Text style={styles.courseDistance}>{item.distance.toFixed(1)} km</Text>
-          </View>
+          {(item.city || item.country) ? (
+            <Text style={styles.courseCity}>
+              {[item.city, item.country].filter(Boolean).join(', ')}
+            </Text>
+          ) : null}
         </View>
         <TouchableOpacity
           style={styles.favBtn}
@@ -196,67 +206,50 @@ export default function CourseModal() {
         <Text style={styles.headerTitle}>BANOR</Text>
         <View style={styles.headerIcons}>
           <MapPin size={22} color="#FFFFFF" />
-          <Search size={22} color="#FFFFFF" />
         </View>
       </View>
 
       <View style={styles.searchSection}>
         <View style={styles.searchBar}>
+          <Search size={18} color="rgba(255,255,255,0.6)" />
           <TextInput
             style={styles.searchInput}
-            placeholder="Sök"
-            placeholderTextColor="#999"
+            placeholder="Search golf courses..."
+            placeholderTextColor="rgba(255,255,255,0.5)"
             value={searchQuery}
             onChangeText={setSearchQuery}
+            onSubmitEditing={handleSearch}
+            returnKeyType="search"
           />
-        </View>
-
-        <View style={styles.filterRow}>
-          <Text style={styles.filterLabel}>Filter:</Text>
           <TouchableOpacity
-            style={styles.countryPicker}
-            onPress={() => setShowCountryPicker(!showCountryPicker)}
+            style={styles.searchBtn}
+            onPress={handleSearch}
+            activeOpacity={0.7}
+            disabled={isSearching}
           >
-            <Text style={styles.countryText}>{selectedCountry}</Text>
-            <Text style={styles.countryChevron}>▼</Text>
+            {isSearching ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.searchBtnText}>Sök</Text>
+            )}
           </TouchableOpacity>
         </View>
-
-        {showCountryPicker && (
-          <View style={styles.countryDropdown}>
-            {COUNTRIES.map((country) => (
-              <TouchableOpacity
-                key={country}
-                style={[
-                  styles.countryOption,
-                  selectedCountry === country && styles.countryOptionActive,
-                ]}
-                onPress={() => {
-                  setSelectedCountry(country);
-                  setShowCountryPicker(false);
-                }}
-              >
-                <Text
-                  style={[
-                    styles.countryOptionText,
-                    selectedCountry === country && styles.countryOptionTextActive,
-                  ]}
-                >
-                  {country}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
 
         <View style={styles.tabRow}>
           <TabCourse
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            playedCount={playedCount}
+            playedCount={0}
           />
         </View>
       </View>
+
+      {isSelecting && (
+        <View style={styles.selectingOverlay}>
+          <ActivityIndicator size="large" color="#FFFFFF" />
+          <Text style={styles.selectingText}>Loading course data...</Text>
+        </View>
+      )}
 
       <FlatList
         data={filteredCourses}
@@ -266,11 +259,15 @@ export default function CourseModal() {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>
-              {activeTab === 'favorite'
-                ? 'Inga favoritbanor ännu'
-                : 'Inga banor hittades'}
-            </Text>
+            {isSearching ? (
+              <ActivityIndicator size="large" color="rgba(255,255,255,0.5)" />
+            ) : (
+              <Text style={styles.emptyText}>
+                {hasSearched
+                  ? 'No courses found. Try a different search.'
+                  : 'Search for a golf course by name'}
+              </Text>
+            )}
           </View>
         }
       />
@@ -296,7 +293,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.12)',
   },
-
   headerTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
@@ -313,81 +309,32 @@ const styles = StyleSheet.create({
     paddingTop: 12,
   },
   searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 10,
+    borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: Platform.OS === 'ios' ? 10 : 6,
     marginBottom: 10,
     backgroundColor: 'rgba(0,0,0,0.35)',
+    gap: 8,
   },
   searchInput: {
+    flex: 1,
     fontSize: 15,
     color: '#FFFFFF',
     padding: 0,
-    textAlign: 'center' as const,
   },
-  filterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    gap: 8,
-  },
-  filterLabel: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.8)',
-    fontWeight: '600' as const,
-  },
-  countryPicker: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    gap: 6,
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-  },
-  countryText: {
-    fontSize: 14,
-    color: '#FFFFFF',
-    fontWeight: '500' as const,
-    flex: 1,
-  },
-  countryChevron: {
-    fontSize: 10,
-    color: '#FFFFFF',
-  },
-  countryDropdown: {
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 10,
-    marginBottom: 10,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  countryOption: {
+  searchBtn: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.08)',
+    paddingVertical: 8,
+    borderRadius: 8,
   },
-  countryOptionActive: {
-    backgroundColor: 'rgba(0,0,0,0.35)',
-  },
-  countryOptionText: {
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.7)',
-  },
-  countryOptionTextActive: {
+  searchBtnText: {
     color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '600' as const,
   },
   tabRow: {
@@ -424,21 +371,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.5)',
     marginTop: 1,
   },
-  courseBottom: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 4,
-  },
-  starsRow: {
-    flexDirection: 'row',
-    gap: 2,
-  },
-  courseDistance: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.7)',
-    fontWeight: '500' as const,
-  },
   favBtn: {
     padding: 8,
   },
@@ -453,5 +385,24 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 15,
     color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center' as const,
+    paddingHorizontal: 32,
+  },
+  selectingOverlay: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 100,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 12,
+  },
+  selectingText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600' as const,
   },
 });

@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, Platform, Linking, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MapPin, Move, RotateCcw, ZoomIn, Navigation } from 'lucide-react-native';
+import { MapPin, Move, RotateCcw, ZoomIn, Navigation, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import Svg, { Circle, Line, Polygon, Text as SvgText } from 'react-native-svg';
 import { useWeather } from '@/hooks/useWeather';
 import { calculateGolfShot } from '@/services/golfCalculations';
+import { useScoring } from '@/contexts/ScoringContext';
+import { loadCourseLocation } from '@/mocks/courseData';
+import type { CourseLocation } from '@/mocks/courseData';
 
 interface Coordinate {
   latitude: number;
   longitude: number;
 }
-
-const DEFAULT_START: Coordinate = { latitude: 57.698483, longitude: 12.580719 };
-const DEFAULT_END: Coordinate = { latitude: 57.701442, longitude: 12.581172 };
 
 function haversineDistance(coord1: Coordinate, coord2: Coordinate): number {
   const R = 6371000;
@@ -27,6 +27,19 @@ function haversineDistance(coord1: Coordinate, coord2: Coordinate): number {
       Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
+}
+
+function offsetCoordinate(base: Coordinate, bearingDeg: number, distanceMeters: number): Coordinate {
+  const R = 6371000;
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const toDeg = (rad: number) => (rad * 180) / Math.PI;
+  const lat1 = toRad(base.latitude);
+  const lon1 = toRad(base.longitude);
+  const bearing = toRad(bearingDeg);
+  const d = distanceMeters / R;
+  const lat2 = Math.asin(Math.sin(lat1) * Math.cos(d) + Math.cos(lat1) * Math.sin(d) * Math.cos(bearing));
+  const lon2 = lon1 + Math.atan2(Math.sin(bearing) * Math.sin(d) * Math.cos(lat1), Math.cos(d) - Math.sin(lat1) * Math.sin(lat2));
+  return { latitude: toDeg(lat2), longitude: toDeg(lon2) };
 }
 
 interface MiniCompassProps {
@@ -109,10 +122,14 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange }: GPSTabProps) 
   const MapView = require('react-native-maps').default;
   const { Marker, Polyline } = require('react-native-maps');
   const insets = useSafeAreaInsets();
+  const { holes } = useScoring();
 
   const mapRef = useRef<any>(null);
   const locationWatchRef = useRef<any>(null);
-  const [startPosition, setStartPosition] = useState<Coordinate>(DEFAULT_START);
+  const [courseLocation, setCourseLocation] = useState<CourseLocation | null>(null);
+  const [currentGpsHoleIndex, setCurrentGpsHoleIndex] = useState<number>(0);
+  const [startPosition, setStartPosition] = useState<Coordinate | null>(null);
+  const [endPosition, setEndPosition] = useState<Coordinate | null>(null);
   const [dragEnd, setDragEnd] = useState<Coordinate | null>(null);
   const [distance, setDistance] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
@@ -140,44 +157,116 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange }: GPSTabProps) 
     }
   }, [distance, onDistanceChange]);
 
+  const holeCoordinates = useMemo(() => {
+    if (!courseLocation?.latitude || !courseLocation?.longitude) return [];
+    const baseLat = courseLocation.latitude;
+    const baseLon = courseLocation.longitude;
+    const baseCoord: Coordinate = { latitude: baseLat, longitude: baseLon };
+
+    return holes.map((hole, idx) => {
+      const bearingOffset = (idx * 20) % 360;
+      const teeOffset = idx * 150;
+      const tee = offsetCoordinate(baseCoord, bearingOffset, teeOffset);
+      const greenDist = hole.distance > 0 ? hole.distance * 0.9144 : 350;
+      const green = offsetCoordinate(tee, bearingOffset + 10, greenDist);
+      return { tee, green, hole };
+    });
+  }, [courseLocation, holes]);
+
+  const currentGpsHole = useMemo(() => {
+    if (holeCoordinates.length === 0) return null;
+    return holeCoordinates[currentGpsHoleIndex] ?? null;
+  }, [holeCoordinates, currentGpsHoleIndex]);
+
+  const currentHoleData = useMemo(() => {
+    if (currentGpsHoleIndex < holes.length) return holes[currentGpsHoleIndex];
+    return null;
+  }, [holes, currentGpsHoleIndex]);
+
   useEffect(() => {
-    const LocationModule = require('expo-location');
-    let mounted = true;
-    void (async () => {
-      try {
-        const { status } = await LocationModule.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          console.log('Location permission denied');
-          if (mounted) {
-            setPermissionDenied(true);
-            setLoading(false);
-          }
-          return;
-        }
-        const loc = await LocationModule.getCurrentPositionAsync({
-          accuracy: LocationModule.Accuracy.High,
-        });
-        console.log('Got user location:', loc.coords.latitude, loc.coords.longitude);
-        if (mounted) {
-          const userCoord: Coordinate = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
-          setGeoLocation({ lat: loc.coords.latitude, lon: loc.coords.longitude });
-          setStartPosition(userCoord);
-          setDragEnd(DEFAULT_END);
-          const initialDist = Math.round(haversineDistance(userCoord, DEFAULT_END));
-          setDistance(initialDist);
-          setLoading(false);
-        }
-      } catch (err) {
-        console.log('Error getting location:', err);
-        if (mounted) {
-          setPermissionDenied(true);
-          setLoading(false);
-        }
-      }
-    })();
-    return () => { mounted = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void loadCourseAndLocation();
   }, []);
+
+  const loadCourseAndLocation = async () => {
+    try {
+      const loc = await loadCourseLocation();
+      if (loc && loc.latitude && loc.longitude) {
+        console.log('[GPSTab] Loaded course location:', loc.latitude, loc.longitude);
+        setCourseLocation(loc);
+      } else {
+        console.log('[GPSTab] No course location found, using user location');
+      }
+    } catch (e) {
+      console.log('[GPSTab] Error loading course location:', e);
+    }
+    void initLocation();
+  };
+
+  const initLocation = async () => {
+    const LocationModule = require('expo-location');
+    try {
+      const { status } = await LocationModule.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.log('Location permission denied');
+        setPermissionDenied(true);
+        setLoading(false);
+        return;
+      }
+      const loc = await LocationModule.getCurrentPositionAsync({
+        accuracy: LocationModule.Accuracy.High,
+      });
+      console.log('Got user location:', loc.coords.latitude, loc.coords.longitude);
+      setGeoLocation({ lat: loc.coords.latitude, lon: loc.coords.longitude });
+      setLoading(false);
+    } catch (err) {
+      console.log('Error getting location:', err);
+      setPermissionDenied(true);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!loading && currentGpsHole) {
+      const tee = currentGpsHole.tee;
+      const green = currentGpsHole.green;
+      setStartPosition(tee);
+      setEndPosition(green);
+      setDragEnd(green);
+      const dist = Math.round(haversineDistance(tee, green));
+      setDistance(dist);
+
+      if (mapRef.current) {
+        mapRef.current.fitToCoordinates(
+          [tee, green],
+          { edgePadding: { top: 140, right: 60, bottom: 100, left: 60 }, animated: true }
+        );
+      }
+    }
+  }, [loading, currentGpsHole]);
+
+  const handleNextHole = useCallback(() => {
+    if (currentGpsHoleIndex < holes.length - 1) {
+      setPinnedPosition(null);
+      setGpsActive(false);
+      if (locationWatchRef.current) {
+        locationWatchRef.current.remove();
+        locationWatchRef.current = null;
+      }
+      setCurrentGpsHoleIndex((prev) => prev + 1);
+    }
+  }, [currentGpsHoleIndex, holes.length]);
+
+  const handlePrevHole = useCallback(() => {
+    if (currentGpsHoleIndex > 0) {
+      setPinnedPosition(null);
+      setGpsActive(false);
+      if (locationWatchRef.current) {
+        locationWatchRef.current.remove();
+        locationWatchRef.current = null;
+      }
+      setCurrentGpsHoleIndex((prev) => prev - 1);
+    }
+  }, [currentGpsHoleIndex]);
 
   const startLocationWatch = useCallback(async (pinCoord: Coordinate) => {
     const Loc = require('expo-location');
@@ -236,41 +325,45 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange }: GPSTabProps) 
       setPinnedPosition(null);
       setGpsActive(false);
       stopLocationWatch();
-      setStartPosition(DEFAULT_START);
-      setDragEnd(DEFAULT_END);
-      const dist = Math.round(haversineDistance(DEFAULT_START, DEFAULT_END));
-      setDistance(dist);
+      if (currentGpsHole) {
+        setStartPosition(currentGpsHole.tee);
+        setDragEnd(currentGpsHole.green);
+        const dist = Math.round(haversineDistance(currentGpsHole.tee, currentGpsHole.green));
+        setDistance(dist);
+      }
     }
-  }, [pinnedPosition, startLocationWatch, stopLocationWatch]);
+  }, [pinnedPosition, startLocationWatch, stopLocationWatch, currentGpsHole]);
 
   const handleDrag = useCallback((e: any) => {
     const newCoord: Coordinate = e.nativeEvent.coordinate;
     setDragEnd(newCoord);
-    const dist = Math.round(haversineDistance(startPosition, newCoord));
-    setDistance(dist);
+    if (startPosition) {
+      const dist = Math.round(haversineDistance(startPosition, newCoord));
+      setDistance(dist);
+    }
   }, [startPosition]);
 
   const handleDragEnd = useCallback((e: any) => {
     const newCoord: Coordinate = e.nativeEvent.coordinate;
     console.log('Drag ended at:', newCoord.latitude, newCoord.longitude);
     setDragEnd(newCoord);
-    const dist = Math.round(haversineDistance(startPosition, newCoord));
-    setDistance(dist);
+    if (startPosition) {
+      const dist = Math.round(haversineDistance(startPosition, newCoord));
+      setDistance(dist);
+    }
   }, [startPosition]);
 
   const handleReset = useCallback(() => {
-    if (pinnedPosition) {
-      return;
-    }
-    setDragEnd(DEFAULT_END);
-    setStartPosition(DEFAULT_START);
-    const resetDist = Math.round(haversineDistance(DEFAULT_START, DEFAULT_END));
+    if (pinnedPosition || !currentGpsHole) return;
+    setStartPosition(currentGpsHole.tee);
+    setDragEnd(currentGpsHole.green);
+    const resetDist = Math.round(haversineDistance(currentGpsHole.tee, currentGpsHole.green));
     setDistance(resetDist);
     mapRef.current?.fitToCoordinates(
-      [DEFAULT_START, DEFAULT_END],
-      { edgePadding: { top: 100, right: 60, bottom: 80, left: 60 }, animated: true }
+      [currentGpsHole.tee, currentGpsHole.green],
+      { edgePadding: { top: 140, right: 60, bottom: 100, left: 60 }, animated: true }
     );
-  }, [pinnedPosition]);
+  }, [pinnedPosition, currentGpsHole]);
 
   if (loading) {
     return (
@@ -291,26 +384,28 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange }: GPSTabProps) 
     );
   }
 
+  const displayStart = startPosition ?? { latitude: 0, longitude: 0 };
+  const displayEnd = dragEnd ?? endPosition ?? displayStart;
+
+  const initialRegion = {
+    latitude: (displayStart.latitude + displayEnd.latitude) / 2,
+    longitude: (displayStart.longitude + displayEnd.longitude) / 2,
+    latitudeDelta: Math.abs(displayEnd.latitude - displayStart.latitude) * 2.5 + 0.002,
+    longitudeDelta: Math.abs(displayEnd.longitude - displayStart.longitude) * 2.5 + 0.002,
+  };
+
   const handleMapReady = () => {
-    if (mapRef.current && dragEnd) {
+    if (mapRef.current && startPosition && dragEnd) {
       mapRef.current.fitToCoordinates(
         [startPosition, dragEnd],
-        {
-          edgePadding: { top: 100, right: 60, bottom: 80, left: 60 },
-          animated: false,
-        }
+        { edgePadding: { top: 140, right: 60, bottom: 100, left: 60 }, animated: false }
       );
     }
   };
 
-  const initialRegion = {
-    latitude: (startPosition.latitude + (dragEnd?.latitude ?? startPosition.latitude)) / 2,
-    longitude: (startPosition.longitude + (dragEnd?.longitude ?? startPosition.longitude)) / 2,
-    latitudeDelta: Math.abs((dragEnd?.latitude ?? startPosition.latitude) - startPosition.latitude) * 2.5 + 0.002,
-    longitudeDelta: Math.abs((dragEnd?.longitude ?? startPosition.longitude) - startPosition.longitude) * 2.5 + 0.002,
-  };
-
   const windDistText = adjustedDistance ? Math.round(adjustedDistance.adjustedDistance) : null;
+  const isFirstHole = currentGpsHoleIndex === 0;
+  const isLastHole = currentGpsHoleIndex === holes.length - 1;
 
   return (
     <View style={styles.container}>
@@ -325,7 +420,7 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange }: GPSTabProps) 
         showsCompass={true}
         showsScale={true}
       >
-        {dragEnd && (
+        {startPosition && dragEnd && (
           <>
             <Polyline
               coordinates={[startPosition, dragEnd]}
@@ -361,8 +456,37 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange }: GPSTabProps) 
         )}
       </MapView>
 
+      <View style={[styles.holeHeader, { top: insets.top + 8 }]}>
+        <TouchableOpacity
+          style={[styles.holeNavArrow, isFirstHole && styles.holeNavArrowDisabled]}
+          onPress={handlePrevHole}
+          disabled={isFirstHole}
+          activeOpacity={0.6}
+        >
+          <ChevronLeft size={22} color={isFirstHole ? 'rgba(255,255,255,0.3)' : '#FFFFFF'} />
+        </TouchableOpacity>
+
+        <View style={styles.holeHeaderCenter}>
+          <Text style={styles.holeHeaderTitle}>
+            Hole {currentHoleData?.number ?? currentGpsHoleIndex + 1}
+          </Text>
+          <Text style={styles.holeHeaderPar}>
+            PAR {currentHoleData?.par ?? '-'} • {currentHoleData?.distance ?? '-'} yds
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.holeNavArrow, isLastHole && styles.holeNavArrowDisabled]}
+          onPress={handleNextHole}
+          disabled={isLastHole}
+          activeOpacity={0.6}
+        >
+          <ChevronRight size={22} color={isLastHole ? 'rgba(255,255,255,0.3)' : '#FFFFFF'} />
+        </TouchableOpacity>
+      </View>
+
       <TouchableOpacity
-        style={[styles.gpsToggle, gpsActive && styles.gpsToggleActive, { top: insets.top + 12 }]}
+        style={[styles.gpsToggle, { top: insets.top + 64 }]}
         onPress={handleSetPin}
         activeOpacity={0.7}
       >
@@ -372,7 +496,7 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange }: GPSTabProps) 
         </Text>
       </TouchableOpacity>
 
-      <View style={[styles.distanceOverlay, { top: insets.top + 52 }]}>
+      <View style={[styles.distanceOverlay, { top: insets.top + 104 }]}>
         <Text style={styles.distanceMainValue}>{distance}</Text>
         <Text style={styles.distanceMainUnit}>m</Text>
         {windDistText !== null && (
@@ -420,7 +544,7 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange }: GPSTabProps) 
       </TouchableOpacity>
 
       {weather && (
-        <View style={[styles.miniCompassBox, { top: insets.top + 12 }]}>
+        <View style={[styles.miniCompassBox, { top: insets.top + 64 }]}>
           <MiniWindCompass windDeg={weather.windDeg} windMs={weather.windMs} />
         </View>
       )}
@@ -483,6 +607,47 @@ const styles = StyleSheet.create({
     color: '#888',
     fontSize: 13,
   },
+  holeHeader: {
+    position: 'absolute' as const,
+    left: 16,
+    right: 16,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  holeNavArrow: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  holeNavArrowDisabled: {
+    opacity: 0.4,
+  },
+  holeHeaderCenter: {
+    alignItems: 'center' as const,
+    flex: 1,
+  },
+  holeHeaderTitle: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  holeHeaderPar: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 2,
+  },
   startMarker: {
     width: 20,
     height: 20,
@@ -517,7 +682,6 @@ const styles = StyleSheet.create({
   },
   gpsToggle: {
     position: 'absolute' as const,
-    top: 16,
     left: 16,
     backgroundColor: 'rgba(0,0,0,0.7)',
     borderRadius: 12,
@@ -528,10 +692,6 @@ const styles = StyleSheet.create({
     gap: 6,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.15)',
-  },
-  gpsToggleActive: {
-    borderColor: 'rgba(52,199,89,0.5)',
-    backgroundColor: 'rgba(0,0,0,0.8)',
   },
   gpsToggleText: {
     color: '#FFFFFF',
@@ -544,7 +704,6 @@ const styles = StyleSheet.create({
   distanceOverlay: {
     position: 'absolute' as const,
     left: 16,
-    top: 60,
   },
   distanceMainValue: {
     color: '#FFFFFF',
@@ -640,7 +799,6 @@ const styles = StyleSheet.create({
   },
   miniCompassBox: {
     position: 'absolute' as const,
-    top: 16,
     right: 16,
   },
   webFallback: {

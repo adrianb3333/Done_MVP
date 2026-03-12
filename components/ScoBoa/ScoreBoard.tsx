@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useScoring, PlayerRoundInfo } from '@/contexts/ScoringContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useSession } from '@/contexts/SessionContext';
-import { HoleInfo, getToPar, MOCK_COURSE } from '@/mocks/courseData';
+import { HoleInfo, getToPar } from '@/mocks/courseData';
 
 interface ScoreBoardProps {
   visible: boolean;
@@ -21,7 +21,7 @@ interface ScoreBoardProps {
 
 export default function ScoreBoard({ visible, onClose }: ScoreBoardProps) {
   const {
-    scores, players, totalScore, totalPar, holesPlayed, courseName,
+    scores, players, holesPlayed, courseName,
     playerScores, getPlayerTotalScore, getPlayerTotalPar, getPlayerHolesPlayed,
   } = useScoring();
   const { profile } = useProfile();
@@ -33,24 +33,25 @@ export default function ScoreBoard({ visible, onClose }: ScoreBoardProps) {
   const currentPlayerId = '__creator__';
 
   const allPlayers = useMemo(() => {
-    const current: PlayerRoundInfo = { id: currentPlayerId, name: currentPlayerName, hcp: 9 };
+    const current: PlayerRoundInfo = { id: currentPlayerId, name: currentPlayerName, hcp: 0 };
     return [current, ...players];
   }, [currentPlayerName, players]);
 
-  const front9 = useMemo(() => MOCK_COURSE.holes.filter((h) => h.number <= 9), []);
-  const back9 = useMemo(() => MOCK_COURSE.holes.filter((h) => h.number >= 10), []);
+  const { holes: scoringHoles } = useScoring();
+  const front9 = useMemo(() => scoringHoles.filter((h) => h.number <= 9), [scoringHoles]);
+  const back9 = useMemo(() => scoringHoles.filter((h) => h.number >= 10), [scoringHoles]);
 
   const front9Par = useMemo(() => front9.reduce((s, h) => s + h.par, 0), [front9]);
   const back9Par = useMemo(() => back9.reduce((s, h) => s + h.par, 0), [back9]);
   const fullPar = front9Par + back9Par;
 
-  const getPlayerScore = (playerId: string): number => {
+  const getPlayerScore = useCallback((playerId: string): number => {
     return getPlayerTotalScore(playerId);
-  };
+  }, [getPlayerTotalScore]);
 
-  const getPlayerPlayed = (playerId: string): number => {
+  const getPlayerPlayed = useCallback((playerId: string): number => {
     return getPlayerHolesPlayed(playerId);
-  };
+  }, [getPlayerHolesPlayed]);
 
   const getPlayerToPar = (playerId: string): string => {
     const pScore = getPlayerTotalScore(playerId);
@@ -111,7 +112,7 @@ export default function ScoreBoard({ visible, onClose }: ScoreBoardProps) {
       const bScoreToPar = getPlayerScore(b.id) - getPlayerTotalPar(b.id);
       return aScoreToPar - bScoreToPar;
     });
-  }, [allPlayers, getPlayerTotalScore, getPlayerTotalPar, getPlayerHolesPlayed]);
+  }, [allPlayers, getPlayerScore, getPlayerPlayed, getPlayerTotalPar]);
 
   const renderScorecard = (playerId: string) => {
     const front9Total = getHalfTotal(playerId, front9);

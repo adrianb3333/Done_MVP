@@ -1,7 +1,7 @@
 import createContextHook from '@nkzw/create-context-hook';
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { HoleInfo, getHolesForOption, MOCK_COURSE } from '@/mocks/courseData';
+import { HoleInfo, getHolesForOption, loadSelectedCourseHoles, loadSelectedCourseName } from '@/mocks/courseData';
 import { createRound, saveHoleScore, completeRound } from '@/services/roundService';
 
 export type FairwayHit = 'left' | 'hit' | 'right';
@@ -51,7 +51,8 @@ function createEmptyHoleScore(holeNumber: number): HoleScore {
 
 export const [ScoringProvider, useScoring] = createContextHook(() => {
   const [holeOption, setHoleOption] = useState<string>('18');
-  const [holes, setHoles] = useState<HoleInfo[]>(MOCK_COURSE.holes);
+  const [holes, setHoles] = useState<HoleInfo[]>([]);
+  const [_allCourseHoles, setAllCourseHoles] = useState<HoleInfo[]>([]);
   const [currentHoleIndex, setCurrentHoleIndex] = useState<number>(0);
   const [inputStep, setInputStep] = useState<InputStep>('digit');
   const [scores, setScores] = useState<Map<number, HoleScore>>(new Map());
@@ -61,21 +62,23 @@ export const [ScoringProvider, useScoring] = createContextHook(() => {
   const [advancedDataEnabled, setAdvancedDataEnabled] = useState<boolean>(false);
   const [playerScores, setPlayerScores] = useState<Map<string, Map<number, HoleScore>>>(new Map());
   const [currentScoringPlayerIndex, setCurrentScoringPlayerIndex] = useState<number>(0);
+  const [courseName, setCourseName] = useState<string>('Golf Course');
+  const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
   useEffect(() => {
     void loadSetupData();
   }, []);
 
   useEffect(() => {
-    if (!supabaseRoundId) {
+    if (isLoaded && !supabaseRoundId) {
       void initSupabaseRound();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isLoaded]);
 
   const initSupabaseRound = async () => {
     try {
-      const roundId = await createRound(MOCK_COURSE.name);
+      const roundId = await createRound(courseName);
       if (roundId) {
         setSupabaseRoundId(roundId);
         console.log('[ScoringContext] Supabase round initialized:', roundId);
@@ -87,10 +90,18 @@ export const [ScoringProvider, useScoring] = createContextHook(() => {
 
   const loadSetupData = async () => {
     try {
+      const courseHoles = await loadSelectedCourseHoles();
+      setAllCourseHoles(courseHoles);
+      console.log('[ScoringContext] Loaded course holes from API:', courseHoles.length);
+
+      const name = await loadSelectedCourseName();
+      setCourseName(name);
+      console.log('[ScoringContext] Loaded course name:', name);
+
       const storedOption = await AsyncStorage.getItem(STORAGE_KEY_HOLE_OPTION);
       const option = storedOption || '18';
       setHoleOption(option);
-      const activeHoles = getHolesForOption(option);
+      const activeHoles = getHolesForOption(option, courseHoles);
       setHoles(activeHoles);
       console.log('[ScoringContext] Loaded hole option:', option, 'holes:', activeHoles.length);
 
@@ -105,8 +116,11 @@ export const [ScoringProvider, useScoring] = createContextHook(() => {
         setAdvancedDataEnabled(JSON.parse(storedAdvanced));
         console.log('[ScoringContext] Advanced data enabled:', JSON.parse(storedAdvanced));
       }
+
+      setIsLoaded(true);
     } catch (e) {
       console.log('[ScoringContext] Error loading setup data:', e);
+      setIsLoaded(true);
     }
   };
 
@@ -451,7 +465,7 @@ export const [ScoringProvider, useScoring] = createContextHook(() => {
     getScoreForHole,
     allScores,
     setInputStep,
-    courseName: MOCK_COURSE.name,
+    courseName,
     supabaseRoundId,
     completeSupabaseRound,
     advancedDataEnabled,
@@ -471,7 +485,7 @@ export const [ScoringProvider, useScoring] = createContextHook(() => {
     showScoreboard, setShowScoreboard, setScore, setFairwayData,
     setGreenData, setExtraShotData, goToNextHole, goToPrevHole, goToHole,
     goBackStep, clearHoleScore, getScoreForHole, allScores, setInputStep,
-    completeSupabaseRound, advancedDataEnabled, playerScores,
+    courseName, completeSupabaseRound, advancedDataEnabled, playerScores,
     currentScoringPlayerIndex, currentScoringPlayer, allScoringPlayers,
     isCreatorScoring, getPlayerTotalScore, getPlayerTotalPar,
     getPlayerHolesPlayed, getPlayerHoleScore, moveToNextScoringPlayer,
