@@ -709,42 +709,6 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
             </View>
           )}
 
-          {savedSessions.length > 0 && (
-            <View style={styles.categorySection}>
-              <View style={styles.categoryHeaderRow}>
-                <View style={[styles.categoryDot, { backgroundColor: '#FF8C32' }]} />
-                <Text style={styles.categoryTitle}>Sessions</Text>
-              </View>
-              {savedSessions.map((session) => {
-                const sessionDrills = savedDrills.filter(d => session.drillIds.includes(d.id));
-                return (
-                  <TouchableOpacity
-                    key={session.id}
-                    style={styles.drillCard}
-                    activeOpacity={0.7}
-                  >
-                    <LinearGradient
-                      colors={['rgba(255,255,255,0.14)', 'rgba(255,255,255,0.04)']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.drillCardGradient}
-                    >
-                      <View style={styles.drillCardInner}>
-                        <View style={styles.drillCardContent}>
-                          <Text style={styles.drillCardName}>{session.name}</Text>
-                          <Text style={styles.drillCardMeta}>
-                            {sessionDrills.length} drill{sessionDrills.length !== 1 ? 's' : ''} · {sessionDrills.map(d => d.name).join(', ')}
-                          </Text>
-                        </View>
-                        <ChevronRight size={20} color="rgba(255,255,255,0.5)" />
-                      </View>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          )}
-
           {orderedCategories.length > 0 ? (
             orderedCategories.map((category) => (
               <View key={category} style={styles.categorySection}>
@@ -788,7 +752,7 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
               </View>
             ))
           ) : (
-            savedSessions.length === 0 && savedSensorDrills.length === 0 && (
+            savedSensorDrills.length === 0 && (
               <View style={styles.emptyState}>
                 <Dumbbell size={36} color="rgba(255,255,255,0.35)" />
                 <Text style={styles.emptyTitle}>No drills yet</Text>
