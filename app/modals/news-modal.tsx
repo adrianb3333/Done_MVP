@@ -1,22 +1,100 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, Image, ActivityIndicator } from 'react-native';
 import { Newspaper, Play } from 'lucide-react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useQuery } from '@tanstack/react-query';
+import { sanityFetch, sanityImageUrl } from '@/lib/sanity';
 
 const SEGMENTS = ['News', 'Onboarding', 'Tutorials'] as const;
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+interface SanityPost {
+  _id: string;
+  title: string;
+  caption?: string;
+  mainImage?: {
+    asset: {
+      _ref: string;
+    };
+  };
+  _createdAt: string;
+}
+
 function NewsContent() {
-  return (
-    <ScrollView style={styles.contentScroll} contentContainerStyle={styles.contentContainer}>
-      <View style={styles.emptyState}>
-        <Newspaper size={48} color="#333" />
-        <Text style={styles.emptyTitle}>News</Text>
-        <Text style={styles.emptySubtitle}>Latest updates and announcements will appear here</Text>
+  const { data: posts, isLoading, isError, refetch } = useQuery<SanityPost[]>({
+    queryKey: ['sanity-news-posts'],
+    queryFn: () =>
+      sanityFetch<SanityPost[]>(
+        `*[_type == "post" && tabLocation == "news"] | order(_createdAt desc) { _id, title, caption, mainImage, _createdAt }`
+      ),
+  });
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#FFFFFF" />
       </View>
+    );
+  }
+
+  if (isError) {
+    return (
+      <ScrollView style={styles.contentScroll} contentContainerStyle={styles.contentContainer}>
+        <View style={styles.emptyState}>
+          <Newspaper size={48} color="#333" />
+          <Text style={styles.emptyTitle}>Something went wrong</Text>
+          <Text style={styles.emptySubtitle}>Could not load news. Pull down to retry.</Text>
+          <TouchableOpacity onPress={() => refetch()} style={styles.retryButton} activeOpacity={0.7}>
+            <Text style={styles.retryText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    );
+  }
+
+  if (!posts || posts.length === 0) {
+    return (
+      <ScrollView style={styles.contentScroll} contentContainerStyle={styles.contentContainer}>
+        <View style={styles.emptyState}>
+          <Newspaper size={48} color="#333" />
+          <Text style={styles.emptyTitle}>News</Text>
+          <Text style={styles.emptySubtitle}>Latest updates and announcements will appear here</Text>
+        </View>
+      </ScrollView>
+    );
+  }
+
+  return (
+    <ScrollView style={styles.contentScroll} contentContainerStyle={styles.newsListContainer}>
+      {posts.map((post) => {
+        const imageUrl = post.mainImage?.asset?._ref
+          ? sanityImageUrl(post.mainImage.asset._ref)
+          : null;
+
+        return (
+          <View key={post._id} style={styles.newsCard}>
+            {imageUrl ? (
+              <Image source={{ uri: imageUrl }} style={styles.newsCardImage} resizeMode="cover" />
+            ) : null}
+            <View style={styles.newsCardBody}>
+              <Text style={styles.newsCardTitle} numberOfLines={2}>{post.title}</Text>
+              {post.caption ? (
+                <Text style={styles.newsCardCaption} numberOfLines={3}>{post.caption}</Text>
+              ) : null}
+              <Text style={styles.newsCardDate}>
+                {new Date(post._createdAt).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                })}
+              </Text>
+            </View>
+          </View>
+        );
+      })}
     </ScrollView>
   );
 }
@@ -279,6 +357,59 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center' as const,
     lineHeight: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  retryButton: {
+    marginTop: 16,
+    backgroundColor: '#2A2A2A',
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#FFFFFF',
+  },
+  newsListContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 40,
+  },
+  newsCard: {
+    backgroundColor: '#141414',
+    borderRadius: 14,
+    overflow: 'hidden' as const,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#1F1F1F',
+  },
+  newsCardImage: {
+    width: '100%' as const,
+    height: 180,
+  },
+  newsCardBody: {
+    padding: 14,
+    gap: 6,
+  },
+  newsCardTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+  },
+  newsCardCaption: {
+    fontSize: 13,
+    color: '#999',
+    lineHeight: 19,
+  },
+  newsCardDate: {
+    fontSize: 11,
+    color: '#555',
+    marginTop: 4,
   },
   onboardingContainer: {
     paddingHorizontal: 24,
