@@ -93,6 +93,67 @@ export async function getGolfCourseDetail(courseId: number): Promise<GolfCourseD
   }
 }
 
+function haversineDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+export function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  return haversineDistanceKm(lat1, lon1, lat2, lon2);
+}
+
+export async function searchNearbyCourses(lat: number, lon: number): Promise<GolfCourseSearchResult[]> {
+  try {
+    console.log('[GolfCourseAPI] Searching nearby courses for:', lat, lon);
+    const geoResp = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&accept-language=en`,
+      { headers: { 'User-Agent': 'GolfersCrib/1.0' } }
+    );
+    const geoData = await geoResp.json();
+    const city = geoData.address?.city || geoData.address?.town || geoData.address?.municipality || geoData.address?.village || '';
+    const state = geoData.address?.state || '';
+    const country = geoData.address?.country || '';
+    console.log('[GolfCourseAPI] Reverse geocoded to:', city, state, country);
+
+    let results: GolfCourseSearchResult[] = [];
+
+    if (city) {
+      results = await searchGolfCourses(city);
+      console.log('[GolfCourseAPI] City search results:', results.length);
+    }
+
+    if (results.length === 0 && state) {
+      results = await searchGolfCourses(state);
+      console.log('[GolfCourseAPI] State search results:', results.length);
+    }
+
+    if (results.length === 0 && country) {
+      results = await searchGolfCourses(country);
+      console.log('[GolfCourseAPI] Country search results:', results.length);
+    }
+
+    if (results.length === 0) {
+      results = await searchGolfCourses('golf club');
+      console.log('[GolfCourseAPI] Fallback search results:', results.length);
+    }
+
+    results.sort((a, b) => {
+      const distA = haversineDistanceKm(lat, lon, a.location?.latitude ?? 0, a.location?.longitude ?? 0);
+      const distB = haversineDistanceKm(lat, lon, b.location?.latitude ?? 0, b.location?.longitude ?? 0);
+      return distA - distB;
+    });
+
+    return results;
+  } catch (e) {
+    console.log('[GolfCourseAPI] Nearby search error:', e);
+    return [];
+  }
+}
+
 export function getDefaultMaleTee(course: GolfCourseDetail): GolfCourseTee | null {
   const maleTees = course.tees?.male;
   if (maleTees && maleTees.length > 0) {

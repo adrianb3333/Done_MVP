@@ -159,16 +159,12 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange }: GPSTabProps) 
 
   const holeCoordinates = useMemo(() => {
     if (!courseLocation?.latitude || !courseLocation?.longitude) return [];
-    const baseLat = courseLocation.latitude;
-    const baseLon = courseLocation.longitude;
-    const baseCoord: Coordinate = { latitude: baseLat, longitude: baseLon };
+    const baseCoord: Coordinate = { latitude: courseLocation.latitude, longitude: courseLocation.longitude };
 
-    return holes.map((hole, idx) => {
-      const bearingOffset = (idx * 20) % 360;
-      const teeOffset = idx * 150;
-      const tee = offsetCoordinate(baseCoord, bearingOffset, teeOffset);
-      const greenDist = hole.distance > 0 ? hole.distance * 0.9144 : 350;
-      const green = offsetCoordinate(tee, bearingOffset + 10, greenDist);
+    return holes.map((hole) => {
+      const tee = baseCoord;
+      const greenDistMeters = hole.distance > 0 ? hole.distance * 0.9144 : 350;
+      const green = offsetCoordinate(tee, 0, greenDistMeters);
       return { tee, green, hole };
     });
   }, [courseLocation, holes]);

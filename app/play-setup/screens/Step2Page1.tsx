@@ -64,14 +64,20 @@ export default function Step2Page1() {
       const storedPlayers = await AsyncStorage.getItem(STORAGE_KEY_PLAYERS);
       if (storedPlayers) {
         setPlayers(JSON.parse(storedPlayers));
+      } else {
+        setPlayers([]);
       }
       const storedCourse = await AsyncStorage.getItem(STORAGE_KEY_COURSE);
       if (storedCourse) {
         setSelectedCourse(JSON.parse(storedCourse));
+      } else {
+        setSelectedCourse(null);
       }
       const storedHoleOption = await AsyncStorage.getItem(STORAGE_KEY_HOLE_OPTION);
       if (storedHoleOption) {
         setHoleOptionState(storedHoleOption as HoleOption);
+      } else {
+        setHoleOptionState('18');
       }
     } catch (e) {
       console.log('[Step2Page1] Error loading selections:', e);

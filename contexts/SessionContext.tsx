@@ -3,6 +3,16 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const PLAY_SETUP_KEYS = [
+  'play_setup_selected_players',
+  'play_setup_selected_course',
+  'play_setup_course_holes',
+  'play_setup_course_location',
+  'play_setup_hole_option',
+  'play_round_private',
+  'play_setup_advanced_data',
+];
+
 export type SessionType = 'play' | 'practice' | null;
 export type SessionState = 'idle' | 'setup' | 'active' | 'minimized';
 
@@ -73,6 +83,10 @@ export const [SessionProvider, useSession] = createContextHook<SessionContextVal
     setSessionState('setup');
     setSetupStep(1);
     if (type === 'play') {
+      console.log('[Session] Clearing previous round setup data');
+      AsyncStorage.multiRemove(PLAY_SETUP_KEYS).catch((e) => {
+        console.log('[Session] Error clearing setup data:', e);
+      });
       router.push('/play-setup/step1' as any);
     } else {
       router.push('/practice-setup/step1' as any);
