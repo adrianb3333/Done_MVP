@@ -117,17 +117,15 @@ export default function ProfileCard({
     if (!user) return;
     console.log('[ProfileCard] Opening chat with:', user.username);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.push({
+      pathname: '/modals/chat-conversation-modal',
+      params: {
+        otherUserId: user.id,
+        otherUsername: user.username || user.display_name || 'User',
+        otherAvatar: user.avatar_url || '',
+      },
+    });
     onClose();
-    setTimeout(() => {
-      router.push({
-        pathname: '/modals/chat-conversation-modal',
-        params: {
-          otherUserId: user.id,
-          otherUsername: user.username || user.display_name || 'User',
-          otherAvatar: user.avatar_url || '',
-        },
-      });
-    }, 350);
   }, [user, onClose, router]);
 
   if (!user) return null;

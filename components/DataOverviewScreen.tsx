@@ -1731,8 +1731,11 @@ const DETAIL_SEGMENTS: { key: DetailsSegment; label: string }[] = [
   { key: 'thegame', label: 'The Game' },
 ];
 
+type ScreenMode = 'data' | 'battle';
+
 export default function DataOverviewScreen() {
   const [activeTab, setActiveTab] = useState<DataTab>('stats');
+  const [screenMode, setScreenMode] = useState<ScreenMode>('data');
   const { openSidebar, navigateTo, dataOverviewInitialTab, clearDataOverviewInitialTab, dataOverviewInitialStatsSegment, clearDataOverviewInitialStatsSegment } = useAppNavigation();
   const insets = useSafeAreaInsets();
 
@@ -1809,17 +1812,16 @@ export default function DataOverviewScreen() {
   const scrollHeaderValue = useMemo(() => ({ onScroll: onHeaderScroll, contentPaddingTop }), [onHeaderScroll, contentPaddingTop]);
 
   const renderHeaderTitle = () => {
-    if (activeTab === 'sg') {
-      return (
-        <View style={styles.sgHeaderTitleRow}>
-          <Text style={styles.headerTitle}>Strokes Gained</Text>
-          <TouchableOpacity onPress={() => setShowHandicapPicker(true)} activeOpacity={0.7} style={styles.vsHeaderBtn}>
-            <Text style={styles.vsHeaderIcon}>🆚</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-    return <Text style={styles.headerTitle}>{tabs.find(t => t.key === activeTab)?.label ?? 'Stats'}</Text>;
+    return (
+      <TouchableOpacity
+        onPress={() => setScreenMode(prev => prev === 'data' ? 'battle' : 'data')}
+        activeOpacity={0.7}
+        style={styles.headerTitleToggle}
+      >
+        <Text style={styles.headerTitle}>{screenMode === 'data' ? 'Data' : 'Battle'}</Text>
+        <Text style={styles.headerToggleArrow}>▾</Text>
+      </TouchableOpacity>
+    );
   };
 
   const renderSegmentControl = () => {
@@ -1912,7 +1914,7 @@ export default function DataOverviewScreen() {
 
   return (
     <LinearGradient
-      colors={['#0F6FAF', '#3FB8E8', '#BFF3FF']}
+      colors={screenMode === 'battle' ? ['#C62828', '#E53935', '#FF5252'] : ['#0F6FAF', '#3FB8E8', '#BFF3FF']}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
       style={styles.container}
@@ -1927,8 +1929,8 @@ export default function DataOverviewScreen() {
               <Image source={require('@/assets/images/golferscrib-logo.png')} style={styles.logoIcon} resizeMode="contain" />
             </TouchableOpacity>
           </View>
-          {renderSegmentControl()}
-          {isDetailsCourses && (
+          {screenMode === 'data' && renderSegmentControl()}
+          {screenMode === 'data' && isDetailsCourses && (
             <View style={styles.headerSearchSection}>
               <View style={styles.headerSearchBar}>
                 <Search size={16} color="rgba(255,255,255,0.6)" />
@@ -1962,9 +1964,11 @@ export default function DataOverviewScreen() {
       </Animated.View>
 
       <View style={styles.body}>
-        <ScrollHeaderProvider value={scrollHeaderValue}>
-          {renderContent()}
-        </ScrollHeaderProvider>
+        {screenMode === 'data' ? (
+          <ScrollHeaderProvider value={scrollHeaderValue}>
+            {renderContent()}
+          </ScrollHeaderProvider>
+        ) : null}
       </View>
 
       <Modal
@@ -2057,6 +2061,16 @@ const styles = StyleSheet.create({
   logoIcon: {
     width: 32,
     height: 20,
+  },
+  headerTitleToggle: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 4,
+  },
+  headerToggleArrow: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    marginTop: 1,
   },
   sgHeaderTitleRow: {
     flexDirection: 'row' as const,

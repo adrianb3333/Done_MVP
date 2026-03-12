@@ -16,6 +16,7 @@ import { useProfile, UserProfile } from '@/contexts/ProfileContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import ProfileCard from '@/components/ProfileCard';
 import * as Haptics from 'expo-haptics';
+import { useChat } from '@/contexts/ChatContext';
 
 interface Notification {
   id: string;
@@ -30,6 +31,7 @@ interface Notification {
 export default function NotificationsModal() {
   const router = useRouter();
   const { followers, isFollowing, toggleFollow } = useProfile();
+  const { hasUnreadChats, markChatsRead } = useChat();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [profileCardUser, setProfileCardUser] = useState<UserProfile | null>(null);
@@ -139,11 +141,13 @@ export default function NotificationsModal() {
             onPress={() => {
               console.log('[Notifications] Opening chat list');
               void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              markChatsRead();
               router.push('/modals/chat-list-modal');
             }}
             testID="notifications-chat-icon"
           >
             <MessageCircle size={22} color="#1A1A1A" strokeWidth={2} />
+            {hasUnreadChats && <View style={s.chatUnreadDot} />}
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -295,5 +299,16 @@ const s = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#FF3B30',
     marginLeft: 8,
+  },
+  chatUnreadDot: {
+    position: 'absolute' as const,
+    top: 2,
+    right: 2,
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    backgroundColor: '#FF3B30',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
   },
 });

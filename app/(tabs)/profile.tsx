@@ -28,6 +28,7 @@ import { useScrollHeader } from '@/hooks/useScrollHeader';
 import ProfileCard from '@/components/ProfileCard';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { supabase } from '@/lib/supabase';
+import { useChat } from '@/contexts/ChatContext';
 
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -555,7 +556,8 @@ export default function ProfileScreen() {
   const [newsRead, setNewsRead] = useState<boolean>(false);
   const [notificationsRead, setNotificationsRead] = useState<boolean>(false);
 
-  const hasUnreadNotifications = followers.length > 0 && !notificationsRead;
+  const { hasUnreadChats } = useChat();
+  const hasUnreadNotifications = (followers.length > 0 && !notificationsRead) || hasUnreadChats;
   const hasNewNews = !newsRead;
 
   useEffect(() => {

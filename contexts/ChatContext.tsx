@@ -23,6 +23,7 @@ export interface Conversation {
 
 const STORAGE_KEY = 'chat_conversations';
 const MESSAGES_KEY = 'chat_messages';
+const UNREAD_CHAT_KEY = 'chat_unread_flag';
 
 function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
@@ -35,6 +36,13 @@ function getConversationId(userA: string, userB: string): string {
 function useChatState() {
   const queryClient = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
+  const [hasUnreadChats, setHasUnreadChats] = useState<boolean>(false);
+
+  useEffect(() => {
+    void AsyncStorage.getItem(UNREAD_CHAT_KEY).then((val) => {
+      if (val === 'true') setHasUnreadChats(true);
+    });
+  }, []);
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data: { session } }) => {
@@ -122,6 +130,9 @@ function useChatState() {
       }
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(allConvs));
 
+      setHasUnreadChats(true);
+      await AsyncStorage.setItem(UNREAD_CHAT_KEY, 'true');
+
       return message;
     },
     onSuccess: () => {
@@ -138,6 +149,12 @@ function useChatState() {
     void queryClient.invalidateQueries({ queryKey: ['conversations', userId] });
   }, [queryClient, userId]);
 
+  const markChatsRead = useCallback(() => {
+    console.log('[ChatContext] Marking chats as read');
+    setHasUnreadChats(false);
+    void AsyncStorage.setItem(UNREAD_CHAT_KEY, 'false');
+  }, []);
+
   const conversations = useMemo(() => conversationsQuery.data ?? [], [conversationsQuery.data]);
 
   return useMemo(() => ({
@@ -149,7 +166,9 @@ function useChatState() {
     isSending: sendMessageMutation.isPending,
     getOrCreateConversation,
     refetchConversations,
-  }), [userId, conversations, conversationsQuery.isLoading, loadMessages, sendMessageMutation.mutateAsync, sendMessageMutation.isPending, getOrCreateConversation, refetchConversations]);
+    hasUnreadChats,
+    markChatsRead,
+  }), [userId, conversations, conversationsQuery.isLoading, loadMessages, sendMessageMutation.mutateAsync, sendMessageMutation.isPending, getOrCreateConversation, refetchConversations, hasUnreadChats, markChatsRead]);
 }
 
 export const [ChatProvider, useChat] = createContextHook(useChatState);
