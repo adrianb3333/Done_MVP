@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,11 +7,13 @@ import {
   Image,
   ScrollView,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { Trophy } from 'lucide-react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { LinearGradient } from 'expo-linear-gradient';
 import { UserProfile } from '@/contexts/ProfileContext';
+import { supabase } from '@/lib/supabase';
 
 interface TourData {
   eventsPlayed: number;
@@ -33,22 +35,72 @@ interface ProfileCardProps {
   visible: boolean;
   onClose: () => void;
   user: UserProfile | null;
-  followersCount?: number;
-  followingCount?: number;
   isFollowingUser?: boolean;
   onToggleFollow?: () => void;
+}
+
+function useUserSocialCounts(userId: string | null, visible: boolean) {
+  const [followersCount, setFollowersCount] = useState<number>(0);
+  const [followingCount, setFollowingCount] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (!userId || !visible) {
+      setFollowersCount(0);
+      setFollowingCount(0);
+      setLoading(true);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchCounts = async () => {
+      try {
+        console.log('[ProfileCard] Fetching social counts for:', userId);
+        const [followersRes, followingRes] = await Promise.all([
+          supabase
+            .from('follows')
+            .select('id', { count: 'exact', head: true })
+            .eq('following_id', userId),
+          supabase
+            .from('follows')
+            .select('id', { count: 'exact', head: true })
+            .eq('follower_id', userId),
+        ]);
+
+        if (cancelled) return;
+
+        const fwersCount = followersRes.count ?? 0;
+        const fwingCount = followingRes.count ?? 0;
+        console.log('[ProfileCard] Social counts:', { followersCount: fwersCount, followingCount: fwingCount });
+        setFollowersCount(fwersCount);
+        setFollowingCount(fwingCount);
+      } catch (err: any) {
+        console.log('[ProfileCard] Error fetching social counts:', err.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    void fetchCounts();
+    return () => { cancelled = true; };
+  }, [userId, visible]);
+
+  return { followersCount, followingCount, loading };
 }
 
 export default function ProfileCard({
   visible,
   onClose,
   user,
-  followersCount = 0,
-  followingCount = 0,
   isFollowingUser = false,
   onToggleFollow,
 }: ProfileCardProps) {
   const [tourModalVisible, setTourModalVisible] = useState<boolean>(false);
+  const { followersCount, followingCount, loading: socialLoading } = useUserSocialCounts(
+    user?.id ?? null,
+    visible
+  );
 
   if (!user) return null;
 
@@ -59,7 +111,6 @@ export default function ProfileCard({
     .toUpperCase()
     .slice(0, 2);
 
-  const randomHcp = (Math.random() * 30 + 2).toFixed(1);
   const homeCourse = 'Bro Hof Slott GC';
 
   return (
@@ -69,7 +120,12 @@ export default function ProfileCard({
       presentationStyle="fullScreen"
       onRequestClose={onClose}
     >
-      <View style={styles.container}>
+      <LinearGradient
+        colors={['#EBF4FF', '#D6EAFF', '#C2DFFF', '#EBF4FF']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.gradientBg}
+      >
         <View style={styles.header}>
           <GlassBackButton onPress={onClose} />
           <Text style={styles.headerTitle}>@{user.username}</Text>
@@ -93,15 +149,23 @@ export default function ProfileCard({
           </View>
 
           <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{followersCount}</Text>
-              <Text style={styles.statLabel}>Followers</Text>
-            </View>
-            <View style={styles.statSeparator} />
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{followingCount}</Text>
-              <Text style={styles.statLabel}>Following</Text>
-            </View>
+            {socialLoading ? (
+              <View style={styles.statsLoading}>
+                <ActivityIndicator size="small" color="rgba(0,0,0,0.3)" />
+              </View>
+            ) : (
+              <>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>{followersCount}</Text>
+                  <Text style={styles.statLabel}>Followers</Text>
+                </View>
+                <View style={styles.statSeparator} />
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>{followingCount}</Text>
+                  <Text style={styles.statLabel}>Following</Text>
+                </View>
+              </>
+            )}
           </View>
 
           <View style={styles.badgeRow}>
@@ -111,7 +175,7 @@ export default function ProfileCard({
               end={{ x: 0, y: 1 }}
               style={styles.handicapCard}
             >
-              <Text style={styles.handicapValue}>{randomHcp}</Text>
+              <Text style={styles.handicapValue}>HCP</Text>
               <Image
                 source={require('@/assets/images/sgf-icon.png')}
                 style={styles.handicapSgfIcon}
@@ -158,7 +222,7 @@ export default function ProfileCard({
             </View>
           </View>
         </ScrollView>
-      </View>
+      </LinearGradient>
 
       <Modal
         visible={tourModalVisible}
@@ -210,9 +274,8 @@ export default function ProfileCard({
 }
 
 const styles = StyleSheet.create({
-  container: {
+  gradientBg: {
     flex: 1,
-    backgroundColor: '#0A0A0A',
   },
   header: {
     flexDirection: 'row' as const,
@@ -222,11 +285,10 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 14,
   },
-
   headerTitle: {
     fontSize: 17,
     fontWeight: '700' as const,
-    color: '#EFEFEF',
+    color: '#1A1A1A',
   },
   headerSpacer: {
     width: 40,
@@ -248,16 +310,16 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     borderWidth: 3,
-    borderColor: '#2A2A2A',
+    borderColor: 'rgba(0,0,0,0.08)',
     marginBottom: 14,
   },
   avatarPlaceholder: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: 'rgba(0,0,0,0.08)',
     borderWidth: 3,
-    borderColor: '#2A2A2A',
+    borderColor: 'rgba(0,0,0,0.06)',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     marginBottom: 14,
@@ -265,24 +327,29 @@ const styles = StyleSheet.create({
   avatarInitials: {
     fontSize: 32,
     fontWeight: '700' as const,
-    color: '#1DB954',
+    color: '#1A1A1A',
   },
   homeCourse: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: '#888',
+    color: 'rgba(0,0,0,0.45)',
     marginTop: 4,
   },
   statsRow: {
     flexDirection: 'row' as const,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.06)',
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#1A1A1A',
+    borderColor: 'rgba(0,0,0,0.04)',
+  },
+  statsLoading: {
+    paddingVertical: 8,
+    alignItems: 'center' as const,
+    width: '100%' as const,
   },
   statItem: {
     flex: 1,
@@ -291,17 +358,17 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 22,
     fontWeight: '800' as const,
-    color: '#EFEFEF',
+    color: '#1A1A1A',
   },
   statLabel: {
     fontSize: 12,
-    color: '#666',
+    color: 'rgba(0,0,0,0.45)',
     marginTop: 4,
   },
   statSeparator: {
     width: 1,
     height: 30,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: 'rgba(0,0,0,0.12)',
   },
   badgeRow: {
     flexDirection: 'row' as const,
@@ -333,7 +400,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.06)',
     borderRadius: 16,
     padding: 14,
     borderWidth: 1,
@@ -347,16 +414,16 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   followButton: {
-    backgroundColor: '#1DB954',
+    backgroundColor: '#1A1A1A',
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: 'center' as const,
     marginBottom: 24,
   },
   followButtonActive: {
-    backgroundColor: '#1E1E1E',
+    backgroundColor: 'rgba(0,0,0,0.08)',
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: 'rgba(0,0,0,0.12)',
   },
   followButtonText: {
     fontSize: 16,
@@ -364,7 +431,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   followButtonTextActive: {
-    color: '#EFEFEF',
+    color: '#1A1A1A',
   },
   infoSection: {
     marginBottom: 16,
@@ -372,19 +439,19 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#EFEFEF',
+    color: '#1A1A1A',
     marginBottom: 10,
   },
   infoCard: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0,0,0,0.06)',
     borderRadius: 14,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#1A1A1A',
+    borderColor: 'rgba(0,0,0,0.04)',
   },
   infoEmpty: {
     fontSize: 14,
-    color: '#555',
+    color: 'rgba(0,0,0,0.35)',
     textAlign: 'center' as const,
   },
 });
@@ -392,22 +459,27 @@ const styles = StyleSheet.create({
 const tourStyles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-start' as const,
     paddingTop: 80,
     paddingHorizontal: 20,
   },
   modalCard: {
-    backgroundColor: '#111111',
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 24,
     borderWidth: 1,
-    borderColor: '#222222',
+    borderColor: 'rgba(0,0,0,0.06)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 8,
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: '800' as const,
-    color: '#EFEFEF',
+    color: '#1A1A1A',
     marginBottom: 20,
     textAlign: 'center' as const,
   },
@@ -418,16 +490,16 @@ const tourStyles = StyleSheet.create({
     flexDirection: 'row' as const,
     justifyContent: 'space-between' as const,
     alignItems: 'center' as const,
-    backgroundColor: '#0A0A0A',
+    backgroundColor: 'rgba(0,0,0,0.04)',
     borderRadius: 12,
     paddingVertical: 14,
     paddingHorizontal: 18,
     borderWidth: 1,
-    borderColor: '#1A1A1A',
+    borderColor: 'rgba(0,0,0,0.04)',
   },
   dataLabel: {
     fontSize: 14,
-    color: '#666',
+    color: 'rgba(0,0,0,0.45)',
     fontWeight: '600' as const,
   },
   dataValue: {
@@ -441,7 +513,7 @@ const tourStyles = StyleSheet.create({
     marginTop: 20,
   },
   closeButton: {
-    backgroundColor: '#222222',
+    backgroundColor: 'rgba(0,0,0,0.06)',
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 24,
@@ -449,6 +521,6 @@ const tourStyles = StyleSheet.create({
   closeButtonText: {
     fontSize: 14,
     fontWeight: '700' as const,
-    color: '#EFEFEF',
+    color: '#1A1A1A',
   },
 });

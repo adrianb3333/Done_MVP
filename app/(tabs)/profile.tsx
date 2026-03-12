@@ -11,10 +11,10 @@ import {
   Image,
   ScrollView,
   Dimensions,
-
+  TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { HelpCircle, X, User, Newspaper, Bluetooth, QrCode, Swords, Clock, Target, Zap, Hash, Menu, BarChart2, ChevronRight, Settings, Camera, Bell, ArrowRight, ChevronLeft } from 'lucide-react-native';
+import { HelpCircle, X, User, Newspaper, Bluetooth, QrCode, Swords, Clock, Target, Zap, Hash, Menu, BarChart2, ChevronRight, Settings, Camera, Bell, ArrowRight, ChevronLeft, Search } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -26,6 +26,7 @@ import { useAppNavigation } from '@/contexts/AppNavigationContext';
 import { useScrollHeader } from '@/hooks/useScrollHeader';
 
 import ProfileCard from '@/components/ProfileCard';
+import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { supabase } from '@/lib/supabase';
 
 
@@ -528,6 +529,22 @@ export default function ProfileScreen() {
   const [profileCardUser, setProfileCardUser] = useState<UserProfile | null>(null);
   const [profileCardVisible, setProfileCardVisible] = useState<boolean>(false);
   const [helpMenuVisible, setHelpMenuVisible] = useState<boolean>(false);
+  const [followsSearchQuery, setFollowsSearchQuery] = useState<string>('');
+  const followsUnderlineAnim = useRef(new Animated.Value(0)).current;
+
+  const FOLLOWS_SEGMENTS = ['Hitta', 'Följare', 'Följer', 'Friends'] as const;
+  const followsSegmentWidth = (SCREEN_WIDTH - 48) / FOLLOWS_SEGMENTS.length;
+  const followsUnderlineWidth = 40;
+
+  const followsTranslateX = followsUnderlineAnim.interpolate({
+    inputRange: [0, 1, 2, 3],
+    outputRange: [
+      (followsSegmentWidth - followsUnderlineWidth) / 2,
+      followsSegmentWidth + (followsSegmentWidth - followsUnderlineWidth) / 2,
+      followsSegmentWidth * 2 + (followsSegmentWidth - followsUnderlineWidth) / 2,
+      followsSegmentWidth * 3 + (followsSegmentWidth - followsUnderlineWidth) / 2,
+    ],
+  });
   const helpMenuAnim = useRef(new Animated.Value(0)).current;
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -566,9 +583,12 @@ export default function ProfileScreen() {
   const openFollowsModal = useCallback((tab: 'hitta' | 'followers' | 'following' | 'friends') => {
     console.log('[Profile] Opening follows modal, tab:', tab);
     setFollowsTab(tab);
+    setFollowsSearchQuery('');
+    const tabIndex = tab === 'hitta' ? 0 : tab === 'followers' ? 1 : tab === 'following' ? 2 : 3;
+    followsUnderlineAnim.setValue(tabIndex);
     setFollowsModalVisible(true);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  }, []);
+  }, [followsUnderlineAnim]);
 
   const handleToggleFollow = useCallback(async (targetUserId: string) => {
     console.log('[Profile] Toggle follow:', targetUserId);
@@ -587,6 +607,33 @@ export default function ProfileScreen() {
     setProfileCardVisible(true);
   }, []);
 
+  const handleFollowsTabChange = useCallback((tab: 'hitta' | 'followers' | 'following' | 'friends') => {
+    setFollowsTab(tab);
+    const tabIndex = tab === 'hitta' ? 0 : tab === 'followers' ? 1 : tab === 'following' ? 2 : 3;
+    Animated.spring(followsUnderlineAnim, {
+      toValue: tabIndex,
+      useNativeDriver: true,
+      tension: 300,
+      friction: 30,
+    }).start();
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }, [followsUnderlineAnim]);
+
+  const getFilteredListData = useCallback(() => {
+    const data = (() => {
+      if (followsTab === 'hitta') return allUsers;
+      if (followsTab === 'followers') return followers;
+      if (followsTab === 'friends') return following;
+      return following;
+    })();
+    if (!followsSearchQuery.trim()) return data;
+    const q = followsSearchQuery.toLowerCase();
+    return data.filter((u) =>
+      (u.display_name || '').toLowerCase().includes(q) ||
+      (u.username || '').toLowerCase().includes(q)
+    );
+  }, [followsTab, allUsers, followers, following, followsSearchQuery]);
+
   const renderFollowUser = useCallback(({ item }: { item: UserProfile }) => {
     const amFollowing = isFollowing(item.id);
     return (
@@ -600,7 +647,7 @@ export default function ProfileScreen() {
             <Image source={{ uri: item.avatar_url }} style={styles.followUserAvatar} />
           ) : (
             <View style={styles.followUserAvatarPlaceholder}>
-              <User size={20} color="#666" />
+              <User size={20} color="rgba(0,0,0,0.35)" />
             </View>
           )}
           <View style={styles.followUserInfo}>
@@ -621,20 +668,6 @@ export default function ProfileScreen() {
       </View>
     );
   }, [isFollowing, handleToggleFollow, isTogglingFollow, openProfileCard]);
-
-  const getModalTitle = useCallback(() => {
-    if (followsTab === 'hitta') return 'Hitta';
-    if (followsTab === 'followers') return 'Följare';
-    if (followsTab === 'friends') return 'Friends';
-    return 'Följer';
-  }, [followsTab]);
-
-  const getListData = useCallback(() => {
-    if (followsTab === 'hitta') return allUsers;
-    if (followsTab === 'followers') return followers;
-    if (followsTab === 'friends') return following;
-    return following;
-  }, [followsTab, allUsers, followers, following]);
 
   const getEmptyText = useCallback(() => {
     if (followsTab === 'hitta') return 'Inga användare hittades';
@@ -1119,82 +1152,100 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* Follows Modal - almost full screen */}
+      {/* Follows Modal - full screen with gradient */}
       <Modal
         visible={followsModalVisible}
         animationType="slide"
-        transparent
+        presentationStyle="fullScreen"
         onRequestClose={() => setFollowsModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.followsSheet}>
-            <View style={styles.modalHandle} />
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{getModalTitle()}</Text>
-              <TouchableOpacity onPress={() => setFollowsModalVisible(false)} style={styles.modalCloseBtn}>
-                <X size={22} color="#999" />
-              </TouchableOpacity>
-            </View>
+        <LinearGradient
+          colors={['#EBF4FF', '#D6EAFF', '#C2DFFF', '#EBF4FF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.followsGradient}
+        >
+          <View style={[styles.followsHeader, { paddingTop: insets.top + 8 }]}>
+            <GlassBackButton onPress={() => setFollowsModalVisible(false)} />
+            <Text style={styles.followsHeaderTitle}>Social</Text>
+            <View style={{ width: 44 }} />
+          </View>
 
-            <View style={styles.tabSwitcher}>
-              <TouchableOpacity
-                style={[styles.tabBtn, followsTab === 'hitta' && styles.tabBtnActive]}
-                onPress={() => setFollowsTab('hitta')}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.tabBtnText, followsTab === 'hitta' && styles.tabBtnTextActive]}>
-                  Hitta
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.tabBtn, followsTab === 'followers' && styles.tabBtnActive]}
-                onPress={() => setFollowsTab('followers')}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.tabBtnText, followsTab === 'followers' && styles.tabBtnTextActive]}>
-                  Följare ({followersCount})
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.tabBtn, followsTab === 'following' && styles.tabBtnActive]}
-                onPress={() => setFollowsTab('following')}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.tabBtnText, followsTab === 'following' && styles.tabBtnTextActive]}>
-                  Följer ({followingCount})
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.tabBtn, followsTab === 'friends' && styles.tabBtnActive]}
-                onPress={() => setFollowsTab('friends')}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.tabBtnText, followsTab === 'friends' && styles.tabBtnTextActive]}>
-                  Friends
-                </Text>
-              </TouchableOpacity>
+          <View style={styles.followsSegmentContainer}>
+            <View style={styles.followsSegmentRow}>
+              {(['hitta', 'followers', 'following', 'friends'] as const).map((tab, index) => {
+                const labels = [
+                  'Hitta',
+                  `Följare (${followersCount})`,
+                  `Följer (${followingCount})`,
+                  'Friends',
+                ];
+                return (
+                  <TouchableOpacity
+                    key={tab}
+                    style={[styles.followsSegmentBtn, { width: followsSegmentWidth }]}
+                    onPress={() => handleFollowsTabChange(tab)}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.followsSegmentText,
+                        followsTab === tab && styles.followsSegmentTextActive,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {labels[index]}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
+            <Animated.View
+              style={[
+                styles.followsSegmentUnderline,
+                {
+                  width: followsUnderlineWidth,
+                  transform: [{ translateX: followsTranslateX }],
+                },
+              ]}
+            />
+          </View>
 
-            {followsTab === 'hitta' && isLoadingAllUsers ? (
-              <View style={styles.emptyState}>
-                <ActivityIndicator size="small" color="#1DB954" />
-              </View>
-            ) : (
-              <FlatList
-                data={getListData()}
-                keyExtractor={(item) => item.id}
-                renderItem={renderFollowUser}
-                contentContainerStyle={styles.followsList}
-                showsVerticalScrollIndicator={false}
-                ListEmptyComponent={
-                  <View style={styles.emptyState}>
-                    <Text style={styles.emptyText}>{getEmptyText()}</Text>
-                  </View>
-                }
-              />
+          <View style={styles.followsSearchBar}>
+            <Search size={16} color="rgba(0,0,0,0.35)" />
+            <TextInput
+              style={styles.followsSearchInput}
+              placeholder="Sök användare..."
+              placeholderTextColor="rgba(0,0,0,0.35)"
+              value={followsSearchQuery}
+              onChangeText={setFollowsSearchQuery}
+            />
+            {followsSearchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setFollowsSearchQuery('')}>
+                <X size={16} color="rgba(0,0,0,0.35)" />
+              </TouchableOpacity>
             )}
           </View>
-        </View>
+
+          {followsTab === 'hitta' && isLoadingAllUsers ? (
+            <View style={styles.followsEmptyState}>
+              <ActivityIndicator size="small" color="rgba(0,0,0,0.4)" />
+            </View>
+          ) : (
+            <FlatList
+              data={getFilteredListData()}
+              keyExtractor={(item) => item.id}
+              renderItem={renderFollowUser}
+              contentContainerStyle={styles.followsList}
+              showsVerticalScrollIndicator={false}
+              ListEmptyComponent={
+                <View style={styles.followsEmptyState}>
+                  <Text style={styles.followsEmptyText}>{getEmptyText()}</Text>
+                </View>
+              }
+            />
+          )}
+        </LinearGradient>
       </Modal>
 
       {/* Last Round Popup */}
@@ -1349,7 +1400,10 @@ export default function ProfileScreen() {
       {/* Profile Card for viewing other users */}
       <ProfileCard
         visible={profileCardVisible}
-        onClose={() => setProfileCardVisible(false)}
+        onClose={() => {
+          setProfileCardVisible(false);
+          setProfileCardUser(null);
+        }}
         user={profileCardUser}
         isFollowingUser={profileCardUser ? isFollowing(profileCardUser.id) : false}
         onToggleFollow={profileCardUser ? () => handleToggleFollow(profileCardUser.id) : undefined}
@@ -2023,69 +2077,71 @@ const styles = StyleSheet.create({
     color: '#1DB954',
   },
 
-  modalOverlay: {
+  followsGradient: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'flex-end' as const,
   },
-  followsSheet: {
-    backgroundColor: 'transparent',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingBottom: 40,
-    height: SCREEN_HEIGHT * 0.88,
-  },
-  modalHandle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#333',
-    alignSelf: 'center' as const,
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  modalHeader: {
+  followsHeader: {
     flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     justifyContent: 'space-between' as const,
-    alignItems: 'center' as const,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
   },
-  modalTitle: {
-    fontSize: 18,
+  followsHeaderTitle: {
+    fontSize: 20,
     fontWeight: '700' as const,
-    color: '#EFEFEF',
+    color: '#1A1A1A',
   },
-  modalCloseBtn: {
-    padding: 4,
+  followsSegmentContainer: {
+    paddingHorizontal: 24,
+    paddingTop: 4,
+    paddingBottom: 12,
   },
-  tabSwitcher: {
+  followsSegmentRow: {
     flexDirection: 'row' as const,
-    marginHorizontal: 20,
-    backgroundColor: '#1E1E1E',
-    borderRadius: 12,
-    padding: 3,
   },
-  tabBtn: {
-    flex: 1,
+  followsSegmentBtn: {
     paddingVertical: 10,
-    borderRadius: 10,
     alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    zIndex: 1,
   },
-  tabBtnActive: {
-    backgroundColor: '#2A2A2A',
-  },
-  tabBtnText: {
+  followsSegmentText: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: '#666',
+    color: 'rgba(0,0,0,0.35)',
   },
-  tabBtnTextActive: {
-    color: '#EFEFEF',
+  followsSegmentTextActive: {
+    color: '#1A1A1A',
+    fontWeight: '700' as const,
+  },
+  followsSegmentUnderline: {
+    height: 3,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 1.5,
+  },
+  followsSearchBar: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    marginHorizontal: 20,
+    marginBottom: 8,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
+  },
+  followsSearchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: '#1A1A1A',
+    padding: 0,
   },
   followsList: {
     paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingTop: 8,
     paddingBottom: 20,
   },
   followUserRow: {
@@ -2109,7 +2165,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: 'rgba(0,0,0,0.08)',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
   },
@@ -2120,18 +2176,18 @@ const styles = StyleSheet.create({
   followUserName: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: '#EFEFEF',
+    color: '#1A1A1A',
   },
   followUserUsername: {
     fontSize: 13,
-    color: '#666',
+    color: 'rgba(0,0,0,0.45)',
     marginTop: 1,
   },
   followBtn: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     gap: 5,
-    backgroundColor: '#1DB954',
+    backgroundColor: '#1A1A1A',
     paddingHorizontal: 20,
     paddingVertical: 9,
     borderRadius: 20,
@@ -2139,9 +2195,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center' as const,
   },
   followBtnFollowing: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: 'rgba(0,0,0,0.08)',
     borderWidth: 1,
-    borderColor: '#3A3A3A',
+    borderColor: 'rgba(0,0,0,0.12)',
   },
   followBtnText: {
     fontSize: 13,
@@ -2149,15 +2205,15 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   followBtnTextFollowing: {
-    color: '#EFEFEF',
+    color: '#1A1A1A',
   },
-  emptyState: {
+  followsEmptyState: {
     paddingVertical: 40,
     alignItems: 'center' as const,
   },
-  emptyText: {
+  followsEmptyText: {
     fontSize: 15,
-    color: '#666',
+    color: 'rgba(0,0,0,0.45)',
   },
 
   lrGradientContainer: {

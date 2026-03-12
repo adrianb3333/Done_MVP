@@ -1,17 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   ActivityIndicator,
+  TouchableOpacity,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { UserPlus, Heart, MessageCircle, Bell } from 'lucide-react-native';
+import { Bell, User } from 'lucide-react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useProfile } from '@/contexts/ProfileContext';
+import { useProfile, UserProfile } from '@/contexts/ProfileContext';
 import { LinearGradient } from 'expo-linear-gradient';
+import ProfileCard from '@/components/ProfileCard';
+import * as Haptics from 'expo-haptics';
 
 interface Notification {
   id: string;
@@ -20,13 +24,16 @@ interface Notification {
   username: string;
   timestamp: string;
   read: boolean;
+  userProfile: UserProfile | null;
 }
 
 export default function NotificationsModal() {
   const router = useRouter();
-  const { followers } = useProfile();
+  const { followers, isFollowing, toggleFollow } = useProfile();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [profileCardUser, setProfileCardUser] = useState<UserProfile | null>(null);
+  const [profileCardVisible, setProfileCardVisible] = useState<boolean>(false);
 
   useEffect(() => {
     const generated: Notification[] = followers.map((f, idx) => ({
@@ -36,23 +43,29 @@ export default function NotificationsModal() {
       username: f.display_name || f.username || 'Someone',
       timestamp: new Date(Date.now() - idx * 3600000 * (idx + 1)).toISOString(),
       read: idx > 1,
+      userProfile: f,
     }));
     setNotifications(generated);
     setLoading(false);
   }, [followers]);
 
-  const getIcon = (type: Notification['type']) => {
-    switch (type) {
-      case 'follow':
-        return <UserPlus size={18} color="#2D803D" />;
-      case 'like':
-        return <Heart size={18} color="#FF5252" />;
-      case 'comment':
-        return <MessageCircle size={18} color="#0059B2" />;
-      default:
-        return <Bell size={18} color="#666" />;
+  const openProfileCard = useCallback((user: UserProfile | null) => {
+    if (!user) return;
+    console.log('[Notifications] Opening profile card for:', user.username);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setProfileCardUser(user);
+    setProfileCardVisible(true);
+  }, []);
+
+  const handleToggleFollow = useCallback(async (targetUserId: string) => {
+    console.log('[Notifications] Toggle follow:', targetUserId);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      await toggleFollow(targetUserId);
+    } catch (err: any) {
+      console.error('[Notifications] Toggle follow error:', err.message);
     }
-  };
+  }, [toggleFollow]);
 
   const formatTime = (dateStr: string) => {
     const now = new Date();
@@ -70,9 +83,19 @@ export default function NotificationsModal() {
   };
 
   const renderNotification = ({ item }: { item: Notification }) => (
-    <View style={[s.notifRow, !item.read && s.notifUnread]}>
+    <TouchableOpacity
+      style={[s.notifRow, !item.read && s.notifUnread]}
+      activeOpacity={0.7}
+      onPress={() => openProfileCard(item.userProfile)}
+    >
       <View style={s.notifIconWrap}>
-        {getIcon(item.type)}
+        {item.userProfile?.avatar_url ? (
+          <Image source={{ uri: item.userProfile.avatar_url }} style={s.notifAvatar} />
+        ) : (
+          <View style={s.notifAvatarPlaceholder}>
+            <User size={16} color="rgba(0,0,0,0.35)" />
+          </View>
+        )}
       </View>
       <View style={s.notifContent}>
         <Text style={s.notifText}>
@@ -82,7 +105,7 @@ export default function NotificationsModal() {
         <Text style={s.notifTime}>{formatTime(item.timestamp)}</Text>
       </View>
       {!item.read && <View style={s.unreadDot} />}
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -119,6 +142,17 @@ export default function NotificationsModal() {
           showsVerticalScrollIndicator={false}
         />
       )}
+
+      <ProfileCard
+        visible={profileCardVisible}
+        onClose={() => {
+          setProfileCardVisible(false);
+          setProfileCardUser(null);
+        }}
+        user={profileCardUser}
+        isFollowingUser={profileCardUser ? isFollowing(profileCardUser.id) : false}
+        onToggleFollow={profileCardUser ? () => handleToggleFollow(profileCardUser.id) : undefined}
+      />
     </LinearGradient>
   );
 }
@@ -187,13 +221,24 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.04)',
   },
   notifIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.12)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    overflow: 'hidden' as const,
+    marginRight: 14,
+  },
+  notifAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+  },
+  notifAvatarPlaceholder: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.08)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    marginRight: 14,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.06)',
   },
