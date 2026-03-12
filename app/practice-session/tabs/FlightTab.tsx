@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { StyleSheet, ImageBackground, View, ScrollView, ActivityIndicator, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from 'expo-location';
@@ -10,7 +10,8 @@ import AdjustedDistance from "@/components/WinCom/AdjustedDistance";
 import StatCard from "@/components/reusables/StatCard";
 
 import { useWeather } from "@/hooks/useWeather";
-import { calculateGolfShot, GolfCalculationResult } from "@/services/golfCalculations";
+import { useDeviceHeading } from "@/hooks/useDeviceHeading";
+import { calculateGolfShot, decomposeWind, GolfCalculationResult } from "@/services/golfCalculations";
 import Colors from '@/constants/colors';
 
 type FlightOption = 'Low' | 'Normal' | 'High';
@@ -22,35 +23,35 @@ interface FlightTabProps {
 export default function FlightTab({ externalDistance }: FlightTabProps) {
   const [ballFlight, setBallFlight] = useState<FlightOption>('Normal');
   const [distance, setDistance] = useState<string>('');
-  const [targetHeading] = useState<number>(0);
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
-  
-  const { weather, loading } = useWeather(userLocation?.lat || null, userLocation?.lon || null, targetHeading);
-  const [calculation, setCalculation] = useState<GolfCalculationResult | null>(null);
+  const deviceHeading = useDeviceHeading();
+
+  const { weather, loading } = useWeather(userLocation?.lat || null, userLocation?.lon || null, 0);
+
+  const liveWind = useMemo(() => {
+    if (!weather) return null;
+    return decomposeWind(weather.windMs, weather.windDeg, deviceHeading);
+  }, [weather, deviceHeading]);
+
+  const calculation = useMemo<GolfCalculationResult | null>(() => {
+    const distanceNum = parseFloat(distance);
+    if (!weather || !liveWind || !(distanceNum > 0)) return null;
+    return calculateGolfShot(
+      distanceNum,
+      ballFlight,
+      weather.windMs,
+      liveWind.headTail,
+      liveWind.cross,
+      weather.temp,
+      weather.pressureMb
+    );
+  }, [distance, ballFlight, weather, liveWind]);
 
   useEffect(() => {
     if (externalDistance && externalDistance > 0) {
       setDistance(String(externalDistance));
     }
   }, [externalDistance]);
-
-  useEffect(() => {
-    const distanceNum = parseFloat(distance);
-    if (weather && distanceNum > 0) {
-      const result = calculateGolfShot(
-        distanceNum,
-        ballFlight,
-        weather.windMs,
-        weather.headTail,
-        weather.cross,
-        weather.temp,
-        weather.pressureMb
-      );
-      setCalculation(result);
-    } else {
-      setCalculation(null);
-    }
-  }, [distance, ballFlight, weather]);
 
   useEffect(() => {
     if (Platform.OS === 'web') {
@@ -97,7 +98,7 @@ export default function FlightTab({ externalDistance }: FlightTabProps) {
             {loading ? (
               <ActivityIndicator size="large" color={Colors.white || "#ffffff"} />
             ) : (
-              <WindCompass windDirectionFromAPI={weather?.windDeg || 0} />
+              <WindCompass windDirectionFromAPI={weather?.windDeg || 0} deviceHeading={deviceHeading} />
             )}
           </View>
 
@@ -142,8 +143,8 @@ export default function FlightTab({ externalDistance }: FlightTabProps) {
             </View>
             
             <View style={styles.statsRow}>
-              <StatCard label="Cross" value={weather ? `${weather.cross > 0 ? '+' : ''}${weather.cross} m/s` : '-- m/s'} />
-              <StatCard label="Head/Tail" value={weather ? `${weather.headTail > 0 ? '+' : ''}${weather.headTail} m/s` : '-- m/s'} />
+              <StatCard label="Cross" value={liveWind ? `${liveWind.cross > 0 ? '+' : ''}${liveWind.cross} m/s` : '-- m/s'} />
+              <StatCard label="Head/Tail" value={liveWind ? `${liveWind.headTail > 0 ? '+' : ''}${liveWind.headTail} m/s` : '-- m/s'} />
               <StatCard label="Update" value={weather?.lastUpdated || '--:--'} />
             </View>
           </View>

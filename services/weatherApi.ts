@@ -48,13 +48,11 @@ export const fetchGolfWeather = async (
     // Standard pressure is 1013.25 mb. 1mb drop is roughly 9 meters.
     const seaLevelEstimate = Math.round((1013.25 - data.current.pressure_mb) * 9);
 
-    // Wind Vectors (Head/Tail/Cross)
-    // Formula: θ = Wind Direction - Target Heading
+    // Wind vector decomposition is now done on-device in real-time
+    // using decomposeWind() from golfCalculations.ts.
+    // We still compute a default here for consumers that don't track heading.
     const relativeAngleRad = ((windDeg - targetHeading) * Math.PI) / 180;
-    
-    // Head/Tail (Negative is Headwind, Positive is Tailwind)
     const headTail = parseFloat((windMs * Math.cos(relativeAngleRad)).toFixed(1));
-    // Crosswind (Magnitude of lateral force)
     const cross = parseFloat((windMs * Math.sin(relativeAngleRad)).toFixed(1));
 
     return {
@@ -63,12 +61,12 @@ export const fetchGolfWeather = async (
       windMs,
       gustMs,
       windDeg,
-      windDir: data.current.wind_dir, // e.g., "East"
+      windDir: data.current.wind_dir,
       seaLevel: seaLevelEstimate,
       pressureMb: data.current.pressure_mb,
-      headTail: -headTail, // Inverting so negative shows as a "Head" force
-      cross: Math.abs(cross),
-      lastUpdated: data.current.last_updated.split(' ')[1], // Returns "11:05"
+      headTail,
+      cross,
+      lastUpdated: data.current.last_updated.split(' ')[1],
     };
   } catch (error: any) {
     if (error?.name === 'AbortError') {

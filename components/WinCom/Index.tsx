@@ -1,61 +1,27 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, View, Platform } from 'react-native';
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
 import { useDerivedValue, withSpring, useSharedValue } from 'react-native-reanimated';
-import * as Location from 'expo-location';
 import CompassRing from './CompassRing';
 import WindArrow from './WindArrow';
 
-export default function WindCompass({ windDirectionFromAPI }: { windDirectionFromAPI: number }) {
-  const deviceHeading = useSharedValue(0);
+interface WindCompassProps {
+  windDirectionFromAPI: number;
+  deviceHeading?: number;
+}
 
-  useEffect(() => {
-    if (Platform.OS === 'web') {
-      console.log('[WindCompass] Web platform detected, skipping location services');
-      return;
-    }
+export default function WindCompass({ windDirectionFromAPI, deviceHeading: externalHeading = 0 }: WindCompassProps) {
+  const headingShared = useSharedValue(0);
 
-    let headingSubscription: Location.LocationSubscription | null = null;
-
-    const setupHeading = async () => {
-      try {
-        console.log('[WindCompass] Requesting location permissions...');
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        
-        if (status !== 'granted') {
-          console.warn('[WindCompass] Location permission denied');
-          return;
-        }
-
-        console.log('[WindCompass] Location permission granted, starting heading watch...');
-
-        headingSubscription = await Location.watchHeadingAsync((headingData) => {
-          const trueHeading = headingData.trueHeading;
-          console.log('[WindCompass] True heading updated:', trueHeading);
-          deviceHeading.value = trueHeading;
-        });
-
-        console.log('[WindCompass] Heading watch started successfully');
-      } catch (error) {
-        console.error('[WindCompass] Error setting up heading:', error);
-      }
-    };
-
-    setupHeading();
-
-    return () => {
-      if (headingSubscription) {
-        console.log('[WindCompass] Cleaning up heading subscription');
-        headingSubscription.remove();
-      }
-    };
-  }, [deviceHeading]);
+  React.useEffect(() => {
+    headingShared.value = externalHeading;
+  }, [externalHeading, headingShared]);
 
   const ringRotation = useDerivedValue(() => {
-    return withSpring(-deviceHeading.value, { damping: 30, stiffness: 60, mass: 1.2 });
+    return withSpring(-headingShared.value, { damping: 30, stiffness: 60, mass: 1.2 });
   });
 
   const arrowRotation = useDerivedValue(() => {
-    return withSpring(windDirectionFromAPI + 180 - deviceHeading.value, { damping: 30, stiffness: 60, mass: 1.2 });
+    return withSpring(windDirectionFromAPI + 180 - headingShared.value, { damping: 30, stiffness: 60, mass: 1.2 });
   });
 
   return (

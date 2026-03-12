@@ -43,6 +43,16 @@ export interface GolfCalculationResult {
   crosswindDrift: number;
 }
 
+export function decomposeWind(windSpeedMs: number, windDeg: number, targetHeading: number): { headTail: number; cross: number } {
+  const relativeAngleRad = ((windDeg - targetHeading) * Math.PI) / 180;
+  const longitudinal = windSpeedMs * Math.cos(relativeAngleRad);
+  const lateral = windSpeedMs * Math.sin(relativeAngleRad);
+  return {
+    headTail: parseFloat(longitudinal.toFixed(1)),
+    cross: parseFloat(lateral.toFixed(1)),
+  };
+}
+
 export function calculateGolfShot(
   distance: number,
   trajectory: FlightOption,

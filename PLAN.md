@@ -1,20 +1,36 @@
-# Fix wind arrow direction & make compass smoother
+# Live orientation-based wind adjustments for Wind & Flight tabs
 
-## What's changing
+## Summary
+Replace the static (hardcoded to 0°) target heading with a real-time device compass heading so the "Played As" / Adjusted Distance updates live as you rotate your phone.
 
-**Direction fix:**
-- The wind arrow's sharp tip will now point in the direction the wind is **blowing toward** (not where it comes from)
-- The same fix applies to the mini compass on the GPS tab
+---
 
-**Smoothness improvements:**
-- Both the compass ring and wind arrow will animate with a heavier, more fluid motion — similar to a real compass needle settling into place, no bouncing
-- Higher damping values so the needle glides instead of jittering
-- The arrow and ring will feel weighted and professional, like what you'd see in apps like Tour Wind or Garmin
+## What changes
 
-**Arrow redesign:**
-- Sleeker, more refined arrow shape — thinner with a sharper tip and a subtle tail, replacing the basic triangle
-- Slightly translucent with a soft glow effect for a premium feel
+### 1. New shared compass hook
+- A reusable hook that listens to the device compass at ~30Hz
+- Applies a **moving average filter** (last 5 readings) to smooth out jitter so the numbers don't flicker
+- Only triggers recalculation when heading changes by more than 1°
+- Falls back gracefully on web (uses 0° heading)
 
-**No changes to:**
-- Any calculation logic
-- Any layout, colors, or other UI elements
+### 2. Fix the wind vector math
+- **Current bug:** The weather API inverts the head/tail sign, causing headwinds and tailwinds to be swapped
+- **Fix:** Remove the manual negation so the formula correctly outputs:
+  - **Positive longitudinal** → Headwind → Distance **increases**
+  - **Negative longitudinal** → Tailwind → Distance **decreases**
+
+### 3. Real-time recalculation in Wind & Flight tabs
+- Both tabs currently pass a fixed `0` as the target heading — this will be replaced with the live smoothed compass heading
+- The head/tail and crosswind values are **recalculated locally** each time the heading changes (without re-fetching the weather API — only wind speed and direction from the API are needed, the vector decomposition happens on-device)
+- The Adjusted Distance, Wind breakdown stats (Cross, Head/Tail) all update instantly as the user scans the horizon
+
+### 4. Compass component reuse
+- The existing WindCompass already tracks device heading for the arrow — the new hook will be shared between the compass visual and the calculation, keeping them perfectly in sync
+
+---
+
+## What stays the same
+- All visual design, layout, colors, and UI components remain untouched
+- The ball flight toggle (Low/Normal/High) and distance input work exactly as before
+- Weather data still fetches from the same API at the same intervals
+- The compass arrow and ring animations stay the same
