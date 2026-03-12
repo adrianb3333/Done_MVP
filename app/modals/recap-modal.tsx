@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,17 +9,30 @@ import {
   Image,
   Dimensions,
   Animated,
+  ScrollView,
+  ActivityIndicator,
 } from 'react-native';
-import { X, Target, Calendar } from 'lucide-react-native';
+import { X, Target, Calendar, RefreshCw } from 'lucide-react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { generateText } from '@rork-ai/toolkit-sdk';
+import { supabase } from '@/lib/supabase';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const GOAL_STORAGE_KEY = 'coach_handicap_goal';
+const COACH_SUMMARIES_KEY = 'coach_analysis_summaries';
+
+interface CoachSummary {
+  id: string;
+  type: 'round' | 'drill';
+  text: string;
+  createdAt: string;
+  sourceId: string;
+}
 
 export default function RecapModal() {
   const insets = useSafeAreaInsets();
@@ -29,6 +42,11 @@ export default function RecapModal() {
   const [isEditingGoal, setIsEditingGoal] = useState<boolean>(false);
   const goalInputRef = useRef<TextInput>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const hasCheckedRef = useRef<boolean>(false);
+  const [summaries, setSummaries] = useState<CoachSummary[]>([]);
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [lastCheckedRoundId, setLastCheckedRoundId] = useState<string>('');
+  const [lastCheckedDrillId, setLastCheckedDrillId] = useState<string>('');
 
   const currentHandicap = 14.2;
   const yearStartHandicap = 16.8;
@@ -49,6 +67,178 @@ export default function RecapModal() {
     };
     void loadGoal();
   }, []);
+
+  useEffect(() => {
+    const loadSummaries = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(COACH_SUMMARIES_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored) as CoachSummary[];
+          setSummaries(parsed);
+          if (parsed.length > 0) {
+            const lastRoundSummary = parsed.find(s => s.type === 'round');
+            const lastDrillSummary = parsed.find(s => s.type === 'drill');
+            if (lastRoundSummary) setLastCheckedRoundId(lastRoundSummary.sourceId);
+            if (lastDrillSummary) setLastCheckedDrillId(lastDrillSummary.sourceId);
+          }
+          console.log('[Coach] Loaded summaries:', parsed.length);
+        }
+      } catch (e: any) {
+        console.log('[Coach] Error loading summaries:', e.message);
+      }
+    };
+    void loadSummaries();
+  }, []);
+
+  const generateRoundSummary = useCallback(async (roundId: string, courseName: string, scores: { hole: number; par: number; score: number; putts: number; fairway: string; gir: boolean }[]) => {
+    const goalText = savedGoal ? `The player's handicap goal is ${savedGoal}.` : 'No handicap goal is set.';
+    const totalScore = scores.reduce((a, b) => a + b.score, 0);
+    const totalPar = scores.reduce((a, b) => a + b.par, 0);
+    const totalPutts = scores.reduce((a, b) => a + b.putts, 0);
+    const girCount = scores.filter(s => s.gir).length;
+    const fwHits = scores.filter(s => s.fairway === 'hit').length;
+    const fwTotal = scores.filter(s => s.fairway !== 'n/a').length;
+    const diff = totalScore - totalPar;
+    const diffStr = diff === 0 ? 'Even par' : diff > 0 ? `+${diff}` : `${diff}`;
+
+    const prompt = `You are a golf coach AI. Analyze this completed round and give a brief, motivating summary (3-5 sentences). Compare performance to the player's goal and current handicap.\n\nCurrent handicap: ${currentHandicap}\n${goalText}\nCourse: ${courseName}\nTotal: ${totalScore} (${diffStr})\nHoles: ${scores.length}\nTotal putts: ${totalPutts}\nGIR: ${girCount}/${scores.length}\nFairways hit: ${fwHits}/${fwTotal}\n\nKeep it concise, direct, and encouraging. Mention specific strengths and one area to improve.`;
+
+    try {
+      console.log('[Coach] Generating round summary for:', roundId);
+      const text = await generateText(prompt);
+      console.log('[Coach] Round summary generated');
+      return text;
+    } catch (e: any) {
+      console.log('[Coach] Error generating round summary:', e.message);
+      return null;
+    }
+  }, [savedGoal, currentHandicap]);
+
+  const generateDrillSummary = useCallback(async (drillName: string, score: number | null, drillCount: number) => {
+    const goalText = savedGoal ? `The player's handicap goal is ${savedGoal}.` : 'No handicap goal is set.';
+
+    const prompt = `You are a golf coach AI. Analyze this completed practice drill and give a brief, motivating summary (2-4 sentences). Compare to the player's goal.\n\nCurrent handicap: ${currentHandicap}\n${goalText}\nDrill: ${drillName}\nScore: ${score ?? 'N/A'}\nTotal drills completed: ${drillCount}\n\nKeep it concise and encouraging. Mention how this practice contributes to their goal.`;
+
+    try {
+      console.log('[Coach] Generating drill summary for:', drillName);
+      const text = await generateText(prompt);
+      console.log('[Coach] Drill summary generated');
+      return text;
+    } catch (e: any) {
+      console.log('[Coach] Error generating drill summary:', e.message);
+      return null;
+    }
+  }, [savedGoal, currentHandicap]);
+
+  const saveSummary = useCallback(async (summary: CoachSummary) => {
+    try {
+      const updated = [summary, ...summaries].slice(0, 20);
+      setSummaries(updated);
+      await AsyncStorage.setItem(COACH_SUMMARIES_KEY, JSON.stringify(updated));
+      console.log('[Coach] Summary saved, total:', updated.length);
+    } catch (e: any) {
+      console.log('[Coach] Error saving summary:', e.message);
+    }
+  }, [summaries]);
+
+  const checkForNewActivity = useCallback(async () => {
+    if (isGenerating) return;
+    setIsGenerating(true);
+    console.log('[Coach] Checking for new activity...');
+
+    try {
+      const { data: latestRound, error: roundErr } = await supabase
+        .from('rounds')
+        .select('id, course_name, is_completed, created_at')
+        .eq('is_completed', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (roundErr) console.log('[Coach] Round fetch error:', roundErr.message);
+
+      if (latestRound && latestRound.id !== lastCheckedRoundId) {
+        console.log('[Coach] New completed round found:', latestRound.id);
+        setLastCheckedRoundId(latestRound.id);
+
+        const { data: holeScores, error: holeErr } = await supabase
+          .from('hole_scores')
+          .select('hole_number, par, score, putts, fairway_status, gir')
+          .eq('round_id', latestRound.id)
+          .order('hole_number', { ascending: true });
+
+        if (holeErr) console.log('[Coach] Hole scores fetch error:', holeErr.message);
+
+        if (holeScores && holeScores.length > 0) {
+          const scores = holeScores.map(h => ({
+            hole: h.hole_number,
+            par: h.par,
+            score: h.score,
+            putts: h.putts ?? 2,
+            fairway: h.fairway_status ?? 'n/a',
+            gir: h.gir ?? false,
+          }));
+
+          const text = await generateRoundSummary(latestRound.id, latestRound.course_name || 'Unknown', scores);
+          if (text) {
+            await saveSummary({
+              id: `round-${latestRound.id}`,
+              type: 'round',
+              text,
+              createdAt: new Date().toISOString(),
+              sourceId: latestRound.id,
+            });
+          }
+        }
+      }
+
+      const { data: latestDrill, error: drillErr } = await supabase
+        .from('golf_drills')
+        .select('id, drill_name, score, created_at')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (drillErr) console.log('[Coach] Drill fetch error:', drillErr.message);
+
+      if (latestDrill && latestDrill.id !== lastCheckedDrillId) {
+        console.log('[Coach] New drill found:', latestDrill.id);
+        setLastCheckedDrillId(latestDrill.id);
+
+        const { count } = await supabase
+          .from('golf_drills')
+          .select('*', { count: 'exact', head: true });
+
+        const text = await generateDrillSummary(latestDrill.drill_name, latestDrill.score, count || 0);
+        if (text) {
+          await saveSummary({
+            id: `drill-${latestDrill.id}`,
+            type: 'drill',
+            text,
+            createdAt: new Date().toISOString(),
+            sourceId: latestDrill.id,
+          });
+        }
+      }
+
+      if ((!latestRound || latestRound.id === lastCheckedRoundId) && (!latestDrill || latestDrill.id === lastCheckedDrillId)) {
+        console.log('[Coach] No new activity found');
+      }
+    } catch (e: any) {
+      console.log('[Coach] Error checking activity:', e.message);
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [isGenerating, lastCheckedRoundId, lastCheckedDrillId, generateRoundSummary, generateDrillSummary, saveSummary]);
+
+  useEffect(() => {
+    if (hasCheckedRef.current) return;
+    hasCheckedRef.current = true;
+    const timer = setTimeout(() => {
+      void checkForNewActivity();
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [checkForNewActivity]);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -157,8 +347,56 @@ export default function RecapModal() {
           <Text style={styles.weekDayText}>
             {new Date().toLocaleDateString('en-US', { weekday: 'long' })}
           </Text>
+          <Text style={styles.weekDayDot}> · </Text>
+          <Text style={styles.coachAnalysisHeader}>Coach Analysis</Text>
         </View>
       </Animated.View>
+
+      <ScrollView style={styles.summariesScroll} contentContainerStyle={styles.summariesContent} showsVerticalScrollIndicator={false}>
+        {isGenerating && summaries.length === 0 && (
+          <View style={styles.generatingRow}>
+            <ActivityIndicator size="small" color="#5BBF7F" />
+            <Text style={styles.generatingText}>Analyzing your latest activity...</Text>
+          </View>
+        )}
+
+        {summaries.length === 0 && !isGenerating && (
+          <View style={styles.emptySummaries}>
+            <Text style={styles.emptySummariesText}>Complete a round or drill to get your first coach analysis</Text>
+          </View>
+        )}
+
+        {summaries.map((summary) => {
+          const dateStr = new Date(summary.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+          return (
+            <View key={summary.id} style={styles.summaryCard}>
+              <View style={styles.summaryCardHeader}>
+                <View style={[styles.summaryTypeBadge, summary.type === 'round' ? styles.summaryTypeBadgeRound : styles.summaryTypeBadgeDrill]}>
+                  <Text style={styles.summaryTypeBadgeText}>{summary.type === 'round' ? 'Round' : 'Drill'}</Text>
+                </View>
+                <Text style={styles.summaryDate}>{dateStr}</Text>
+              </View>
+              <Text style={styles.summaryText}>{summary.text}</Text>
+            </View>
+          );
+        })}
+
+        {summaries.length > 0 && (
+          <TouchableOpacity
+            style={styles.refreshBtn}
+            onPress={() => void checkForNewActivity()}
+            activeOpacity={0.7}
+            disabled={isGenerating}
+          >
+            {isGenerating ? (
+              <ActivityIndicator size="small" color="#5BBF7F" />
+            ) : (
+              <RefreshCw size={16} color="#5BBF7F" />
+            )}
+            <Text style={styles.refreshBtnText}>{isGenerating ? 'Analyzing...' : 'Check for new activity'}</Text>
+          </TouchableOpacity>
+        )}
+      </ScrollView>
 
       <Modal
         visible={goalModalVisible}
@@ -473,6 +711,98 @@ const styles = StyleSheet.create({
   weekDayDot: {
     fontSize: 16,
     fontWeight: '700' as const,
+    color: 'rgba(255,255,255,0.4)',
+  },
+  coachAnalysisHeader: {
+    fontSize: 16,
+    fontWeight: '800' as const,
+    color: '#5BBF7F',
+  },
+  summariesScroll: {
+    flex: 1,
+    marginTop: 18,
+  },
+  summariesContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+  },
+  generatingRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 10,
+    paddingVertical: 20,
+    justifyContent: 'center' as const,
+  },
+  generatingText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.5)',
+  },
+  emptySummaries: {
+    paddingVertical: 40,
+    alignItems: 'center' as const,
+  },
+  emptySummariesText: {
+    fontSize: 14,
+    fontWeight: '500' as const,
+    color: 'rgba(255,255,255,0.35)',
+    textAlign: 'center' as const,
+    lineHeight: 20,
+  },
+  summaryCard: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  summaryCardHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    marginBottom: 10,
+  },
+  summaryTypeBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  summaryTypeBadgeRound: {
+    backgroundColor: 'rgba(91,191,127,0.2)',
+  },
+  summaryTypeBadgeDrill: {
+    backgroundColor: 'rgba(79,195,247,0.2)',
+  },
+  summaryTypeBadgeText: {
+    fontSize: 11,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+  },
+  summaryDate: {
+    fontSize: 11,
+    fontWeight: '500' as const,
+    color: 'rgba(255,255,255,0.35)',
+  },
+  summaryText: {
+    fontSize: 14,
+    fontWeight: '500' as const,
+    color: '#FFFFFF',
+    lineHeight: 21,
+  },
+  refreshBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 8,
+    paddingVertical: 14,
+    marginTop: 4,
+  },
+  refreshBtnText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
     color: 'rgba(255,255,255,0.4)',
   },
 });
