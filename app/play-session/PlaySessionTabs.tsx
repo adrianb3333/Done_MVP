@@ -6,18 +6,18 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronDown, Target, Navigation, Wind, Brain, Database } from 'lucide-react-native';
+import { ChevronDown, Target, Navigation, Wind, FileText, Database } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useSession } from '@/contexts/SessionContext';
 import { ScoringProvider, useScoring } from '@/contexts/ScoringContext';
 import ScoreTab from './tabs/ScoreTab';
 import GPSTab from './tabs/GPSTab';
 import WindTab from './tabs/WindTab';
-import MindTab from './tabs/MindTab';
+import InfoTab from './tabs/InfoTab';
 import DataTab from './tabs/DataTab';
 import ScoreBoard from '@/components/ScoBoa/ScoreBoard';
 
-type PlayTab = 'score' | 'gps' | 'wind' | 'mind' | 'data';
+type PlayTab = 'score' | 'gps' | 'wind' | 'info' | 'data';
 
 const GREEN_ACTIVE = '#3D954D';
 const GREEN_INACTIVE = '#9BBFA2';
@@ -26,7 +26,7 @@ const tabConfig: { key: PlayTab; label: string; icon: React.ReactNode }[] = [
   { key: 'score', label: 'Score', icon: <Target size={20} /> },
   { key: 'gps', label: 'GPS', icon: <Navigation size={20} /> },
   { key: 'wind', label: 'Wind', icon: <Wind size={20} /> },
-  { key: 'mind', label: 'Mind', icon: <Brain size={20} /> },
+  { key: 'info', label: 'Info', icon: <FileText size={20} /> },
   { key: 'data', label: 'Data', icon: <Database size={20} /> },
 ];
 
@@ -35,7 +35,7 @@ function PlaySessionContent() {
   const [gpsDistance, setGpsDistance] = useState<number>(0);
   const [gpsAdjustedDistance, setGpsAdjustedDistance] = useState<number>(0);
   const { minimizeSession } = useSession();
-  const { showScoreboard, setShowScoreboard } = useScoring();
+  const { showScoreboard, setShowScoreboard, currentHoleIndex, goToHole } = useScoring();
   const insets = useSafeAreaInsets();
 
   const handleGpsDistanceChange = useCallback((dist: number) => {
@@ -46,15 +46,20 @@ function PlaySessionContent() {
     setGpsAdjustedDistance(dist);
   }, []);
 
+  const handleGpsHoleChange = useCallback((index: number) => {
+    console.log('[PlaySession] GPS hole changed to index:', index);
+    goToHole(index);
+  }, [goToHole]);
+
   const isScoreTab = activeTab === 'score';
-  const isFullScreenTab = activeTab === 'wind' || activeTab === 'mind' || activeTab === 'gps' || activeTab === 'data';
+  const isFullScreenTab = activeTab === 'wind' || activeTab === 'info' || activeTab === 'gps' || activeTab === 'data';
 
   const renderContent = () => {
     switch (activeTab) {
       case 'score': return <ScoreTab />;
-      case 'gps': return <GPSTab onDistanceChange={handleGpsDistanceChange} onAdjustedDistanceChange={handleGpsAdjustedDistanceChange} />;
+      case 'gps': return <GPSTab onDistanceChange={handleGpsDistanceChange} onAdjustedDistanceChange={handleGpsAdjustedDistanceChange} externalHoleIndex={currentHoleIndex} onHoleIndexChange={handleGpsHoleChange} />;
       case 'wind': return <WindTab externalDistance={gpsDistance} externalAdjustedDistance={gpsAdjustedDistance} />;
-      case 'mind': return <MindTab />;
+      case 'info': return <InfoTab />;
       case 'data': return <DataTab />;
     }
   };

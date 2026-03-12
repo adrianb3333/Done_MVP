@@ -116,9 +116,11 @@ const miniStyles = StyleSheet.create({
 interface GPSTabProps {
   onDistanceChange?: (distance: number) => void;
   onAdjustedDistanceChange?: (adjustedDistance: number) => void;
+  externalHoleIndex?: number;
+  onHoleIndexChange?: (index: number) => void;
 }
 
-function NativeMap({ onDistanceChange, onAdjustedDistanceChange }: GPSTabProps) {
+function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleIndex, onHoleIndexChange }: GPSTabProps) {
   const MapView = require('react-native-maps').default;
   const { Marker, Polyline } = require('react-native-maps');
   const insets = useSafeAreaInsets();
@@ -127,7 +129,7 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange }: GPSTabProps) 
   const mapRef = useRef<any>(null);
   const locationWatchRef = useRef<any>(null);
   const [courseLocation, setCourseLocation] = useState<CourseLocation | null>(null);
-  const [currentGpsHoleIndex, setCurrentGpsHoleIndex] = useState<number>(0);
+  const [currentGpsHoleIndex, setCurrentGpsHoleIndex] = useState<number>(externalHoleIndex ?? 0);
   const [startPosition, setStartPosition] = useState<Coordinate | null>(null);
   const [endPosition, setEndPosition] = useState<Coordinate | null>(null);
   const [dragEnd, setDragEnd] = useState<Coordinate | null>(null);
@@ -240,29 +242,47 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange }: GPSTabProps) 
     }
   }, [loading, currentGpsHole]);
 
-  const handleNextHole = useCallback(() => {
-    if (currentGpsHoleIndex < holes.length - 1) {
+  useEffect(() => {
+    if (externalHoleIndex !== undefined && externalHoleIndex !== currentGpsHoleIndex) {
+      console.log('[GPSTab] Syncing to external hole index:', externalHoleIndex);
       setPinnedPosition(null);
       setGpsActive(false);
       if (locationWatchRef.current) {
         locationWatchRef.current.remove();
         locationWatchRef.current = null;
       }
-      setCurrentGpsHoleIndex((prev) => prev + 1);
+      setCurrentGpsHoleIndex(externalHoleIndex);
     }
-  }, [currentGpsHoleIndex, holes.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalHoleIndex]);
+
+  const handleNextHole = useCallback(() => {
+    if (currentGpsHoleIndex < holes.length - 1) {
+      const nextIdx = currentGpsHoleIndex + 1;
+      setPinnedPosition(null);
+      setGpsActive(false);
+      if (locationWatchRef.current) {
+        locationWatchRef.current.remove();
+        locationWatchRef.current = null;
+      }
+      setCurrentGpsHoleIndex(nextIdx);
+      onHoleIndexChange?.(nextIdx);
+    }
+  }, [currentGpsHoleIndex, holes.length, onHoleIndexChange]);
 
   const handlePrevHole = useCallback(() => {
     if (currentGpsHoleIndex > 0) {
+      const prevIdx = currentGpsHoleIndex - 1;
       setPinnedPosition(null);
       setGpsActive(false);
       if (locationWatchRef.current) {
         locationWatchRef.current.remove();
         locationWatchRef.current = null;
       }
-      setCurrentGpsHoleIndex((prev) => prev - 1);
+      setCurrentGpsHoleIndex(prevIdx);
+      onHoleIndexChange?.(prevIdx);
     }
-  }, [currentGpsHoleIndex]);
+  }, [currentGpsHoleIndex, onHoleIndexChange]);
 
   const startLocationWatch = useCallback(async (pinCoord: Coordinate) => {
     const Loc = require('expo-location');
@@ -572,11 +592,11 @@ function WebMapFallback() {
   );
 }
 
-export default function GPSTab({ onDistanceChange, onAdjustedDistanceChange }: GPSTabProps) {
+export default function GPSTab({ onDistanceChange, onAdjustedDistanceChange, externalHoleIndex, onHoleIndexChange }: GPSTabProps) {
   if (Platform.OS === 'web') {
     return <WebMapFallback />;
   }
-  return <NativeMap onDistanceChange={onDistanceChange} onAdjustedDistanceChange={onAdjustedDistanceChange} />;
+  return <NativeMap onDistanceChange={onDistanceChange} onAdjustedDistanceChange={onAdjustedDistanceChange} externalHoleIndex={externalHoleIndex} onHoleIndexChange={onHoleIndexChange} />;
 }
 
 const styles = StyleSheet.create({

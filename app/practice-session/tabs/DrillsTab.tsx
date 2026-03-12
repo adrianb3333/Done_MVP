@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { Plus, Layers, CalendarDays, CalendarCheck, Swords, Dumbbell, ChevronRight, Clock as ClockIcon, ChevronDown } from "lucide-react-native";
+import { Plus, Layers, CalendarDays, Swords, Dumbbell, ChevronRight, Clock as ClockIcon, ChevronDown, Trash2, BarChart3 } from "lucide-react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import Clock from "@/components/ovningar/Clock";
@@ -44,6 +44,7 @@ import { Star } from "lucide-react-native";
 import { useSensor } from '@/contexts/SensorContext';
 import SensorLockOverlay from '@/components/SensorLockOverlay';
 import { saveDrillResult, fetchDrillHistory } from '@/services/drillResultsService';
+import DrillProgressScreen from '@/components/drills/DrillProgressScreen';
 
 interface DrillsTabProps {
   onDrillActiveChange?: (active: boolean) => void;
@@ -99,7 +100,8 @@ type ScreenState =
   | 'history'
   | 'drillOverview'
   | 'activeDrill'
-  | 'drillSummary';
+  | 'drillSummary'
+  | 'progressChart';
 
 export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSetPin, onNavigateToTab, onClearPin }: DrillsTabProps) {
   const { isPaired: sensorsPaired } = useSensor();
@@ -113,6 +115,9 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
   const [activeDrillItem, setActiveDrillItem] = useState<DrillItem | null>(null);
   const [lastDrillResult, setLastDrillResult] = useState<DrillResult | null>(null);
   const [_dataLoaded, setDataLoaded] = useState(false);
+  const [isDeleteMode, setIsDeleteMode] = useState(false);
+  const [selectedForDelete, setSelectedForDelete] = useState<Set<string>>(new Set());
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
@@ -298,6 +303,43 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
     setCurrentScreen('main');
     onDrillActiveChange?.(false);
   }, [onDrillActiveChange]);
+
+  const toggleDeleteMode = useCallback(() => {
+    if (isDeleteMode) {
+      setIsDeleteMode(false);
+      setSelectedForDelete(new Set());
+    } else {
+      setIsDeleteMode(true);
+      setSelectedForDelete(new Set());
+    }
+  }, [isDeleteMode]);
+
+  const toggleDrillForDelete = useCallback((drillId: string) => {
+    setSelectedForDelete(prev => {
+      const next = new Set(prev);
+      if (next.has(drillId)) {
+        next.delete(drillId);
+      } else {
+        next.add(drillId);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleDeleteConfirmed = useCallback(() => {
+    console.log('Deleting drills:', Array.from(selectedForDelete));
+    const updatedDrills = savedDrills.filter(d => !selectedForDelete.has(d.id));
+    setSavedDrills(updatedDrills);
+    void persistDrills(updatedDrills);
+
+    const updatedSensorDrills = savedSensorDrills.filter(d => !selectedForDelete.has(d.id));
+    setSavedSensorDrills(updatedSensorDrills);
+    void persistSensorDrills(updatedSensorDrills);
+
+    setShowDeleteConfirm(false);
+    setIsDeleteMode(false);
+    setSelectedForDelete(new Set());
+  }, [selectedForDelete, savedDrills, savedSensorDrills, persistDrills, persistSensorDrills]);
 
   const handleSetPin = useCallback(() => {
     console.log('Set Pin pressed - clearing old pin and navigating to Position tab');
@@ -505,6 +547,17 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
     );
   }
 
+  if (currentScreen === 'progressChart') {
+    return (
+      <DrillProgressScreen
+        onBack={() => setCurrentScreen('main')}
+        drills={savedDrills}
+        sensorDrills={savedSensorDrills}
+        history={drillHistory}
+      />
+    );
+  }
+
   return (
     <View style={styles.mainContainer}>
       <LinearGradient
@@ -617,34 +670,42 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
                 <Star size={14} color="#FFD700" fill="#FFD700" />
                 <Text style={styles.categoryTitle}>Sensor Drills</Text>
               </View>
-              {savedSensorDrills.map((drill) => (
-                <TouchableOpacity
-                  key={drill.id}
-                  style={styles.drillCard}
-                  activeOpacity={0.7}
-                  onPress={() => handleDrillCardPress(drill)}
-                >
-                  <LinearGradient
-                    colors={['rgba(255,215,0,0.18)', 'rgba(255,215,0,0.06)']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.drillCardGradient}
+              {savedSensorDrills.map((drill) => {
+                const isSelectedForDel = selectedForDelete.has(drill.id);
+                return (
+                  <TouchableOpacity
+                    key={drill.id}
+                    style={[styles.drillCard, isDeleteMode && isSelectedForDel && styles.drillCardDeleteSelected]}
+                    activeOpacity={0.7}
+                    onPress={() => isDeleteMode ? toggleDrillForDelete(drill.id) : handleDrillCardPress(drill)}
                   >
-                    <View style={styles.drillCardInner}>
-                      <View style={styles.drillCardContent}>
-                        <View style={styles.sensorDrillNameRow}>
-                          <Star size={14} color="#FFD700" fill="#FFD700" />
-                          <Text style={styles.drillCardName}>{drill.name}</Text>
+                    <LinearGradient
+                      colors={['rgba(255,215,0,0.18)', 'rgba(255,215,0,0.06)']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.drillCardGradient}
+                    >
+                      <View style={styles.drillCardInner}>
+                        {isDeleteMode && (
+                          <View style={[styles.deleteCheckbox, isSelectedForDel && styles.deleteCheckboxActive]}>
+                            {isSelectedForDel && <View style={styles.deleteCheckboxDot} />}
+                          </View>
+                        )}
+                        <View style={styles.drillCardContent}>
+                          <View style={styles.sensorDrillNameRow}>
+                            <Star size={14} color="#FFD700" fill="#FFD700" />
+                            <Text style={styles.drillCardName}>{drill.name}</Text>
+                          </View>
+                          <Text style={styles.drillCardMeta}>
+                            {drill.category} · {drill.rounds} rounds · {drill.targetsPerRound} targets · {drill.totalShots} shots
+                          </Text>
                         </View>
-                        <Text style={styles.drillCardMeta}>
-                          {drill.category} · {drill.rounds} rounds · {drill.targetsPerRound} targets · {drill.totalShots} shots
-                        </Text>
+                        {!isDeleteMode && <ChevronRight size={20} color="rgba(255,255,255,0.5)" />}
                       </View>
-                      <ChevronRight size={20} color="rgba(255,255,255,0.5)" />
-                    </View>
-                  </LinearGradient>
-                </TouchableOpacity>
-              ))}
+                    </LinearGradient>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           )}
 
@@ -691,31 +752,39 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
                   <View style={[styles.categoryDot, { backgroundColor: CATEGORY_COLORS[category] || '#2D6A4F' }]} />
                   <Text style={styles.categoryTitle}>{category}</Text>
                 </View>
-                {drillsByCategory[category].map((drill) => (
-                  <TouchableOpacity
-                    key={drill.id}
-                    style={styles.drillCard}
-                    activeOpacity={0.7}
-                    onPress={() => handleDrillCardPress(drill)}
-                  >
-                    <LinearGradient
-                      colors={['rgba(255,255,255,0.14)', 'rgba(255,255,255,0.04)']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.drillCardGradient}
+                {drillsByCategory[category].map((drill) => {
+                  const isSelectedForDel = selectedForDelete.has(drill.id);
+                  return (
+                    <TouchableOpacity
+                      key={drill.id}
+                      style={[styles.drillCard, isDeleteMode && isSelectedForDel && styles.drillCardDeleteSelected]}
+                      activeOpacity={0.7}
+                      onPress={() => isDeleteMode ? toggleDrillForDelete(drill.id) : handleDrillCardPress(drill)}
                     >
-                      <View style={styles.drillCardInner}>
-                        <View style={styles.drillCardContent}>
-                          <Text style={styles.drillCardName}>{drill.name}</Text>
-                          <Text style={styles.drillCardMeta}>
-                            {drill.rounds} rounds · {drill.targetsPerRound} targets · {drill.totalShots} shots
-                          </Text>
+                      <LinearGradient
+                        colors={['rgba(255,255,255,0.14)', 'rgba(255,255,255,0.04)']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.drillCardGradient}
+                      >
+                        <View style={styles.drillCardInner}>
+                          {isDeleteMode && (
+                            <View style={[styles.deleteCheckbox, isSelectedForDel && styles.deleteCheckboxActive]}>
+                              {isSelectedForDel && <View style={styles.deleteCheckboxDot} />}
+                            </View>
+                          )}
+                          <View style={styles.drillCardContent}>
+                            <Text style={styles.drillCardName}>{drill.name}</Text>
+                            <Text style={styles.drillCardMeta}>
+                              {drill.rounds} rounds · {drill.targetsPerRound} targets · {drill.totalShots} shots
+                            </Text>
+                          </View>
+                          {!isDeleteMode && <ChevronRight size={20} color="rgba(255,255,255,0.5)" />}
                         </View>
-                        <ChevronRight size={20} color="rgba(255,255,255,0.5)" />
-                      </View>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                ))}
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             ))
           ) : (
@@ -729,7 +798,54 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
               </View>
             )
           )}
+          {isDeleteMode && selectedForDelete.size > 0 && (
+            <TouchableOpacity
+              style={styles.deleteConfirmBtn}
+              onPress={() => setShowDeleteConfirm(true)}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={['#FF5252', '#D32F2F']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.deleteConfirmGradient}
+              >
+                <Trash2 size={18} color="#FFFFFF" />
+                <Text style={styles.deleteConfirmText}>Delete {selectedForDelete.size} drill{selectedForDelete.size !== 1 ? 's' : ''}</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
         </ScrollView>
+
+        {showDeleteConfirm && (
+          <View style={styles.deleteOverlay}>
+            <LinearGradient
+              colors={['#0059B2', '#1075E3', '#1C8CFF']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.deleteModal}
+            >
+              <Text style={styles.deleteModalTitle}>Delete Drills?</Text>
+              <Text style={styles.deleteModalMessage}>Are you sure you want to delete {selectedForDelete.size} drill{selectedForDelete.size !== 1 ? 's' : ''}? This cannot be undone.</Text>
+              <View style={styles.deleteModalButtons}>
+                <TouchableOpacity
+                  style={styles.deleteModalCancel}
+                  onPress={() => setShowDeleteConfirm(false)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.deleteModalCancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.deleteModalConfirm}
+                  onPress={handleDeleteConfirmed}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.deleteModalConfirmText}>Delete</Text>
+                </TouchableOpacity>
+              </View>
+            </LinearGradient>
+          </View>
+        )}
 
         <Animated.View
           style={[
@@ -763,9 +879,16 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
             <TouchableOpacity
               style={styles.headerIconBtnTransparent}
               activeOpacity={0.7}
-              onPress={() => setCurrentScreen('history')}
+              onPress={() => setCurrentScreen('progressChart')}
             >
-              <CalendarCheck size={22} color="#FFFFFF" />
+              <BarChart3 size={22} color="#FFFFFF" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.headerIconBtnTransparent}
+              activeOpacity={0.7}
+              onPress={toggleDeleteMode}
+            >
+              <Trash2 size={22} color={isDeleteMode ? '#FF5252' : '#FFFFFF'} />
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -1032,5 +1155,108 @@ const styles = StyleSheet.create({
     height: 38,
     alignItems: "center" as const,
     justifyContent: "center" as const,
+  },
+  drillCardDeleteSelected: {
+    borderColor: '#FF5252',
+    borderWidth: 2,
+  },
+  deleteCheckbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.4)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginRight: 10,
+  },
+  deleteCheckboxActive: {
+    borderColor: '#FF5252',
+    backgroundColor: 'rgba(255,82,82,0.2)',
+  },
+  deleteCheckboxDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#FF5252',
+  },
+  deleteConfirmBtn: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    borderRadius: 14,
+    overflow: 'hidden' as const,
+  },
+  deleteConfirmGradient: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    paddingVertical: 14,
+    gap: 8,
+    borderRadius: 14,
+  },
+  deleteConfirmText: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+  },
+  deleteOverlay: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    zIndex: 200,
+  },
+  deleteModal: {
+    borderRadius: 20,
+    padding: 28,
+    width: '80%' as unknown as number,
+    alignItems: 'center' as const,
+    overflow: 'hidden' as const,
+  },
+  deleteModalTitle: {
+    fontSize: 20,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  deleteModalMessage: {
+    fontSize: 15,
+    color: '#FFFFFF',
+    textAlign: 'center' as const,
+    marginBottom: 24,
+    lineHeight: 21,
+  },
+  deleteModalButtons: {
+    flexDirection: 'row' as const,
+    gap: 12,
+    width: '100%' as unknown as number,
+  },
+  deleteModalCancel: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center' as const,
+  },
+  deleteModalCancelText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#000000',
+  },
+  deleteModalConfirm: {
+    flex: 1,
+    backgroundColor: '#FF5252',
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center' as const,
+  },
+  deleteModalConfirmText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
   },
 });

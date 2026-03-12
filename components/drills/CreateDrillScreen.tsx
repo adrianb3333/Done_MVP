@@ -281,7 +281,8 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   chipSelected: {
-    borderColor: '#1B5E20',
+    borderColor: '#2E7D32',
+    backgroundColor: '#2E7D32',
   },
   chipDot: {
     width: 10,
@@ -294,7 +295,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   chipTextSelected: {
-    color: '#1B5E20',
+    color: '#FFFFFF',
     fontWeight: '700' as const,
   },
   optionRow: {

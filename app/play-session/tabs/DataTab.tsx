@@ -1,14 +1,15 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Modal } from 'react-native';
-import { Clock, Thermometer, Timer, Flag, X } from 'lucide-react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal } from 'react-native';
+import { Flag, X } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Colors from '@/constants/colors';
 import { useSession } from '@/contexts/SessionContext';
 import { useScoring } from '@/contexts/ScoringContext';
-import { fetchGolfWeather } from '@/services/weatherApi';
 import { computeRoundStats, getToParString, pctOf } from '@/services/statsHelper';
 import { useSensor } from '@/contexts/SensorContext';
 import SensorLockOverlay from '@/components/SensorLockOverlay';
+import DistancesModal from '@/app/modals/distances-modal';
+import StrokesGainedModal from '@/app/modals/strokesgained-modal';
 
 const SG_SEGMENTS: { key: string; label: string }[] = [
   { key: 'ovve', label: 'Ovve' },
@@ -35,74 +36,16 @@ const SG_TITLES: Record<string, string> = {
 };
 
 export default function DataTab() {
-  const { quitSession, sessionStartTime } = useSession();
+  const { quitSession } = useSession();
   const { allScores, holes } = useScoring();
   const { isPaired } = useSensor();
 
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
   const [showSGModal, setShowSGModal] = useState(false);
+  const [showDistancesModal, setShowDistancesModal] = useState(false);
+  const [showStrokesGainedModal, setShowStrokesGainedModal] = useState(false);
   const [sgSegment, setSgSegment] = useState<string>('ovve');
   const selectedHandicap = 'Scratch';
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [elapsed, setElapsed] = useState(0);
-  const [temperature, setTemperature] = useState<number | null>(null);
-  const clockRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  useEffect(() => {
-    clockRef.current = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => {
-      if (clockRef.current) clearInterval(clockRef.current);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!sessionStartTime) return;
-    const tick = () => {
-      setElapsed(Math.floor((Date.now() - sessionStartTime) / 1000));
-    };
-    tick();
-    timerRef.current = setInterval(tick, 1000);
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [sessionStartTime]);
-
-  useEffect(() => {
-    const loadTemp = async () => {
-      try {
-        if (Platform.OS !== 'web' || navigator.geolocation) {
-          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 });
-          });
-          const result = await fetchGolfWeather(position.coords.latitude, position.coords.longitude);
-          if (result) setTemperature(result.temp);
-        }
-      } catch {
-        const result = await fetchGolfWeather(59.33, 18.07);
-        if (result) setTemperature(result.temp);
-      }
-    };
-    void loadTemp();
-  }, []);
-
-  const formatTime = (date: Date) => {
-    const h = date.getHours().toString().padStart(2, '0');
-    const m = date.getMinutes().toString().padStart(2, '0');
-    return `${h}:${m}`;
-  };
-
-  const formatElapsed = (seconds: number) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    if (hrs > 0) {
-      return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
 
   const stats = useMemo(() => computeRoundStats(allScores, holes), [allScores, holes]);
   const toParStr = getToParString(stats.scoreToPar);
@@ -117,31 +60,31 @@ export default function DataTab() {
       end={{ x: 0, y: 1 }}
       style={styles.container}
     >
-      <View style={styles.dataHeaderRow}>
-        <View style={{ flex: 1 }} />
+      <View style={styles.topCardsRow}>
         <TouchableOpacity
-          style={styles.sgButton}
+          style={styles.topCard}
+          onPress={() => setShowDistancesModal(true)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.topCardTitle}>Distances</Text>
+          <Text style={styles.topCardSubtext}>(Sensors Needed)</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.topCard}
+          onPress={() => setShowStrokesGainedModal(true)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.topCardTitle}>Short Game (SG)</Text>
+          <Text style={styles.topCardSubtext}>(Sensors Needed)</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.topCard}
           onPress={() => setShowSGModal(true)}
           activeOpacity={0.7}
         >
-          <Text style={styles.sgButtonText}>Strokes Gained</Text>
+          <Text style={styles.topCardTitle}>Strokes Gained</Text>
+          <Text style={styles.topCardSubtext}>(Sensors Needed)</Text>
         </TouchableOpacity>
-      </View>
-      <View style={styles.miniStatsRow}>
-        <View style={styles.miniStat}>
-          <Clock size={13} color="#FFFFFF" />
-          <Text style={styles.miniStatValue}>{formatTime(currentTime)}</Text>
-        </View>
-        <View style={styles.miniStat}>
-          <Thermometer size={13} color="#FFFFFF" />
-          <Text style={styles.miniStatValue}>
-            {temperature !== null ? `${temperature}°C` : '--°C'}
-          </Text>
-        </View>
-        <View style={styles.miniStat}>
-          <Timer size={13} color="#FFFFFF" />
-          <Text style={styles.miniStatValue}>{formatElapsed(elapsed)}</Text>
-        </View>
       </View>
 
       {stats.holesPlayed === 0 ? (
@@ -175,6 +118,24 @@ export default function DataTab() {
       <TouchableOpacity style={styles.quitButton} onPress={() => setShowQuitConfirm(true)}>
         <Text style={styles.quitText}>Quit Round</Text>
       </TouchableOpacity>
+
+      <Modal
+        visible={showDistancesModal}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setShowDistancesModal(false)}
+      >
+        <DistancesModal onClose={() => setShowDistancesModal(false)} />
+      </Modal>
+
+      <Modal
+        visible={showStrokesGainedModal}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setShowStrokesGainedModal(false)}
+      >
+        <StrokesGainedModal onClose={() => setShowStrokesGainedModal(false)} />
+      </Modal>
 
       <Modal
         visible={showSGModal}
@@ -518,29 +479,34 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 0,
   },
-  miniStatsRow: {
+  topCardsRow: {
     flexDirection: 'row' as const,
-    justifyContent: 'space-between' as const,
     gap: 6,
     marginBottom: 12,
     paddingHorizontal: 12,
   },
-  miniStat: {
+  topCard: {
     flex: 1,
-    flexDirection: 'row' as const,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    gap: 5,
-    backgroundColor: 'rgba(0,0,0,0.25)',
-    borderRadius: 8,
-    paddingVertical: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+    borderColor: 'rgba(255,255,255,0.18)',
   },
-  miniStatValue: {
-    fontSize: 12,
-    fontWeight: '600' as const,
+  topCardTitle: {
+    fontSize: 11,
+    fontWeight: '800' as const,
     color: '#FFFFFF',
+    textAlign: 'center' as const,
+  },
+  topCardSubtext: {
+    fontSize: 8,
+    color: 'rgba(255,255,255,0.5)',
+    fontWeight: '500' as const,
+    marginTop: 2,
   },
   emptyState: {
     flex: 1,

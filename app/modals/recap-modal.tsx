@@ -193,9 +193,9 @@ export default function RecapModal() {
       }
 
       const { data: latestDrill, error: drillErr } = await supabase
-        .from('golf_drills')
-        .select('id, drill_name, score, created_at')
-        .order('created_at', { ascending: false })
+        .from('drill_results')
+        .select('id, drill_name, percentage, category, total_hits, total_shots, completed_at')
+        .order('completed_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
@@ -206,10 +206,10 @@ export default function RecapModal() {
         setLastCheckedDrillId(latestDrill.id);
 
         const { count } = await supabase
-          .from('golf_drills')
+          .from('drill_results')
           .select('*', { count: 'exact', head: true });
 
-        const text = await generateDrillSummary(latestDrill.drill_name, latestDrill.score, count || 0);
+        const text = await generateDrillSummary(latestDrill.drill_name, latestDrill.percentage, count || 0);
         if (text) {
           await saveSummary({
             id: `drill-${latestDrill.id}`,
