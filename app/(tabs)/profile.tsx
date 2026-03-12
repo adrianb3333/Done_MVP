@@ -1245,6 +1245,17 @@ export default function ProfileScreen() {
               }
             />
           )}
+
+          <ProfileCard
+            visible={profileCardVisible}
+            onClose={() => {
+              setProfileCardVisible(false);
+              setProfileCardUser(null);
+            }}
+            user={profileCardUser}
+            isFollowingUser={profileCardUser ? isFollowing(profileCardUser.id) : false}
+            onToggleFollow={profileCardUser ? () => handleToggleFollow(profileCardUser.id) : undefined}
+          />
         </LinearGradient>
       </Modal>
 
