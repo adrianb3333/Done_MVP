@@ -9,7 +9,7 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
-import { Trophy, MessageSquare } from 'lucide-react-native';
+import { Trophy, MessageSquare, UserPlus, UserCheck } from 'lucide-react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { LinearGradient } from 'expo-linear-gradient';
 import { UserProfile } from '@/contexts/ProfileContext';
@@ -44,12 +44,14 @@ interface ProfileCardProps {
 function useUserSocialCounts(userId: string | null, visible: boolean) {
   const [followersCount, setFollowersCount] = useState<number>(0);
   const [followingCount, setFollowingCount] = useState<number>(0);
+  const [friendsCount, setFriendsCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     if (!userId || !visible) {
       setFollowersCount(0);
       setFollowingCount(0);
+      setFriendsCount(0);
       setLoading(true);
       return;
     }
@@ -62,11 +64,11 @@ function useUserSocialCounts(userId: string | null, visible: boolean) {
         const [followersRes, followingRes] = await Promise.all([
           supabase
             .from('follows')
-            .select('id', { count: 'exact', head: true })
+            .select('following_id', { count: 'exact' })
             .eq('following_id', userId),
           supabase
             .from('follows')
-            .select('id', { count: 'exact', head: true })
+            .select('follower_id', { count: 'exact' })
             .eq('follower_id', userId),
         ]);
 
@@ -74,9 +76,15 @@ function useUserSocialCounts(userId: string | null, visible: boolean) {
 
         const fwersCount = followersRes.count ?? 0;
         const fwingCount = followingRes.count ?? 0;
-        console.log('[ProfileCard] Social counts:', { followersCount: fwersCount, followingCount: fwingCount });
+
+        const followerIds = (followersRes.data ?? []).map((r: any) => r.following_id);
+        const followingIds = (followingRes.data ?? []).map((r: any) => r.follower_id);
+        const mutualCount = followerIds.filter((id: string) => followingIds.includes(id)).length;
+
+        console.log('[ProfileCard] Social counts:', { followers: fwersCount, following: fwingCount, friends: mutualCount });
         setFollowersCount(fwersCount);
         setFollowingCount(fwingCount);
+        setFriendsCount(mutualCount);
       } catch (err: any) {
         console.log('[ProfileCard] Error fetching social counts:', err.message);
       } finally {
@@ -88,7 +96,7 @@ function useUserSocialCounts(userId: string | null, visible: boolean) {
     return () => { cancelled = true; };
   }, [userId, visible]);
 
-  return { followersCount, followingCount, loading };
+  return { followersCount, followingCount, friendsCount, loading };
 }
 
 export default function ProfileCard({
@@ -100,7 +108,7 @@ export default function ProfileCard({
 }: ProfileCardProps) {
   const router = useRouter();
   const [tourModalVisible, setTourModalVisible] = useState<boolean>(false);
-  const { followersCount, followingCount, loading: socialLoading } = useUserSocialCounts(
+  const { followersCount, followingCount, friendsCount, loading: socialLoading } = useUserSocialCounts(
     user?.id ?? null,
     visible
   );
@@ -157,58 +165,66 @@ export default function ProfileCard({
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          <View style={styles.topRow}>
-            <View style={styles.profileCardHalf}>
-              <View style={styles.miniAvatarSection}>
-                {user.avatar_url ? (
-                  <Image source={{ uri: user.avatar_url }} style={styles.miniAvatar} />
-                ) : (
-                  <View style={styles.miniAvatarPlaceholder}>
-                    <Text style={styles.miniAvatarInitials}>{initials}</Text>
-                  </View>
-                )}
-                <Text style={styles.miniHomeCourse} numberOfLines={1}>{homeCourse}</Text>
+          <View style={styles.avatarSection}>
+            {user.avatar_url ? (
+              <Image source={{ uri: user.avatar_url }} style={styles.avatar} />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Text style={styles.avatarInitials}>{initials}</Text>
               </View>
+            )}
+            <Text style={styles.displayName}>{user.display_name || user.username}</Text>
+            <Text style={styles.homeCourse}>{homeCourse}</Text>
+          </View>
 
-              <View style={styles.miniStatsRow}>
-                {socialLoading ? (
-                  <ActivityIndicator size="small" color="rgba(0,0,0,0.3)" />
+          <View style={styles.statsRow}>
+            {socialLoading ? (
+              <ActivityIndicator size="small" color="rgba(0,0,0,0.3)" />
+            ) : (
+              <>
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>{followersCount}</Text>
+                  <Text style={styles.statLabel}>Followers</Text>
+                </View>
+                <View style={styles.statSep} />
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>{followingCount}</Text>
+                  <Text style={styles.statLabel}>Following</Text>
+                </View>
+                <View style={styles.statSep} />
+                <View style={styles.statItem}>
+                  <Text style={styles.statNumber}>{friendsCount}</Text>
+                  <Text style={styles.statLabel}>Friends</Text>
+                </View>
+              </>
+            )}
+          </View>
+
+          <View style={styles.actionRow}>
+            {onToggleFollow && (
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={onToggleFollow}
+                activeOpacity={0.7}
+              >
+                {isFollowingUser ? (
+                  <UserCheck size={16} color="#1A1A1A" strokeWidth={2.2} />
                 ) : (
-                  <>
-                    <View style={styles.miniStatItem}>
-                      <Text style={styles.miniStatNumber}>{followersCount}</Text>
-                      <Text style={styles.miniStatLabel}>Followers</Text>
-                    </View>
-                    <View style={styles.miniStatSep} />
-                    <View style={styles.miniStatItem}>
-                      <Text style={styles.miniStatNumber}>{followingCount}</Text>
-                      <Text style={styles.miniStatLabel}>Following</Text>
-                    </View>
-                  </>
+                  <UserPlus size={16} color="#1A1A1A" strokeWidth={2.2} />
                 )}
-              </View>
-
-              {onToggleFollow && (
-                <TouchableOpacity
-                  style={[styles.miniFollowBtn, isFollowingUser && styles.miniFollowBtnActive]}
-                  onPress={onToggleFollow}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[styles.miniFollowBtnText, isFollowingUser && styles.miniFollowBtnTextActive]}>
-                    {isFollowingUser ? 'Following' : 'Follow'}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-
+                <Text style={styles.actionButtonText}>
+                  {isFollowingUser ? 'Following' : 'Follow'}
+                </Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
-              style={styles.textButtonHalf}
-              activeOpacity={0.8}
+              style={styles.actionButton}
+              activeOpacity={0.7}
               onPress={handleOpenChat}
               testID="profile-card-text-button"
             >
-              <MessageSquare size={28} color="#1A1A1A" strokeWidth={2} />
-              <Text style={styles.textButtonLabel}>Text</Text>
+              <MessageSquare size={16} color="#1A1A1A" strokeWidth={2.2} />
+              <Text style={styles.actionButtonText}>Text</Text>
             </TouchableOpacity>
           </View>
 
@@ -331,124 +347,101 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingBottom: 40,
+    alignItems: 'center' as const,
   },
-  topRow: {
-    flexDirection: 'row' as const,
-    gap: 12,
+  avatarSection: {
+    alignItems: 'center' as const,
+    paddingTop: 20,
     marginBottom: 16,
-    paddingTop: 10,
   },
-  profileCardHalf: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    borderRadius: 20,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.06)',
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
-  miniAvatarSection: {
-    alignItems: 'center' as const,
-    marginBottom: 10,
-  },
-  miniAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    borderWidth: 2,
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 3,
     borderColor: 'rgba(0,0,0,0.08)',
-    marginBottom: 6,
+    marginBottom: 12,
   },
-  miniAvatarPlaceholder: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  avatarPlaceholder: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: 'rgba(0,0,0,0.08)',
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: 'rgba(0,0,0,0.06)',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
-    marginBottom: 6,
+    marginBottom: 12,
   },
-  miniAvatarInitials: {
-    fontSize: 20,
-    fontWeight: '700' as const,
+  avatarInitials: {
+    fontSize: 36,
+    fontWeight: '800' as const,
     color: '#1A1A1A',
   },
-  miniHomeCourse: {
-    fontSize: 11,
+  displayName: {
+    fontSize: 20,
+    fontWeight: '800' as const,
+    color: '#1A1A1A',
+    marginBottom: 4,
+  },
+  homeCourse: {
+    fontSize: 13,
     fontWeight: '600' as const,
     color: 'rgba(0,0,0,0.4)',
-    textAlign: 'center' as const,
   },
-  miniStatsRow: {
+  statsRow: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    marginBottom: 10,
-    gap: 8,
+    marginBottom: 18,
+    gap: 16,
+    minHeight: 44,
   },
-  miniStatItem: {
+  statItem: {
     alignItems: 'center' as const,
   },
-  miniStatNumber: {
-    fontSize: 16,
+  statNumber: {
+    fontSize: 20,
     fontWeight: '800' as const,
     color: '#1A1A1A',
   },
-  miniStatLabel: {
-    fontSize: 9,
+  statLabel: {
+    fontSize: 11,
     color: 'rgba(0,0,0,0.4)',
-    marginTop: 1,
+    marginTop: 2,
   },
-  miniStatSep: {
+  statSep: {
     width: 1,
-    height: 20,
+    height: 28,
     backgroundColor: 'rgba(0,0,0,0.12)',
   },
-  miniFollowBtn: {
-    backgroundColor: '#1A1A1A',
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    alignItems: 'center' as const,
-    width: '100%' as const,
-  },
-  miniFollowBtnActive: {
-    backgroundColor: 'rgba(0,0,0,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.12)',
-  },
-  miniFollowBtnText: {
-    fontSize: 13,
-    fontWeight: '700' as const,
-    color: '#fff',
-  },
-  miniFollowBtnTextActive: {
-    color: '#1A1A1A',
-  },
-  textButtonHalf: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    borderRadius: 20,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.06)',
+  actionRow: {
+    flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    gap: 10,
+    gap: 14,
+    marginBottom: 24,
   },
-  textButtonLabel: {
-    fontSize: 17,
-    fontWeight: '800' as const,
+  actionButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    borderRadius: 20,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0,0,0,0.15)',
+  },
+  actionButtonText: {
+    fontSize: 14,
+    fontWeight: '700' as const,
     color: '#1A1A1A',
-    letterSpacing: 0.3,
   },
   badgeRow: {
     flexDirection: 'row' as const,
     gap: 10,
     marginBottom: 16,
+    width: '100%' as const,
   },
   handicapCard: {
     flex: 1,
@@ -490,6 +483,7 @@ const styles = StyleSheet.create({
   },
   infoSection: {
     marginBottom: 16,
+    width: '100%' as const,
   },
   infoTitle: {
     fontSize: 16,

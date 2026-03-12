@@ -82,11 +82,25 @@ export default function NotificationsModal() {
     return date.toLocaleDateString('sv-SE', { month: 'short', day: 'numeric' });
   };
 
+  const markAsRead = useCallback((notifId: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notifId ? { ...n, read: true } : n))
+    );
+  }, []);
+
+  const handleNotificationPress = useCallback((item: Notification) => {
+    if (!item.read) {
+      console.log('[Notifications] Marking as read:', item.id);
+      markAsRead(item.id);
+    }
+    openProfileCard(item.userProfile);
+  }, [markAsRead, openProfileCard]);
+
   const renderNotification = ({ item }: { item: Notification }) => (
     <TouchableOpacity
       style={[s.notifRow, !item.read && s.notifUnread]}
       activeOpacity={0.7}
-      onPress={() => openProfileCard(item.userProfile)}
+      onPress={() => handleNotificationPress(item)}
     >
       <View style={s.notifIconWrap}>
         {item.userProfile?.avatar_url ? (

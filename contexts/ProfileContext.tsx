@@ -1,5 +1,5 @@
 import createContextHook from '@nkzw/create-context-hook';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
@@ -17,11 +17,17 @@ export interface FollowRelation {
   created_at: string;
 }
 
+const avatarCacheMap = new Map<string, string>();
+
 function resolveAvatarUrl(avatarPath: string | null): string | null {
   if (!avatarPath) return null;
   if (avatarPath.startsWith('http')) return avatarPath;
+  const cached = avatarCacheMap.get(avatarPath);
+  if (cached) return cached;
   const { data } = supabase.storage.from('avatars').getPublicUrl(avatarPath);
-  return data.publicUrl + '?t=' + Date.now();
+  const url = data.publicUrl;
+  avatarCacheMap.set(avatarPath, url);
+  return url;
 }
 
 function resolveProfileAvatar(profile: UserProfile): UserProfile {
@@ -33,7 +39,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    void supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('[ProfileContext] Got session user:', session?.user?.id);
       setUserId(session?.user?.id ?? null);
     });
@@ -155,7 +161,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       return data as UserProfile;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['profile', userId] });
     },
   });
 
@@ -181,8 +187,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['followers', userId] });
-      queryClient.invalidateQueries({ queryKey: ['following', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['followers', userId] });
+      void queryClient.invalidateQueries({ queryKey: ['following', userId] });
     },
   });
 
@@ -215,7 +221,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     }
 
     console.log('[ProfileContext] Profile avatar_url updated to:', fileName);
-    queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+    void queryClient.invalidateQueries({ queryKey: ['profile', userId] });
     return fileName;
   }, [userId, queryClient]);
 
@@ -223,7 +229,14 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     return (followingQuery.data ?? []).some((u) => u.id === targetUserId);
   }, [followingQuery.data]);
 
-  return {
+  const refetchAll = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+    void queryClient.invalidateQueries({ queryKey: ['followers', userId] });
+    void queryClient.invalidateQueries({ queryKey: ['following', userId] });
+    void queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+  }, [queryClient, userId]);
+
+  return useMemo(() => ({
     userId,
     profile: profileQuery.data ?? null,
     isLoading: profileQuery.isLoading,
@@ -239,11 +252,21 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     isFollowing,
     allUsers: allUsersQuery.data ?? [],
     isLoadingAllUsers: allUsersQuery.isLoading,
-    refetchAll: () => {
-      queryClient.invalidateQueries({ queryKey: ['profile', userId] });
-      queryClient.invalidateQueries({ queryKey: ['followers', userId] });
-      queryClient.invalidateQueries({ queryKey: ['following', userId] });
-      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
-    },
-  };
+    refetchAll,
+  }), [
+    userId,
+    profileQuery.data,
+    profileQuery.isLoading,
+    followersQuery.data,
+    followingQuery.data,
+    updateProfileMutation.mutateAsync,
+    updateProfileMutation.isPending,
+    toggleFollowMutation.mutateAsync,
+    toggleFollowMutation.isPending,
+    uploadAvatar,
+    isFollowing,
+    allUsersQuery.data,
+    allUsersQuery.isLoading,
+    refetchAll,
+  ]);
 });
