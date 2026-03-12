@@ -535,8 +535,11 @@ export default function ProfileScreen() {
 
   const randomHcp = useRef((Math.random() * 20 + 5).toFixed(1)).current;
 
-  const hasUnreadNotifications = followers.length > 0;
-  const hasNewNews = true;
+  const [newsRead, setNewsRead] = useState<boolean>(false);
+  const [notificationsRead, setNotificationsRead] = useState<boolean>(false);
+
+  const hasUnreadNotifications = followers.length > 0 && !notificationsRead;
+  const hasNewNews = !newsRead;
 
   useEffect(() => {
     Animated.parallel([
@@ -746,7 +749,7 @@ export default function ProfileScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.helpMenuItem}
-              onPress={() => { toggleHelpMenu(); router.push('/modals/news-modal' as any); }}
+              onPress={() => { toggleHelpMenu(); setNewsRead(true); router.push('/modals/news-modal' as any); }}
               activeOpacity={0.7}
             >
               <Newspaper size={18} color="#B0B0B0" />
@@ -764,7 +767,7 @@ export default function ProfileScreen() {
             <View style={styles.helpMenuDivider} />
             <TouchableOpacity
               style={styles.helpMenuItem}
-              onPress={() => { toggleHelpMenu(); router.push('/modals/notifications-modal' as any); }}
+              onPress={() => { toggleHelpMenu(); setNotificationsRead(true); router.push('/modals/notifications-modal' as any); }}
               activeOpacity={0.7}
             >
               <Bell size={18} color="#B0B0B0" />
