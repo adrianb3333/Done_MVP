@@ -51,11 +51,11 @@ export default function WindCompass({ windDirectionFromAPI }: { windDirectionFro
   }, [deviceHeading]);
 
   const ringRotation = useDerivedValue(() => {
-    return withSpring(-deviceHeading.value, { damping: 20, stiffness: 150 });
+    return withSpring(-deviceHeading.value, { damping: 30, stiffness: 60, mass: 1.2 });
   });
 
   const arrowRotation = useDerivedValue(() => {
-    return withSpring(windDirectionFromAPI - deviceHeading.value, { damping: 15, stiffness: 150 });
+    return withSpring(windDirectionFromAPI + 180 - deviceHeading.value, { damping: 30, stiffness: 60, mass: 1.2 });
   });
 
   return (

@@ -1,39 +1,20 @@
-# Upgrade Wind & Flight Calculations to Trackman-Based Model
+# Fix wind arrow direction & make compass smoother
 
-**What changes (calculations only — no UI or design changes)**
+## What's changing
 
-This upgrade replaces the current simple linear wind factors with professionally calibrated Trackman empirical rules and adds air density correction.
+**Direction fix:**
+- The wind arrow's sharp tip will now point in the direction the wind is **blowing toward** (not where it comes from)
+- The same fix applies to the mini compass on the GPS tab
 
----
+**Smoothness improvements:**
+- Both the compass ring and wind arrow will animate with a heavier, more fluid motion — similar to a real compass needle settling into place, no bouncing
+- Higher damping values so the needle glides instead of jittering
+- The arrow and ring will feel weighted and professional, like what you'd see in apps like Tour Wind or Garmin
 
-**New Calculation Model**
+**Arrow redesign:**
+- Sleeker, more refined arrow shape — thinner with a sharper tip and a subtle tail, replacing the basic triangle
+- Slightly translucent with a soft glow effect for a premium feel
 
-- **Headwind effect**: Adds ~1% to the required distance per 1 m/s of headwind (scaled for metric). A 5 m/s headwind on a 150m shot ≈ +7.5m adjustment.
-- **Tailwind effect**: Subtracts ~0.5% per 1 m/s of tailwind — half the headwind benefit, because the ball loses lift riding the wind.
-- **Crosswind drift**: ~0.7 meters of lateral drift per 1 m/s of crosswind, scaled by trajectory (low ball drifts less, high ball drifts more).
-- **Trajectory scaling**: Low/Normal/High ball flights still modify how much wind affects the shot, but now using percentage-based multipliers instead of flat additive factors.
-
----
-
-**Air Density Correction (new)**
-
-- The weather API already fetches pressure data — we'll now use it along with temperature to compute **air density**.
-- Formula: ρ = P / (R × T), where P = pressure in Pascals, T = temperature in Kelvin.
-- Compared to a baseline "standard day" (15°C, 1013.25 hPa), the app calculates how much thinner or thicker the air is.
-- Thinner air (hot/high altitude) = ball flies further → reduce "play" distance.
-- Thicker air (cold/low altitude) = more drag → increase "play" distance.
-- This replaces the current crude temperature-only adjustment with a proper density-based one.
-
----
-
-**Weather API Update**
-
-- Add `pressureMb` (atmospheric pressure in millibars) to the weather data returned from the API — it's already available in the API response, just not being passed through.
-
----
-
-**Files touched**
-
-- Weather data service (add pressure field)
-- Golf calculations service (new formula engine)
-- No changes to any screens, components, or UI elements — the function signature stays the same so all callers (Wind tab, Flight tab, GPS tab, Position tab) work without modification.
+**No changes to:**
+- Any calculation logic
+- Any layout, colors, or other UI elements

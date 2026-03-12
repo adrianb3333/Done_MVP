@@ -64,7 +64,7 @@ function MiniWindCompass({ windDeg, windMs }: MiniCompassProps) {
     return { x: MINI_CENTER + radius * Math.cos(rad), y: MINI_CENTER + radius * Math.sin(rad) };
   };
 
-  const arrowRad = ((windDeg - 90) * Math.PI) / 180;
+  const arrowRad = ((windDeg + 180 - 90) * Math.PI) / 180;
   const tipR = MINI_RADIUS - 4;
   const baseR = 8;
   const tipX = MINI_CENTER + tipR * Math.cos(arrowRad);
