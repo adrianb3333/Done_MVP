@@ -15,7 +15,9 @@ import {
   TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { User, Search, ChevronDown, X } from 'lucide-react-native';
+import { User, Search, ChevronDown, X, Swords } from 'lucide-react-native';
+import { useBattle } from '@/contexts/BattleContext';
+import ProfileCard from '@/components/ProfileCard';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -132,9 +134,14 @@ const OPPONENT_BAG: ClubBagEntry[] = [
 
 export default function CompareModal() {
   const router = useRouter();
-  const { profile, allUsers, isLoadingAllUsers } = useProfile();
+  const { profile, allUsers, isLoadingAllUsers, isFollowing: checkIsFollowing, toggleFollow } = useProfile();
+  const { battleResults } = useBattle();
   const insets = useSafeAreaInsets();
   const username = profile?.display_name || profile?.username || 'User';
+  const [showBattleHistory, setShowBattleHistory] = useState(false);
+  const [profileCardUser, setProfileCardUser] = useState<UserProfile | null>(null);
+  const [showProfileCard, setShowProfileCard] = useState(false);
+  const [expandedBattleId, setExpandedBattleId] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState(0);
   const [selectedOpponent, setSelectedOpponent] = useState<UserProfile | null>(null);
@@ -582,8 +589,15 @@ export default function CompareModal() {
         pointerEvents="box-none"
       >
         <View style={styles.headerRow} pointerEvents="box-none">
-          <GlassBackButton onPress={() => router.back()} />
+          <GlassBackButton onPress={() => showBattleHistory ? setShowBattleHistory(false) : router.back()} />
           <View style={styles.headerSpacer} />
+          <TouchableOpacity
+            onPress={() => setShowBattleHistory(prev => !prev)}
+            style={styles.oneVOneBtn}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.oneVOneText}>1V1</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.segmentContainer} pointerEvents="box-none">
@@ -617,6 +631,109 @@ export default function CompareModal() {
           />
         </View>
       </Animated.View>
+
+      {showBattleHistory && (
+        <View style={[styles.battleOverlay, { paddingTop: insets.top + FLOATING_HEADER_HEIGHT + 8 }]}>
+          <ScrollView contentContainerStyle={styles.battleScrollContent} showsVerticalScrollIndicator={false}>
+            {battleResults.length === 0 ? (
+              <View style={styles.battleEmptyWrap}>
+                <Swords size={40} color="rgba(255,255,255,0.35)" />
+                <Text style={styles.battleEmptyTitle}>No battles yet</Text>
+                <Text style={styles.battleEmptySub}>Start a battle from the Drills tab</Text>
+              </View>
+            ) : (
+              [...battleResults]
+                .sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())
+                .map((result) => {
+                  const isExpanded = expandedBattleId === result.id;
+                  const userWon = result.user_score > result.opponent_score;
+                  const isDraw = result.user_score === result.opponent_score;
+                  const dateStr = new Date(result.completed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                  return (
+                    <TouchableOpacity
+                      key={result.id}
+                      style={styles.battleCard}
+                      onPress={() => setExpandedBattleId(isExpanded ? null : result.id)}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.battleCardInner}>
+                        <View style={styles.battleRow}>
+                          <View style={styles.battlePlayerCol}>
+                            <Text style={[styles.battleScore, { color: '#7AE582' }]}>{result.user_score}</Text>
+                            <Text style={styles.battlePlayerLabel}>You</Text>
+                            <Text style={styles.battlePct}>{result.user_percentage}%</Text>
+                          </View>
+                          <View style={styles.battleVsCol}>
+                            <Text style={styles.battleVsText}>VS</Text>
+                            <View style={[styles.battleBadge, { backgroundColor: isDraw ? 'rgba(255,209,102,0.2)' : userWon ? 'rgba(122,229,130,0.2)' : 'rgba(255,138,128,0.2)' }]}>
+                              <Text style={[styles.battleBadgeText, { color: isDraw ? '#FFD166' : userWon ? '#7AE582' : '#FF8A80' }]}>
+                                {isDraw ? 'Draw' : userWon ? 'Won' : 'Lost'}
+                              </Text>
+                            </View>
+                          </View>
+                          <TouchableOpacity
+                            style={styles.battlePlayerCol}
+                            onPress={() => {
+                              setProfileCardUser({ id: result.opponent_id, username: result.opponent_username, display_name: result.opponent_display_name, avatar_url: result.opponent_avatar_url });
+                              setShowProfileCard(true);
+                            }}
+                            activeOpacity={0.7}
+                          >
+                            {result.opponent_avatar_url ? (
+                              <Image source={{ uri: result.opponent_avatar_url }} style={styles.battleAvatar} />
+                            ) : (
+                              <View style={styles.battleAvatarPlaceholder}>
+                                <User size={16} color="rgba(255,255,255,0.5)" />
+                              </View>
+                            )}
+                            <Text style={[styles.battleScore, { color: '#FFD166' }]}>{result.opponent_score}</Text>
+                            <Text style={styles.battlePlayerLabel} numberOfLines={1}>{result.opponent_display_name.split(' ')[0]}</Text>
+                            <Text style={styles.battlePct}>{result.opponent_percentage}%</Text>
+                          </TouchableOpacity>
+                        </View>
+                        <View style={styles.battleMeta}>
+                          <Text style={styles.battleMetaText}>{result.battle_name}</Text>
+                          <Text style={styles.battleMetaText}>{dateStr}</Text>
+                        </View>
+                        {isExpanded && (
+                          <View style={styles.battleExpanded}>
+                            <Text style={styles.battleExpandedTitle}>ROUND BREAKDOWN</Text>
+                            {result.user_round_scores.map((uScore, idx) => {
+                              const oScore = result.opponent_round_scores[idx] ?? 0;
+                              return (
+                                <View key={idx} style={styles.battleExpandedRow}>
+                                  <Text style={styles.battleExpandedRound}>R{idx + 1}</Text>
+                                  <Text style={[styles.battleExpandedScore, uScore > oScore && { color: '#7AE582', fontWeight: '900' as const }]}>
+                                    {uScore}/{result.shots_per_round}
+                                  </Text>
+                                  <Text style={styles.battleExpandedVs}>vs</Text>
+                                  <Text style={[styles.battleExpandedScore, oScore > uScore && { color: '#FFD166', fontWeight: '900' as const }]}>
+                                    {oScore}/{result.shots_per_round}
+                                  </Text>
+                                </View>
+                              );
+                            })}
+                          </View>
+                        )}
+                        <View style={styles.battleExpandHint}>
+                          <ChevronDown size={16} color="rgba(255,255,255,0.4)" style={isExpanded ? { transform: [{ rotate: '180deg' }] } : undefined} />
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })
+            )}
+          </ScrollView>
+        </View>
+      )}
+
+      <ProfileCard
+        visible={showProfileCard}
+        onClose={() => setShowProfileCard(false)}
+        user={profileCardUser}
+        isFollowingUser={profileCardUser ? checkIsFollowing(profileCardUser.id) : false}
+        onToggleFollow={profileCardUser ? () => void toggleFollow(profileCardUser.id) : undefined}
+      />
 
       <Modal
         visible={showPlayerPicker}
@@ -694,6 +811,170 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     flex: 1,
+  },
+  oneVOneBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  oneVOneText: {
+    fontSize: 12,
+    fontWeight: '900' as const,
+    color: '#FFFFFF',
+  },
+  battleOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 5,
+    backgroundColor: 'rgba(0,0,0,0.15)',
+  },
+  battleScrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+  },
+  battleEmptyWrap: {
+    alignItems: 'center' as const,
+    paddingTop: 60,
+    gap: 10,
+  },
+  battleEmptyTitle: {
+    fontSize: 20,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+  },
+  battleEmptySub: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.55)',
+    textAlign: 'center' as const,
+  },
+  battleCard: {
+    backgroundColor: 'rgba(0,0,0,0.32)',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    marginBottom: 12,
+    overflow: 'hidden' as const,
+  },
+  battleCardInner: {
+    padding: 16,
+  },
+  battleRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+  },
+  battlePlayerCol: {
+    alignItems: 'center' as const,
+    width: 90,
+  },
+  battleVsCol: {
+    alignItems: 'center' as const,
+    gap: 6,
+  },
+  battleVsText: {
+    fontSize: 18,
+    fontWeight: '900' as const,
+    color: 'rgba(255,255,255,0.45)',
+  },
+  battleBadge: {
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  battleBadgeText: {
+    fontSize: 12,
+    fontWeight: '700' as const,
+  },
+  battleScore: {
+    fontSize: 30,
+    fontWeight: '900' as const,
+    letterSpacing: -1,
+  },
+  battlePlayerLabel: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 2,
+  },
+  battlePct: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.45)',
+    marginTop: 1,
+  },
+  battleAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginBottom: 4,
+  },
+  battleAvatarPlaceholder: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginBottom: 4,
+  },
+  battleMeta: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.08)',
+  },
+  battleMetaText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.4)',
+  },
+  battleExpanded: {
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.08)',
+  },
+  battleExpandedTitle: {
+    fontSize: 12,
+    fontWeight: '800' as const,
+    color: 'rgba(255,255,255,0.6)',
+    letterSpacing: 0.8,
+    marginBottom: 10,
+  },
+  battleExpandedRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginBottom: 8,
+    gap: 16,
+  },
+  battleExpandedRound: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.5)',
+    width: 28,
+  },
+  battleExpandedScore: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: 'rgba(255,255,255,0.7)',
+    width: 55,
+    textAlign: 'center' as const,
+  },
+  battleExpandedVs: {
+    fontSize: 11,
+    fontWeight: '500' as const,
+    color: 'rgba(255,255,255,0.35)',
+  },
+  battleExpandHint: {
+    alignItems: 'center' as const,
+    marginTop: 6,
   },
   segmentContainer: {
     paddingHorizontal: 20,

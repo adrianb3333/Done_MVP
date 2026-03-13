@@ -2001,7 +2001,7 @@ export default function DataOverviewScreen() {
   const [activeTab, setActiveTab] = useState<DataTab>('stats');
   const [screenMode, setScreenMode] = useState<ScreenMode>('data');
   const [_battleSubScreen, _setBattleSubScreen] = useState<BattleSubScreen>('history');
-  const { openSidebar, dataOverviewInitialTab, clearDataOverviewInitialTab, dataOverviewInitialStatsSegment, clearDataOverviewInitialStatsSegment } = useAppNavigation();
+  const { openSidebar, navigateTo, dataOverviewInitialTab, clearDataOverviewInitialTab, dataOverviewInitialStatsSegment, clearDataOverviewInitialStatsSegment } = useAppNavigation();
   const { battleResults } = useBattle();
   const { isFollowing: checkIsFollowing, toggleFollow } = useProfile();
   const [profileCardUser, setProfileCardUser] = useState<UserProfile | null>(null);
@@ -2200,18 +2200,8 @@ export default function DataOverviewScreen() {
               <Menu size={24} color="#FFFFFF" />
             </TouchableOpacity>
             {renderHeaderTitle()}
-            <TouchableOpacity
-              onPress={() => {
-                if (screenMode === 'battle') {
-                  setScreenMode('data');
-                } else {
-                  setScreenMode('battle');
-                }
-              }}
-              style={battleStyles.oneVOneBtn}
-              activeOpacity={0.7}
-            >
-              <Text style={battleStyles.oneVOneText}>1V1</Text>
+            <TouchableOpacity onPress={() => navigateTo('mygame')} style={styles.menuBtn} activeOpacity={0.7}>
+              <Image source={require('@/assets/images/golferscrib-logo.png')} style={styles.logoIcon} resizeMode="contain" />
             </TouchableOpacity>
           </View>
           {screenMode === 'data' && renderSegmentControl()}
