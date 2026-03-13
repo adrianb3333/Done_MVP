@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, Platform, Linking, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MapPin, Move, RotateCcw, ZoomIn, Navigation, ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { MapPin, Flag, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import Svg, { Circle, Line, Polygon, Text as SvgText } from 'react-native-svg';
 import { useWeather } from '@/hooks/useWeather';
 import { calculateGolfShot } from '@/services/golfCalculations';
@@ -137,7 +137,6 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
   const [loading, setLoading] = useState<boolean>(true);
   const [permissionDenied, setPermissionDenied] = useState<boolean>(false);
   const [geoLocation, setGeoLocation] = useState<{ lat: number; lon: number } | null>(null);
-  const [gpsActive, setGpsActive] = useState<boolean>(false);
   const [pinnedPosition, setPinnedPosition] = useState<Coordinate | null>(null);
 
   const { weather } = useWeather(geoLocation?.lat || null, geoLocation?.lon || null, 0);
@@ -246,7 +245,6 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
     if (externalHoleIndex !== undefined && externalHoleIndex !== currentGpsHoleIndex) {
       console.log('[GPSTab] Syncing to external hole index:', externalHoleIndex);
       setPinnedPosition(null);
-      setGpsActive(false);
       if (locationWatchRef.current) {
         locationWatchRef.current.remove();
         locationWatchRef.current = null;
@@ -260,7 +258,6 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
     if (currentGpsHoleIndex < holes.length - 1) {
       const nextIdx = currentGpsHoleIndex + 1;
       setPinnedPosition(null);
-      setGpsActive(false);
       if (locationWatchRef.current) {
         locationWatchRef.current.remove();
         locationWatchRef.current = null;
@@ -274,7 +271,6 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
     if (currentGpsHoleIndex > 0) {
       const prevIdx = currentGpsHoleIndex - 1;
       setPinnedPosition(null);
-      setGpsActive(false);
       if (locationWatchRef.current) {
         locationWatchRef.current.remove();
         locationWatchRef.current = null;
@@ -283,31 +279,6 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
       onHoleIndexChange?.(prevIdx);
     }
   }, [currentGpsHoleIndex, onHoleIndexChange]);
-
-  const startLocationWatch = useCallback(async (pinCoord: Coordinate) => {
-    const Loc = require('expo-location');
-    if (locationWatchRef.current) {
-      locationWatchRef.current.remove();
-      locationWatchRef.current = null;
-    }
-    try {
-      const sub = await Loc.watchPositionAsync(
-        { accuracy: Loc.Accuracy.High, distanceInterval: 1, timeInterval: 2000 },
-        (loc: any) => {
-          const current: Coordinate = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
-          const dist = Math.round(haversineDistance(pinCoord, current));
-          console.log('Live location update - distance from pin:', dist, 'm');
-          setStartPosition(pinCoord);
-          setDragEnd(current);
-          setDistance(dist);
-          setGeoLocation({ lat: loc.coords.latitude, lon: loc.coords.longitude });
-        }
-      );
-      locationWatchRef.current = sub;
-    } catch (err) {
-      console.log('Error starting location watch:', err);
-    }
-  }, []);
 
   const stopLocationWatch = useCallback(() => {
     if (locationWatchRef.current) {
@@ -321,34 +292,6 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
       stopLocationWatch();
     };
   }, [stopLocationWatch]);
-
-  const handleSetPin = useCallback(async () => {
-    const Loc = require('expo-location');
-    if (!pinnedPosition) {
-      try {
-        const loc = await Loc.getCurrentPositionAsync({ accuracy: Loc.Accuracy.High });
-        const pinCoord: Coordinate = { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
-        console.log('Pin set at:', pinCoord.latitude, pinCoord.longitude);
-        setPinnedPosition(pinCoord);
-        setStartPosition(pinCoord);
-        setGpsActive(true);
-        void startLocationWatch(pinCoord);
-      } catch (err) {
-        console.log('Error setting pin:', err);
-      }
-    } else {
-      console.log('Pin removed');
-      setPinnedPosition(null);
-      setGpsActive(false);
-      stopLocationWatch();
-      if (currentGpsHole) {
-        setStartPosition(currentGpsHole.tee);
-        setDragEnd(currentGpsHole.green);
-        const dist = Math.round(haversineDistance(currentGpsHole.tee, currentGpsHole.green));
-        setDistance(dist);
-      }
-    }
-  }, [pinnedPosition, startLocationWatch, stopLocationWatch, currentGpsHole]);
 
   const handleDrag = useCallback((e: any) => {
     const newCoord: Coordinate = e.nativeEvent.coordinate;
@@ -441,7 +384,7 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
             <Polyline
               coordinates={[startPosition, dragEnd]}
               strokeColor="#FFFFFF"
-              strokeWidth={3}
+              strokeWidth={6}
             />
             <Marker
               coordinate={startPosition}
@@ -463,7 +406,7 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
               >
                 <View style={styles.dragMarkerHitArea}>
                   <View style={styles.dragMarkerOuter}>
-                    <Move size={20} color="rgba(255,255,255,0.9)" />
+                    <View style={styles.dragMarkerDot} />
                   </View>
                 </View>
               </Marker>
@@ -472,91 +415,61 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
         )}
       </MapView>
 
-      <View style={[styles.holeHeader, { top: insets.top + 8 }]}>
+      <View style={[styles.holeHeaderCompact, { top: insets.top + 10 }]}>
         <TouchableOpacity
-          style={[styles.holeNavArrow, isFirstHole && styles.holeNavArrowDisabled]}
+          style={[styles.holeNavArrowSmall, isFirstHole && styles.holeNavArrowDisabled]}
           onPress={handlePrevHole}
           disabled={isFirstHole}
           activeOpacity={0.6}
         >
-          <ChevronLeft size={22} color={isFirstHole ? 'rgba(255,255,255,0.3)' : '#FFFFFF'} />
+          <ChevronLeft size={16} color={isFirstHole ? 'rgba(255,255,255,0.3)' : '#FFFFFF'} />
         </TouchableOpacity>
-
-        <View style={styles.holeHeaderCenter}>
-          <Text style={styles.holeHeaderTitle}>
-            Hole {currentHoleData?.number ?? currentGpsHoleIndex + 1}
-          </Text>
-          <Text style={styles.holeHeaderPar}>
-            PAR {currentHoleData?.par ?? '-'} • {currentHoleData?.distance ?? '-'} yds
-          </Text>
-        </View>
-
+        <Text style={styles.holeCompactText}>
+          H{currentHoleData?.number ?? currentGpsHoleIndex + 1} • P{currentHoleData?.par ?? '-'} • {currentHoleData?.distance ?? '-'}y
+        </Text>
         <TouchableOpacity
-          style={[styles.holeNavArrow, isLastHole && styles.holeNavArrowDisabled]}
+          style={[styles.holeNavArrowSmall, isLastHole && styles.holeNavArrowDisabled]}
           onPress={handleNextHole}
           disabled={isLastHole}
           activeOpacity={0.6}
         >
-          <ChevronRight size={22} color={isLastHole ? 'rgba(255,255,255,0.3)' : '#FFFFFF'} />
+          <ChevronRight size={16} color={isLastHole ? 'rgba(255,255,255,0.3)' : '#FFFFFF'} />
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity
-        style={[styles.gpsToggle, { top: insets.top + 64 }]}
-        onPress={handleSetPin}
-        activeOpacity={0.7}
-      >
-        <Navigation size={18} color={gpsActive ? '#34C759' : '#FFFFFF'} fill={gpsActive ? '#34C759' : 'transparent'} />
-        <Text style={[styles.gpsToggleText, gpsActive && styles.gpsToggleTextActive]}>
-          {pinnedPosition ? 'Remove Pin' : 'Set Pin'}
-        </Text>
-      </TouchableOpacity>
-
-      <View style={[styles.distanceOverlay, { top: insets.top + 104 }]}>
+      <View style={[styles.distanceOverlay, { top: insets.top + 64 }]}>
         <Text style={styles.distanceMainValue}>{distance}</Text>
-        <Text style={styles.distanceMainUnit}>m</Text>
+        <Text style={styles.distanceMainUnit}>Meters</Text>
         {windDistText !== null && (
           <View style={styles.windDistRow}>
             <Text style={styles.windDistValueOrange}>{windDistText}</Text>
-            <Text style={styles.windDistUnitOrange}>m</Text>
+            <Text style={styles.windDistUnitOrange}>Meters</Text>
             <Text style={styles.windDistSubtext}>Adjusted based on weather data</Text>
           </View>
         )}
       </View>
 
-      {!pinnedPosition && (
-        <View style={styles.toolLabel}>
-          <Move size={14} color="#34C759" />
-          <Text style={styles.toolLabelText}>Drag to measure</Text>
-        </View>
-      )}
-
-      {pinnedPosition && (
-        <View style={styles.toolLabel}>
-          <Navigation size={14} color="#34C759" />
-          <Text style={styles.toolLabelText}>Pin set - walk to update distance</Text>
-        </View>
-      )}
-
       <TouchableOpacity style={styles.resetBtn} onPress={handleReset} activeOpacity={0.7}>
-        <RotateCcw size={18} color="#fff" />
+        <Text style={styles.resetBtnText}>Reset</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.zoomBtn}
         onPress={() => {
-          if (dragEnd && mapRef.current) {
+          if (endPosition && mapRef.current) {
+            const metersView = 30;
+            const delta = metersView / 111320;
             mapRef.current.animateToRegion({
-              latitude: dragEnd.latitude,
-              longitude: dragEnd.longitude,
-              latitudeDelta: 0.001,
-              longitudeDelta: 0.001,
+              latitude: endPosition.latitude,
+              longitude: endPosition.longitude,
+              latitudeDelta: delta,
+              longitudeDelta: delta,
             }, 600);
           }
         }}
         activeOpacity={0.7}
       >
-        <ZoomIn size={18} color="#fff" />
+        <Flag size={20} color="#fff" fill="#fff" />
       </TouchableOpacity>
 
       {weather && (
@@ -623,24 +536,23 @@ const styles = StyleSheet.create({
     color: '#888',
     fontSize: 13,
   },
-  holeHeader: {
+  holeHeaderCompact: {
     position: 'absolute' as const,
-    left: 16,
-    right: 16,
+    left: 52,
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    borderRadius: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 8,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.15)',
+    gap: 4,
   },
-  holeNavArrow: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  holeNavArrowSmall: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     backgroundColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
@@ -648,21 +560,11 @@ const styles = StyleSheet.create({
   holeNavArrowDisabled: {
     opacity: 0.4,
   },
-  holeHeaderCenter: {
-    alignItems: 'center' as const,
-    flex: 1,
-  },
-  holeHeaderTitle: {
-    fontSize: 18,
-    fontWeight: '800' as const,
-    color: '#FFFFFF',
-    letterSpacing: 0.5,
-  },
-  holeHeaderPar: {
+  holeCompactText: {
     fontSize: 13,
-    fontWeight: '600' as const,
-    color: 'rgba(255,255,255,0.7)',
-    marginTop: 2,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+    paddingHorizontal: 4,
   },
   startMarker: {
     width: 20,
@@ -690,33 +592,19 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     borderWidth: 3,
-    borderColor: 'rgba(255,255,255,0.6)',
+    borderColor: '#FFFFFF',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
-  gpsToggle: {
-    position: 'absolute' as const,
-    left: 16,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
+  dragMarkerDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#FFFFFF',
   },
-  gpsToggleText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700' as const,
-  },
-  gpsToggleTextActive: {
-    color: '#34C759',
-  },
+
   distanceOverlay: {
     position: 'absolute' as const,
     left: 16,
@@ -762,7 +650,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 3,
   },
   windDistSubtext: {
-    color: 'rgba(255,255,255,0.45)',
+    color: '#FF9500',
     fontSize: 8,
     fontWeight: '500' as const,
     marginTop: 1,
@@ -770,43 +658,32 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
-  toolLabel: {
-    position: 'absolute' as const,
-    bottom: 20,
-    alignSelf: 'center' as const,
-    backgroundColor: 'rgba(0,0,0,0.75)',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 6,
-  },
-  toolLabelText: {
-    color: '#ccc',
-    fontSize: 12,
-    fontWeight: '500' as const,
-  },
+
   resetBtn: {
     position: 'absolute' as const,
-    bottom: 20,
+    bottom: 24,
     right: 16,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: 'rgba(0,0,0,0.75)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.15)',
   },
+  resetBtnText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700' as const,
+  },
   zoomBtn: {
     position: 'absolute' as const,
-    bottom: 70,
+    bottom: 90,
     right: 16,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: 'rgba(0,0,0,0.75)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
