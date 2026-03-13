@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MapPin, Flag, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import Svg, { Circle, Line, Polygon, Text as SvgText } from 'react-native-svg';
 import { useWeather } from '@/hooks/useWeather';
+import { useDeviceHeading } from '@/hooks/useDeviceHeading';
 import { calculateGolfShot } from '@/services/golfCalculations';
 import { useScoring } from '@/contexts/ScoringContext';
 import { loadCourseLocation } from '@/mocks/courseData';
@@ -45,13 +46,16 @@ function offsetCoordinate(base: Coordinate, bearingDeg: number, distanceMeters: 
 interface MiniCompassProps {
   windDeg: number;
   windMs: number;
+  deviceHeading: number;
 }
 
 const MINI_CENTER = 32;
 const MINI_RADIUS = 28;
 const MINI_TEXT_R = 18;
 
-function MiniWindCompass({ windDeg, windMs }: MiniCompassProps) {
+function MiniWindCompass({ windDeg, windMs, deviceHeading }: MiniCompassProps) {
+  const rotation = -deviceHeading;
+
   const MARKERS = [
     { deg: 0, label: 'N' },
     { deg: 90, label: 'E' },
@@ -60,11 +64,11 @@ function MiniWindCompass({ windDeg, windMs }: MiniCompassProps) {
   ];
 
   const pos = (degree: number, radius: number) => {
-    const rad = ((degree - 90) * Math.PI) / 180;
+    const rad = ((degree + rotation - 90) * Math.PI) / 180;
     return { x: MINI_CENTER + radius * Math.cos(rad), y: MINI_CENTER + radius * Math.sin(rad) };
   };
 
-  const arrowRad = ((windDeg + 180 - 90) * Math.PI) / 180;
+  const arrowRad = ((windDeg + 180 + rotation - 90) * Math.PI) / 180;
   const tipR = MINI_RADIUS - 4;
   const baseR = 8;
   const tipX = MINI_CENTER + tipR * Math.cos(arrowRad);
@@ -125,6 +129,7 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
   const { Marker, Polyline } = require('react-native-maps');
   const insets = useSafeAreaInsets();
   const { holes } = useScoring();
+  const deviceHeading = useDeviceHeading();
 
   const mapRef = useRef<any>(null);
   const locationWatchRef = useRef<any>(null);
@@ -579,7 +584,7 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
 
       {weather && (
         <View style={[styles.miniCompassBox, { top: insets.top + 64 }]}>
-          <MiniWindCompass windDeg={weather.windDeg} windMs={weather.windMs} />
+          <MiniWindCompass windDeg={weather.windDeg} windMs={weather.windMs} deviceHeading={deviceHeading} />
         </View>
       )}
     </View>
