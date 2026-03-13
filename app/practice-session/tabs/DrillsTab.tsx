@@ -349,6 +349,20 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
     setSelectedForDelete(new Set());
   }, [selectedForDelete, savedDrills, savedSensorDrills, persistDrills, persistSensorDrills]);
 
+  const handleBattleSetPin = useCallback((onPinDone: () => void) => {
+    console.log('[DrillsTab] Battle requests Set Pin - navigating to Position');
+    onClearPin?.();
+    if (onRequestSetPin) {
+      onRequestSetPin(() => {
+        console.log('[DrillsTab] Pin set from Position tab for battle');
+        onPinDone();
+        setCurrentScreen('battle');
+      });
+    } else {
+      onPinDone();
+    }
+  }, [onRequestSetPin, onClearPin]);
+
   const handleSetPin = useCallback(() => {
     console.log('Set Pin pressed - clearing old pin and navigating to Position tab');
     onClearPin?.();
@@ -537,20 +551,6 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
       />
     );
   }
-
-  const handleBattleSetPin = useCallback((onPinDone: () => void) => {
-    console.log('[DrillsTab] Battle requests Set Pin - navigating to Position');
-    onClearPin?.();
-    if (onRequestSetPin) {
-      onRequestSetPin(() => {
-        console.log('[DrillsTab] Pin set from Position tab for battle');
-        onPinDone();
-        setCurrentScreen('battle');
-      });
-    } else {
-      onPinDone();
-    }
-  }, [onRequestSetPin, onClearPin]);
 
   if (currentScreen === 'battle') {
     return (
