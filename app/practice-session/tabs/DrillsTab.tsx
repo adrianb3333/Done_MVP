@@ -538,6 +538,20 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
     );
   }
 
+  const handleBattleSetPin = useCallback((onPinDone: () => void) => {
+    console.log('[DrillsTab] Battle requests Set Pin - navigating to Position');
+    onClearPin?.();
+    if (onRequestSetPin) {
+      onRequestSetPin(() => {
+        console.log('[DrillsTab] Pin set from Position tab for battle');
+        onPinDone();
+        setCurrentScreen('battle');
+      });
+    } else {
+      onPinDone();
+    }
+  }, [onRequestSetPin, onClearPin]);
+
   if (currentScreen === 'battle') {
     return (
       <BattleScreen
@@ -547,6 +561,7 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
           setCurrentScreen('battleDrill');
           onDrillActiveChange?.(true);
         }}
+        onRequestSetPin={handleBattleSetPin}
       />
     );
   }
@@ -556,7 +571,7 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
       <BattleDrillScreen
         battle={activeBattle}
         onBack={() => {
-          setCurrentScreen('battle');
+          setCurrentScreen('main');
           onDrillActiveChange?.(false);
           void clearActiveBattle();
         }}
@@ -567,14 +582,25 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
           void completeBattle({ userRoundScores: userScores, opponentRoundScores: oppScores });
           setCurrentScreen('battleSummary');
         }}
+        onNavigateToTab={onNavigateToTab}
       />
     );
   }
 
-  if (currentScreen === 'battleSummary' && activeBattle) {
+  if (currentScreen === 'battleSummary') {
+    const battleForSummary = activeBattle ?? {
+      id: 'summary',
+      battle_name: 'Battle',
+      opponent_id: '',
+      opponent_username: '',
+      opponent_display_name: 'Opponent',
+      opponent_avatar_url: null,
+      rounds: battleUserScores.length,
+      shots_per_round: battleUserScores.length > 0 ? Math.max(...battleUserScores, 1) : 10,
+    };
     return (
       <BattleSummaryScreen
-        battle={activeBattle}
+        battle={battleForSummary}
         userRoundScores={battleUserScores}
         opponentRoundScores={battleOppScores}
         onRetry={() => {

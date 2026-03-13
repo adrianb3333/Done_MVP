@@ -12,6 +12,7 @@ import {
   FlatList,
   Image,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,6 +24,7 @@ import * as Haptics from 'expo-haptics';
 interface BattleScreenProps {
   onBack: () => void;
   onBattleStart?: () => void;
+  onRequestSetPin?: (onPinDone: () => void) => void;
 }
 
 const ROUNDS_OPTIONS = [1, 2, 3, 4, 5];
@@ -31,7 +33,7 @@ const SHOTS_OPTIONS = [5, 10, 15, 20, 25, 30];
 const GLASS_BG = 'rgba(0,0,0,0.28)';
 const GLASS_BORDER = 'rgba(255,255,255,0.12)';
 
-export default function BattleScreen({ onBack, onBattleStart }: BattleScreenProps) {
+export default function BattleScreen({ onBack, onBattleStart, onRequestSetPin }: BattleScreenProps) {
   const insets = useSafeAreaInsets();
   const [battleName, setBattleName] = useState('');
   const [selectedRounds, setSelectedRounds] = useState(3);
@@ -39,6 +41,10 @@ export default function BattleScreen({ onBack, onBattleStart }: BattleScreenProp
   const [showFriendPicker, setShowFriendPicker] = useState(false);
   const [selectedOpponent, setSelectedOpponent] = useState<UserProfile | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [pinSet, setPinSet] = useState(false);
+  const [showNameWarning, setShowNameWarning] = useState(false);
+  const [showPinWarning, setShowPinWarning] = useState(false);
+  const [shakeAnim] = useState(new Animated.Value(0));
 
   const { following, allUsers, isLoadingAllUsers, userId } = useProfile();
   const { sendInvite, startBattleDirectly } = useBattle();
@@ -65,11 +71,51 @@ export default function BattleScreen({ onBack, onBattleStart }: BattleScreenProp
     if (Platform.OS !== 'web') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }, []);
 
+  const triggerShake = useCallback(() => {
+    Animated.sequence([
+      Animated.timing(shakeAnim, { toValue: 10, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -10, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 8, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: -8, duration: 60, useNativeDriver: true }),
+      Animated.timing(shakeAnim, { toValue: 0, duration: 60, useNativeDriver: true }),
+    ]).start();
+  }, [shakeAnim]);
+
+  const handleSetPin = useCallback(() => {
+    console.log('[BattleScreen] Set Pin pressed');
+    if (onRequestSetPin) {
+      onRequestSetPin(() => {
+        console.log('[BattleScreen] Pin set callback received');
+        setPinSet(true);
+        setShowPinWarning(false);
+      });
+    } else {
+      setPinSet(true);
+      setShowPinWarning(false);
+    }
+  }, [onRequestSetPin]);
+
   const handleStartBattle = useCallback(async () => {
+    if (!battleName.trim()) {
+      setShowNameWarning(true);
+      triggerShake();
+      if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+    setShowNameWarning(false);
+
+    if (!pinSet) {
+      setShowPinWarning(true);
+      triggerShake();
+      if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+    setShowPinWarning(false);
+
     if (!selectedOpponent) return;
     if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-    const name = battleName.trim() || `Battle vs ${selectedOpponent.display_name}`;
+    const name = battleName.trim();
 
     await sendInvite({
       toUserId: selectedOpponent.id,
@@ -93,7 +139,7 @@ export default function BattleScreen({ onBack, onBattleStart }: BattleScreenProp
 
     console.log('[BattleScreen] Battle started, navigating to drill screen');
     onBattleStart?.();
-  }, [selectedOpponent, battleName, selectedRounds, selectedShots, sendInvite, startBattleDirectly, onBattleStart]);
+  }, [selectedOpponent, battleName, selectedRounds, selectedShots, sendInvite, startBattleDirectly, onBattleStart, pinSet, triggerShake]);
 
   const renderFriendItem = useCallback(({ item }: { item: UserProfile }) => (
     <TouchableOpacity
@@ -117,6 +163,8 @@ export default function BattleScreen({ onBack, onBattleStart }: BattleScreenProp
       </View>
     </TouchableOpacity>
   ), [handleSelectOpponent]);
+
+  const canStart = !!selectedOpponent && battleName.trim().length > 0 && pinSet;
 
   return (
     <LinearGradient
@@ -143,6 +191,14 @@ export default function BattleScreen({ onBack, onBattleStart }: BattleScreenProp
           <View style={styles.headerSpacer} />
         </View>
 
+        {(showNameWarning || showPinWarning) && (
+          <Animated.View style={[styles.warningBanner, { transform: [{ translateX: shakeAnim }] }]}>
+            <Text style={styles.warningText}>
+              {showNameWarning ? 'Please name your battle!' : 'Set Pin before starting Battle!'}
+            </Text>
+          </Animated.View>
+        )}
+
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -153,22 +209,29 @@ export default function BattleScreen({ onBack, onBattleStart }: BattleScreenProp
               <Text style={styles.pageTitle}>Battle Settings</Text>
               <Text style={styles.pageSubtitle}>Set up a head-to-head challenge</Text>
             </View>
-            <TouchableOpacity style={styles.setPinButton} activeOpacity={0.7}>
+            <TouchableOpacity
+              style={[styles.setPinButton, pinSet && styles.setPinButtonActive]}
+              activeOpacity={0.7}
+              onPress={handleSetPin}
+            >
               <Flag size={16} color="#FFFFFF" />
-              <Text style={styles.setPinText}>Set Pin</Text>
+              <Text style={styles.setPinText}>{pinSet ? 'Pin Set' : 'Set Pin'}</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.nameRow}>
             <View style={styles.nameInputBlock}>
-              <Text style={styles.sectionLabel}>BATTLE NAME</Text>
-              <View style={styles.inputWrapper}>
+              <Text style={styles.sectionLabel}>BATTLE NAME *</Text>
+              <View style={[styles.inputWrapper, showNameWarning && !battleName.trim() && styles.inputWrapperError]}>
                 <TextInput
                   style={styles.textInput}
                   placeholder="e.g. Iron Showdown"
                   placeholderTextColor="rgba(0,0,0,0.35)"
                   value={battleName}
-                  onChangeText={setBattleName}
+                  onChangeText={(text) => {
+                    setBattleName(text);
+                    if (text.trim()) setShowNameWarning(false);
+                  }}
                   returnKeyType="done"
                 />
               </View>
@@ -261,6 +324,12 @@ export default function BattleScreen({ onBack, onBattleStart }: BattleScreenProp
                     vs {selectedOpponent.display_name}
                   </Text>
                 )}
+                <View style={styles.statusRow}>
+                  <View style={[styles.statusDot, pinSet ? styles.statusGreen : styles.statusRed]} />
+                  <Text style={styles.statusText}>{pinSet ? 'Pin set' : 'Pin required'}</Text>
+                  <View style={[styles.statusDot, battleName.trim() ? styles.statusGreen : styles.statusRed]} />
+                  <Text style={styles.statusText}>{battleName.trim() ? 'Named' : 'Name required'}</Text>
+                </View>
               </View>
             </LinearGradient>
           </View>
@@ -273,7 +342,7 @@ export default function BattleScreen({ onBack, onBattleStart }: BattleScreenProp
           >
             <View style={styles.startButtonOuter}>
               <LinearGradient
-                colors={['#C0392B', '#A93226']}
+                colors={canStart ? ['#C0392B', '#A93226'] : ['rgba(192,57,43,0.5)', 'rgba(169,50,38,0.5)']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.startButton}
@@ -497,6 +566,20 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 38,
   },
+  warningBanner: {
+    backgroundColor: 'rgba(255,243,205,0.9)',
+    marginHorizontal: 20,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginBottom: 4,
+  },
+  warningText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#856404',
+    textAlign: 'center' as const,
+  },
   scrollContent: {
     paddingHorizontal: 20,
     paddingBottom: 40,
@@ -531,6 +614,9 @@ const styles = StyleSheet.create({
     gap: 6,
     marginTop: 4,
   },
+  setPinButtonActive: {
+    backgroundColor: '#1B5E20',
+  },
   setPinText: {
     fontSize: 14,
     fontWeight: '700' as const,
@@ -559,6 +645,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
     overflow: 'hidden' as const,
+  },
+  inputWrapperError: {
+    borderWidth: 2,
+    borderColor: '#FF5252',
   },
   textInput: {
     fontSize: 16,
@@ -671,6 +761,30 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     color: 'rgba(255,255,255,0.7)',
     marginTop: 6,
+  },
+  statusRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 6,
+    marginTop: 12,
+    flexWrap: 'wrap' as const,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  statusGreen: {
+    backgroundColor: '#22C55E',
+  },
+  statusRed: {
+    backgroundColor: '#FF5252',
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.6)',
+    marginRight: 8,
   },
   startButtonOuter: {
     marginTop: 28,

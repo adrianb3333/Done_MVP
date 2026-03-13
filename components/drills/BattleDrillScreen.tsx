@@ -5,24 +5,29 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Modal,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronRight, ArrowLeft, User } from 'lucide-react-native';
+import { ChevronRight, ArrowLeft, User, Plane, Navigation } from 'lucide-react-native';
 import { ActiveBattle } from '@/contexts/BattleContext';
+import * as Haptics from 'expo-haptics';
 
 interface BattleDrillScreenProps {
   battle: ActiveBattle;
   onBack: () => void;
   onFinish: (userRoundScores: number[], opponentRoundScores: number[]) => void;
+  onNavigateToTab?: (tab: 'flight' | 'position') => void;
 }
 
 const GLASS_BG = 'rgba(0,0,0,0.28)';
 const GLASS_BORDER = 'rgba(255,255,255,0.12)';
 
-export default function BattleDrillScreen({ battle, onBack, onFinish }: BattleDrillScreenProps) {
+export default function BattleDrillScreen({ battle, onBack, onFinish, onNavigateToTab }: BattleDrillScreenProps) {
   const insets = useSafeAreaInsets();
   const [currentRound, setCurrentRound] = useState(0);
+  const [showQuitModal, setShowQuitModal] = useState(false);
   const [userHighest, setUserHighest] = useState<number[]>(
     Array.from({ length: battle.rounds }, () => 0)
   );
@@ -76,6 +81,17 @@ export default function BattleDrillScreen({ battle, onBack, onFinish }: BattleDr
     }
   }, [isLastRound, userHighest, opponentHighest, onFinish]);
 
+  const handleQuitPress = useCallback(() => {
+    if (Platform.OS !== 'web') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setShowQuitModal(true);
+  }, []);
+
+  const handleQuitConfirm = useCallback(() => {
+    console.log('[BattleDrillScreen] Quit battle confirmed');
+    setShowQuitModal(false);
+    onBack();
+  }, [onBack]);
+
   return (
     <LinearGradient
       colors={['#C62828', '#E53935', '#FF5252']}
@@ -84,7 +100,7 @@ export default function BattleDrillScreen({ battle, onBack, onFinish }: BattleDr
       style={styles.container}
     >
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
-        <TouchableOpacity onPress={onBack} activeOpacity={0.7}>
+        <TouchableOpacity onPress={handleQuitPress} activeOpacity={0.7}>
           <View style={styles.backCircle}>
             <ArrowLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
           </View>
@@ -185,22 +201,87 @@ export default function BattleDrillScreen({ battle, onBack, onFinish }: BattleDr
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
-        <TouchableOpacity onPress={handleNext} activeOpacity={0.8}>
-          <View style={styles.nextButtonOuter}>
-            <LinearGradient
-              colors={['rgba(0,0,0,0.35)', 'rgba(0,0,0,0.25)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.nextButton}
+        <View style={styles.footerRow}>
+          {onNavigateToTab && (
+            <TouchableOpacity
+              onPress={() => onNavigateToTab('flight')}
+              activeOpacity={0.7}
+              style={styles.navCircleWrap}
             >
-              <Text style={styles.nextButtonText}>
-                {isLastRound ? 'Finish Battle' : 'Next Round'}
-              </Text>
-              <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />
-            </LinearGradient>
+              <View style={styles.navCircle}>
+                <Plane size={20} color="#FFFFFF" />
+              </View>
+              <Text style={styles.navCircleLabel}>Flight</Text>
+            </TouchableOpacity>
+          )}
+
+          <View style={styles.nextButtonFlex}>
+            <TouchableOpacity onPress={handleNext} activeOpacity={0.8}>
+              <View style={styles.nextButtonOuter}>
+                <LinearGradient
+                  colors={['rgba(0,0,0,0.35)', 'rgba(0,0,0,0.25)']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.nextButton}
+                >
+                  <Text style={styles.nextButtonText}>
+                    {isLastRound ? 'Finish Battle' : 'Next Round'}
+                  </Text>
+                  <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />
+                </LinearGradient>
+              </View>
+            </TouchableOpacity>
           </View>
-        </TouchableOpacity>
+
+          {onNavigateToTab && (
+            <TouchableOpacity
+              onPress={() => onNavigateToTab('position')}
+              activeOpacity={0.7}
+              style={styles.navCircleWrap}
+            >
+              <View style={styles.navCircle}>
+                <Navigation size={20} color="#FFFFFF" />
+              </View>
+              <Text style={styles.navCircleLabel}>Position</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
+
+      <Modal
+        visible={showQuitModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowQuitModal(false)}
+      >
+        <View style={styles.quitOverlay}>
+          <LinearGradient
+            colors={['#C62828', '#E53935']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.quitModal}
+          >
+            <Text style={styles.quitTitle}>Quit Battle</Text>
+            <Text style={styles.quitMessage}>Are you sure you want to quit this battle? Your progress will be lost.</Text>
+            <View style={styles.quitButtons}>
+              <TouchableOpacity
+                style={styles.quitNoBtn}
+                onPress={() => setShowQuitModal(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.quitNoBtnText}>No</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.quitYesBtn}
+                onPress={handleQuitConfirm}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.quitYesBtnText}>Yes</Text>
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }
@@ -345,7 +426,34 @@ const styles = StyleSheet.create({
     marginVertical: 14,
   },
   footer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
+  },
+  footerRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 12,
+  },
+  navCircleWrap: {
+    alignItems: 'center' as const,
+    gap: 4,
+  },
+  navCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: GLASS_BG,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  navCircleLabel: {
+    fontSize: 10,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.6)',
+  },
+  nextButtonFlex: {
+    flex: 1,
   },
   nextButtonOuter: {
     borderRadius: 16,
@@ -365,5 +473,64 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800' as const,
     color: '#FFFFFF',
+  },
+  quitOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  quitModal: {
+    borderRadius: 22,
+    padding: 28,
+    width: '80%',
+    alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  quitTitle: {
+    fontSize: 22,
+    fontWeight: '900' as const,
+    color: '#FFFFFF',
+    marginBottom: 10,
+  },
+  quitMessage: {
+    fontSize: 15,
+    fontWeight: '500' as const,
+    color: 'rgba(255,255,255,0.8)',
+    textAlign: 'center' as const,
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  quitButtons: {
+    flexDirection: 'row' as const,
+    gap: 12,
+    width: '100%',
+  },
+  quitNoBtn: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  quitNoBtnText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+  },
+  quitYesBtn: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center' as const,
+  },
+  quitYesBtnText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#C62828',
   },
 });

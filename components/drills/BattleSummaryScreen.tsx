@@ -60,6 +60,7 @@ export default function BattleSummaryScreen({
               <User size={28} color="#FFFFFF" />
             </View>
             <Text style={styles.vsPlayerName}>You</Text>
+            <View style={styles.greenLine} />
             <Text style={[styles.vsScore, { color: '#7AE582' }]}>{userTotal}</Text>
             <Text style={styles.vsPct}>{userPct}%</Text>
           </View>
@@ -77,6 +78,7 @@ export default function BattleSummaryScreen({
               </View>
             )}
             <Text style={styles.vsPlayerName}>{battle.opponent_display_name.split(' ')[0]}</Text>
+            <View style={styles.greenLine} />
             <Text style={[styles.vsScore, { color: '#FFD166' }]}>{oppTotal}</Text>
             <Text style={styles.vsPct}>{oppPct}%</Text>
           </View>
@@ -104,9 +106,9 @@ export default function BattleSummaryScreen({
         </View>
 
         <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
-          <TouchableOpacity onPress={onRetry} style={styles.retryButton} activeOpacity={0.8}>
+          <TouchableOpacity onPress={onRetry} style={styles.rematchButton} activeOpacity={0.8}>
             <RotateCcw size={18} color="#FFFFFF" strokeWidth={2.5} />
-            <Text style={styles.retryText}>Retry</Text>
+            <Text style={styles.rematchText}>ReMatch</Text>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={onHome} activeOpacity={0.8} style={styles.homeButton}>
@@ -117,7 +119,7 @@ export default function BattleSummaryScreen({
               style={styles.homeGradient}
             >
               <Home size={18} color="#FFFFFF" strokeWidth={2.5} />
-              <Text style={styles.homeText}>Done</Text>
+              <Text style={styles.homeText}>Home</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -177,6 +179,13 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: '#FFFFFF',
     marginBottom: 6,
+  },
+  greenLine: {
+    width: 40,
+    height: 3,
+    backgroundColor: '#22C55E',
+    borderRadius: 1.5,
+    marginBottom: 4,
   },
   vsScore: {
     fontSize: 36,
@@ -264,7 +273,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
-  retryButton: {
+  rematchButton: {
     flex: 1,
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
@@ -276,7 +285,7 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: GLASS_BG,
   },
-  retryText: {
+  rematchText: {
     fontSize: 17,
     fontWeight: '700' as const,
     color: '#FFFFFF',

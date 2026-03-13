@@ -138,7 +138,7 @@ export default function CompareModal() {
   const { battleResults } = useBattle();
   const insets = useSafeAreaInsets();
   const username = profile?.display_name || profile?.username || 'User';
-  const [showBattleHistory, setShowBattleHistory] = useState(false);
+  const [showBattleSummaries, setShowBattleSummaries] = useState(false);
   const [profileCardUser, setProfileCardUser] = useState<UserProfile | null>(null);
   const [showProfileCard, setShowProfileCard] = useState(false);
   const [expandedBattleId, setExpandedBattleId] = useState<string | null>(null);
@@ -589,10 +589,10 @@ export default function CompareModal() {
         pointerEvents="box-none"
       >
         <View style={styles.headerRow} pointerEvents="box-none">
-          <GlassBackButton onPress={() => showBattleHistory ? setShowBattleHistory(false) : router.back()} />
+          <GlassBackButton onPress={() => router.back()} />
           <View style={styles.headerSpacer} />
           <TouchableOpacity
-            onPress={() => setShowBattleHistory(prev => !prev)}
+            onPress={() => setShowBattleSummaries(true)}
             style={styles.oneVOneBtn}
             activeOpacity={0.7}
           >
@@ -632,8 +632,23 @@ export default function CompareModal() {
         </View>
       </Animated.View>
 
-      {showBattleHistory && (
-        <View style={[styles.battleOverlay, { paddingTop: insets.top + FLOATING_HEADER_HEIGHT + 8 }]}>
+      {showBattleSummaries && (
+        <View style={[styles.battleSummariesScreen, { paddingTop: insets.top }]}>
+          <LinearGradient
+            colors={['#FF1C1C', '#E31010', '#B20000', '#800000']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <View style={styles.battleSummariesHeader}>
+            <TouchableOpacity onPress={() => setShowBattleSummaries(false)} activeOpacity={0.7}>
+              <View style={styles.battleSummariesBackCircle}>
+                <ChevronDown size={22} color="#FFFFFF" style={{ transform: [{ rotate: '90deg' }] }} />
+              </View>
+            </TouchableOpacity>
+            <Text style={styles.battleSummariesTitle}>Battle Summaries</Text>
+            <View style={{ width: 38 }} />
+          </View>
           <ScrollView contentContainerStyle={styles.battleScrollContent} showsVerticalScrollIndicator={false}>
             {battleResults.length === 0 ? (
               <View style={styles.battleEmptyWrap}>
@@ -659,14 +674,15 @@ export default function CompareModal() {
                       <View style={styles.battleCardInner}>
                         <View style={styles.battleRow}>
                           <View style={styles.battlePlayerCol}>
-                            <Text style={[styles.battleScore, { color: '#7AE582' }]}>{result.user_score}</Text>
-                            <Text style={styles.battlePlayerLabel}>You</Text>
-                            <Text style={styles.battlePct}>{result.user_percentage}%</Text>
+                            <View style={styles.bsGreenLine} />
+                            <Text style={[styles.battleScore, { color: '#FFFFFF' }]}>{result.user_score}</Text>
+                            <Text style={styles.battlePlayerLabelWhite}>You</Text>
+                            <Text style={styles.battlePctWhite}>{result.user_percentage}%</Text>
                           </View>
                           <View style={styles.battleVsCol}>
-                            <Text style={styles.battleVsText}>VS</Text>
-                            <View style={[styles.battleBadge, { backgroundColor: isDraw ? 'rgba(255,209,102,0.2)' : userWon ? 'rgba(122,229,130,0.2)' : 'rgba(255,138,128,0.2)' }]}>
-                              <Text style={[styles.battleBadgeText, { color: isDraw ? '#FFD166' : userWon ? '#7AE582' : '#FF8A80' }]}>
+                            <Text style={styles.battleVsTextWhite}>VS</Text>
+                            <View style={[styles.battleBadge, { backgroundColor: isDraw ? 'rgba(255,209,102,0.25)' : userWon ? 'rgba(122,229,130,0.25)' : 'rgba(255,138,128,0.25)' }]}>
+                              <Text style={[styles.battleBadgeText, { color: '#FFFFFF' }]}>
                                 {isDraw ? 'Draw' : userWon ? 'Won' : 'Lost'}
                               </Text>
                             </View>
@@ -686,28 +702,29 @@ export default function CompareModal() {
                                 <User size={16} color="rgba(255,255,255,0.5)" />
                               </View>
                             )}
-                            <Text style={[styles.battleScore, { color: '#FFD166' }]}>{result.opponent_score}</Text>
-                            <Text style={styles.battlePlayerLabel} numberOfLines={1}>{result.opponent_display_name.split(' ')[0]}</Text>
-                            <Text style={styles.battlePct}>{result.opponent_percentage}%</Text>
+                            <View style={styles.bsGreenLine} />
+                            <Text style={[styles.battleScore, { color: '#FFFFFF' }]}>{result.opponent_score}</Text>
+                            <Text style={styles.battlePlayerLabelWhite} numberOfLines={1}>{result.opponent_display_name.split(' ')[0]}</Text>
+                            <Text style={styles.battlePctWhite}>{result.opponent_percentage}%</Text>
                           </TouchableOpacity>
                         </View>
                         <View style={styles.battleMeta}>
-                          <Text style={styles.battleMetaText}>{result.battle_name}</Text>
-                          <Text style={styles.battleMetaText}>{dateStr}</Text>
+                          <Text style={styles.battleMetaTextWhite}>{result.battle_name}</Text>
+                          <Text style={styles.battleMetaTextWhite}>{dateStr}</Text>
                         </View>
                         {isExpanded && (
                           <View style={styles.battleExpanded}>
-                            <Text style={styles.battleExpandedTitle}>ROUND BREAKDOWN</Text>
+                            <Text style={styles.battleExpandedTitleWhite}>ROUND BREAKDOWN</Text>
                             {result.user_round_scores.map((uScore, idx) => {
                               const oScore = result.opponent_round_scores[idx] ?? 0;
                               return (
                                 <View key={idx} style={styles.battleExpandedRow}>
-                                  <Text style={styles.battleExpandedRound}>R{idx + 1}</Text>
-                                  <Text style={[styles.battleExpandedScore, uScore > oScore && { color: '#7AE582', fontWeight: '900' as const }]}>
+                                  <Text style={styles.battleExpandedRoundWhite}>R{idx + 1}</Text>
+                                  <Text style={[styles.battleExpandedScoreWhite, uScore > oScore && { fontWeight: '900' as const }]}>
                                     {uScore}/{result.shots_per_round}
                                   </Text>
-                                  <Text style={styles.battleExpandedVs}>vs</Text>
-                                  <Text style={[styles.battleExpandedScore, oScore > uScore && { color: '#FFD166', fontWeight: '900' as const }]}>
+                                  <Text style={styles.battleExpandedVsWhite}>vs</Text>
+                                  <Text style={[styles.battleExpandedScoreWhite, oScore > uScore && { fontWeight: '900' as const }]}>
                                     {oScore}/{result.shots_per_round}
                                   </Text>
                                 </View>
@@ -716,7 +733,7 @@ export default function CompareModal() {
                           </View>
                         )}
                         <View style={styles.battleExpandHint}>
-                          <ChevronDown size={16} color="rgba(255,255,255,0.4)" style={isExpanded ? { transform: [{ rotate: '180deg' }] } : undefined} />
+                          <ChevronDown size={16} color="rgba(255,255,255,0.5)" style={isExpanded ? { transform: [{ rotate: '180deg' }] } : undefined} />
                         </View>
                       </View>
                     </TouchableOpacity>
@@ -1469,5 +1486,88 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.4)',
     textAlign: 'center' as const,
     marginTop: 40,
+  },
+  battleSummariesScreen: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 50,
+  },
+  battleSummariesHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 14,
+    gap: 12,
+  },
+  battleSummariesBackCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(0,0,0,0.28)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  battleSummariesTitle: {
+    flex: 1,
+    textAlign: 'center' as const,
+    fontSize: 22,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+  },
+  bsGreenLine: {
+    width: 40,
+    height: 3,
+    backgroundColor: '#22C55E',
+    borderRadius: 1.5,
+    marginBottom: 4,
+  },
+  battlePlayerLabelWhite: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: '#FFFFFF',
+    marginTop: 2,
+  },
+  battlePctWhite: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 1,
+  },
+  battleVsTextWhite: {
+    fontSize: 18,
+    fontWeight: '900' as const,
+    color: 'rgba(255,255,255,0.6)',
+  },
+  battleMetaTextWhite: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.6)',
+  },
+  battleExpandedTitleWhite: {
+    fontSize: 12,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+    letterSpacing: 0.8,
+    marginBottom: 10,
+  },
+  battleExpandedRoundWhite: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.7)',
+    width: 28,
+  },
+  battleExpandedScoreWhite: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+    width: 55,
+    textAlign: 'center' as const,
+  },
+  battleExpandedVsWhite: {
+    fontSize: 11,
+    fontWeight: '500' as const,
+    color: 'rgba(255,255,255,0.5)',
   },
 });
