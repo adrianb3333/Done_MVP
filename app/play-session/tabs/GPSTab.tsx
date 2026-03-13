@@ -130,10 +130,12 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
   const locationWatchRef = useRef<any>(null);
   const [courseLocation, setCourseLocation] = useState<CourseLocation | null>(null);
   const [currentGpsHoleIndex, setCurrentGpsHoleIndex] = useState<number>(externalHoleIndex ?? 0);
-  const [startPosition, setStartPosition] = useState<Coordinate | null>(null);
-  const [endPosition, setEndPosition] = useState<Coordinate | null>(null);
-  const [dragEnd, setDragEnd] = useState<Coordinate | null>(null);
-  const [distance, setDistance] = useState<number>(0);
+  const [teePosition, setTeePosition] = useState<Coordinate | null>(null);
+  const [greenPosition, setGreenPosition] = useState<Coordinate | null>(null);
+  const [midPosition, setMidPosition] = useState<Coordinate | null>(null);
+  const [distanceToGreen, setDistanceToGreen] = useState<number>(0);
+  const [distanceToTee, setDistanceToTee] = useState<number>(0);
+  const [totalDistance, setTotalDistance] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [permissionDenied, setPermissionDenied] = useState<boolean>(false);
   const [geoLocation, setGeoLocation] = useState<{ lat: number; lon: number } | null>(null);
@@ -142,9 +144,9 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
   const { weather } = useWeather(geoLocation?.lat || null, geoLocation?.lon || null, 0);
 
   const adjustedDistance = useMemo(() => {
-    if (!weather || distance <= 0) return null;
-    return calculateGolfShot(distance, 'Normal', weather.windMs, weather.headTail, weather.cross, weather.temp, weather.pressureMb);
-  }, [weather, distance]);
+    if (!weather || totalDistance <= 0) return null;
+    return calculateGolfShot(totalDistance, 'Normal', weather.windMs, weather.headTail, weather.cross, weather.temp, weather.pressureMb);
+  }, [weather, totalDistance]);
 
   useEffect(() => {
     if (adjustedDistance) {
@@ -153,10 +155,10 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
   }, [adjustedDistance, onAdjustedDistanceChange]);
 
   useEffect(() => {
-    if (distance > 0) {
-      onDistanceChange?.(distance);
+    if (totalDistance > 0) {
+      onDistanceChange?.(totalDistance);
     }
-  }, [distance, onDistanceChange]);
+  }, [totalDistance, onDistanceChange]);
 
   const holeCoordinates = useMemo(() => {
     if (!courseLocation?.latitude || !courseLocation?.longitude) return [];
@@ -166,7 +168,11 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
       const tee = baseCoord;
       const greenDistMeters = hole.distance > 0 ? hole.distance * 0.9144 : 350;
       const green = offsetCoordinate(tee, 0, greenDistMeters);
-      return { tee, green, hole };
+      const mid: Coordinate = {
+        latitude: (tee.latitude + green.latitude) / 2,
+        longitude: (tee.longitude + green.longitude) / 2,
+      };
+      return { tee, green, mid, hole };
     });
   }, [courseLocation, holes]);
 
@@ -222,15 +228,24 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
     }
   };
 
+  const recalcDistances = useCallback((tee: Coordinate, green: Coordinate, mid: Coordinate) => {
+    const dGreen = Math.round(haversineDistance(mid, green));
+    const dTee = Math.round(haversineDistance(mid, tee));
+    const dTotal = Math.round(haversineDistance(tee, green));
+    setDistanceToGreen(dGreen);
+    setDistanceToTee(dTee);
+    setTotalDistance(dTotal);
+  }, []);
+
   useEffect(() => {
     if (!loading && currentGpsHole) {
       const tee = currentGpsHole.tee;
       const green = currentGpsHole.green;
-      setStartPosition(tee);
-      setEndPosition(green);
-      setDragEnd(green);
-      const dist = Math.round(haversineDistance(tee, green));
-      setDistance(dist);
+      const mid = currentGpsHole.mid;
+      setTeePosition(tee);
+      setGreenPosition(green);
+      setMidPosition(mid);
+      recalcDistances(tee, green, mid);
 
       if (mapRef.current) {
         mapRef.current.fitToCoordinates(
@@ -239,7 +254,7 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
         );
       }
     }
-  }, [loading, currentGpsHole]);
+  }, [loading, currentGpsHole, recalcDistances]);
 
   useEffect(() => {
     if (externalHoleIndex !== undefined && externalHoleIndex !== currentGpsHoleIndex) {
@@ -293,36 +308,68 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
     };
   }, [stopLocationWatch]);
 
-  const handleDrag = useCallback((e: any) => {
+  const handleMidDrag = useCallback((e: any) => {
     const newCoord: Coordinate = e.nativeEvent.coordinate;
-    setDragEnd(newCoord);
-    if (startPosition) {
-      const dist = Math.round(haversineDistance(startPosition, newCoord));
-      setDistance(dist);
+    setMidPosition(newCoord);
+    if (teePosition && greenPosition) {
+      recalcDistances(teePosition, greenPosition, newCoord);
     }
-  }, [startPosition]);
+  }, [teePosition, greenPosition, recalcDistances]);
 
-  const handleDragEnd = useCallback((e: any) => {
+  const handleMidDragEnd = useCallback((e: any) => {
     const newCoord: Coordinate = e.nativeEvent.coordinate;
-    console.log('Drag ended at:', newCoord.latitude, newCoord.longitude);
-    setDragEnd(newCoord);
-    if (startPosition) {
-      const dist = Math.round(haversineDistance(startPosition, newCoord));
-      setDistance(dist);
+    console.log('[GPSTab] Mid drag ended:', newCoord.latitude, newCoord.longitude);
+    setMidPosition(newCoord);
+    if (teePosition && greenPosition) {
+      recalcDistances(teePosition, greenPosition, newCoord);
     }
-  }, [startPosition]);
+  }, [teePosition, greenPosition, recalcDistances]);
+
+  const handleTeeDrag = useCallback((e: any) => {
+    const newCoord: Coordinate = e.nativeEvent.coordinate;
+    setTeePosition(newCoord);
+    if (midPosition && greenPosition) {
+      recalcDistances(newCoord, greenPosition, midPosition);
+    }
+  }, [midPosition, greenPosition, recalcDistances]);
+
+  const handleTeeDragEnd = useCallback((e: any) => {
+    const newCoord: Coordinate = e.nativeEvent.coordinate;
+    console.log('[GPSTab] Tee drag ended:', newCoord.latitude, newCoord.longitude);
+    setTeePosition(newCoord);
+    if (midPosition && greenPosition) {
+      recalcDistances(newCoord, greenPosition, midPosition);
+    }
+  }, [midPosition, greenPosition, recalcDistances]);
+
+  const handleGreenDrag = useCallback((e: any) => {
+    const newCoord: Coordinate = e.nativeEvent.coordinate;
+    setGreenPosition(newCoord);
+    if (teePosition && midPosition) {
+      recalcDistances(teePosition, newCoord, midPosition);
+    }
+  }, [teePosition, midPosition, recalcDistances]);
+
+  const handleGreenDragEnd = useCallback((e: any) => {
+    const newCoord: Coordinate = e.nativeEvent.coordinate;
+    console.log('[GPSTab] Green drag ended:', newCoord.latitude, newCoord.longitude);
+    setGreenPosition(newCoord);
+    if (teePosition && midPosition) {
+      recalcDistances(teePosition, newCoord, midPosition);
+    }
+  }, [teePosition, midPosition, recalcDistances]);
 
   const handleReset = useCallback(() => {
     if (pinnedPosition || !currentGpsHole) return;
-    setStartPosition(currentGpsHole.tee);
-    setDragEnd(currentGpsHole.green);
-    const resetDist = Math.round(haversineDistance(currentGpsHole.tee, currentGpsHole.green));
-    setDistance(resetDist);
+    setTeePosition(currentGpsHole.tee);
+    setGreenPosition(currentGpsHole.green);
+    setMidPosition(currentGpsHole.mid);
+    recalcDistances(currentGpsHole.tee, currentGpsHole.green, currentGpsHole.mid);
     mapRef.current?.fitToCoordinates(
       [currentGpsHole.tee, currentGpsHole.green],
       { edgePadding: { top: 140, right: 60, bottom: 100, left: 60 }, animated: true }
     );
-  }, [pinnedPosition, currentGpsHole]);
+  }, [pinnedPosition, currentGpsHole, recalcDistances]);
 
   if (loading) {
     return (
@@ -343,20 +390,24 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
     );
   }
 
-  const displayStart = startPosition ?? { latitude: 0, longitude: 0 };
-  const displayEnd = dragEnd ?? endPosition ?? displayStart;
+  const displayTee = teePosition ?? { latitude: 0, longitude: 0 };
+  const displayGreen = greenPosition ?? displayTee;
+  const displayMid = midPosition ?? {
+    latitude: (displayTee.latitude + displayGreen.latitude) / 2,
+    longitude: (displayTee.longitude + displayGreen.longitude) / 2,
+  };
 
   const initialRegion = {
-    latitude: (displayStart.latitude + displayEnd.latitude) / 2,
-    longitude: (displayStart.longitude + displayEnd.longitude) / 2,
-    latitudeDelta: Math.abs(displayEnd.latitude - displayStart.latitude) * 2.5 + 0.002,
-    longitudeDelta: Math.abs(displayEnd.longitude - displayStart.longitude) * 2.5 + 0.002,
+    latitude: (displayTee.latitude + displayGreen.latitude) / 2,
+    longitude: (displayTee.longitude + displayGreen.longitude) / 2,
+    latitudeDelta: Math.abs(displayGreen.latitude - displayTee.latitude) * 2.5 + 0.002,
+    longitudeDelta: Math.abs(displayGreen.longitude - displayTee.longitude) * 2.5 + 0.002,
   };
 
   const handleMapReady = () => {
-    if (mapRef.current && startPosition && dragEnd) {
+    if (mapRef.current && teePosition && greenPosition) {
       mapRef.current.fitToCoordinates(
-        [startPosition, dragEnd],
+        [teePosition, greenPosition],
         { edgePadding: { top: 140, right: 60, bottom: 100, left: 60 }, animated: false }
       );
     }
@@ -379,30 +430,58 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
         showsCompass={true}
         showsScale={true}
       >
-        {startPosition && dragEnd && (
+        {teePosition && greenPosition && midPosition && (
           <>
             <Polyline
-              coordinates={[startPosition, dragEnd]}
+              coordinates={[displayTee, displayMid]}
               strokeColor="#FFFFFF"
-              strokeWidth={6}
+              strokeWidth={7}
             />
+            <Polyline
+              coordinates={[displayMid, displayGreen]}
+              strokeColor="#FFFFFF"
+              strokeWidth={7}
+            />
+
             <Marker
-              coordinate={startPosition}
+              coordinate={displayTee}
+              draggable
+              onDrag={handleTeeDrag}
+              onDragEnd={handleTeeDragEnd}
               anchor={{ x: 0.5, y: 0.5 }}
-              tracksViewChanges={false}
+              tracksViewChanges={true}
             >
-              <View style={styles.startMarker}>
-                <View style={styles.startMarkerInner} />
+              <View style={styles.endpointHitArea}>
+                <View style={styles.endpointMarkerOuter}>
+                  <View style={styles.endpointMarkerInner} />
+                </View>
               </View>
             </Marker>
+
+            <Marker
+              coordinate={displayGreen}
+              draggable
+              onDrag={handleGreenDrag}
+              onDragEnd={handleGreenDragEnd}
+              anchor={{ x: 0.5, y: 0.5 }}
+              tracksViewChanges={true}
+            >
+              <View style={styles.endpointHitArea}>
+                <View style={styles.greenMarkerOuter}>
+                  <View style={styles.greenMarkerRing} />
+                  <View style={styles.greenMarkerDot} />
+                </View>
+              </View>
+            </Marker>
+
             {!pinnedPosition && (
               <Marker
-                coordinate={dragEnd}
+                coordinate={displayMid}
                 draggable
-                onDrag={handleDrag}
-                onDragEnd={handleDragEnd}
+                onDrag={handleMidDrag}
+                onDragEnd={handleMidDragEnd}
                 anchor={{ x: 0.5, y: 0.5 }}
-                tracksViewChanges={false}
+                tracksViewChanges={true}
               >
                 <View style={styles.dragMarkerHitArea}>
                   <View style={styles.dragMarkerOuter}>
@@ -411,6 +490,32 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
                 </View>
               </Marker>
             )}
+
+            <Marker
+              coordinate={{
+                latitude: (displayMid.latitude + displayGreen.latitude) / 2,
+                longitude: (displayMid.longitude + displayGreen.longitude) / 2,
+              }}
+              anchor={{ x: 0.5, y: 0.5 }}
+              tracksViewChanges={true}
+            >
+              <View style={styles.distanceBubble}>
+                <Text style={styles.distanceBubbleText}>{distanceToGreen}</Text>
+              </View>
+            </Marker>
+
+            <Marker
+              coordinate={{
+                latitude: (displayMid.latitude + displayTee.latitude) / 2,
+                longitude: (displayMid.longitude + displayTee.longitude) / 2,
+              }}
+              anchor={{ x: 0.5, y: 0.5 }}
+              tracksViewChanges={true}
+            >
+              <View style={styles.distanceBubble}>
+                <Text style={styles.distanceBubbleText}>{distanceToTee}</Text>
+              </View>
+            </Marker>
           </>
         )}
       </MapView>
@@ -438,7 +543,7 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
       </View>
 
       <View style={[styles.distanceOverlay, { top: insets.top + 64 }]}>
-        <Text style={styles.distanceMainValue}>{distance}</Text>
+        <Text style={styles.distanceMainValue}>{totalDistance}</Text>
         <Text style={styles.distanceMainUnit}>Meters</Text>
         {windDistText !== null && (
           <View style={styles.windDistRow}>
@@ -456,12 +561,12 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
       <TouchableOpacity
         style={styles.zoomBtn}
         onPress={() => {
-          if (endPosition && mapRef.current) {
+          if (greenPosition && mapRef.current) {
             const metersView = 30;
             const delta = metersView / 111320;
             mapRef.current.animateToRegion({
-              latitude: endPosition.latitude,
-              longitude: endPosition.longitude,
+              latitude: greenPosition.latitude,
+              longitude: greenPosition.longitude,
               latitudeDelta: delta,
               longitudeDelta: delta,
             }, 600);
@@ -566,25 +671,55 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     paddingHorizontal: 4,
   },
-  startMarker: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(52,199,89,0.3)',
+  endpointHitArea: {
+    width: 50,
+    height: 50,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
-  startMarkerInner: {
+  endpointMarkerOuter: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  endpointMarkerInner: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#34C759',
+    backgroundColor: '#FFFFFF',
+  },
+  greenMarkerOuter: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  greenMarkerRing: {
+    position: 'absolute' as const,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: '#FFFFFF',
+  },
+  greenMarkerDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#FFFFFF',
   },
   dragMarkerHitArea: {
-    width: 90,
-    height: 90,
+    width: 100,
+    height: 100,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
@@ -603,6 +738,26 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     backgroundColor: '#FFFFFF',
+  },
+  distanceBubble: {
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    minWidth: 48,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  distanceBubbleText: {
+    color: '#1a1a1a',
+    fontSize: 16,
+    fontWeight: '800' as const,
+    letterSpacing: -0.5,
   },
 
   distanceOverlay: {
