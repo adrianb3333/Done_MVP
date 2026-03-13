@@ -35,6 +35,13 @@ export default function BattleDrillScreen({ battle, onBack, onFinish, onNavigate
     Array.from({ length: battle.rounds }, () => 0)
   );
 
+  const [isTiebreaker, setIsTiebreaker] = useState(false);
+  const [tiebreakerRound, setTiebreakerRound] = useState(0);
+  const [tiebreakerUserHit, setTiebreakerUserHit] = useState(false);
+  const [tiebreakerOppHit, setTiebreakerOppHit] = useState(false);
+  const [tiebreakerUserScores, setTiebreakerUserScores] = useState<number[]>([]);
+  const [tiebreakerOppScores, setTiebreakerOppScores] = useState<number[]>([]);
+
   const userHits = useMemo(() => userHighest[currentRound] ?? 0, [userHighest, currentRound]);
   const oppHits = useMemo(() => opponentHighest[currentRound] ?? 0, [opponentHighest, currentRound]);
 
@@ -73,9 +80,44 @@ export default function BattleDrillScreen({ battle, onBack, onFinish, onNavigate
     });
   }, [currentRound]);
 
+  const handleTiebreakerNext = useCallback(() => {
+    const uHit = tiebreakerUserHit ? 1 : 0;
+    const oHit = tiebreakerOppHit ? 1 : 0;
+
+    const newUserScores = [...tiebreakerUserScores, uHit];
+    const newOppScores = [...tiebreakerOppScores, oHit];
+    setTiebreakerUserScores(newUserScores);
+    setTiebreakerOppScores(newOppScores);
+
+    if (uHit !== oHit) {
+      console.log('[BattleDrillScreen] Tiebreaker resolved at round', tiebreakerRound + 1);
+      const finalUserScores = [...userHighest, ...newUserScores];
+      const finalOppScores = [...opponentHighest, ...newOppScores];
+      onFinish(finalUserScores, finalOppScores);
+    } else {
+      console.log('[BattleDrillScreen] Tiebreaker round', tiebreakerRound + 1, 'still tied, continuing');
+      setTiebreakerRound(prev => prev + 1);
+      setTiebreakerUserHit(false);
+      setTiebreakerOppHit(false);
+    }
+  }, [tiebreakerUserHit, tiebreakerOppHit, tiebreakerUserScores, tiebreakerOppScores, tiebreakerRound, userHighest, opponentHighest, onFinish]);
+
   const handleNext = useCallback(() => {
     if (isLastRound) {
-      onFinish(userHighest, opponentHighest);
+      const uTotal = userHighest.reduce((s, h) => s + h, 0);
+      const oTotal = opponentHighest.reduce((s, h) => s + h, 0);
+      if (uTotal === oTotal) {
+        console.log('[BattleDrillScreen] Tie detected, entering tiebreaker mode');
+        if (Platform.OS !== 'web') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        setIsTiebreaker(true);
+        setTiebreakerRound(0);
+        setTiebreakerUserHit(false);
+        setTiebreakerOppHit(false);
+        setTiebreakerUserScores([]);
+        setTiebreakerOppScores([]);
+      } else {
+        onFinish(userHighest, opponentHighest);
+      }
     } else {
       setCurrentRound(prev => prev + 1);
     }
@@ -137,68 +179,144 @@ export default function BattleDrillScreen({ battle, onBack, onFinish, onNavigate
         </View>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.playerSection}>
-          <View style={styles.playerHeader}>
-            <View style={styles.playerIcon}>
-              <User size={16} color="#FFFFFF" />
-            </View>
-            <Text style={styles.playerName}>Your Score</Text>
-            <Text style={styles.playerHitsLabel}>{userHits}/{battle.shots_per_round}</Text>
+      {isTiebreaker ? (
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.tiebreakerBanner}>
+            <Text style={styles.tiebreakerBannerTitle}>TIEBREAKER</Text>
+            <Text style={styles.tiebreakerBannerSub}>Sudden death — 1 shot each until a winner is decided</Text>
+            <Text style={styles.tiebreakerRoundLabel}>Round {tiebreakerRound + 1}</Text>
           </View>
-          <View style={styles.targetsGrid}>
-            {Array.from({ length: battle.shots_per_round }).map((_, idx) => {
-              const targetNumber = idx + 1;
-              const isHit = targetNumber <= userHits;
-              return (
-                <TouchableOpacity
-                  key={`u-${idx}`}
-                  style={[styles.targetCircle, isHit && styles.targetHitUser]}
-                  onPress={() => toggleUserTarget(idx)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.targetText, isHit && styles.targetTextHit]}>
-                    {targetNumber}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
 
-        <View style={styles.divider} />
-
-        <View style={styles.playerSection}>
-          <View style={styles.playerHeader}>
-            <View style={[styles.playerIcon, { backgroundColor: 'rgba(255,209,102,0.3)' }]}>
-              <User size={16} color="#FFD166" />
+          <View style={styles.playerSection}>
+            <View style={styles.playerHeader}>
+              <View style={styles.playerIcon}>
+                <User size={16} color="#FFFFFF" />
+              </View>
+              <Text style={styles.playerName}>Your Shot</Text>
             </View>
-            <Text style={styles.playerName}>{battle.opponent_display_name}</Text>
-            <Text style={styles.playerHitsLabel}>{oppHits}/{battle.shots_per_round}</Text>
+            <View style={styles.tiebreakerRow}>
+              <TouchableOpacity
+                style={[styles.tiebreakerCircle, tiebreakerUserHit && styles.targetHitUser]}
+                onPress={() => setTiebreakerUserHit(!tiebreakerUserHit)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.tiebreakerCircleText, tiebreakerUserHit && styles.targetTextHit]}>
+                  {tiebreakerUserHit ? 'HIT' : 'MISS'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-          <View style={styles.targetsGrid}>
-            {Array.from({ length: battle.shots_per_round }).map((_, idx) => {
-              const targetNumber = idx + 1;
-              const isHit = targetNumber <= oppHits;
-              return (
-                <TouchableOpacity
-                  key={`o-${idx}`}
-                  style={[styles.targetCircle, isHit && styles.targetHitOpp]}
-                  onPress={() => toggleOpponentTarget(idx)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.targetText, isHit && styles.targetTextHit]}>
-                    {targetNumber}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+
+          <View style={styles.divider} />
+
+          <View style={styles.playerSection}>
+            <View style={styles.playerHeader}>
+              <View style={[styles.playerIcon, { backgroundColor: 'rgba(255,209,102,0.3)' }]}>
+                <User size={16} color="#FFD166" />
+              </View>
+              <Text style={styles.playerName}>{battle.opponent_display_name}</Text>
+            </View>
+            <View style={styles.tiebreakerRow}>
+              <TouchableOpacity
+                style={[styles.tiebreakerCircle, tiebreakerOppHit && styles.targetHitOpp]}
+                onPress={() => setTiebreakerOppHit(!tiebreakerOppHit)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.tiebreakerCircleText, tiebreakerOppHit && styles.targetTextHit]}>
+                  {tiebreakerOppHit ? 'HIT' : 'MISS'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </ScrollView>
+
+          {tiebreakerUserScores.length > 0 && (
+            <View style={styles.tiebreakerHistory}>
+              <Text style={styles.tiebreakerHistoryTitle}>PREVIOUS ROUNDS</Text>
+              {tiebreakerUserScores.map((uS, idx) => {
+                const oS = tiebreakerOppScores[idx] ?? 0;
+                return (
+                  <View key={idx} style={styles.tiebreakerHistoryRow}>
+                    <Text style={styles.tiebreakerHistoryRound}>TB{idx + 1}</Text>
+                    <Text style={[styles.tiebreakerHistoryScore, uS === 1 && { color: '#7AE582', fontWeight: '900' as const }]}>
+                      {uS === 1 ? 'Hit' : 'Miss'}
+                    </Text>
+                    <Text style={styles.tiebreakerHistoryVs}>vs</Text>
+                    <Text style={[styles.tiebreakerHistoryScore, oS === 1 && { color: '#FFD166', fontWeight: '900' as const }]}>
+                      {oS === 1 ? 'Hit' : 'Miss'}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+        </ScrollView>
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.playerSection}>
+            <View style={styles.playerHeader}>
+              <View style={styles.playerIcon}>
+                <User size={16} color="#FFFFFF" />
+              </View>
+              <Text style={styles.playerName}>Your Score</Text>
+              <Text style={styles.playerHitsLabel}>{userHits}/{battle.shots_per_round}</Text>
+            </View>
+            <View style={styles.targetsGrid}>
+              {Array.from({ length: battle.shots_per_round }).map((_, idx) => {
+                const targetNumber = idx + 1;
+                const isHit = targetNumber <= userHits;
+                return (
+                  <TouchableOpacity
+                    key={`u-${idx}`}
+                    style={[styles.targetCircle, isHit && styles.targetHitUser]}
+                    onPress={() => toggleUserTarget(idx)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.targetText, isHit && styles.targetTextHit]}>
+                      {targetNumber}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.playerSection}>
+            <View style={styles.playerHeader}>
+              <View style={[styles.playerIcon, { backgroundColor: 'rgba(255,209,102,0.3)' }]}>
+                <User size={16} color="#FFD166" />
+              </View>
+              <Text style={styles.playerName}>{battle.opponent_display_name}</Text>
+              <Text style={styles.playerHitsLabel}>{oppHits}/{battle.shots_per_round}</Text>
+            </View>
+            <View style={styles.targetsGrid}>
+              {Array.from({ length: battle.shots_per_round }).map((_, idx) => {
+                const targetNumber = idx + 1;
+                const isHit = targetNumber <= oppHits;
+                return (
+                  <TouchableOpacity
+                    key={`o-${idx}`}
+                    style={[styles.targetCircle, isHit && styles.targetHitOpp]}
+                    onPress={() => toggleOpponentTarget(idx)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.targetText, isHit && styles.targetTextHit]}>
+                      {targetNumber}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </ScrollView>
+      )}
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
         <View style={styles.footerRow}>
@@ -216,16 +334,16 @@ export default function BattleDrillScreen({ battle, onBack, onFinish, onNavigate
           )}
 
           <View style={styles.nextButtonFlex}>
-            <TouchableOpacity onPress={handleNext} activeOpacity={0.8}>
+            <TouchableOpacity onPress={isTiebreaker ? handleTiebreakerNext : handleNext} activeOpacity={0.8}>
               <View style={styles.nextButtonOuter}>
                 <LinearGradient
-                  colors={['rgba(0,0,0,0.35)', 'rgba(0,0,0,0.25)']}
+                  colors={isTiebreaker ? ['rgba(255,215,0,0.35)', 'rgba(255,165,0,0.25)'] : ['rgba(0,0,0,0.35)', 'rgba(0,0,0,0.25)']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                   style={styles.nextButton}
                 >
                   <Text style={styles.nextButtonText}>
-                    {isLastRound ? 'Finish Battle' : 'Next Round'}
+                    {isTiebreaker ? 'Submit Shot' : isLastRound ? 'Finish Battle' : 'Next Round'}
                   </Text>
                   <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />
                 </LinearGradient>
@@ -532,5 +650,93 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700' as const,
     color: '#C62828',
+  },
+  tiebreakerBanner: {
+    backgroundColor: 'rgba(255,215,0,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.3)',
+    borderRadius: 16,
+    padding: 18,
+    alignItems: 'center' as const,
+    marginBottom: 20,
+  },
+  tiebreakerBannerTitle: {
+    fontSize: 22,
+    fontWeight: '900' as const,
+    color: '#FFD166',
+    letterSpacing: 2,
+  },
+  tiebreakerBannerSub: {
+    fontSize: 13,
+    fontWeight: '500' as const,
+    color: 'rgba(255,255,255,0.7)',
+    textAlign: 'center' as const,
+    marginTop: 4,
+  },
+  tiebreakerRoundLabel: {
+    fontSize: 15,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+    marginTop: 10,
+  },
+  tiebreakerRow: {
+    flexDirection: 'row' as const,
+    justifyContent: 'center' as const,
+    paddingVertical: 8,
+  },
+  tiebreakerCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: GLASS_BG,
+    borderWidth: 2,
+    borderColor: GLASS_BORDER,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  tiebreakerCircleText: {
+    fontSize: 16,
+    fontWeight: '800' as const,
+    color: 'rgba(255,255,255,0.55)',
+  },
+  tiebreakerHistory: {
+    marginTop: 16,
+    backgroundColor: GLASS_BG,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+    borderRadius: 14,
+    padding: 14,
+  },
+  tiebreakerHistoryTitle: {
+    fontSize: 11,
+    fontWeight: '800' as const,
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: 0.8,
+    marginBottom: 10,
+  },
+  tiebreakerHistoryRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginBottom: 6,
+    gap: 14,
+  },
+  tiebreakerHistoryRound: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.5)',
+    width: 30,
+  },
+  tiebreakerHistoryScore: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: 'rgba(255,255,255,0.7)',
+    width: 50,
+    textAlign: 'center' as const,
+  },
+  tiebreakerHistoryVs: {
+    fontSize: 11,
+    fontWeight: '500' as const,
+    color: 'rgba(255,255,255,0.35)',
   },
 });

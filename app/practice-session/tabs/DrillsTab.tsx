@@ -113,6 +113,7 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
   const { activeBattle, completeBattle, clearActiveBattle } = useBattle();
   const [battleUserScores, setBattleUserScores] = useState<number[]>([]);
   const [battleOppScores, setBattleOppScores] = useState<number[]>([]);
+  const [savedBattleInfo, setSavedBattleInfo] = useState<typeof activeBattle>(null);
   const [selectedDrill, setSelectedDrill] = useState<{ category: string; card: string } | null>(null);
   const [currentScreen, setCurrentScreen] = useState<ScreenState>('main');
   const [savedDrills, setSavedDrills] = useState<CustomDrill[]>([]);
@@ -579,6 +580,7 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
           console.log('[DrillsTab] Battle drill finished');
           setBattleUserScores(userScores);
           setBattleOppScores(oppScores);
+          setSavedBattleInfo(activeBattle ? { ...activeBattle } : null);
           void completeBattle({ userRoundScores: userScores, opponentRoundScores: oppScores });
           setCurrentScreen('battleSummary');
         }}
@@ -588,7 +590,8 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
   }
 
   if (currentScreen === 'battleSummary') {
-    const battleForSummary = activeBattle ?? {
+    const info = savedBattleInfo ?? activeBattle;
+    const battleForSummary = info ?? {
       id: 'summary',
       battle_name: 'Battle',
       opponent_id: '',
@@ -606,12 +609,14 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
         onRetry={() => {
           setBattleUserScores([]);
           setBattleOppScores([]);
+          setSavedBattleInfo(null);
           setCurrentScreen('battleDrill');
           onDrillActiveChange?.(true);
         }}
         onHome={() => {
           setBattleUserScores([]);
           setBattleOppScores([]);
+          setSavedBattleInfo(null);
           setCurrentScreen('main');
           onDrillActiveChange?.(false);
         }}

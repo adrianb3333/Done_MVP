@@ -56,13 +56,12 @@ export default function BattleSummaryScreen({
 
         <View style={styles.vsContainer}>
           <View style={styles.playerColumn}>
-            <View style={styles.playerAvatarWrap}>
-              <User size={28} color="#FFFFFF" />
-            </View>
-            <Text style={styles.vsPlayerName}>You</Text>
-            <View style={styles.greenLine} />
+            {userWon ? <View style={styles.greenLine} /> : <View style={styles.greenLinePlaceholder} />}
             <Text style={[styles.vsScore, { color: '#7AE582' }]}>{userTotal}</Text>
             <Text style={styles.vsPct}>{userPct}%</Text>
+            <View style={styles.playerAvatarWrapSmall}>
+              <User size={20} color="#FFFFFF" />
+            </View>
           </View>
 
           <View style={styles.vsMiddle}>
@@ -70,17 +69,16 @@ export default function BattleSummaryScreen({
           </View>
 
           <View style={styles.playerColumn}>
-            {battle.opponent_avatar_url ? (
-              <Image source={{ uri: battle.opponent_avatar_url }} style={styles.opponentAvatar} />
-            ) : (
-              <View style={styles.playerAvatarWrap}>
-                <User size={28} color="#FFD166" />
-              </View>
-            )}
-            <Text style={styles.vsPlayerName}>{battle.opponent_display_name.split(' ')[0]}</Text>
-            <View style={styles.greenLine} />
+            {!userWon && !isDraw ? <View style={styles.greenLine} /> : <View style={styles.greenLinePlaceholder} />}
             <Text style={[styles.vsScore, { color: '#FFD166' }]}>{oppTotal}</Text>
             <Text style={styles.vsPct}>{oppPct}%</Text>
+            {battle.opponent_avatar_url ? (
+              <Image source={{ uri: battle.opponent_avatar_url }} style={styles.opponentAvatarSmall} />
+            ) : (
+              <View style={styles.playerAvatarWrapSmall}>
+                <User size={20} color="#FFD166" />
+              </View>
+            )}
           </View>
         </View>
 
@@ -174,6 +172,25 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     marginBottom: 8,
   },
+  playerAvatarWrapSmall: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: GLASS_BG,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginTop: 8,
+  },
+  opponentAvatarSmall: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.3)',
+    marginTop: 8,
+  },
   vsPlayerName: {
     fontSize: 14,
     fontWeight: '700' as const,
@@ -185,6 +202,12 @@ const styles = StyleSheet.create({
     height: 3,
     backgroundColor: '#22C55E',
     borderRadius: 1.5,
+    marginBottom: 4,
+  },
+  greenLinePlaceholder: {
+    width: 40,
+    height: 3,
+    backgroundColor: 'transparent',
     marginBottom: 4,
   },
   vsScore: {

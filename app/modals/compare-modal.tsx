@@ -674,10 +674,17 @@ export default function CompareModal() {
                       <View style={styles.battleCardInner}>
                         <View style={styles.battleRow}>
                           <View style={styles.battlePlayerCol}>
-                            <View style={styles.bsGreenLine} />
+                            {userWon && <View style={styles.bsGreenLine} />}
+                            {!userWon && <View style={styles.bsGreenLinePlaceholder} />}
                             <Text style={[styles.battleScore, { color: '#FFFFFF' }]}>{result.user_score}</Text>
-                            <Text style={styles.battlePlayerLabelWhite}>You</Text>
                             <Text style={styles.battlePctWhite}>{result.user_percentage}%</Text>
+                            {profile?.avatar_url ? (
+                              <Image source={{ uri: profile.avatar_url }} style={styles.battleAvatarSmall} />
+                            ) : (
+                              <View style={styles.battleAvatarSmallPlaceholder}>
+                                <User size={14} color="rgba(255,255,255,0.5)" />
+                              </View>
+                            )}
                           </View>
                           <View style={styles.battleVsCol}>
                             <Text style={styles.battleVsTextWhite}>VS</Text>
@@ -695,17 +702,17 @@ export default function CompareModal() {
                             }}
                             activeOpacity={0.7}
                           >
+                            {!userWon && !isDraw && <View style={styles.bsGreenLine} />}
+                            {(userWon || isDraw) && <View style={styles.bsGreenLinePlaceholder} />}
+                            <Text style={[styles.battleScore, { color: '#FFFFFF' }]}>{result.opponent_score}</Text>
+                            <Text style={styles.battlePctWhite}>{result.opponent_percentage}%</Text>
                             {result.opponent_avatar_url ? (
-                              <Image source={{ uri: result.opponent_avatar_url }} style={styles.battleAvatar} />
+                              <Image source={{ uri: result.opponent_avatar_url }} style={styles.battleAvatarSmall} />
                             ) : (
-                              <View style={styles.battleAvatarPlaceholder}>
-                                <User size={16} color="rgba(255,255,255,0.5)" />
+                              <View style={styles.battleAvatarSmallPlaceholder}>
+                                <User size={14} color="rgba(255,255,255,0.5)" />
                               </View>
                             )}
-                            <View style={styles.bsGreenLine} />
-                            <Text style={[styles.battleScore, { color: '#FFFFFF' }]}>{result.opponent_score}</Text>
-                            <Text style={styles.battlePlayerLabelWhite} numberOfLines={1}>{result.opponent_display_name.split(' ')[0]}</Text>
-                            <Text style={styles.battlePctWhite}>{result.opponent_percentage}%</Text>
                           </TouchableOpacity>
                         </View>
                         <View style={styles.battleMeta}>
@@ -1522,6 +1529,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#22C55E',
     borderRadius: 1.5,
     marginBottom: 4,
+  },
+  bsGreenLinePlaceholder: {
+    width: 40,
+    height: 3,
+    backgroundColor: 'transparent',
+    marginBottom: 4,
+  },
+  battleAvatarSmall: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.3)',
+    marginTop: 6,
+  },
+  battleAvatarSmallPlaceholder: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginTop: 6,
   },
   battlePlayerLabelWhite: {
     fontSize: 13,
