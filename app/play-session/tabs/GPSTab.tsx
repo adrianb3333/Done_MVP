@@ -525,7 +525,7 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
         )}
       </MapView>
 
-      <View style={[styles.holeHeaderCompact, { top: insets.top + 10, left: 0, right: 0 }]}>
+      <View style={[styles.holeHeaderCompact, { top: insets.top + 10 }]}>
         <TouchableOpacity
           style={[styles.holeNavArrowSmall, isFirstHole && styles.holeNavArrowDisabled]}
           onPress={handlePrevHole}
