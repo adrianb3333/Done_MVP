@@ -10,6 +10,8 @@ import { AppNavigationProvider, useAppNavigation } from "@/contexts/AppNavigatio
 import { UserDataProvider } from "@/hooks/useUserData";
 import { SensorProvider } from "@/contexts/SensorContext";
 import { ChatProvider } from "@/contexts/ChatContext";
+import { BattleProvider } from "@/contexts/BattleContext";
+import BattleInviteBanner from "@/components/BattleInviteBanner";
 import PlaySessionTabs from "@/app/play-session/PlaySessionTabs";
 import PracticeSessionTabs from "@/app/practice-session/PracticeSessionTabs";
 import MiniSessionModal from "@/components/MiniSessionModal";
@@ -340,7 +342,12 @@ function AppContent() {
 }
 
 function RootLayoutNav() {
-  return <AppContent />;
+  return (
+    <>
+      <AppContent />
+      <BattleInviteBanner />
+    </>
+  );
 }
 
 export default function RootLayout() {
@@ -357,11 +364,13 @@ export default function RootLayout() {
           <SensorProvider>
             <ProfileProvider>
               <AppNavigationProvider>
-                <ChatProvider>
-                  <UserDataProvider>
-                    <RootLayoutNav />
-                  </UserDataProvider>
-                </ChatProvider>
+                <BattleProvider>
+                  <ChatProvider>
+                    <UserDataProvider>
+                      <RootLayoutNav />
+                    </UserDataProvider>
+                  </ChatProvider>
+                </BattleProvider>
               </AppNavigationProvider>
             </ProfileProvider>
           </SensorProvider>

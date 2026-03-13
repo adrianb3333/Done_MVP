@@ -17,7 +17,10 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Menu, BarChart2, TrendingUp, Crosshair, List, Video, Plus, Columns2, Trash2, Dumbbell, ChevronRight, MapPin, Search, Star, X } from 'lucide-react-native';
+import { Menu, BarChart2, TrendingUp, Crosshair, List, Video, Plus, Columns2, Trash2, Dumbbell, ChevronRight, MapPin, Search, Star, X, Swords, User, ChevronDown } from 'lucide-react-native';
+import { useBattle, BattleResult } from '@/contexts/BattleContext';
+import { useProfile, UserProfile } from '@/contexts/ProfileContext';
+import ProfileCard from '@/components/ProfileCard';
 import { useScrollHeader, ScrollHeaderProvider, useScrollHeaderContext, useScrollHeaderPadding } from '@/hooks/useScrollHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TabCourse, { CourseTab } from '@/components/PlaSta/TabCourse';
@@ -1732,11 +1735,277 @@ const DETAIL_SEGMENTS: { key: DetailsSegment; label: string }[] = [
 ];
 
 type ScreenMode = 'data' | 'battle';
+type BattleSubScreen = 'history' | 'setup';
+
+function BattleHistoryContent({ battleResults, onSelectUser }: { battleResults: BattleResult[]; onSelectUser: (userId: string, username: string, displayName: string, avatarUrl: string | null) => void }) {
+  const insets = useSafeAreaInsets();
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const sorted = useMemo(() => {
+    return [...battleResults].sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime());
+  }, [battleResults]);
+
+  if (sorted.length === 0) {
+    return (
+      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 70, paddingHorizontal: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+        <View style={battleStyles.emptyWrap}>
+          <Swords size={40} color="rgba(255,255,255,0.35)" />
+          <Text style={battleStyles.emptyTitle}>No battles yet</Text>
+          <Text style={battleStyles.emptySub}>Start a battle from the Drills tab</Text>
+        </View>
+      </ScrollView>
+    );
+  }
+
+  return (
+    <ScrollView contentContainerStyle={{ paddingTop: insets.top + 70, paddingHorizontal: 16, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+      {sorted.map((result) => {
+        const isExpanded = expandedId === result.id;
+        const userWon = result.user_score > result.opponent_score;
+        const isDraw = result.user_score === result.opponent_score;
+        const dateStr = new Date(result.completed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+        return (
+          <TouchableOpacity
+            key={result.id}
+            style={battleStyles.historyCard}
+            onPress={() => setExpandedId(isExpanded ? null : result.id)}
+            activeOpacity={0.8}
+          >
+            <View style={battleStyles.historyCardInner}>
+              <View style={battleStyles.historyRow}>
+                <View style={battleStyles.historyPlayerCol}>
+                  <Text style={[battleStyles.historyScore, { color: '#7AE582' }]}>{result.user_score}</Text>
+                  <Text style={battleStyles.historyPlayerLabel}>You</Text>
+                  <Text style={battleStyles.historyPct}>{result.user_percentage}%</Text>
+                </View>
+                <View style={battleStyles.historyVsCol}>
+                  <Text style={battleStyles.historyVsText}>VS</Text>
+                  <View style={[battleStyles.historyBadge, { backgroundColor: isDraw ? 'rgba(255,209,102,0.2)' : userWon ? 'rgba(122,229,130,0.2)' : 'rgba(255,138,128,0.2)' }]}>
+                    <Text style={[battleStyles.historyBadgeText, { color: isDraw ? '#FFD166' : userWon ? '#7AE582' : '#FF8A80' }]}>
+                      {isDraw ? 'Draw' : userWon ? 'Won' : 'Lost'}
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={battleStyles.historyPlayerCol}
+                  onPress={() => onSelectUser(result.opponent_id, result.opponent_username, result.opponent_display_name, result.opponent_avatar_url)}
+                  activeOpacity={0.7}
+                >
+                  {result.opponent_avatar_url ? (
+                    <Image source={{ uri: result.opponent_avatar_url }} style={battleStyles.historyAvatar} />
+                  ) : (
+                    <View style={battleStyles.historyAvatarPlaceholder}>
+                      <User size={16} color="rgba(255,255,255,0.5)" />
+                    </View>
+                  )}
+                  <Text style={[battleStyles.historyScore, { color: '#FFD166' }]}>{result.opponent_score}</Text>
+                  <Text style={battleStyles.historyPlayerLabel} numberOfLines={1}>{result.opponent_display_name.split(' ')[0]}</Text>
+                  <Text style={battleStyles.historyPct}>{result.opponent_percentage}%</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={battleStyles.historyMeta}>
+                <Text style={battleStyles.historyMetaText}>{result.battle_name}</Text>
+                <Text style={battleStyles.historyMetaText}>{dateStr}</Text>
+              </View>
+
+              {isExpanded && (
+                <View style={battleStyles.historyExpanded}>
+                  <Text style={battleStyles.expandedTitle}>ROUND BREAKDOWN</Text>
+                  {result.user_round_scores.map((uScore, idx) => {
+                    const oScore = result.opponent_round_scores[idx] ?? 0;
+                    return (
+                      <View key={idx} style={battleStyles.expandedRow}>
+                        <Text style={battleStyles.expandedRoundLabel}>R{idx + 1}</Text>
+                        <Text style={[battleStyles.expandedScore, uScore > oScore && { color: '#7AE582', fontWeight: '900' as const }]}>
+                          {uScore}/{result.shots_per_round}
+                        </Text>
+                        <Text style={battleStyles.expandedVs}>vs</Text>
+                        <Text style={[battleStyles.expandedScore, oScore > uScore && { color: '#FFD166', fontWeight: '900' as const }]}>
+                          {oScore}/{result.shots_per_round}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              )}
+
+              <View style={battleStyles.historyExpandHint}>
+                <ChevronDown size={16} color="rgba(255,255,255,0.4)" style={isExpanded ? { transform: [{ rotate: '180deg' }] } : undefined} />
+              </View>
+            </View>
+          </TouchableOpacity>
+        );
+      })}
+    </ScrollView>
+  );
+}
+
+const battleStyles = StyleSheet.create({
+  emptyWrap: {
+    alignItems: 'center' as const,
+    paddingTop: 60,
+    gap: 10,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+  },
+  emptySub: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.55)',
+    textAlign: 'center' as const,
+  },
+  historyCard: {
+    backgroundColor: 'rgba(0,0,0,0.32)',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    marginBottom: 12,
+    overflow: 'hidden' as const,
+  },
+  historyCardInner: {
+    padding: 16,
+  },
+  historyRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+  },
+  historyPlayerCol: {
+    alignItems: 'center' as const,
+    width: 90,
+  },
+  historyVsCol: {
+    alignItems: 'center' as const,
+    gap: 6,
+  },
+  historyVsText: {
+    fontSize: 18,
+    fontWeight: '900' as const,
+    color: 'rgba(255,255,255,0.45)',
+  },
+  historyBadge: {
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  historyBadgeText: {
+    fontSize: 12,
+    fontWeight: '700' as const,
+  },
+  historyScore: {
+    fontSize: 30,
+    fontWeight: '900' as const,
+    letterSpacing: -1,
+  },
+  historyPlayerLabel: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 2,
+  },
+  historyPct: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.45)',
+    marginTop: 1,
+  },
+  historyAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginBottom: 4,
+  },
+  historyAvatarPlaceholder: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginBottom: 4,
+  },
+  historyMeta: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.08)',
+  },
+  historyMetaText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.4)',
+  },
+  historyExpanded: {
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.08)',
+  },
+  expandedTitle: {
+    fontSize: 12,
+    fontWeight: '800' as const,
+    color: 'rgba(255,255,255,0.6)',
+    letterSpacing: 0.8,
+    marginBottom: 10,
+  },
+  expandedRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginBottom: 8,
+    gap: 16,
+  },
+  expandedRoundLabel: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.5)',
+    width: 28,
+  },
+  expandedScore: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: 'rgba(255,255,255,0.7)',
+    width: 55,
+    textAlign: 'center' as const,
+  },
+  expandedVs: {
+    fontSize: 11,
+    fontWeight: '500' as const,
+    color: 'rgba(255,255,255,0.35)',
+  },
+  historyExpandHint: {
+    alignItems: 'center' as const,
+    marginTop: 6,
+  },
+  oneVOneBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  oneVOneText: {
+    fontSize: 12,
+    fontWeight: '900' as const,
+    color: '#FFFFFF',
+  },
+});
 
 export default function DataOverviewScreen() {
   const [activeTab, setActiveTab] = useState<DataTab>('stats');
   const [screenMode, setScreenMode] = useState<ScreenMode>('data');
-  const { openSidebar, navigateTo, dataOverviewInitialTab, clearDataOverviewInitialTab, dataOverviewInitialStatsSegment, clearDataOverviewInitialStatsSegment } = useAppNavigation();
+  const [_battleSubScreen, _setBattleSubScreen] = useState<BattleSubScreen>('history');
+  const { openSidebar, dataOverviewInitialTab, clearDataOverviewInitialTab, dataOverviewInitialStatsSegment, clearDataOverviewInitialStatsSegment } = useAppNavigation();
+  const { battleResults } = useBattle();
+  const { isFollowing: checkIsFollowing, toggleFollow } = useProfile();
+  const [profileCardUser, setProfileCardUser] = useState<UserProfile | null>(null);
+  const [showProfileCard, setShowProfileCard] = useState(false);
   const insets = useSafeAreaInsets();
 
   const [statsSegment, setStatsSegment] = useState<StatsSegment>(dataOverviewInitialStatsSegment || 'round');
@@ -1810,6 +2079,12 @@ export default function DataOverviewScreen() {
   const { headerTranslateY, onScroll: onHeaderScroll } = useScrollHeader(totalHeaderHeight);
   const contentPaddingTop = insets.top + totalHeaderHeight;
   const scrollHeaderValue = useMemo(() => ({ onScroll: onHeaderScroll, contentPaddingTop }), [onHeaderScroll, contentPaddingTop]);
+
+  const handleSelectBattleUser = useCallback((userId: string, username: string, displayName: string, avatarUrl: string | null) => {
+    console.log('[DataOverview] Opening profile card for battle user:', username);
+    setProfileCardUser({ id: userId, username, display_name: displayName, avatar_url: avatarUrl });
+    setShowProfileCard(true);
+  }, []);
 
   const renderHeaderTitle = () => {
     return (
@@ -1925,8 +2200,18 @@ export default function DataOverviewScreen() {
               <Menu size={24} color="#FFFFFF" />
             </TouchableOpacity>
             {renderHeaderTitle()}
-            <TouchableOpacity onPress={() => navigateTo('mygame')} style={styles.menuBtn} activeOpacity={0.7}>
-              <Image source={require('@/assets/images/golferscrib-logo.png')} style={styles.logoIcon} resizeMode="contain" />
+            <TouchableOpacity
+              onPress={() => {
+                if (screenMode === 'battle') {
+                  setScreenMode('data');
+                } else {
+                  setScreenMode('battle');
+                }
+              }}
+              style={battleStyles.oneVOneBtn}
+              activeOpacity={0.7}
+            >
+              <Text style={battleStyles.oneVOneText}>1V1</Text>
             </TouchableOpacity>
           </View>
           {screenMode === 'data' && renderSegmentControl()}
@@ -1968,8 +2253,21 @@ export default function DataOverviewScreen() {
           <ScrollHeaderProvider value={scrollHeaderValue}>
             {renderContent()}
           </ScrollHeaderProvider>
-        ) : null}
+        ) : (
+          <BattleHistoryContent
+            battleResults={battleResults}
+            onSelectUser={handleSelectBattleUser}
+          />
+        )}
       </View>
+
+      <ProfileCard
+        visible={showProfileCard}
+        onClose={() => setShowProfileCard(false)}
+        user={profileCardUser}
+        isFollowingUser={profileCardUser ? checkIsFollowing(profileCardUser.id) : false}
+        onToggleFollow={profileCardUser ? () => void toggleFollow(profileCardUser.id) : undefined}
+      />
 
       <Modal
         visible={courseShowCountryPicker}

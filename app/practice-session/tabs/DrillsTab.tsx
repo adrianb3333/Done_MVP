@@ -36,6 +36,9 @@ import CreateScheduleScreen, { ScheduledItem } from "@/components/drills/CreateS
 import CalendarScreen from "@/components/drills/CalendarScreen";
 import CreateSensorDrillScreen, { SensorDrill } from "@/components/drills/CreateSensorDrillScreen";
 import BattleScreen from "@/components/drills/BattleScreen";
+import BattleDrillScreen from "@/components/drills/BattleDrillScreen";
+import BattleSummaryScreen from "@/components/drills/BattleSummaryScreen";
+import { useBattle } from "@/contexts/BattleContext";
 import DrillHistoryScreen, { DrillHistoryEntry } from "@/components/drills/DrillHistoryScreen";
 import DrillOverviewScreen from "@/components/drills/DrillOverviewScreen";
 import ActiveDrillScreen, { DrillResult } from "@/components/drills/ActiveDrillScreen";
@@ -97,6 +100,8 @@ type ScreenState =
   | 'calendar'
   | 'createSensorDrill'
   | 'battle'
+  | 'battleDrill'
+  | 'battleSummary'
   | 'history'
   | 'drillOverview'
   | 'activeDrill'
@@ -105,6 +110,9 @@ type ScreenState =
 
 export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSetPin, onNavigateToTab, onClearPin }: DrillsTabProps) {
   const { isPaired: sensorsPaired } = useSensor();
+  const { activeBattle, completeBattle, clearActiveBattle } = useBattle();
+  const [battleUserScores, setBattleUserScores] = useState<number[]>([]);
+  const [battleOppScores, setBattleOppScores] = useState<number[]>([]);
   const [selectedDrill, setSelectedDrill] = useState<{ category: string; card: string } | null>(null);
   const [currentScreen, setCurrentScreen] = useState<ScreenState>('main');
   const [savedDrills, setSavedDrills] = useState<CustomDrill[]>([]);
@@ -534,6 +542,53 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
     return (
       <BattleScreen
         onBack={() => setCurrentScreen('main')}
+        onBattleStart={() => {
+          console.log('[DrillsTab] Battle started, switching to battleDrill');
+          setCurrentScreen('battleDrill');
+          onDrillActiveChange?.(true);
+        }}
+      />
+    );
+  }
+
+  if (currentScreen === 'battleDrill' && activeBattle) {
+    return (
+      <BattleDrillScreen
+        battle={activeBattle}
+        onBack={() => {
+          setCurrentScreen('battle');
+          onDrillActiveChange?.(false);
+          void clearActiveBattle();
+        }}
+        onFinish={(userScores, oppScores) => {
+          console.log('[DrillsTab] Battle drill finished');
+          setBattleUserScores(userScores);
+          setBattleOppScores(oppScores);
+          void completeBattle({ userRoundScores: userScores, opponentRoundScores: oppScores });
+          setCurrentScreen('battleSummary');
+        }}
+      />
+    );
+  }
+
+  if (currentScreen === 'battleSummary' && activeBattle) {
+    return (
+      <BattleSummaryScreen
+        battle={activeBattle}
+        userRoundScores={battleUserScores}
+        opponentRoundScores={battleOppScores}
+        onRetry={() => {
+          setBattleUserScores([]);
+          setBattleOppScores([]);
+          setCurrentScreen('battleDrill');
+          onDrillActiveChange?.(true);
+        }}
+        onHome={() => {
+          setBattleUserScores([]);
+          setBattleOppScores([]);
+          setCurrentScreen('main');
+          onDrillActiveChange?.(false);
+        }}
       />
     );
   }

@@ -1,0 +1,369 @@
+import React, { useState, useMemo, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ChevronRight, ArrowLeft, User } from 'lucide-react-native';
+import { ActiveBattle } from '@/contexts/BattleContext';
+
+interface BattleDrillScreenProps {
+  battle: ActiveBattle;
+  onBack: () => void;
+  onFinish: (userRoundScores: number[], opponentRoundScores: number[]) => void;
+}
+
+const GLASS_BG = 'rgba(0,0,0,0.28)';
+const GLASS_BORDER = 'rgba(255,255,255,0.12)';
+
+export default function BattleDrillScreen({ battle, onBack, onFinish }: BattleDrillScreenProps) {
+  const insets = useSafeAreaInsets();
+  const [currentRound, setCurrentRound] = useState(0);
+  const [userHighest, setUserHighest] = useState<number[]>(
+    Array.from({ length: battle.rounds }, () => 0)
+  );
+  const [opponentHighest, setOpponentHighest] = useState<number[]>(
+    Array.from({ length: battle.rounds }, () => 0)
+  );
+
+  const userHits = useMemo(() => userHighest[currentRound] ?? 0, [userHighest, currentRound]);
+  const oppHits = useMemo(() => opponentHighest[currentRound] ?? 0, [opponentHighest, currentRound]);
+
+  const userTotalHits = useMemo(() => userHighest.reduce((s, h) => s + h, 0), [userHighest]);
+  const oppTotalHits = useMemo(() => opponentHighest.reduce((s, h) => s + h, 0), [opponentHighest]);
+
+  const totalShotsSoFar = useMemo(() => (currentRound + 1) * battle.shots_per_round, [currentRound, battle.shots_per_round]);
+  const userAvg = useMemo(() => totalShotsSoFar === 0 ? 0 : Math.round((userTotalHits / totalShotsSoFar) * 100), [userTotalHits, totalShotsSoFar]);
+  const oppAvg = useMemo(() => totalShotsSoFar === 0 ? 0 : Math.round((oppTotalHits / totalShotsSoFar) * 100), [oppTotalHits, totalShotsSoFar]);
+
+  const isLastRound = currentRound === battle.rounds - 1;
+
+  const toggleUserTarget = useCallback((targetIndex: number) => {
+    const targetNumber = targetIndex + 1;
+    setUserHighest(prev => {
+      const updated = [...prev];
+      if (targetNumber === updated[currentRound]) {
+        updated[currentRound] = targetNumber - 1;
+      } else {
+        updated[currentRound] = targetNumber;
+      }
+      return updated;
+    });
+  }, [currentRound]);
+
+  const toggleOpponentTarget = useCallback((targetIndex: number) => {
+    const targetNumber = targetIndex + 1;
+    setOpponentHighest(prev => {
+      const updated = [...prev];
+      if (targetNumber === updated[currentRound]) {
+        updated[currentRound] = targetNumber - 1;
+      } else {
+        updated[currentRound] = targetNumber;
+      }
+      return updated;
+    });
+  }, [currentRound]);
+
+  const handleNext = useCallback(() => {
+    if (isLastRound) {
+      onFinish(userHighest, opponentHighest);
+    } else {
+      setCurrentRound(prev => prev + 1);
+    }
+  }, [isLastRound, userHighest, opponentHighest, onFinish]);
+
+  return (
+    <LinearGradient
+      colors={['#C62828', '#E53935', '#FF5252']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.container}
+    >
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+        <TouchableOpacity onPress={onBack} activeOpacity={0.7}>
+          <View style={styles.backCircle}>
+            <ArrowLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
+          </View>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{battle.battle_name}</Text>
+        <View style={styles.headerSpacer} />
+      </View>
+
+      <View style={styles.progressBarContainer}>
+        {Array.from({ length: battle.rounds }).map((_, i) => (
+          <View
+            key={i}
+            style={[
+              styles.progressSegment,
+              i <= currentRound ? styles.progressActive : styles.progressInactive,
+              i < battle.rounds - 1 && { marginRight: 4 },
+            ]}
+          />
+        ))}
+      </View>
+
+      <View style={styles.statsBar}>
+        <View style={styles.statItem}>
+          <Text style={styles.statLabel}>Round</Text>
+          <Text style={styles.statValue}>{currentRound + 1}/{battle.rounds}</Text>
+        </View>
+        <View style={[styles.statItem, styles.statBorder]}>
+          <Text style={styles.statLabel}>You</Text>
+          <Text style={[styles.statValue, { color: '#7AE582' }]}>{userAvg}%</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statLabel}>{battle.opponent_display_name.split(' ')[0]}</Text>
+          <Text style={[styles.statValue, { color: '#FFD166' }]}>{oppAvg}%</Text>
+        </View>
+      </View>
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.playerSection}>
+          <View style={styles.playerHeader}>
+            <View style={styles.playerIcon}>
+              <User size={16} color="#FFFFFF" />
+            </View>
+            <Text style={styles.playerName}>Your Score</Text>
+            <Text style={styles.playerHitsLabel}>{userHits}/{battle.shots_per_round}</Text>
+          </View>
+          <View style={styles.targetsGrid}>
+            {Array.from({ length: battle.shots_per_round }).map((_, idx) => {
+              const targetNumber = idx + 1;
+              const isHit = targetNumber <= userHits;
+              return (
+                <TouchableOpacity
+                  key={`u-${idx}`}
+                  style={[styles.targetCircle, isHit && styles.targetHitUser]}
+                  onPress={() => toggleUserTarget(idx)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.targetText, isHit && styles.targetTextHit]}>
+                    {targetNumber}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.playerSection}>
+          <View style={styles.playerHeader}>
+            <View style={[styles.playerIcon, { backgroundColor: 'rgba(255,209,102,0.3)' }]}>
+              <User size={16} color="#FFD166" />
+            </View>
+            <Text style={styles.playerName}>{battle.opponent_display_name}</Text>
+            <Text style={styles.playerHitsLabel}>{oppHits}/{battle.shots_per_round}</Text>
+          </View>
+          <View style={styles.targetsGrid}>
+            {Array.from({ length: battle.shots_per_round }).map((_, idx) => {
+              const targetNumber = idx + 1;
+              const isHit = targetNumber <= oppHits;
+              return (
+                <TouchableOpacity
+                  key={`o-${idx}`}
+                  style={[styles.targetCircle, isHit && styles.targetHitOpp]}
+                  onPress={() => toggleOpponentTarget(idx)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.targetText, isHit && styles.targetTextHit]}>
+                    {targetNumber}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      </ScrollView>
+
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+        <TouchableOpacity onPress={handleNext} activeOpacity={0.8}>
+          <View style={styles.nextButtonOuter}>
+            <LinearGradient
+              colors={['rgba(0,0,0,0.35)', 'rgba(0,0,0,0.25)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.nextButton}
+            >
+              <Text style={styles.nextButtonText}>
+                {isLastRound ? 'Finish Battle' : 'Next Round'}
+              </Text>
+              <ChevronRight size={20} color="#FFFFFF" strokeWidth={2.5} />
+            </LinearGradient>
+          </View>
+        </TouchableOpacity>
+      </View>
+    </LinearGradient>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  header: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 16,
+    paddingBottom: 14,
+    gap: 12,
+  },
+  backCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: GLASS_BG,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: 'center' as const,
+    fontSize: 20,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+  },
+  headerSpacer: { width: 38 },
+  progressBarContainer: {
+    flexDirection: 'row' as const,
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  progressSegment: {
+    flex: 1,
+    height: 4,
+    borderRadius: 2,
+  },
+  progressActive: { backgroundColor: '#FFFFFF' },
+  progressInactive: { backgroundColor: 'rgba(255,255,255,0.2)' },
+  statsBar: {
+    flexDirection: 'row' as const,
+    marginHorizontal: 20,
+    backgroundColor: GLASS_BG,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+    borderRadius: 14,
+    overflow: 'hidden' as const,
+    marginBottom: 16,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center' as const,
+    paddingVertical: 12,
+  },
+  statBorder: {
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: GLASS_BORDER,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: '500' as const,
+    color: 'rgba(255,255,255,0.55)',
+    marginBottom: 3,
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  playerSection: {
+    marginBottom: 8,
+  },
+  playerHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    marginBottom: 14,
+    gap: 10,
+  },
+  playerIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(122,229,130,0.3)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  playerName: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+  },
+  playerHitsLabel: {
+    fontSize: 16,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+  },
+  targetsGrid: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    justifyContent: 'center' as const,
+    gap: 10,
+  },
+  targetCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: GLASS_BG,
+    borderWidth: 2,
+    borderColor: GLASS_BORDER,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  targetHitUser: {
+    backgroundColor: '#2E7D32',
+    borderColor: '#2E7D32',
+  },
+  targetHitOpp: {
+    backgroundColor: '#D4A017',
+    borderColor: '#D4A017',
+  },
+  targetText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: 'rgba(255,255,255,0.55)',
+  },
+  targetTextHit: {
+    color: '#FFFFFF',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    marginVertical: 14,
+  },
+  footer: {
+    paddingHorizontal: 20,
+  },
+  nextButtonOuter: {
+    borderRadius: 16,
+    overflow: 'hidden' as const,
+    borderWidth: 1,
+    borderColor: GLASS_BORDER,
+  },
+  nextButton: {
+    flexDirection: 'row' as const,
+    borderRadius: 16,
+    paddingVertical: 18,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 6,
+  },
+  nextButtonText: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+  },
+});

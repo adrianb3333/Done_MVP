@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,13 +9,20 @@ import {
   KeyboardAvoidingView,
   Platform,
   Modal,
+  FlatList,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Flag, Plus, X } from 'lucide-react-native';
+import { ArrowLeft, Flag, Plus, X, Check, User, Search } from 'lucide-react-native';
+import { useProfile, UserProfile } from '@/contexts/ProfileContext';
+import { useBattle } from '@/contexts/BattleContext';
+import * as Haptics from 'expo-haptics';
 
 interface BattleScreenProps {
   onBack: () => void;
+  onBattleStart?: () => void;
 }
 
 const ROUNDS_OPTIONS = [1, 2, 3, 4, 5];
@@ -24,18 +31,92 @@ const SHOTS_OPTIONS = [5, 10, 15, 20, 25, 30];
 const GLASS_BG = 'rgba(0,0,0,0.28)';
 const GLASS_BORDER = 'rgba(255,255,255,0.12)';
 
-export default function BattleScreen({ onBack }: BattleScreenProps) {
+export default function BattleScreen({ onBack, onBattleStart }: BattleScreenProps) {
   const insets = useSafeAreaInsets();
   const [battleName, setBattleName] = useState('');
   const [selectedRounds, setSelectedRounds] = useState(3);
   const [selectedShots, setSelectedShots] = useState(10);
-  const [showSensorModal, setShowSensorModal] = useState(false);
+  const [showFriendPicker, setShowFriendPicker] = useState(false);
+  const [selectedOpponent, setSelectedOpponent] = useState<UserProfile | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const { following, allUsers, isLoadingAllUsers, userId } = useProfile();
+  const { sendInvite, startBattleDirectly } = useBattle();
 
   const totalShots = selectedRounds * selectedShots;
 
-  const handleStartBattle = () => {
-    setShowSensorModal(true);
-  };
+  const friendsList = useMemo(() => {
+    if (following.length > 0) return following;
+    return allUsers.filter(u => u.id !== userId);
+  }, [following, allUsers, userId]);
+
+  const filteredFriends = useMemo(() => {
+    if (!searchQuery.trim()) return friendsList;
+    const q = searchQuery.toLowerCase();
+    return friendsList.filter(u =>
+      u.display_name.toLowerCase().includes(q) ||
+      u.username.toLowerCase().includes(q)
+    );
+  }, [friendsList, searchQuery]);
+
+  const handleSelectOpponent = useCallback((user: UserProfile) => {
+    setSelectedOpponent(user);
+    setShowFriendPicker(false);
+    if (Platform.OS !== 'web') void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }, []);
+
+  const handleStartBattle = useCallback(async () => {
+    if (!selectedOpponent) return;
+    if (Platform.OS !== 'web') void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+    const name = battleName.trim() || `Battle vs ${selectedOpponent.display_name}`;
+
+    await sendInvite({
+      toUserId: selectedOpponent.id,
+      battleName: name,
+      rounds: selectedRounds,
+      shotsPerRound: selectedShots,
+      toUsername: selectedOpponent.username,
+      toDisplayName: selectedOpponent.display_name,
+      toAvatarUrl: selectedOpponent.avatar_url,
+    });
+
+    await startBattleDirectly({
+      battleName: name,
+      opponentId: selectedOpponent.id,
+      opponentUsername: selectedOpponent.username,
+      opponentDisplayName: selectedOpponent.display_name,
+      opponentAvatarUrl: selectedOpponent.avatar_url,
+      rounds: selectedRounds,
+      shotsPerRound: selectedShots,
+    });
+
+    console.log('[BattleScreen] Battle started, navigating to drill screen');
+    onBattleStart?.();
+  }, [selectedOpponent, battleName, selectedRounds, selectedShots, sendInvite, startBattleDirectly, onBattleStart]);
+
+  const renderFriendItem = useCallback(({ item }: { item: UserProfile }) => (
+    <TouchableOpacity
+      style={pickerStyles.friendItem}
+      onPress={() => handleSelectOpponent(item)}
+      activeOpacity={0.7}
+    >
+      {item.avatar_url ? (
+        <Image source={{ uri: item.avatar_url }} style={pickerStyles.avatar} />
+      ) : (
+        <View style={pickerStyles.avatarPlaceholder}>
+          <User size={18} color="rgba(0,0,0,0.4)" />
+        </View>
+      )}
+      <View style={pickerStyles.friendInfo}>
+        <Text style={pickerStyles.friendName}>{item.display_name}</Text>
+        <Text style={pickerStyles.friendUsername}>@{item.username}</Text>
+      </View>
+      <View style={pickerStyles.selectCircle}>
+        <Plus size={16} color="#C0392B" />
+      </View>
+    </TouchableOpacity>
+  ), [handleSelectOpponent]);
 
   return (
     <LinearGradient
@@ -94,10 +175,34 @@ export default function BattleScreen({ onBack }: BattleScreenProps) {
             </View>
             <View style={styles.challengerBlock}>
               <Text style={styles.sectionLabel}>CHALLENGER</Text>
-              <TouchableOpacity style={styles.addChallengerBtn} activeOpacity={0.7}>
-                <Plus size={18} color="#C0392B" />
-                <Text style={styles.addChallengerText}>Add</Text>
-              </TouchableOpacity>
+              {selectedOpponent ? (
+                <TouchableOpacity
+                  style={styles.selectedChallengerBtn}
+                  onPress={() => setShowFriendPicker(true)}
+                  activeOpacity={0.7}
+                >
+                  {selectedOpponent.avatar_url ? (
+                    <Image source={{ uri: selectedOpponent.avatar_url }} style={styles.selectedAvatar} />
+                  ) : (
+                    <View style={styles.selectedAvatarPlaceholder}>
+                      <User size={14} color="#FFF" />
+                    </View>
+                  )}
+                  <Text style={styles.selectedName} numberOfLines={1}>
+                    {selectedOpponent.display_name}
+                  </Text>
+                  <Check size={14} color="#2E7D32" />
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.addChallengerBtn}
+                  onPress={() => setShowFriendPicker(true)}
+                  activeOpacity={0.7}
+                >
+                  <Plus size={18} color="#C0392B" />
+                  <Text style={styles.addChallengerText}>Add</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
 
@@ -151,6 +256,11 @@ export default function BattleScreen({ onBack }: BattleScreenProps) {
                 <Text style={styles.summaryText}>
                   {selectedRounds} rounds x {selectedShots} shots = {totalShots} total shots per player
                 </Text>
+                {selectedOpponent && (
+                  <Text style={styles.summaryOpponent}>
+                    vs {selectedOpponent.display_name}
+                  </Text>
+                )}
               </View>
             </LinearGradient>
           </View>
@@ -158,6 +268,8 @@ export default function BattleScreen({ onBack }: BattleScreenProps) {
           <TouchableOpacity
             onPress={handleStartBattle}
             activeOpacity={0.8}
+            disabled={!selectedOpponent}
+            style={{ opacity: selectedOpponent ? 1 : 0.45 }}
           >
             <View style={styles.startButtonOuter}>
               <LinearGradient
@@ -174,33 +286,182 @@ export default function BattleScreen({ onBack }: BattleScreenProps) {
       </KeyboardAvoidingView>
 
       <Modal
-        visible={showSensorModal}
+        visible={showFriendPicker}
         transparent
-        animationType="fade"
-        onRequestClose={() => setShowSensorModal(false)}
+        animationType="slide"
+        onRequestClose={() => setShowFriendPicker(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Sensors Required</Text>
-            <Text style={styles.modalMessage}>
-              This feature requires sensors to be connected.{'\n'}Coming Soon!
-            </Text>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setShowSensorModal(false)}
-              activeOpacity={0.8}
-            >
-              <View style={styles.modalCloseInner}>
-                <X size={18} color="#FFFFFF" />
-                <Text style={styles.modalCloseText}>Close</Text>
+        <View style={pickerStyles.overlay}>
+          <View style={[pickerStyles.container, { paddingTop: insets.top + 12 }]}>
+            <View style={pickerStyles.header}>
+              <Text style={pickerStyles.title}>Select Challenger</Text>
+              <TouchableOpacity onPress={() => setShowFriendPicker(false)} activeOpacity={0.7}>
+                <X size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={pickerStyles.searchBar}>
+              <Search size={16} color="rgba(0,0,0,0.4)" />
+              <TextInput
+                style={pickerStyles.searchInput}
+                placeholder="Search users..."
+                placeholderTextColor="rgba(0,0,0,0.35)"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+            </View>
+
+            {following.length > 0 && (
+              <Text style={pickerStyles.sectionLabel}>FRIENDS & FOLLOWING</Text>
+            )}
+            {following.length === 0 && (
+              <Text style={pickerStyles.sectionLabel}>ALL USERS</Text>
+            )}
+
+            {isLoadingAllUsers ? (
+              <View style={pickerStyles.loadingWrap}>
+                <ActivityIndicator size="large" color="#0059B2" />
+                <Text style={pickerStyles.loadingText}>Loading users...</Text>
               </View>
-            </TouchableOpacity>
+            ) : (
+              <FlatList
+                data={filteredFriends}
+                keyExtractor={(item) => item.id}
+                renderItem={renderFriendItem}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={pickerStyles.listContent}
+                ListEmptyComponent={
+                  <View style={pickerStyles.emptyWrap}>
+                    <User size={32} color="rgba(0,0,0,0.2)" />
+                    <Text style={pickerStyles.emptyText}>No users found</Text>
+                  </View>
+                }
+              />
+            )}
           </View>
         </View>
       </Modal>
     </LinearGradient>
   );
 }
+
+const pickerStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    marginTop: 60,
+    paddingHorizontal: 20,
+  },
+  header: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.08)',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '800' as const,
+    color: '#1a1a1a',
+  },
+  searchBar: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+    marginTop: 14,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: '#1a1a1a',
+    padding: 0,
+  },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: '700' as const,
+    color: 'rgba(0,0,0,0.4)',
+    letterSpacing: 0.8,
+    marginTop: 16,
+    marginBottom: 10,
+  },
+  friendItem: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.06)',
+    gap: 12,
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+  avatarPlaceholder: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  friendInfo: {
+    flex: 1,
+  },
+  friendName: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#1a1a1a',
+  },
+  friendUsername: {
+    fontSize: 13,
+    color: 'rgba(0,0,0,0.45)',
+    marginTop: 1,
+  },
+  selectCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
+    borderColor: '#C0392B',
+    borderStyle: 'dashed' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  listContent: {
+    paddingBottom: 40,
+  },
+  loadingWrap: {
+    paddingTop: 40,
+    alignItems: 'center' as const,
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: 'rgba(0,0,0,0.5)',
+  },
+  emptyWrap: {
+    paddingTop: 40,
+    alignItems: 'center' as const,
+    gap: 10,
+  },
+  emptyText: {
+    fontSize: 15,
+    color: 'rgba(0,0,0,0.4)',
+  },
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -284,7 +545,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   challengerBlock: {
-    width: 120,
+    width: 130,
   },
   sectionLabel: {
     fontSize: 13,
@@ -322,6 +583,36 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700' as const,
     color: '#C0392B',
+  },
+  selectedChallengerBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    gap: 6,
+    borderWidth: 2,
+    borderColor: '#2E7D32',
+  },
+  selectedAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+  },
+  selectedAvatarPlaceholder: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0,0,0,0.15)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  selectedName: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: '#1a1a1a',
   },
   optionRow: {
     flexDirection: 'row' as const,
@@ -375,6 +666,12 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: '#FFFFFF',
   },
+  summaryOpponent: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 6,
+  },
   startButtonOuter: {
     marginTop: 28,
     borderRadius: 14,
@@ -389,50 +686,5 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '800' as const,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
-  },
-  modalContainer: {
-    width: '80%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 28,
-    alignItems: 'center' as const,
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: '800' as const,
-    color: '#1a1a1a',
-    marginBottom: 12,
-  },
-  modalMessage: {
-    fontSize: 15,
-    fontWeight: '500' as const,
-    color: '#555',
-    textAlign: 'center' as const,
-    lineHeight: 22,
-    marginBottom: 24,
-  },
-  modalCloseButton: {
-    width: '100%',
-    backgroundColor: '#C0392B',
-    borderRadius: 14,
-    overflow: 'hidden' as const,
-  },
-  modalCloseInner: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    paddingVertical: 15,
-    gap: 8,
-  },
-  modalCloseText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700' as const,
   },
 });
