@@ -951,14 +951,6 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.liveDividerArea}>
-            <View style={styles.liveDividerGoldBg}>
-              <LinearGradient
-                colors={['#EDE9E0', '#F0ECE4', '#F3F0E9', '#F5F3ED']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={styles.liveDividerGradient}
-              />
-            </View>
             <View style={styles.liveDividerCurvedWhite}>
               <View style={styles.liveDividerCurvedWhiteInner} />
             </View>
@@ -1767,25 +1759,16 @@ const styles = StyleSheet.create({
   liveDividerArea: {
     marginTop: 16,
     marginHorizontal: -20,
-    height: 60,
+    height: 28,
     position: 'relative' as const,
-  },
-  liveDividerGoldBg: {
-    position: 'absolute' as const,
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  liveDividerGradient: {
-    flex: 1,
+    backgroundColor: '#FFFFFF',
   },
   liveDividerCurvedWhite: {
     position: 'absolute' as const,
     left: 0,
     right: 0,
+    top: 0,
     bottom: 0,
-    height: 32,
     backgroundColor: 'transparent',
   },
   liveDividerCurvedWhiteInner: {
@@ -1793,15 +1776,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 26,
     borderTopRightRadius: 26,
-    shadowColor: '#B0A890',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 6,
   },
   liveSection: {
     marginBottom: 32,
-    marginTop: 14,
+    marginTop: 6,
   },
   liveSectionTitle: {
     fontSize: 20,
