@@ -2,6 +2,7 @@ import createContextHook from '@nkzw/create-context-hook';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface UserProfile {
   id: string;
@@ -18,25 +19,49 @@ export interface FollowRelation {
 }
 
 const avatarCacheMap = new Map<string, string>();
+let avatarCacheBuster = Date.now();
 
 function resolveAvatarUrl(avatarPath: string | null): string | null {
   if (!avatarPath) return null;
-  if (avatarPath.startsWith('http')) return avatarPath;
-  const cached = avatarCacheMap.get(avatarPath);
+  if (avatarPath.startsWith('http')) {
+    if (avatarPath.includes('supabase') && !avatarPath.includes('_cb=')) {
+      return `${avatarPath}${avatarPath.includes('?') ? '&' : '?'}_cb=${avatarCacheBuster}`;
+    }
+    return avatarPath;
+  }
+  const cacheKey = `${avatarPath}_${avatarCacheBuster}`;
+  const cached = avatarCacheMap.get(cacheKey);
   if (cached) return cached;
   const { data } = supabase.storage.from('avatars').getPublicUrl(avatarPath);
-  const url = data.publicUrl;
-  avatarCacheMap.set(avatarPath, url);
+  const url = `${data.publicUrl}?_cb=${avatarCacheBuster}`;
+  avatarCacheMap.set(cacheKey, url);
   return url;
+}
+
+function invalidateAvatarCache() {
+  avatarCacheBuster = Date.now();
+  avatarCacheMap.clear();
 }
 
 function resolveProfileAvatar(profile: UserProfile): UserProfile {
   return { ...profile, avatar_url: resolveAvatarUrl(profile.avatar_url) };
 }
 
+const BG_IMAGE_KEY = 'profile_background_image';
+
 export const [ProfileProvider, useProfile] = createContextHook(() => {
   const queryClient = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
+  const [backgroundImageUri, setBackgroundImageUriState] = useState<string | null>(null);
+
+  useEffect(() => {
+    AsyncStorage.getItem(BG_IMAGE_KEY).then((val) => {
+      if (val) {
+        console.log('[ProfileContext] Loaded background image from storage');
+        setBackgroundImageUriState(val);
+      }
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data: { session } }) => {
@@ -192,6 +217,16 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     },
   });
 
+  const setBackgroundImage = useCallback(async (uri: string | null) => {
+    console.log('[ProfileContext] Setting background image:', uri ? 'has image' : 'cleared');
+    setBackgroundImageUriState(uri);
+    if (uri) {
+      await AsyncStorage.setItem(BG_IMAGE_KEY, uri);
+    } else {
+      await AsyncStorage.removeItem(BG_IMAGE_KEY);
+    }
+  }, []);
+
   const uploadAvatar = useCallback(async (uri: string) => {
     if (!userId) throw new Error('Not authenticated');
     console.log('[ProfileContext] Uploading avatar from:', uri);
@@ -209,6 +244,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
       throw uploadError;
     }
     console.log('[ProfileContext] Upload success:', data);
+
+    invalidateAvatarCache();
 
     const { error: updateError } = await supabase
       .from('profiles')
@@ -253,6 +290,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     allUsers: allUsersQuery.data ?? [],
     isLoadingAllUsers: allUsersQuery.isLoading,
     refetchAll,
+    backgroundImageUri,
+    setBackgroundImage,
   }), [
     userId,
     profileQuery.data,
@@ -268,5 +307,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     allUsersQuery.data,
     allUsersQuery.isLoading,
     refetchAll,
+    backgroundImageUri,
+    setBackgroundImage,
   ]);
 });

@@ -515,6 +515,7 @@ export default function ProfileScreen() {
     isFollowing,
     allUsers,
     isLoadingAllUsers,
+    backgroundImageUri,
   } = useProfile();
 
   const { lastRound } = useSession();
@@ -815,6 +816,12 @@ export default function ProfileScreen() {
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: insets.top + PROFILE_HEADER_HEIGHT }} onScroll={onHeaderScroll} scrollEventThrottle={16}>
         <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
+
+          {backgroundImageUri ? (
+            <View style={styles.bgImageWrapper}>
+              <Image source={{ uri: backgroundImageUri }} style={styles.bgImage} resizeMode="cover" />
+            </View>
+          ) : null}
 
           <View style={styles.profileTopSection}>
             <View style={styles.avatarAndFriendsColumn}>
@@ -1505,6 +1512,19 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     paddingBottom: 30,
     backgroundColor: '#FFFFFF',
+  },
+  bgImageWrapper: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 280,
+    marginHorizontal: -20,
+    overflow: 'hidden' as const,
+  },
+  bgImage: {
+    width: '100%' as const,
+    height: '100%' as const,
   },
   cardSectionHeader: {
     fontSize: 20,

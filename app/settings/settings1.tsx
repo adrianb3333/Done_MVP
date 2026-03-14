@@ -13,14 +13,14 @@ import {
   Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Camera, User, ChevronRight, LogOut } from 'lucide-react-native';
+import { Camera, User, ChevronRight, LogOut, ImageIcon, X } from 'lucide-react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { supabase } from '@/lib/supabase';
 import { useProfile } from '@/contexts/ProfileContext';
-import Colors from '@/constants/colors';
 
 interface ProfileData {
   username: string;
@@ -35,7 +35,7 @@ interface ProfileData {
 
 export default function Settings1Screen() {
   const router = useRouter();
-  const { profile, uploadAvatar, updateProfile, refetchAll } = useProfile();
+  const { profile, uploadAvatar, updateProfile, refetchAll, backgroundImageUri, setBackgroundImage } = useProfile();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -130,7 +130,16 @@ export default function Settings1Screen() {
       } else {
         refetchAll();
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        Alert.alert('Saved', 'Your settings have been updated.');
+        try {
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.replace('/(tabs)');
+          }
+        } catch (e) {
+          console.log('[Settings] Nav error after save:', e);
+          router.replace('/(tabs)');
+        }
       }
     } catch (error) {
       console.log('Error:', error);
@@ -173,6 +182,48 @@ export default function Settings1Screen() {
       }
     }
   }, [uploadAvatar]);
+
+  const handlePickBackgroundImage = useCallback(async () => {
+    console.log('[Settings] Picking background image');
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    if (Platform.OS !== 'web') {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'We need access to your photo library.');
+        return;
+      }
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      try {
+        await setBackgroundImage(result.assets[0].uri);
+        console.log('[Settings] Background image set successfully');
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch (err: any) {
+        console.error('[Settings] Background image error:', err.message);
+        Alert.alert('Error', 'Could not set background image.');
+      }
+    }
+  }, [setBackgroundImage]);
+
+  const handleClearBackgroundImage = useCallback(async () => {
+    console.log('[Settings] Clearing background image');
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      await setBackgroundImage(null);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch (err: any) {
+      console.error('[Settings] Clear bg error:', err.message);
+    }
+  }, [setBackgroundImage]);
 
   const handleGoBack = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -229,14 +280,26 @@ export default function Settings1Screen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.accent} />
-      </View>
+      <LinearGradient
+        colors={['#D6E4F0', '#C8DCF0', '#BDD4EB', '#D6E4F0']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.root}
+      >
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#1A1A1A" />
+        </View>
+      </LinearGradient>
     );
   }
 
   return (
-    <View style={styles.root}>
+    <LinearGradient
+      colors={['#D6E4F0', '#C8DCF0', '#BDD4EB', '#D6E4F0']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.root}
+    >
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.header}>
           <GlassBackButton onPress={handleGoBack} />
@@ -248,7 +311,7 @@ export default function Settings1Screen() {
             activeOpacity={0.7}
           >
             {saving ? (
-              <ActivityIndicator size="small" color={Colors.accent} />
+              <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
               <Text style={styles.saveText}>Save</Text>
             )}
@@ -275,7 +338,7 @@ export default function Settings1Screen() {
                   <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} />
                 ) : (
                   <View style={styles.avatarPlaceholder}>
-                    <User size={36} color={Colors.textMuted} />
+                    <User size={36} color="rgba(0,0,0,0.3)" />
                   </View>
                 )}
                 <View style={styles.cameraBadge}>
@@ -290,7 +353,7 @@ export default function Settings1Screen() {
             </View>
 
             <Text style={styles.sectionLabel}>PROFILE</Text>
-            <View style={styles.formContainer}>
+            <View style={styles.glassCard}>
               {fields.map((field, index) => (
                 <View key={field.key}>
                   <View style={styles.fieldRow}>
@@ -300,12 +363,12 @@ export default function Settings1Screen() {
                       value={formData[field.key]}
                       onChangeText={(value) => updateField(field.key, value)}
                       placeholder={field.placeholder}
-                      placeholderTextColor={Colors.textMuted}
+                      placeholderTextColor="rgba(0,0,0,0.25)"
                       keyboardType={field.keyboardType || 'default'}
                       autoCapitalize={field.key === 'username' ? 'none' : 'sentences'}
                       autoCorrect={field.key === 'username' ? false : true}
                       maxLength={200}
-                      selectionColor={Colors.accent}
+                      selectionColor="#1A1A1A"
                     />
                   </View>
                   {index < fields.length - 1 && <View style={styles.divider} />}
@@ -313,62 +376,97 @@ export default function Settings1Screen() {
               ))}
             </View>
 
+            <Text style={styles.sectionLabel}>APPEARANCE</Text>
+            <TouchableOpacity
+              style={styles.glassCard}
+              onPress={handlePickBackgroundImage}
+              activeOpacity={0.7}
+              testID="background-image-button"
+            >
+              <View style={styles.bgImageRow}>
+                <View style={styles.bgImageLeft}>
+                  <View style={styles.bgImageIconWrap}>
+                    <ImageIcon size={20} color="#1A1A1A" />
+                  </View>
+                  <View>
+                    <Text style={styles.bgImageTitle}>Background Image</Text>
+                    <Text style={styles.bgImageSubtitle}>
+                      {backgroundImageUri ? 'Tap to change' : 'Choose a photo for your profile'}
+                    </Text>
+                  </View>
+                </View>
+                <ChevronRight size={18} color="rgba(0,0,0,0.3)" />
+              </View>
+              {backgroundImageUri ? (
+                <View style={styles.bgImagePreviewRow}>
+                  <Image source={{ uri: backgroundImageUri }} style={styles.bgImagePreview} resizeMode="cover" />
+                  <TouchableOpacity
+                    style={styles.bgImageClearBtn}
+                    onPress={handleClearBackgroundImage}
+                    activeOpacity={0.7}
+                  >
+                    <X size={14} color="#FFFFFF" />
+                    <Text style={styles.bgImageClearText}>Remove</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null}
+            </TouchableOpacity>
+
             <Text style={styles.sectionLabel}>ACCOUNT</Text>
             <TouchableOpacity
-              style={styles.signOutRow}
+              style={styles.glassCard}
               onPress={handleSignOut}
               activeOpacity={0.6}
             >
-              <View style={styles.signOutLeft}>
-                <LogOut size={18} color={Colors.error} />
-                <Text style={styles.signOutText}>Sign Out</Text>
+              <View style={styles.signOutRow}>
+                <View style={styles.signOutLeft}>
+                  <LogOut size={18} color="#FF5252" />
+                  <Text style={styles.signOutText}>Sign Out</Text>
+                </View>
+                <ChevronRight size={18} color="rgba(0,0,0,0.3)" />
               </View>
-              <ChevronRight size={18} color={Colors.textMuted} />
             </TouchableOpacity>
 
             <Text style={styles.versionText}>Version 1.0.0</Text>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   container: {
     flex: 1,
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: Colors.background,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: Colors.border,
   },
-
   headerTitle: {
     fontSize: 17,
     fontWeight: '700' as const,
-    color: Colors.textPrimary,
+    color: '#1A1A1A',
     letterSpacing: 0.3,
   },
   saveBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: Colors.accentDim,
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
     minWidth: 70,
     alignItems: 'center' as const,
   },
@@ -378,7 +476,7 @@ const styles = StyleSheet.create({
   saveText: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: Colors.accent,
+    color: '#FFFFFF',
   },
   keyboardView: {
     flex: 1,
@@ -401,17 +499,17 @@ const styles = StyleSheet.create({
     height: 96,
     borderRadius: 48,
     borderWidth: 2,
-    borderColor: Colors.border,
+    borderColor: 'rgba(0,0,0,0.1)',
   },
   avatarPlaceholder: {
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: Colors.surface,
+    backgroundColor: 'rgba(0,0,0,0.08)',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     borderWidth: 2,
-    borderColor: Colors.border,
+    borderColor: 'rgba(0,0,0,0.06)',
   },
   cameraBadge: {
     position: 'absolute' as const,
@@ -420,34 +518,34 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: Colors.accent,
+    backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     borderWidth: 3,
-    borderColor: Colors.background,
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   changePhotoText: {
     marginTop: 10,
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.accent,
+    color: '#1A1A1A',
   },
   sectionLabel: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: Colors.textMuted,
+    color: 'rgba(0,0,0,0.4)',
     letterSpacing: 1,
     marginLeft: 20,
     marginBottom: 8,
     marginTop: 8,
   },
-  formContainer: {
-    backgroundColor: Colors.surface,
+  glassCard: {
+    backgroundColor: 'rgba(0,0,0,0.12)',
     marginHorizontal: 16,
-    borderRadius: 14,
-    overflow: 'hidden',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.border,
+    borderRadius: 16,
+    overflow: 'hidden' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
     marginBottom: 24,
   },
   fieldRow: {
@@ -460,32 +558,87 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 15,
     fontWeight: '500' as const,
-    color: Colors.textSecondary,
+    color: '#1A1A1A',
     flex: 0.45,
   },
   fieldInput: {
     fontSize: 15,
-    color: Colors.textPrimary,
+    color: '#1A1A1A',
     textAlign: 'right' as const,
     flex: 0.55,
     paddingVertical: 0,
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: Colors.border,
+    backgroundColor: 'rgba(0,0,0,0.1)',
     marginLeft: 16,
+  },
+  bgImageRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  bgImageLeft: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 12,
+    flex: 1,
+  },
+  bgImageIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  bgImageTitle: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: '#1A1A1A',
+  },
+  bgImageSubtitle: {
+    fontSize: 12,
+    color: 'rgba(0,0,0,0.4)',
+    marginTop: 2,
+  },
+  bgImagePreviewRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    gap: 12,
+  },
+  bgImagePreview: {
+    width: 120,
+    height: 68,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+  },
+  bgImageClearBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 6,
+    backgroundColor: 'rgba(255,50,50,0.7)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  bgImageClearText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: '#FFFFFF',
   },
   signOutRow: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'space-between' as const,
-    backgroundColor: Colors.surface,
-    marginHorizontal: 16,
-    borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: Colors.border,
   },
   signOutLeft: {
     flexDirection: 'row' as const,
@@ -495,11 +648,11 @@ const styles = StyleSheet.create({
   signOutText: {
     fontSize: 15,
     fontWeight: '500' as const,
-    color: Colors.error,
+    color: '#FF5252',
   },
   versionText: {
     textAlign: 'center' as const,
-    color: Colors.textMuted,
+    color: 'rgba(0,0,0,0.3)',
     fontSize: 12,
     marginTop: 32,
   },
