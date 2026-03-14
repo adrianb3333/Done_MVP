@@ -14,6 +14,8 @@ import { CalendarDays, Settings, Plus, ChevronLeft } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useAppNavigation } from '@/contexts/AppNavigationContext';
 import CrewManagementScreen from '@/components/CrewManagementScreen';
+import CrewCreateScreen from '@/components/CrewCreateScreen';
+import CrewScheduleScreen from '@/components/CrewScheduleScreen';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -23,8 +25,9 @@ type CrewTab = typeof TAB_KEYS[number];
 export default function CrewScreen() {
   const { navigateTo } = useAppNavigation();
   const [activeTab, setActiveTab] = useState<CrewTab>('crew');
-  const [managementVisible, setManagementVisible] = useState<boolean>(false);
-  const [managementInitialSegment, setManagementInitialSegment] = useState<number>(0);
+  const [createVisible, setCreateVisible] = useState<boolean>(false);
+  const [settingsVisible, setSettingsVisible] = useState<boolean>(false);
+  const [scheduleVisible, setScheduleVisible] = useState<boolean>(false);
   const underlineAnim = useRef(new Animated.Value(0)).current;
 
   const tabWidth = (SCREEN_WIDTH - 40) / 2;
@@ -55,12 +58,6 @@ export default function CrewScreen() {
     navigateTo('mygame');
   }, [navigateTo]);
 
-  const openManagement = useCallback((segment: number) => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setManagementInitialSegment(segment);
-    setManagementVisible(true);
-  }, []);
-
   return (
     <View style={styles.container}>
       <SafeAreaView edges={['top']} style={styles.safeTop}>
@@ -79,7 +76,10 @@ export default function CrewScreen() {
           <View style={styles.headerRight}>
             <TouchableOpacity
               style={styles.glassIconBtn}
-              onPress={() => openManagement(0)}
+              onPress={() => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setCreateVisible(true);
+              }}
               activeOpacity={0.7}
               testID="crew-create-button"
             >
@@ -87,7 +87,10 @@ export default function CrewScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.glassIconBtn}
-              onPress={() => openManagement(1)}
+              onPress={() => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setSettingsVisible(true);
+              }}
               activeOpacity={0.7}
               testID="crew-settings-button"
             >
@@ -95,7 +98,10 @@ export default function CrewScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.glassIconBtn}
-              onPress={() => openManagement(2)}
+              onPress={() => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setScheduleVisible(true);
+              }}
               activeOpacity={0.7}
               testID="crew-schedule-button"
             >
@@ -174,15 +180,30 @@ export default function CrewScreen() {
       </ScrollView>
 
       <Modal
-        visible={managementVisible}
+        visible={createVisible}
         animationType="slide"
         presentationStyle="fullScreen"
-        onRequestClose={() => setManagementVisible(false)}
+        onRequestClose={() => setCreateVisible(false)}
       >
-        <CrewManagementScreen
-          initialSegment={managementInitialSegment}
-          onClose={() => setManagementVisible(false)}
-        />
+        <CrewCreateScreen onClose={() => setCreateVisible(false)} />
+      </Modal>
+
+      <Modal
+        visible={settingsVisible}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setSettingsVisible(false)}
+      >
+        <CrewManagementScreen onClose={() => setSettingsVisible(false)} />
+      </Modal>
+
+      <Modal
+        visible={scheduleVisible}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setScheduleVisible(false)}
+      >
+        <CrewScheduleScreen onClose={() => setScheduleVisible(false)} />
       </Modal>
     </View>
   );
