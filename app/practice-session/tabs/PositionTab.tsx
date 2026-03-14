@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, Platform, Linking, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { MapPin, Navigation, Crosshair } from 'lucide-react-native';
-import Svg, { Circle, Line, Text as SvgText, Polygon } from 'react-native-svg';
+import Svg, { Circle, Line, Polygon, Text as SvgText } from 'react-native-svg';
 import Colors from '@/constants/colors';
 import { useWeather } from '@/hooks/useWeather';
-import { calculateGolfShot } from '@/services/golfCalculations';
+import { useDeviceHeading } from '@/hooks/useDeviceHeading';
+import { calculateGolfShot, decomposeWind } from '@/services/golfCalculations';
 
 interface Coordinate {
   latitude: number;
@@ -26,6 +27,79 @@ function haversineDistance(coord1: Coordinate, coord2: Coordinate): number {
   return R * c;
 }
 
+const MINI_CENTER = 32;
+const MINI_RADIUS = 28;
+const MINI_TEXT_R = 18;
+
+interface MiniCompassProps {
+  windDeg: number;
+  windMs: number;
+  deviceHeading: number;
+}
+
+function MiniWindCompass({ windDeg, windMs, deviceHeading }: MiniCompassProps) {
+  const rotation = -deviceHeading;
+
+  const MARKERS = [
+    { deg: 0, label: 'N' },
+    { deg: 90, label: 'E' },
+    { deg: 180, label: 'S' },
+    { deg: 270, label: 'W' },
+  ];
+
+  const pos = (degree: number, radius: number) => {
+    const rad = ((degree + rotation - 90) * Math.PI) / 180;
+    return { x: MINI_CENTER + radius * Math.cos(rad), y: MINI_CENTER + radius * Math.sin(rad) };
+  };
+
+  const arrowRad = ((windDeg + 180 + rotation - 90) * Math.PI) / 180;
+  const tipR = MINI_RADIUS - 4;
+  const baseR = 8;
+  const tipX = MINI_CENTER + tipR * Math.cos(arrowRad);
+  const tipY = MINI_CENTER + tipR * Math.sin(arrowRad);
+  const leftRad = arrowRad + Math.PI - 0.35;
+  const rightRad = arrowRad + Math.PI + 0.35;
+  const lx = MINI_CENTER + baseR * Math.cos(leftRad);
+  const ly = MINI_CENTER + baseR * Math.sin(leftRad);
+  const rx = MINI_CENTER + baseR * Math.cos(rightRad);
+  const ry = MINI_CENTER + baseR * Math.sin(rightRad);
+
+  return (
+    <View style={miniStyles.wrapper}>
+      <Svg width={64} height={64} viewBox="0 0 64 64">
+        <Circle cx={MINI_CENTER} cy={MINI_CENTER} r={MINI_RADIUS} stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" fill="none" />
+        <Circle cx={MINI_CENTER} cy={MINI_CENTER} r={MINI_RADIUS - 6} stroke="rgba(255,255,255,0.12)" strokeWidth="0.8" fill="none" />
+        {MARKERS.map(({ deg, label }) => {
+          const outer = pos(deg, MINI_RADIUS);
+          const inner = pos(deg, MINI_RADIUS - 5);
+          const textP = pos(deg, MINI_TEXT_R);
+          return (
+            <React.Fragment key={deg}>
+              <Line x1={outer.x} y1={outer.y} x2={inner.x} y2={inner.y} stroke="white" strokeWidth={deg === 0 ? '2' : '1'} />
+              <SvgText x={textP.x} y={textP.y} fill="white" fontSize="7" fontWeight={deg === 0 ? 'bold' : '500'} textAnchor="middle" alignmentBaseline="middle">
+                {label}
+              </SvgText>
+            </React.Fragment>
+          );
+        })}
+        <Polygon points={`${tipX},${tipY} ${lx},${ly} ${rx},${ry}`} fill="white" opacity="0.85" />
+      </Svg>
+      <Text style={miniStyles.speedText}>{windMs} m/s</Text>
+    </View>
+  );
+}
+
+const miniStyles = StyleSheet.create({
+  wrapper: {
+    alignItems: 'center' as const,
+  },
+  speedText: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 9,
+    fontWeight: '600' as const,
+    marginTop: 2,
+  },
+});
 
 interface PositionTabProps {
   onDistanceChange?: (distance: number) => void;
@@ -40,22 +114,29 @@ function NativeMap({ onDistanceChange, externalPinnedPosition, onPinChange }: Po
 
   const mapRef = useRef<any>(null);
   const locationSubRef = useRef<any>(null);
+  const deviceHeading = useDeviceHeading();
 
   const [userPosition, setUserPosition] = useState<Coordinate | null>(null);
   const [pinnedPosition, setPinnedPosition] = useState<Coordinate | null>(externalPinnedPosition ?? null);
-  const [distance, setDistance] = useState<number>(0);
+  const [midPosition, setMidPosition] = useState<Coordinate | null>(null);
+  const [distanceToPin, setDistanceToPin] = useState<number>(0);
+  const [distanceToUser, setDistanceToUser] = useState<number>(0);
+  const [totalDistance, setTotalDistance] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [permissionDenied, setPermissionDenied] = useState<boolean>(false);
   const [geoLocation, setGeoLocation] = useState<{ lat: number; lon: number } | null>(null);
 
   const { weather } = useWeather(geoLocation?.lat || null, geoLocation?.lon || null, 0);
 
+  const liveWind = useMemo(() => {
+    if (!weather) return null;
+    return decomposeWind(weather.windMs, weather.windDeg, deviceHeading);
+  }, [weather, deviceHeading]);
+
   const adjustedDistance = useMemo(() => {
-    if (!weather || distance <= 0) return null;
-    return calculateGolfShot(distance, 'Normal', weather.windMs, weather.headTail, weather.cross, weather.temp, weather.pressureMb);
-  }, [weather, distance]);
-
-
+    if (!weather || !liveWind || totalDistance <= 0) return null;
+    return calculateGolfShot(totalDistance, 'Normal', weather.windMs, liveWind.headTail, liveWind.cross, weather.temp, weather.pressureMb);
+  }, [weather, liveWind, totalDistance]);
 
   useEffect(() => {
     let mounted = true;
@@ -118,13 +199,31 @@ function NativeMap({ onDistanceChange, externalPinnedPosition, onPinChange }: Po
     };
   }, []);
 
+  const recalcDistances = useCallback((pin: Coordinate, user: Coordinate, mid: Coordinate) => {
+    const dPin = Math.round(haversineDistance(mid, pin));
+    const dUser = Math.round(haversineDistance(mid, user));
+    const dTotal = Math.round(haversineDistance(pin, user));
+    setDistanceToPin(dPin);
+    setDistanceToUser(dUser);
+    setTotalDistance(dTotal);
+    onDistanceChange?.(dTotal);
+  }, [onDistanceChange]);
+
   useEffect(() => {
-    if (pinnedPosition && userPosition) {
-      const dist = Math.round(haversineDistance(pinnedPosition, userPosition));
-      setDistance(dist);
-      onDistanceChange?.(dist);
+    if (pinnedPosition && userPosition && midPosition) {
+      recalcDistances(pinnedPosition, userPosition, midPosition);
     }
-  }, [pinnedPosition, userPosition, onDistanceChange]);
+  }, [pinnedPosition, userPosition, midPosition, recalcDistances]);
+
+  useEffect(() => {
+    if (pinnedPosition && userPosition && !midPosition) {
+      const mid: Coordinate = {
+        latitude: (pinnedPosition.latitude + userPosition.latitude) / 2,
+        longitude: (pinnedPosition.longitude + userPosition.longitude) / 2,
+      };
+      setMidPosition(mid);
+    }
+  }, [pinnedPosition, userPosition, midPosition]);
 
   useEffect(() => {
     if (externalPinnedPosition && !pinnedPosition) {
@@ -139,18 +238,49 @@ function NativeMap({ onDistanceChange, externalPinnedPosition, onPinChange }: Po
     const newPin = { ...userPosition };
     setPinnedPosition(newPin);
     onPinChange?.(newPin);
-    const dist = 0;
-    setDistance(dist);
-    onDistanceChange?.(dist);
+    setMidPosition(null);
+    setTotalDistance(0);
+    setDistanceToPin(0);
+    setDistanceToUser(0);
+    onDistanceChange?.(0);
   }, [userPosition, onDistanceChange, onPinChange]);
 
   const handleClearPin = useCallback(() => {
     console.log('Clearing pin');
     setPinnedPosition(null);
+    setMidPosition(null);
     onPinChange?.(null);
-    setDistance(0);
+    setTotalDistance(0);
+    setDistanceToPin(0);
+    setDistanceToUser(0);
     onDistanceChange?.(0);
   }, [onDistanceChange, onPinChange]);
+
+  const handleMidDrag = useCallback((e: any) => {
+    const newCoord: Coordinate = e.nativeEvent.coordinate;
+    setMidPosition(newCoord);
+    if (pinnedPosition && userPosition) {
+      recalcDistances(pinnedPosition, userPosition, newCoord);
+    }
+  }, [pinnedPosition, userPosition, recalcDistances]);
+
+  const handleMidDragEnd = useCallback((e: any) => {
+    const newCoord: Coordinate = e.nativeEvent.coordinate;
+    console.log('[PositionTab] Mid drag ended:', newCoord.latitude, newCoord.longitude);
+    setMidPosition(newCoord);
+    if (pinnedPosition && userPosition) {
+      recalcDistances(pinnedPosition, userPosition, newCoord);
+    }
+  }, [pinnedPosition, userPosition, recalcDistances]);
+
+  const fitToBoth = useCallback(() => {
+    if (mapRef.current && pinnedPosition && userPosition) {
+      mapRef.current.fitToCoordinates(
+        [pinnedPosition, userPosition],
+        { edgePadding: { top: 120, right: 60, bottom: 120, left: 60 }, animated: true }
+      );
+    }
+  }, [pinnedPosition, userPosition]);
 
   if (loading) {
     return (
@@ -191,17 +321,14 @@ function NativeMap({ onDistanceChange, externalPinnedPosition, onPinChange }: Po
     }
   };
 
-  const fitToBoth = () => {
-    if (mapRef.current && pinnedPosition && userPosition) {
-      mapRef.current.fitToCoordinates(
-        [pinnedPosition, userPosition],
-        { edgePadding: { top: 120, right: 60, bottom: 80, left: 60 }, animated: true }
-      );
-    }
-  };
-
   const windDistText = adjustedDistance ? Math.round(adjustedDistance.adjustedDistance) : null;
-  const windDeg = weather?.windDeg ?? 0;
+
+  const displayPin = pinnedPosition ?? { latitude: 0, longitude: 0 };
+  const displayUser = userPosition ?? { latitude: 0, longitude: 0 };
+  const displayMid = midPosition ?? {
+    latitude: (displayPin.latitude + displayUser.latitude) / 2,
+    longitude: (displayPin.longitude + displayUser.longitude) / 2,
+  };
 
   return (
     <View style={styles.container}>
@@ -216,10 +343,10 @@ function NativeMap({ onDistanceChange, externalPinnedPosition, onPinChange }: Po
         showsCompass={true}
         showsScale={true}
       >
-        {pinnedPosition && (
+        {pinnedPosition && userPosition && (
           <>
             <Marker
-              coordinate={pinnedPosition}
+              coordinate={displayPin}
               anchor={{ x: 0.5, y: 0.5 }}
               tracksViewChanges={false}
             >
@@ -228,39 +355,85 @@ function NativeMap({ onDistanceChange, externalPinnedPosition, onPinChange }: Po
               </View>
             </Marker>
 
-            {userPosition && (
-              <Polyline
-                coordinates={[pinnedPosition, userPosition]}
-                strokeColor="#FFFFFF"
-                strokeWidth={3}
-              />
-            )}
+            <Polyline
+              coordinates={[displayPin, displayMid]}
+              strokeColor="#FFFFFF"
+              strokeWidth={7}
+            />
+            <Polyline
+              coordinates={[displayMid, displayUser]}
+              strokeColor="#FFFFFF"
+              strokeWidth={7}
+            />
+
+            <Marker
+              coordinate={displayMid}
+              draggable
+              onDrag={handleMidDrag}
+              onDragEnd={handleMidDragEnd}
+              anchor={{ x: 0.5, y: 0.5 }}
+              tracksViewChanges={true}
+            >
+              <View style={styles.dragMarkerHitArea}>
+                <View style={styles.dragMarkerOuter}>
+                  <View style={styles.dragMarkerDot} />
+                </View>
+              </View>
+            </Marker>
+
+            <Marker
+              coordinate={{
+                latitude: (displayMid.latitude + displayPin.latitude) / 2,
+                longitude: (displayMid.longitude + displayPin.longitude) / 2,
+              }}
+              anchor={{ x: 0.5, y: 0.5 }}
+              tracksViewChanges={true}
+            >
+              <View style={styles.distanceBubble}>
+                <Text style={styles.distanceBubbleText}>{distanceToPin}</Text>
+              </View>
+            </Marker>
+
+            <Marker
+              coordinate={{
+                latitude: (displayMid.latitude + displayUser.latitude) / 2,
+                longitude: (displayMid.longitude + displayUser.longitude) / 2,
+              }}
+              anchor={{ x: 0.5, y: 0.5 }}
+              tracksViewChanges={true}
+            >
+              <View style={styles.distanceBubble}>
+                <Text style={styles.distanceBubbleText}>{distanceToUser}</Text>
+              </View>
+            </Marker>
           </>
         )}
       </MapView>
 
-      <TouchableOpacity
-        style={[styles.gpsToggle]}
-        onPress={() => {
-          if (userPosition && mapRef.current) {
-            mapRef.current.animateToRegion({
-              latitude: userPosition.latitude,
-              longitude: userPosition.longitude,
-              latitudeDelta: 0.003,
-              longitudeDelta: 0.003,
-            }, 500);
-          }
-        }}
-        activeOpacity={0.7}
-      >
-        <Navigation size={18} color="#34C759" fill="#34C759" />
-        <Text style={[styles.gpsToggleText, { color: '#34C759' }]}>My Location</Text>
-      </TouchableOpacity>
+      {weather && (
+        <View style={styles.miniCompassBox}>
+          <MiniWindCompass windDeg={weather.windDeg} windMs={weather.windMs} deviceHeading={deviceHeading} />
+        </View>
+      )}
+
+      <View style={styles.setPinArea}>
+        {!pinnedPosition ? (
+          <TouchableOpacity style={styles.actionCircleBtn} onPress={handleSetPin} activeOpacity={0.7}>
+            <MapPin size={22} color="#fff" />
+            <Text style={styles.actionCircleBtnText}>Set Pin</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.actionCircleBtn} onPress={handleClearPin} activeOpacity={0.7}>
+            <MapPin size={22} color="#fff" />
+            <Text style={styles.actionCircleBtnText}>Clear</Text>
+          </TouchableOpacity>
+        )}
+      </View>
 
       {pinnedPosition && (
         <View style={styles.distanceOverlay}>
           <View style={styles.distanceRow}>
-            <Text style={styles.distanceMainValue}>{distance}</Text>
+            <Text style={styles.distanceMainValue}>{totalDistance}</Text>
             <Text style={styles.distanceMainUnit}>Meters</Text>
           </View>
           <Text style={styles.distanceLabel}>GPS Distance</Text>
@@ -276,56 +449,29 @@ function NativeMap({ onDistanceChange, externalPinnedPosition, onPinChange }: Po
         </View>
       )}
 
-      {!pinnedPosition && (
-        <View style={styles.toolLabel}>
-          <Crosshair size={14} color="#34C759" />
-          <Text style={styles.toolLabelText}>Tap "Set Pin" to start measuring</Text>
-        </View>
-      )}
-
-      {pinnedPosition && (
-        <TouchableOpacity style={styles.fitBtn} onPress={fitToBoth} activeOpacity={0.7}>
-          <MapPin size={16} color="#fff" />
-          <Text style={styles.fitBtnText}>Fit</Text>
+      <View style={styles.bottomRightButtons}>
+        <TouchableOpacity
+          style={styles.actionCircleBtn}
+          onPress={() => {
+            if (userPosition && mapRef.current) {
+              mapRef.current.animateToRegion({
+                latitude: userPosition.latitude,
+                longitude: userPosition.longitude,
+                latitudeDelta: 0.003,
+                longitudeDelta: 0.003,
+              }, 500);
+            }
+          }}
+          activeOpacity={0.7}
+        >
+          <Navigation size={20} color="#fff" fill="#fff" />
+          <Text style={styles.actionCircleBtnText}>Live</Text>
         </TouchableOpacity>
-      )}
 
-      <View style={styles.setPinContainer}>
-        {weather && (
-          <View style={styles.miniCompassContainer}>
-            <View style={{ transform: [{ rotate: `${-windDeg}deg` }] }}>
-              <Svg height={64} width={64} viewBox="0 0 100 100">
-                <Circle cx={50} cy={50} r={46} stroke="rgba(255,255,255,0.25)" strokeWidth={1.5} fill="none" />
-                <Circle cx={50} cy={50} r={38} stroke="rgba(255,255,255,0.12)" strokeWidth={0.8} fill="none" />
-                <Line x1={50} y1={4} x2={50} y2={14} stroke="white" strokeWidth={2} />
-                <Line x1={96} y1={50} x2={86} y2={50} stroke="rgba(255,255,255,0.5)" strokeWidth={1.5} />
-                <Line x1={50} y1={96} x2={50} y2={86} stroke="rgba(255,255,255,0.5)" strokeWidth={1.5} />
-                <Line x1={4} y1={50} x2={14} y2={50} stroke="rgba(255,255,255,0.5)" strokeWidth={1.5} />
-                <SvgText x={50} y={22} fill="white" fontSize={10} fontWeight="bold" textAnchor="middle" alignmentBaseline="middle">N</SvgText>
-                <SvgText x={82} y={52} fill="rgba(255,255,255,0.5)" fontSize={8} textAnchor="middle" alignmentBaseline="middle">E</SvgText>
-                <SvgText x={50} y={82} fill="rgba(255,255,255,0.5)" fontSize={8} textAnchor="middle" alignmentBaseline="middle">S</SvgText>
-                <SvgText x={18} y={52} fill="rgba(255,255,255,0.5)" fontSize={8} textAnchor="middle" alignmentBaseline="middle">W</SvgText>
-              </Svg>
-            </View>
-            <View style={styles.miniArrowOverlay}>
-              <View style={{ transform: [{ rotate: `${windDeg}deg` }] }}>
-                <Svg height={64} width={64} viewBox="0 0 100 100">
-                  <Polygon points="50,22 60,70 40,70" fill="white" opacity={0.85} />
-                </Svg>
-              </View>
-            </View>
-          </View>
-        )}
-
-        {!pinnedPosition ? (
-          <TouchableOpacity style={styles.setPinBtn} onPress={handleSetPin} activeOpacity={0.7}>
-            <MapPin size={16} color="#fff" />
-            <Text style={styles.setPinText}>Set Pin</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity style={styles.clearPinBtn} onPress={handleClearPin} activeOpacity={0.7}>
-            <MapPin size={16} color="#FF5252" />
-            <Text style={styles.clearPinText}>Clear Pin</Text>
+        {pinnedPosition && (
+          <TouchableOpacity style={styles.actionCircleBtn} onPress={fitToBoth} activeOpacity={0.7}>
+            <Crosshair size={20} color="#fff" />
+            <Text style={styles.actionCircleBtnText}>Zoom</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -412,45 +558,79 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#fff',
   },
-  orangeEndMarker: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: 'rgba(255,149,0,0.25)',
+  dragMarkerHitArea: {
+    width: 100,
+    height: 100,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
-  orangeEndMarkerInner: {
+  dragMarkerOuter: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  dragMarkerDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#FF9500',
-    borderWidth: 2,
-    borderColor: 'rgba(255,149,0,0.6)',
+    backgroundColor: '#FFFFFF',
   },
-  gpsToggle: {
-    position: 'absolute' as const,
-    top: 16,
-    left: 16,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    flexDirection: 'row' as const,
+  distanceBubble: {
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    minWidth: 48,
     alignItems: 'center' as const,
-    gap: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(52,199,89,0.4)',
+    justifyContent: 'center' as const,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  gpsToggleText: {
+  distanceBubbleText: {
+    color: '#1a1a1a',
+    fontSize: 16,
+    fontWeight: '800' as const,
+    letterSpacing: -0.5,
+  },
+  miniCompassBox: {
+    position: 'absolute' as const,
+    top: 60,
+    right: 16,
+  },
+  setPinArea: {
+    position: 'absolute' as const,
+    top: 60,
+    right: 90,
+    alignItems: 'center' as const,
+  },
+  actionCircleBtn: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  actionCircleBtnText: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '700' as const,
+    marginTop: 2,
   },
   distanceOverlay: {
     position: 'absolute' as const,
     left: 16,
-    top: 90,
+    top: 60,
   },
   distanceRow: {
     flexDirection: 'row' as const,
@@ -463,17 +643,26 @@ const styles = StyleSheet.create({
     fontWeight: '900' as const,
     lineHeight: 52,
     letterSpacing: -1,
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   distanceMainUnit: {
     color: 'rgba(255,255,255,0.7)',
     fontSize: 16,
     fontWeight: '700' as const,
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   distanceLabel: {
     color: 'rgba(255,255,255,0.5)',
     fontSize: 10,
     fontWeight: '500' as const,
     marginTop: 2,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   windDistRow: {
     marginTop: 10,
@@ -486,106 +675,34 @@ const styles = StyleSheet.create({
     fontWeight: '900' as const,
     lineHeight: 40,
     letterSpacing: -1,
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   windDistUnitOrange: {
     color: '#FF9500',
     fontSize: 14,
     fontWeight: '700' as const,
     marginLeft: 4,
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   windDistLabel: {
     color: 'rgba(255,149,0,0.6)',
     fontSize: 10,
     fontWeight: '500' as const,
     marginTop: 2,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
-  toolLabel: {
+  bottomRightButtons: {
     position: 'absolute' as const,
-    bottom: 20,
-    alignSelf: 'center' as const,
-    backgroundColor: 'rgba(0,0,0,0.75)',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 6,
-  },
-  toolLabelText: {
-    color: '#ccc',
-    fontSize: 12,
-    fontWeight: '500' as const,
-  },
-  fitBtn: {
-    position: 'absolute' as const,
-    bottom: 20,
-    right: 16,
-    backgroundColor: 'rgba(0,0,0,0.75)',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 5,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-  },
-  fitBtnText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600' as const,
-  },
-  setPinContainer: {
-    position: 'absolute' as const,
-    top: 16,
+    bottom: 24,
     right: 16,
     alignItems: 'center' as const,
-    gap: 10,
-  },
-  miniCompassContainer: {
-    width: 64,
-    height: 64,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
-  miniArrowOverlay: {
-    position: 'absolute' as const,
-    top: 0,
-    left: 0,
-    width: 64,
-    height: 64,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
-  setPinBtn: {
-    backgroundColor: 'transparent',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 6,
-  },
-  setPinText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '800' as const,
-  },
-  clearPinBtn: {
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 6,
-    borderWidth: 1,
-    borderColor: 'rgba(255,82,82,0.5)',
-  },
-  clearPinText: {
-    color: '#FF5252',
-    fontSize: 13,
-    fontWeight: '700' as const,
+    gap: 12,
   },
   webFallback: {
     flex: 1,
