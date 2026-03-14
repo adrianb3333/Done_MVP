@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, Platform, Linking, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { MapPin, Navigation, Crosshair } from 'lucide-react-native';
+import { MapPin, Navigation, Crosshair, RotateCcw } from 'lucide-react-native';
 import Svg, { Circle, Line, Polygon, Text as SvgText } from 'react-native-svg';
 import Colors from '@/constants/colors';
 import { useWeather } from '@/hooks/useWeather';
@@ -256,6 +256,18 @@ function NativeMap({ onDistanceChange, externalPinnedPosition, onPinChange }: Po
     onDistanceChange?.(0);
   }, [onDistanceChange, onPinChange]);
 
+  const handleResetDrag = useCallback(() => {
+    if (pinnedPosition && userPosition) {
+      console.log('[PositionTab] Resetting drag tool to midpoint');
+      const mid: Coordinate = {
+        latitude: (pinnedPosition.latitude + userPosition.latitude) / 2,
+        longitude: (pinnedPosition.longitude + userPosition.longitude) / 2,
+      };
+      setMidPosition(mid);
+      recalcDistances(pinnedPosition, userPosition, mid);
+    }
+  }, [pinnedPosition, userPosition, recalcDistances]);
+
   const handleMidDrag = useCallback((e: any) => {
     const newCoord: Coordinate = e.nativeEvent.coordinate;
     setMidPosition(newCoord);
@@ -472,6 +484,12 @@ function NativeMap({ onDistanceChange, externalPinnedPosition, onPinChange }: Po
           <TouchableOpacity style={styles.actionCircleBtn} onPress={fitToBoth} activeOpacity={0.7}>
             <Crosshair size={20} color="#fff" />
             <Text style={styles.actionCircleBtnText}>Zoom</Text>
+          </TouchableOpacity>
+        )}
+        {pinnedPosition && (
+          <TouchableOpacity style={styles.actionCircleBtn} onPress={handleResetDrag} activeOpacity={0.7}>
+            <RotateCcw size={20} color="#fff" />
+            <Text style={styles.actionCircleBtnText}>Reset</Text>
           </TouchableOpacity>
         )}
       </View>
