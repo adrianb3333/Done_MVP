@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Animated,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
@@ -14,7 +16,33 @@ interface CrewScheduleScreenProps {
   onClose: () => void;
 }
 
+const TABS = ['Schedule', 'Storage'] as const;
+type Tab = typeof TABS[number];
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps) {
+  const [activeTab, setActiveTab] = useState<Tab>('Schedule');
+  const indicatorAnim = useRef(new Animated.Value(0)).current;
+
+  const handleTabPress = useCallback((tab: Tab) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const toValue = tab === 'Schedule' ? 0 : 1;
+    Animated.spring(indicatorAnim, {
+      toValue,
+      useNativeDriver: true,
+      tension: 300,
+      friction: 30,
+    }).start();
+    setActiveTab(tab);
+  }, [indicatorAnim]);
+
+  const tabWidth = (SCREEN_WIDTH - 32) / 2;
+  const indicatorTranslateX = indicatorAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, tabWidth],
+  });
+
   return (
     <View style={styles.container}>
       <SafeAreaView edges={['top']} style={styles.safeTop}>
@@ -30,26 +58,75 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
           >
             <ChevronLeft size={22} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Schedule</Text>
+          <Text style={styles.headerTitle}>{activeTab}</Text>
           <View style={{ width: 40 }} />
+        </View>
+
+        <View style={styles.segmentContainer}>
+          <View style={styles.segmentRow}>
+            {TABS.map((tab) => (
+              <TouchableOpacity
+                key={tab}
+                onPress={() => handleTabPress(tab)}
+                style={styles.segmentTab}
+                activeOpacity={0.7}
+                testID={`crew-schedule-tab-${tab.toLowerCase()}`}
+              >
+                <Text
+                  style={[
+                    styles.segmentLabel,
+                    activeTab === tab && styles.segmentLabelActive,
+                  ]}
+                >
+                  {tab}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <View style={styles.segmentTrack}>
+            <Animated.View
+              style={[
+                styles.segmentIndicator,
+                { width: tabWidth, transform: [{ translateX: indicatorTranslateX }] },
+              ]}
+            />
+          </View>
         </View>
       </SafeAreaView>
 
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.emptyState}>
-          <View style={styles.emptyIcon}>
-            <Text style={styles.emptyEmoji}>📅</Text>
+      {activeTab === 'Schedule' ? (
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.emptyState}>
+            <View style={styles.emptyIcon}>
+              <Text style={styles.emptyEmoji}>📅</Text>
+            </View>
+            <Text style={styles.emptyTitle}>Schedule</Text>
+            <Text style={styles.emptyText}>
+              Plan training sessions and events for your crew. Coming soon.
+            </Text>
           </View>
-          <Text style={styles.emptyTitle}>Schedule</Text>
-          <Text style={styles.emptyText}>
-            Plan training sessions and events for your crew. Coming soon.
-          </Text>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      ) : (
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.emptyState}>
+            <View style={styles.emptyIcon}>
+              <Text style={styles.emptyEmoji}>📦</Text>
+            </View>
+            <Text style={styles.emptyTitle}>Storage</Text>
+            <Text style={styles.emptyText}>
+              Store and manage crew files and resources. Coming soon.
+            </Text>
+          </View>
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -61,8 +138,6 @@ const styles = StyleSheet.create({
   },
   safeTop: {
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
   header: {
     flexDirection: 'row' as const,
@@ -123,5 +198,36 @@ const styles = StyleSheet.create({
     textAlign: 'center' as const,
     lineHeight: 20,
     paddingHorizontal: 20,
+  },
+  segmentContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 4,
+  },
+  segmentRow: {
+    flexDirection: 'row' as const,
+  },
+  segmentTab: {
+    flex: 1,
+    alignItems: 'center' as const,
+    paddingVertical: 10,
+  },
+  segmentLabel: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: '#AAAAAA',
+  },
+  segmentLabelActive: {
+    color: '#1A1A1A',
+  },
+  segmentTrack: {
+    height: 2,
+    backgroundColor: '#F0F0F0',
+    borderRadius: 1,
+    marginTop: 2,
+  },
+  segmentIndicator: {
+    height: 2,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 1,
   },
 });
