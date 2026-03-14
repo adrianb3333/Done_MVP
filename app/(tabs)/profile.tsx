@@ -2571,7 +2571,7 @@ const styles = StyleSheet.create({
   },
   crewSection: {
     marginTop: 16,
-    paddingBottom: 4,
+    paddingBottom: 24,
     paddingHorizontal: 16,
   },
   crewSectionTitle: {

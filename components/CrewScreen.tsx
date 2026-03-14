@@ -7,11 +7,13 @@ import {
   Animated,
   Dimensions,
   ScrollView,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CalendarDays, Settings, Plus, Menu, ChevronLeft } from 'lucide-react-native';
+import { CalendarDays, Settings, Plus, ChevronLeft } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useAppNavigation } from '@/contexts/AppNavigationContext';
+import CrewManagementScreen from '@/components/CrewManagementScreen';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -19,8 +21,10 @@ const TAB_KEYS = ['crew', 'latest'] as const;
 type CrewTab = typeof TAB_KEYS[number];
 
 export default function CrewScreen() {
-  const { openSidebar, navigateTo } = useAppNavigation();
+  const { navigateTo } = useAppNavigation();
   const [activeTab, setActiveTab] = useState<CrewTab>('crew');
+  const [managementVisible, setManagementVisible] = useState<boolean>(false);
+  const [managementInitialSegment, setManagementInitialSegment] = useState<number>(0);
   const underlineAnim = useRef(new Animated.Value(0)).current;
 
   const tabWidth = (SCREEN_WIDTH - 40) / 2;
@@ -51,6 +55,12 @@ export default function CrewScreen() {
     navigateTo('mygame');
   }, [navigateTo]);
 
+  const openManagement = useCallback((segment: number) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setManagementInitialSegment(segment);
+    setManagementVisible(true);
+  }, []);
+
   return (
     <View style={styles.container}>
       <SafeAreaView edges={['top']} style={styles.safeTop}>
@@ -58,58 +68,38 @@ export default function CrewScreen() {
           <View style={styles.headerLeft}>
             <TouchableOpacity
               onPress={handleBack}
-              style={styles.backBtn}
+              style={styles.glassIconBtn}
               activeOpacity={0.7}
               testID="crew-back-button"
             >
-              <ChevronLeft size={24} color="#1A1A1A" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                openSidebar();
-              }}
-              style={styles.menuBtn}
-              activeOpacity={0.7}
-              testID="crew-menu-button"
-            >
-              <Menu size={22} color="#1A1A1A" />
+              <ChevronLeft size={22} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
           <Text style={styles.headerTitle}>Crew</Text>
           <View style={styles.headerRight}>
             <TouchableOpacity
-              style={styles.headerIconBtn}
-              onPress={() => {
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                console.log('[Crew] Create pressed');
-              }}
+              style={styles.glassIconBtn}
+              onPress={() => openManagement(0)}
               activeOpacity={0.7}
               testID="crew-create-button"
             >
-              <Plus size={22} color="#1A1A1A" />
+              <Plus size={20} color="#FFFFFF" />
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.headerIconBtn}
-              onPress={() => {
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                console.log('[Crew] Settings pressed');
-              }}
+              style={styles.glassIconBtn}
+              onPress={() => openManagement(1)}
               activeOpacity={0.7}
               testID="crew-settings-button"
             >
-              <Settings size={20} color="#1A1A1A" />
+              <Settings size={18} color="#FFFFFF" />
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.headerIconBtn}
-              onPress={() => {
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                console.log('[Crew] Schedule pressed');
-              }}
+              style={styles.glassIconBtn}
+              onPress={() => openManagement(2)}
               activeOpacity={0.7}
               testID="crew-schedule-button"
             >
-              <CalendarDays size={20} color="#1A1A1A" />
+              <CalendarDays size={18} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         </View>
@@ -182,6 +172,18 @@ export default function CrewScreen() {
           </View>
         )}
       </ScrollView>
+
+      <Modal
+        visible={managementVisible}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setManagementVisible(false)}
+      >
+        <CrewManagementScreen
+          initialSegment={managementInitialSegment}
+          onClose={() => setManagementVisible(false)}
+        />
+      </Modal>
     </View>
   );
 }
@@ -208,15 +210,13 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     gap: 4,
   },
-  backBtn: {
-    width: 36,
-    height: 36,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  },
-  menuBtn: {
-    width: 36,
-    height: 36,
+  glassIconBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
@@ -229,13 +229,7 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    gap: 2,
-  },
-  headerIconBtn: {
-    width: 36,
-    height: 36,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+    gap: 8,
   },
   tabBar: {
     paddingHorizontal: 20,
