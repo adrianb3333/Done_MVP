@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
   distanceOverlay: {
     position: 'absolute' as const,
     left: 16,
-    top: 60,
+    top: 110,
   },
   distanceRow: {
     flexDirection: 'row' as const,
