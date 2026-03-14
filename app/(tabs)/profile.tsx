@@ -727,12 +727,6 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      {backgroundImageUri ? (
-        <View style={[styles.bgImageAbsolute, { height: insets.top + PROFILE_HEADER_HEIGHT + 280 }]}>
-          <Image source={{ uri: backgroundImageUri }} style={styles.bgImageFull} resizeMode="cover" />
-        </View>
-      ) : null}
-
       <Animated.View style={[styles.headerAbsolute, { transform: [{ translateY: headerTranslateY }] }]} pointerEvents="box-none">
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <View style={styles.headerRow} pointerEvents="box-none">
@@ -820,10 +814,15 @@ export default function ProfileScreen() {
         </Animated.View>
       )}
 
-      <ScrollView style={[styles.scrollView, backgroundImageUri ? { backgroundColor: 'transparent' } : undefined]} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: insets.top + PROFILE_HEADER_HEIGHT }} onScroll={onHeaderScroll} scrollEventThrottle={16}>
-        <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }, backgroundImageUri ? { backgroundColor: 'transparent' } : undefined]}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: insets.top + PROFILE_HEADER_HEIGHT }} onScroll={onHeaderScroll} scrollEventThrottle={16}>
+        <Animated.View style={[styles.contentOuter, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
 
-          <View style={styles.profileTopSection}>
+          <View style={[styles.imageScrollArea, backgroundImageUri ? { marginTop: -(insets.top + PROFILE_HEADER_HEIGHT), paddingTop: insets.top + PROFILE_HEADER_HEIGHT } : undefined]}>
+            {backgroundImageUri ? (
+              <Image source={{ uri: backgroundImageUri }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
+            ) : null}
+            <View style={styles.imageScrollContent}>
+              <View style={styles.profileTopSection}>
             <View style={styles.avatarAndFriendsColumn}>
               <TouchableOpacity
                 onPress={handleAvatarPress}
@@ -959,13 +958,17 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <View style={[styles.liveDividerArea, backgroundImageUri ? undefined : { marginTop: 16 }]}>
+            </View>
+          </View>
+
+          <View style={styles.liveDividerArea}>
             <View style={styles.liveDividerCurvedWhite}>
               <View style={styles.liveDividerCurvedWhiteInner} />
             </View>
           </View>
 
-          <View style={styles.liveSection}>
+          <View style={styles.whiteContentBelow}>
+            <View style={styles.liveSection}>
             <Text style={styles.liveSectionTitle}>LIVE</Text>
             <View style={styles.liveCard}>
               <View style={styles.liveEmptyState}>
@@ -1134,6 +1137,7 @@ export default function ProfileScreen() {
                 <Image source={require('@/assets/images/affiliate-card-photo.png')} style={styles.tourCardPhoto} resizeMode="cover" />
               </View>
             </TouchableOpacity>
+            </View>
             </View>
           </View>
 
@@ -1518,13 +1522,18 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
   },
-  content: {
+  contentOuter: {
+    paddingBottom: 30,
+  },
+  imageScrollArea: {
+    position: 'relative' as const,
+    overflow: 'hidden' as const,
+  },
+  imageScrollContent: {
     paddingHorizontal: 20,
     paddingTop: 4,
-    paddingBottom: 30,
-    backgroundColor: '#FFFFFF',
   },
 
   cardSectionHeader: {
@@ -1784,12 +1793,14 @@ const styles = StyleSheet.create({
   },
 
   liveDividerArea: {
-    marginTop: 20,
-    marginHorizontal: -20,
     height: 28,
     position: 'relative' as const,
     backgroundColor: 'transparent',
     overflow: 'visible' as const,
+  },
+  whiteContentBelow: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 20,
   },
   liveDividerCurvedWhite: {
     position: 'absolute' as const,
