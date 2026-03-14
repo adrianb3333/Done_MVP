@@ -48,17 +48,25 @@ function resolveProfileAvatar(profile: UserProfile): UserProfile {
 }
 
 const BG_IMAGE_KEY = 'profile_background_image';
+const COACH_MODE_KEY = 'coach_mode_activated';
 
 export const [ProfileProvider, useProfile] = createContextHook(() => {
   const queryClient = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
   const [backgroundImageUri, setBackgroundImageUriState] = useState<string | null>(null);
+  const [isCoachMode, setIsCoachModeState] = useState<boolean>(false);
 
   useEffect(() => {
     AsyncStorage.getItem(BG_IMAGE_KEY).then((val) => {
       if (val) {
         console.log('[ProfileContext] Loaded background image from storage');
         setBackgroundImageUriState(val);
+      }
+    }).catch(() => {});
+    AsyncStorage.getItem(COACH_MODE_KEY).then((val) => {
+      if (val === 'true') {
+        console.log('[ProfileContext] Coach mode loaded from storage');
+        setIsCoachModeState(true);
       }
     }).catch(() => {});
   }, []);
@@ -227,6 +235,18 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     }
   }, []);
 
+  const activateCoachMode = useCallback(async () => {
+    console.log('[ProfileContext] Activating coach mode');
+    setIsCoachModeState(true);
+    await AsyncStorage.setItem(COACH_MODE_KEY, 'true');
+  }, []);
+
+  const deactivateCoachMode = useCallback(async () => {
+    console.log('[ProfileContext] Deactivating coach mode');
+    setIsCoachModeState(false);
+    await AsyncStorage.removeItem(COACH_MODE_KEY);
+  }, []);
+
   const uploadAvatar = useCallback(async (uri: string) => {
     if (!userId) throw new Error('Not authenticated');
     console.log('[ProfileContext] Uploading avatar from:', uri);
@@ -306,6 +326,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     refetchAll,
     backgroundImageUri,
     setBackgroundImage,
+    isCoachMode,
+    activateCoachMode,
+    deactivateCoachMode,
   }), [
     userId,
     profileQuery.data,
@@ -323,5 +346,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     refetchAll,
     backgroundImageUri,
     setBackgroundImage,
+    isCoachMode,
+    activateCoachMode,
+    deactivateCoachMode,
   ]);
 });

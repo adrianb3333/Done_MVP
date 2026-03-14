@@ -516,6 +516,7 @@ export default function ProfileScreen() {
     allUsers,
     isLoadingAllUsers,
     backgroundImageUri,
+    isCoachMode,
   } = useProfile();
 
   const { lastRound } = useSession();
@@ -959,6 +960,26 @@ export default function ProfileScreen() {
           </View>
 
             </View>
+
+            {isCoachMode && (
+              <View style={styles.crewSection}>
+                <Text style={styles.crewSectionTitle}>CREW</Text>
+                <TouchableOpacity
+                  style={styles.crewCard}
+                  onPress={() => {
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    navigateTo('crew' as any);
+                  }}
+                  activeOpacity={0.8}
+                  testID="crew-card"
+                >
+                  <View style={styles.crewCardInner}>
+                    <View style={styles.crewDot} />
+                    <Text style={styles.crewCardText}>No friends playing right now</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
 
           <View style={styles.liveDividerArea}>
@@ -2547,5 +2568,42 @@ const styles = StyleSheet.create({
     position: 'absolute' as const,
     top: 10,
     right: 10,
+  },
+  crewSection: {
+    marginTop: 16,
+    paddingBottom: 4,
+  },
+  crewSectionTitle: {
+    fontSize: 20,
+    fontWeight: '800' as const,
+    color: '#1A1A1A',
+    letterSpacing: 1,
+    marginBottom: 10,
+  },
+  crewCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  crewCardInner: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    padding: 16,
+    gap: 10,
+  },
+  crewDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#CCC',
+  },
+  crewCardText: {
+    fontSize: 13,
+    color: '#999',
+    fontWeight: '500' as const,
   },
 });

@@ -18,6 +18,7 @@ import MiniSessionModal from "@/components/MiniSessionModal";
 import Sidebar from "@/components/Sidebar";
 import DataOverviewScreen from "@/components/DataOverviewScreen";
 import CommunityScreen from "@/components/CommunityScreen";
+import CrewScreen from "@/components/CrewScreen";
 import ProfileScreen from "@/app/(tabs)/profile";
 import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
@@ -133,6 +134,15 @@ function AppContent() {
     return (
       <View style={styles.container}>
         <CommunityScreen />
+        <Sidebar />
+      </View>
+    );
+  }
+
+  if (currentSection === 'crew') {
+    return (
+      <View style={styles.container}>
+        <CrewScreen />
         <Sidebar />
       </View>
     );

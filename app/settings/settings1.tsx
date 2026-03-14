@@ -11,9 +11,10 @@ import {
   Alert,
   ActivityIndicator,
   Image,
+  Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Camera, User, ChevronRight, LogOut, ImageIcon, X } from 'lucide-react-native';
+import { Camera, User, ChevronRight, LogOut, ImageIcon, X, Shield } from 'lucide-react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -21,6 +22,8 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { supabase } from '@/lib/supabase';
 import { useProfile } from '@/contexts/ProfileContext';
+
+type CoachPopupStep = 'none' | 'confirm' | 'warning';
 
 interface ProfileData {
   username: string;
@@ -35,7 +38,8 @@ interface ProfileData {
 
 export default function Settings1Screen() {
   const router = useRouter();
-  const { profile, uploadAvatar, updateProfile, refetchAll, backgroundImageUri, setBackgroundImage } = useProfile();
+  const { profile, uploadAvatar, updateProfile, refetchAll, backgroundImageUri, setBackgroundImage, isCoachMode, activateCoachMode } = useProfile();
+  const [coachPopupStep, setCoachPopupStep] = useState<CoachPopupStep>('none');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
@@ -412,6 +416,31 @@ export default function Settings1Screen() {
               ) : null}
             </TouchableOpacity>
 
+            <TouchableOpacity
+              style={styles.glassCard}
+              onPress={() => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setCoachPopupStep('confirm');
+              }}
+              activeOpacity={0.7}
+              testID="coach-activation-button"
+            >
+              <View style={styles.bgImageRow}>
+                <View style={styles.bgImageLeft}>
+                  <View style={[styles.bgImageIconWrap, { backgroundColor: isCoachMode ? 'rgba(61,149,77,0.15)' : 'rgba(0,0,0,0.08)' }]}>
+                    <Shield size={20} color={isCoachMode ? '#3D954D' : '#1A1A1A'} />
+                  </View>
+                  <View>
+                    <Text style={styles.bgImageTitle}>Coach Activation</Text>
+                    <Text style={styles.bgImageSubtitle}>
+                      {isCoachMode ? 'Coach mode is active' : 'Activate coach features'}
+                    </Text>
+                  </View>
+                </View>
+                <ChevronRight size={18} color="rgba(0,0,0,0.3)" />
+              </View>
+            </TouchableOpacity>
+
             <Text style={styles.sectionLabel}>ACCOUNT</Text>
             <TouchableOpacity
               style={styles.glassCard}
@@ -431,9 +460,226 @@ export default function Settings1Screen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      <Modal
+        visible={coachPopupStep === 'confirm'}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCoachPopupStep('none')}
+      >
+        <View style={coachStyles.overlay}>
+          <LinearGradient
+            colors={['#D6E4F0', '#C8DCF0', '#BDD4EB', '#D6E4F0']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={coachStyles.popupCard}
+          >
+            <Text style={coachStyles.popupTitle}>Coach Activation</Text>
+            <Text style={coachStyles.popupText}>Do you want to activate Coach Mode?</Text>
+            <View style={coachStyles.popupBtnRow}>
+              <TouchableOpacity
+                style={coachStyles.noBtn}
+                onPress={() => {
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setCoachPopupStep('none');
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={coachStyles.noBtnText}>No</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  setCoachPopupStep('warning');
+                }}
+                activeOpacity={0.7}
+                style={coachStyles.yesBtn}
+              >
+                <LinearGradient
+                  colors={['#FF1C1C', '#E31010', '#B20000']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0, y: 1 }}
+                  style={coachStyles.yesBtnGradient}
+                >
+                  <Text style={coachStyles.yesBtnText}>Yes</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={coachPopupStep === 'warning'}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCoachPopupStep('none')}
+      >
+        <View style={coachStyles.overlay}>
+          <LinearGradient
+            colors={['#D6E4F0', '#C8DCF0', '#BDD4EB', '#D6E4F0']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={coachStyles.popupCard}
+          >
+            <Text style={coachStyles.warningTitle}>Warning</Text>
+            <Text style={coachStyles.warningMainText}>If player don't!</Text>
+            <Text style={coachStyles.warningSmallText}>will change functionality of app!</Text>
+            <View style={coachStyles.popupBtnRow}>
+              <TouchableOpacity
+                style={coachStyles.noBtn}
+                onPress={() => {
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setCoachPopupStep('none');
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={coachStyles.noBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={async () => {
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                  await activateCoachMode();
+                  setCoachPopupStep('none');
+                  try {
+                    if (router.canGoBack()) {
+                      router.back();
+                    } else {
+                      router.replace('/(tabs)');
+                    }
+                  } catch (e) {
+                    console.log('[Settings] Nav error after coach activation:', e);
+                    router.replace('/(tabs)');
+                  }
+                }}
+                activeOpacity={0.7}
+                style={coachStyles.coachBtn}
+              >
+                <LinearGradient
+                  colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0, y: 1 }}
+                  style={coachStyles.coachBtnGradient}
+                >
+                  <Text style={coachStyles.coachBtnText}>I am Coach!</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 }
+
+const coachStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 28,
+  },
+  popupCard: {
+    width: '100%' as const,
+    borderRadius: 20,
+    padding: 28,
+    alignItems: 'center' as const,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  popupTitle: {
+    fontSize: 20,
+    fontWeight: '800' as const,
+    color: '#1A1A1A',
+    marginBottom: 10,
+  },
+  popupText: {
+    fontSize: 15,
+    color: 'rgba(0,0,0,0.6)',
+    textAlign: 'center' as const,
+    marginBottom: 24,
+  },
+  popupBtnRow: {
+    flexDirection: 'row' as const,
+    gap: 12,
+    width: '100%' as const,
+  },
+  noBtn: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.08)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  noBtnText: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: '#1A1A1A',
+  },
+  yesBtn: {
+    flex: 1,
+    borderRadius: 14,
+    overflow: 'hidden' as const,
+  },
+  yesBtnGradient: {
+    paddingVertical: 14,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    borderRadius: 14,
+  },
+  yesBtnText: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+  },
+  warningTitle: {
+    fontSize: 22,
+    fontWeight: '900' as const,
+    color: '#FF3B30',
+    marginBottom: 12,
+  },
+  warningMainText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#1A1A1A',
+    textAlign: 'center' as const,
+    marginBottom: 6,
+  },
+  warningSmallText: {
+    fontSize: 13,
+    color: 'rgba(0,0,0,0.5)',
+    textAlign: 'center' as const,
+    marginBottom: 24,
+  },
+  coachBtn: {
+    flex: 1,
+    borderRadius: 14,
+    overflow: 'hidden' as const,
+  },
+  coachBtnGradient: {
+    paddingVertical: 14,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    borderRadius: 14,
+  },
+  coachBtnText: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+  },
+});
 
 const styles = StyleSheet.create({
   root: {

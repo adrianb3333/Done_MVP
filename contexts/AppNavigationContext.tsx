@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import createContextHook from '@nkzw/create-context-hook';
 
-export type AppSection = 'mygame' | 'data-overview' | 'community';
+export type AppSection = 'mygame' | 'data-overview' | 'community' | 'crew';
 
 export const [AppNavigationProvider, useAppNavigation] = createContextHook(() => {
   const [currentSection, setCurrentSection] = useState<AppSection>('mygame');

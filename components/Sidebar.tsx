@@ -12,6 +12,7 @@ import {
 import { X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppNavigation, AppSection } from '@/contexts/AppNavigationContext';
+import { useProfile } from '@/contexts/ProfileContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SIDEBAR_WIDTH = SCREEN_WIDTH * 0.75;
@@ -46,6 +47,7 @@ const sections: SidebarItem[] = [
 
 export default function Sidebar() {
   const { sidebarVisible, closeSidebar, navigateTo, currentSection } = useAppNavigation();
+  const { isCoachMode } = useProfile();
   const insets = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
   const overlayAnim = useRef(new Animated.Value(0)).current;
@@ -141,6 +143,31 @@ export default function Sidebar() {
                 </TouchableOpacity>
               );
             })}
+
+            {isCoachMode && (
+              <>
+                <View style={styles.crewDivider} />
+                {(() => {
+                  const isCrewActive = currentSection === 'crew';
+                  return (
+                    <TouchableOpacity
+                      style={[styles.sectionItem, isCrewActive && styles.sectionItemActive]}
+                      onPress={() => navigateTo('crew')}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.sectionRow}>
+                        <View style={styles.sectionInfo}>
+                          <Text style={[styles.sectionLabel, isCrewActive && styles.sectionLabelActive]}>
+                            Crew
+                          </Text>
+                        </View>
+                      </View>
+                      {isCrewActive && <View style={styles.activeIndicator} />}
+                    </TouchableOpacity>
+                  );
+                })()}
+              </>
+            )}
           </View>
 
           <View style={styles.sidebarFooter}>
@@ -239,5 +266,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#999999',
     textAlign: 'center' as const,
+  },
+  crewDivider: {
+    height: 1,
+    backgroundColor: '#E8E8E8',
+    marginHorizontal: 16,
+    marginVertical: 10,
   },
 });
