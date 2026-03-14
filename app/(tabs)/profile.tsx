@@ -1793,7 +1793,7 @@ const styles = StyleSheet.create({
   },
 
   liveDividerArea: {
-    height: 28,
+    height: 40,
     position: 'relative' as const,
     backgroundColor: 'transparent',
     overflow: 'visible' as const,
@@ -1813,8 +1813,8 @@ const styles = StyleSheet.create({
   liveDividerCurvedWhiteInner: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 26,
-    borderTopRightRadius: 26,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.1,

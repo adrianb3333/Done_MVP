@@ -258,7 +258,21 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     }
 
     console.log('[ProfileContext] Profile avatar_url updated to:', fileName);
+
+    const resolvedUrl = resolveAvatarUrl(fileName);
+    console.log('[ProfileContext] Resolved avatar URL:', resolvedUrl);
+
+    const currentProfile = queryClient.getQueryData<UserProfile | null>(['profile', userId]);
+    if (currentProfile) {
+      queryClient.setQueryData(['profile', userId], {
+        ...currentProfile,
+        avatar_url: resolvedUrl,
+      });
+      console.log('[ProfileContext] Optimistically updated profile cache with new avatar');
+    }
+
     void queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+    void queryClient.invalidateQueries({ queryKey: ['allUsers'] });
     return fileName;
   }, [userId, queryClient]);
 
