@@ -950,6 +950,18 @@ export default function ProfileScreen() {
             </View>
           </View>
 
+          <View style={styles.liveDividerArea}>
+            <LinearGradient
+              colors={['#F0EDE6', '#F5F2EB', '#F8F6F1', '#FAFAF8', '#FFFFFF']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={styles.liveDividerGradient}
+            />
+            <View style={styles.liveDividerLineWrap}>
+              <View style={styles.liveDividerLine} />
+            </View>
+          </View>
+
           <View style={styles.liveSection}>
             <Text style={styles.liveSectionTitle}>LIVE</Text>
             <View style={styles.liveCard}>
@@ -1758,9 +1770,29 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
 
+  liveDividerArea: {
+    marginTop: 16,
+    marginHorizontal: -20,
+  },
+  liveDividerGradient: {
+    height: 40,
+  },
+  liveDividerLineWrap: {
+    paddingHorizontal: 20,
+  },
+  liveDividerLine: {
+    height: 4,
+    backgroundColor: '#E8E4DC',
+    borderRadius: 2,
+    shadowColor: '#B0A890',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
   liveSection: {
     marginBottom: 32,
-    marginTop: 20,
+    marginTop: 14,
   },
   liveSectionTitle: {
     fontSize: 20,
