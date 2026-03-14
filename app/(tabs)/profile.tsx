@@ -727,6 +727,12 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
+      {backgroundImageUri ? (
+        <View style={[styles.bgImageAbsolute, { height: insets.top + PROFILE_HEADER_HEIGHT + 280 }]}>
+          <Image source={{ uri: backgroundImageUri }} style={styles.bgImageFull} resizeMode="cover" />
+        </View>
+      ) : null}
+
       <Animated.View style={[styles.headerAbsolute, { transform: [{ translateY: headerTranslateY }] }]} pointerEvents="box-none">
         <SafeAreaView edges={['top']} style={styles.safeArea}>
           <View style={styles.headerRow} pointerEvents="box-none">
@@ -736,11 +742,11 @@ export default function ProfileScreen() {
             activeOpacity={0.7}
             testID="hamburger-menu"
           >
-            <Menu size={24} color="#1A1A1A" />
+            <Menu size={24} color={backgroundImageUri ? '#FFFFFF' : '#1A1A1A'} />
           </TouchableOpacity>
           <Image
             source={require('@/assets/images/golferscrib-header-logo.png')}
-            style={styles.headerLogo}
+            style={[styles.headerLogo, backgroundImageUri ? { tintColor: '#FFFFFF' } : undefined]}
             resizeMode="contain"
           />
           <View style={styles.headerIcons}>
@@ -761,7 +767,7 @@ export default function ProfileScreen() {
               activeOpacity={0.7}
               testID="help-menu-button"
             >
-              <HelpCircle size={26} color="#888" />
+              <HelpCircle size={26} color={backgroundImageUri ? '#FFFFFF' : '#888'} />
             </TouchableOpacity>
           </View>
         </View>
@@ -814,14 +820,8 @@ export default function ProfileScreen() {
         </Animated.View>
       )}
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: insets.top + PROFILE_HEADER_HEIGHT }} onScroll={onHeaderScroll} scrollEventThrottle={16}>
-        <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
-
-          {backgroundImageUri ? (
-            <View style={styles.bgImageWrapper}>
-              <Image source={{ uri: backgroundImageUri }} style={styles.bgImage} resizeMode="cover" />
-            </View>
-          ) : null}
+      <ScrollView style={[styles.scrollView, backgroundImageUri ? { backgroundColor: 'transparent' } : undefined]} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: insets.top + PROFILE_HEADER_HEIGHT }} onScroll={onHeaderScroll} scrollEventThrottle={16}>
+        <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }, backgroundImageUri ? { backgroundColor: 'transparent' } : undefined]}>
 
           <View style={styles.profileTopSection}>
             <View style={styles.avatarAndFriendsColumn}>
@@ -832,13 +832,15 @@ export default function ProfileScreen() {
                 testID="avatar-button"
               >
                 <View style={styles.avatarShadowWrap}>
-                  {profile?.avatar_url ? (
-                    <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
-                  ) : (
-                    <View style={styles.avatarPlaceholder}>
-                      <Text style={styles.avatarInitials}>{initials}</Text>
-                    </View>
-                  )}
+                  <View style={styles.avatarClip}>
+                    {profile?.avatar_url ? (
+                      <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
+                    ) : (
+                      <View style={styles.avatarPlaceholder}>
+                        <Text style={styles.avatarInitials}>{initials}</Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
               </TouchableOpacity>
 
@@ -957,7 +959,7 @@ export default function ProfileScreen() {
             </View>
           </View>
 
-          <View style={styles.liveDividerArea}>
+          <View style={[styles.liveDividerArea, backgroundImageUri ? undefined : { marginTop: 16 }]}>
             <View style={styles.liveDividerCurvedWhite}>
               <View style={styles.liveDividerCurvedWhiteInner} />
             </View>
@@ -1459,6 +1461,17 @@ const styles = StyleSheet.create({
     zIndex: 100,
     backgroundColor: 'transparent',
   },
+  bgImageAbsolute: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 0,
+  },
+  bgImageFull: {
+    width: '100%' as const,
+    height: '100%' as const,
+  },
   safeArea: {
     zIndex: 10,
   },
@@ -1513,19 +1526,7 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
     backgroundColor: '#FFFFFF',
   },
-  bgImageWrapper: {
-    position: 'absolute' as const,
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 280,
-    marginHorizontal: -20,
-    overflow: 'hidden' as const,
-  },
-  bgImage: {
-    width: '100%' as const,
-    height: '100%' as const,
-  },
+
   cardSectionHeader: {
     fontSize: 20,
     fontWeight: '800' as const,
@@ -1555,21 +1556,25 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.18,
     shadowRadius: 10,
     elevation: 8,
+    borderRadius: 48,
+  },
+  avatarClip: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    overflow: 'hidden' as const,
+    borderWidth: 3,
+    borderColor: '#E0E0E0',
+    backgroundColor: '#F0F0F0',
   },
   avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    borderWidth: 3,
-    borderColor: '#E0E0E0',
+    width: '100%' as const,
+    height: '100%' as const,
   },
   avatarPlaceholder: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: '100%' as const,
+    height: '100%' as const,
     backgroundColor: '#F0F0F0',
-    borderWidth: 3,
-    borderColor: '#E0E0E0',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
   },
@@ -1779,7 +1784,7 @@ const styles = StyleSheet.create({
   },
 
   liveDividerArea: {
-    marginTop: 16,
+    marginTop: 20,
     marginHorizontal: -20,
     height: 28,
     position: 'relative' as const,
@@ -1807,7 +1812,8 @@ const styles = StyleSheet.create({
   },
   liveSection: {
     marginBottom: 32,
-    marginTop: 0,
+    marginTop: -2,
+    paddingTop: 6,
     backgroundColor: '#FFFFFF',
   },
   liveSectionTitle: {
