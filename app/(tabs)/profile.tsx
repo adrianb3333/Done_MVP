@@ -1761,7 +1761,8 @@ const styles = StyleSheet.create({
     marginHorizontal: -20,
     height: 28,
     position: 'relative' as const,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
+    overflow: 'visible' as const,
   },
   liveDividerCurvedWhite: {
     position: 'absolute' as const,
@@ -1784,7 +1785,7 @@ const styles = StyleSheet.create({
   },
   liveSection: {
     marginBottom: 32,
-    marginTop: 6,
+    marginTop: 0,
   },
   liveSectionTitle: {
     fontSize: 20,
