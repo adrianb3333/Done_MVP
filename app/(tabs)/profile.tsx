@@ -1498,11 +1498,13 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
   },
   content: {
     paddingHorizontal: 20,
     paddingTop: 4,
     paddingBottom: 30,
+    backgroundColor: '#FFFFFF',
   },
   cardSectionHeader: {
     fontSize: 20,
@@ -1786,6 +1788,7 @@ const styles = StyleSheet.create({
   liveSection: {
     marginBottom: 32,
     marginTop: 0,
+    backgroundColor: '#FFFFFF',
   },
   liveSectionTitle: {
     fontSize: 20,
@@ -1826,6 +1829,7 @@ const styles = StyleSheet.create({
 
   cardsColumn: {
     gap: 32,
+    backgroundColor: '#FFFFFF',
   },
   roundCardOuter: {
     borderRadius: 16,
