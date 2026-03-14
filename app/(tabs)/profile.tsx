@@ -975,7 +975,7 @@ export default function ProfileScreen() {
                 >
                   <View style={styles.crewCardInner}>
                     <View style={styles.crewDot} />
-                    <Text style={styles.crewCardText}>No friends playing right now</Text>
+                    <Text style={styles.crewCardText}>No Crew for the moment</Text>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -2572,6 +2572,7 @@ const styles = StyleSheet.create({
   crewSection: {
     marginTop: 16,
     paddingBottom: 4,
+    paddingHorizontal: 16,
   },
   crewSectionTitle: {
     fontSize: 20,
