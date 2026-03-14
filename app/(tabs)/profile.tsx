@@ -951,14 +951,16 @@ export default function ProfileScreen() {
           </View>
 
           <View style={styles.liveDividerArea}>
-            <LinearGradient
-              colors={['#F0EDE6', '#F5F2EB', '#F8F6F1', '#FAFAF8', '#FFFFFF']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={styles.liveDividerGradient}
-            />
-            <View style={styles.liveDividerLineWrap}>
-              <View style={styles.liveDividerLine} />
+            <View style={styles.liveDividerGoldBg}>
+              <LinearGradient
+                colors={['#EDE9E0', '#F0ECE4', '#F3F0E9', '#F5F3ED']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+                style={styles.liveDividerGradient}
+              />
+            </View>
+            <View style={styles.liveDividerCurvedWhite}>
+              <View style={styles.liveDividerCurvedWhiteInner} />
             </View>
           </View>
 
@@ -1510,14 +1512,6 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     paddingBottom: 30,
   },
-
-
-  liveDivider: {
-    height: 2,
-    backgroundColor: '#ECECEC',
-    marginHorizontal: -20,
-    marginBottom: 4,
-  },
   cardSectionHeader: {
     fontSize: 20,
     fontWeight: '800' as const,
@@ -1773,22 +1767,37 @@ const styles = StyleSheet.create({
   liveDividerArea: {
     marginTop: 16,
     marginHorizontal: -20,
+    height: 60,
+    position: 'relative' as const,
+  },
+  liveDividerGoldBg: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   liveDividerGradient: {
-    height: 40,
+    flex: 1,
   },
-  liveDividerLineWrap: {
-    paddingHorizontal: 20,
+  liveDividerCurvedWhite: {
+    position: 'absolute' as const,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 32,
+    backgroundColor: 'transparent',
   },
-  liveDividerLine: {
-    height: 4,
-    backgroundColor: '#E8E4DC',
-    borderRadius: 2,
+  liveDividerCurvedWhiteInner: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 26,
+    borderTopRightRadius: 26,
     shadowColor: '#B0A890',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.2,
     shadowRadius: 6,
-    elevation: 4,
+    elevation: 5,
   },
   liveSection: {
     marginBottom: 32,
