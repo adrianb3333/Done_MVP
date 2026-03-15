@@ -24,6 +24,9 @@ import ProfileScreen from "@/app/(tabs)/profile";
 import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
 import PracticeSummary from "@/components/PracticeSummary";
+import CrewEventBanner from "@/components/CrewEventBanner";
+import CrewDrillMode from "@/components/CrewDrillMode";
+import CrewRoundMode from "@/components/CrewRoundMode";
 
 if (Platform.OS !== 'web') {
   SplashScreen.preventAutoHideAsync().catch(() => {
@@ -34,7 +37,7 @@ if (Platform.OS !== 'web') {
 const queryClient = new QueryClient();
 
 function AppContent() {
-  const { sessionState, sessionType, showPracticeSummary } = useSession();
+  const { sessionState, sessionType, showPracticeSummary, crewSession, crewSessionActive } = useSession();
   const { currentSection } = useAppNavigation();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -99,6 +102,15 @@ function AppContent() {
 
   if (showPracticeSummary) {
     return <PracticeSummary />;
+  }
+
+  if (crewSessionActive && crewSession) {
+    if (crewSession.type === 'drill') {
+      return <CrewDrillMode session={crewSession} />;
+    }
+    if (crewSession.type === 'round' || crewSession.type === 'tournament') {
+      return <CrewRoundMode session={crewSession} />;
+    }
   }
 
   if (sessionState === 'active') {
@@ -366,6 +378,7 @@ function RootLayoutNav() {
     <>
       <AppContent />
       <BattleInviteBanner />
+      <CrewEventBanner />
     </>
   );
 }

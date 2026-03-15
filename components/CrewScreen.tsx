@@ -11,7 +11,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CalendarDays, Settings, Plus, ChevronLeft, Crown, Shield, Users, Clock, MapPin } from 'lucide-react-native';
+import { CalendarDays, Settings, Plus, ChevronLeft, Crown, Shield, Users, Clock, MapPin, Trophy, X } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useAppNavigation } from '@/contexts/AppNavigationContext';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -80,6 +80,7 @@ export default function CrewScreen() {
   const [createVisible, setCreateVisible] = useState<boolean>(false);
   const [settingsVisible, setSettingsVisible] = useState<boolean>(false);
   const [scheduleVisible, setScheduleVisible] = useState<boolean>(false);
+  const [pastDetailItem, setPastDetailItem] = useState<ScheduleItem | null>(null);
   const underlineAnim = useRef(new Animated.Value(0)).current;
 
   const tabWidth = (SCREEN_WIDTH - 40) / 3;
@@ -170,10 +171,18 @@ export default function CrewScreen() {
     );
   }, [isDark, textColor, getInitials]);
 
-  const renderActivityCard = useCallback((item: ScheduleItem, showDate: boolean) => {
+  const renderActivityCard = useCallback((item: ScheduleItem, showDate: boolean, isPast?: boolean) => {
     const typeColor = getTypeColor(item.type);
+    const Wrapper = isPast ? TouchableOpacity : View;
+    const wrapperProps = isPast ? {
+      onPress: () => {
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setPastDetailItem(item);
+      },
+      activeOpacity: 0.7,
+    } : {};
     return (
-      <View key={item.id} style={[styles.activityCard, { backgroundColor: cardBg }]}>
+      <Wrapper key={item.id} style={[styles.activityCard, { backgroundColor: cardBg }]} {...wrapperProps}>
         <View style={styles.activityCardTop}>
           <View style={[styles.activityTypeBadge, { backgroundColor: typeColor }]}>
             <Text style={styles.activityTypeBadgeText}>{getTypeLabel(item.type)}</Text>
@@ -193,7 +202,7 @@ export default function CrewScreen() {
             <Text style={[styles.activityCourseText, { color: subtextColor }]} numberOfLines={1}>{item.courseName}</Text>
           </View>
         ) : null}
-      </View>
+      </Wrapper>
     );
   }, [cardBg, textColor, subtextColor]);
 
@@ -367,7 +376,7 @@ export default function CrewScreen() {
 
             <Text style={[styles.latestSectionHeader, { color: textColor }]}>Past</Text>
             {pastItems.length > 0 ? (
-              pastItems.map((item) => renderActivityCard(item, true))
+              pastItems.map((item) => renderActivityCard(item, true, true))
             ) : (
               <Text style={[styles.latestEmptyText, { color: subtextColor }]}>No past activities yet.</Text>
             )}
@@ -410,6 +419,69 @@ export default function CrewScreen() {
         onRequestClose={() => setScheduleVisible(false)}
       >
         <CrewScheduleScreen onClose={() => setScheduleVisible(false)} />
+      </Modal>
+
+      <Modal
+        visible={pastDetailItem !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPastDetailItem(null)}
+      >
+        <View style={styles.pastDetailOverlay}>
+          <View style={[styles.pastDetailCard, { backgroundColor: isDark ? bgColor : '#1A1A1A' }]}>
+            <View style={styles.pastDetailHeader}>
+              <Text style={styles.pastDetailTitle}>{pastDetailItem?.name}</Text>
+              <TouchableOpacity onPress={() => setPastDetailItem(null)}>
+                <X size={22} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.pastDetailDivider} />
+            <View style={styles.pastDetailRow}>
+              <Text style={styles.pastDetailLabel}>Type</Text>
+              <Text style={styles.pastDetailValue}>{pastDetailItem ? getTypeLabel(pastDetailItem.type) : ''}</Text>
+            </View>
+            <View style={styles.pastDetailRow}>
+              <Text style={styles.pastDetailLabel}>Date</Text>
+              <Text style={styles.pastDetailValue}>{pastDetailItem?.date}</Text>
+            </View>
+            <View style={styles.pastDetailRow}>
+              <Text style={styles.pastDetailLabel}>Time</Text>
+              <Text style={styles.pastDetailValue}>{pastDetailItem?.time}</Text>
+            </View>
+            {pastDetailItem?.courseName ? (
+              <View style={styles.pastDetailRow}>
+                <Text style={styles.pastDetailLabel}>Course</Text>
+                <Text style={styles.pastDetailValue}>{pastDetailItem.courseName}</Text>
+              </View>
+            ) : null}
+            {pastDetailItem?.info ? (
+              <>
+                <View style={styles.pastDetailDivider} />
+                <Text style={styles.pastDetailSubheader}>Info</Text>
+                <Text style={styles.pastDetailInfo}>{pastDetailItem.info}</Text>
+              </>
+            ) : null}
+            <View style={styles.pastDetailDivider} />
+            <View style={styles.pastDetailResultSection}>
+              <View style={styles.pastDetailResultHeader}>
+                <Trophy size={16} color="#FFD700" />
+                <Text style={styles.pastDetailResultTitle}>Results</Text>
+              </View>
+              <View style={styles.pastDetailPlacement}>
+                <View style={[styles.pastDetailRankBadge, { backgroundColor: '#FFD700' }]}>
+                  <Text style={styles.pastDetailRankText}>1</Text>
+                </View>
+                <Text style={styles.pastDetailWinnerName}>Winner</Text>
+                <Text style={styles.pastDetailWinnerScore}>
+                  {pastDetailItem?.type === 'drill' ? 'Best Score' : 'Lowest'}
+                </Text>
+              </View>
+              <Text style={styles.pastDetailResultNote}>
+                Detailed results are saved after completing the crew event.
+              </Text>
+            </View>
+          </View>
+        </View>
       </Modal>
     </View>
   );
@@ -691,5 +763,110 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     paddingHorizontal: 20,
     marginBottom: 24,
+  },
+  pastDetailOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    justifyContent: 'center' as const,
+    paddingHorizontal: 24,
+  },
+  pastDetailCard: {
+    borderRadius: 20,
+    padding: 24,
+    maxHeight: '80%' as any,
+  },
+  pastDetailHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    marginBottom: 16,
+  },
+  pastDetailTitle: {
+    fontSize: 20,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+    flex: 1,
+  },
+  pastDetailDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    marginVertical: 14,
+  },
+  pastDetailRow: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    paddingVertical: 6,
+  },
+  pastDetailLabel: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.5)',
+    fontWeight: '600' as const,
+  },
+  pastDetailValue: {
+    fontSize: 15,
+    color: '#FFFFFF',
+    fontWeight: '700' as const,
+  },
+  pastDetailSubheader: {
+    fontSize: 13,
+    fontWeight: '800' as const,
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: 0.8,
+    marginBottom: 8,
+  },
+  pastDetailInfo: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)',
+    lineHeight: 20,
+  },
+  pastDetailResultSection: {
+    gap: 12,
+  },
+  pastDetailResultHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+  },
+  pastDetailResultTitle: {
+    fontSize: 15,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+  },
+  pastDetailPlacement: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 10,
+    paddingVertical: 8,
+  },
+  pastDetailRankBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  pastDetailRankText: {
+    fontSize: 12,
+    fontWeight: '800' as const,
+    color: '#0A0A0A',
+  },
+  pastDetailWinnerName: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: '#FFD700',
+  },
+  pastDetailWinnerScore: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.4)',
+  },
+  pastDetailResultNote: {
+    fontSize: 12,
+    fontWeight: '500' as const,
+    color: 'rgba(255,255,255,0.3)',
+    fontStyle: 'italic' as const,
   },
 });

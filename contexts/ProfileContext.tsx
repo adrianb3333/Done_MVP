@@ -134,6 +134,7 @@ export interface CrewTournament {
   courseCountry?: string;
   holeOption: string;
   format: string;
+  totalRounds?: number;
   groups: CrewRoundGroup[];
   createdAt: number;
 }
@@ -148,6 +149,7 @@ export interface ScheduledTournament {
   courseCountry?: string;
   holeOption?: string;
   format?: string;
+  totalRounds?: number;
   groups?: CrewRoundGroup[];
   info?: string;
   date: string;

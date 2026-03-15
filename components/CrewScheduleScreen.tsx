@@ -222,6 +222,7 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
             courseCountry: tournament.courseCountry || undefined,
             holeOption: tournament.holeOption || undefined,
             format: tournament.format || undefined,
+            totalRounds: tournament.totalRounds || undefined,
             groups: tournament.groups || undefined,
             info: tournament.info || undefined,
             date: selectedDateString,

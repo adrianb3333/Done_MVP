@@ -113,6 +113,7 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
   const [tournamentCourseCountry, setTournamentCourseCountry] = useState<string>('');
   const [tournamentHoleOption, setTournamentHoleOption] = useState<HoleOption>('18');
   const [tournamentFormat, setTournamentFormat] = useState<string>('');
+  const [tournamentTotalRounds, setTournamentTotalRounds] = useState<number>(1);
   const [tournamentGroups, setTournamentGroups] = useState<{ id: string; players: (string | null)[] }[]>([
     { id: '1', players: [null, null, null, null] },
   ]);
@@ -1164,6 +1165,7 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
       courseCountry: tournamentCourseCountry.trim(),
       holeOption: tournamentHoleOption,
       format: tournamentFormat,
+      totalRounds: tournamentTotalRounds,
       groups: tournamentGroups.map((g, idx) => ({
         id: (idx + 1).toString(),
         players: g.players.filter((p): p is string => p !== null),
@@ -1178,7 +1180,7 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
       console.log('[CrewCreate] Save tournament error:', err.message);
       Alert.alert('Error', 'Failed to save tournament.');
     }
-  }, [tournamentName, tournamentInfo, tournamentCourseName, tournamentCourseClubName, tournamentCourseCity, tournamentCourseCountry, tournamentHoleOption, tournamentFormat, tournamentGroups, saveCrewTournament, onClose]);
+  }, [tournamentName, tournamentInfo, tournamentCourseName, tournamentCourseClubName, tournamentCourseCity, tournamentCourseCountry, tournamentHoleOption, tournamentFormat, tournamentTotalRounds, tournamentGroups, saveCrewTournament, onClose]);
 
   const renderTournamentContent = () => {
     return (
@@ -1216,6 +1218,38 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
               numberOfLines={4}
               textAlignVertical="top"
             />
+          </View>
+
+          <Text style={[styles.sectionLabel, isDark && { color: '#FFFFFF' }]}>TOTAL ROUNDS</Text>
+          <View style={styles.totalRoundsRow}>
+            {[1, 2, 3, 4, 5, 6].map((num) => {
+              const isSelected = num <= tournamentTotalRounds;
+              return (
+                <TouchableOpacity
+                  key={num}
+                  style={[
+                    styles.totalRoundCircle,
+                    isSelected && styles.totalRoundCircleSelected,
+                  ]}
+                  onPress={() => {
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    if (num === tournamentTotalRounds) {
+                      setTournamentTotalRounds(Math.max(1, num - 1));
+                    } else {
+                      setTournamentTotalRounds(num);
+                    }
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[
+                    styles.totalRoundText,
+                    isSelected && styles.totalRoundTextSelected,
+                  ]}>
+                    {num}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
 
           <Text style={[styles.sectionLabel, isDark && { color: '#FFFFFF' }]}>SELECT COURSE</Text>
@@ -2317,5 +2351,37 @@ const styles = StyleSheet.create({
   formatCardActive: {
     borderColor: '#2E7D32',
     backgroundColor: 'rgba(46,125,50,0.06)',
+  },
+  totalRoundsRow: {
+    flexDirection: 'row' as const,
+    gap: 12,
+    justifyContent: 'flex-start' as const,
+  },
+  totalRoundCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  totalRoundCircleSelected: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderColor: 'rgba(255,255,255,0.5)',
+    shadowColor: '#FFF',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  totalRoundText: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: 'rgba(255,255,255,0.4)',
+  },
+  totalRoundTextSelected: {
+    color: '#FFFFFF',
   },
 });

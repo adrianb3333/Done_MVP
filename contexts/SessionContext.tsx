@@ -16,6 +16,25 @@ const PLAY_SETUP_KEYS = [
 export type SessionType = 'play' | 'practice' | null;
 export type SessionState = 'idle' | 'setup' | 'active' | 'minimized';
 
+export type CrewSessionType = 'drill' | 'round' | 'tournament' | null;
+
+export interface CrewSessionData {
+  type: CrewSessionType;
+  eventName: string;
+  eventId: string;
+  drillCategory?: string;
+  drillRounds?: number;
+  drillShotsPerRound?: number;
+  drillTotalShots?: number;
+  drillAcceptedDistances?: number[];
+  courseName?: string;
+  holeOption?: string;
+  format?: string;
+  totalRounds?: number;
+  groups?: { id: string; players: string[] }[];
+  participants?: string[];
+}
+
 export interface LastRoundData {
   totalScore: number;
   totalPar: number;
@@ -38,6 +57,8 @@ interface SessionContextValue {
   lastRound: LastRoundData | null;
   sensorsEnabled: boolean;
   showPracticeSummary: boolean;
+  crewSession: CrewSessionData | null;
+  crewSessionActive: boolean;
   setSensorsEnabled: (val: boolean) => void;
   startSetup: (type: 'play' | 'practice') => void;
   startBattlePractice: () => void;
@@ -50,6 +71,10 @@ interface SessionContextValue {
   finishRoundWithData: (data: LastRoundData) => void;
   quitSession: () => void;
   dismissPracticeSummary: () => void;
+  startCrewSession: (data: CrewSessionData) => void;
+  endCrewSession: () => void;
+  minimizeCrewSession: () => void;
+  expandCrewSession: () => void;
 }
 
 const LAST_ROUND_KEY = 'last_round_data';
@@ -65,6 +90,9 @@ export const [SessionProvider, useSession] = createContextHook<SessionContextVal
   const [lastRound, setLastRound] = useState<LastRoundData | null>(null);
   const [sensorsEnabled, setSensorsEnabled] = useState<boolean>(false);
   const [showPracticeSummary, setShowPracticeSummary] = useState<boolean>(false);
+  const [crewSession, setCrewSession] = useState<CrewSessionData | null>(null);
+  const [crewSessionActive, setCrewSessionActive] = useState<boolean>(false);
+  const [crewSessionMinimized, setCrewSessionMinimized] = useState<boolean>(false);
 
   useEffect(() => {
     void AsyncStorage.getItem(LAST_ROUND_KEY).then((stored) => {
@@ -187,6 +215,30 @@ export const [SessionProvider, useSession] = createContextHook<SessionContextVal
     router.replace('/(tabs)/profile' as any);
   }, []);
 
+  const startCrewSession = useCallback((data: CrewSessionData) => {
+    console.log('[Session] Starting crew session:', data.type, data.eventName);
+    setCrewSession(data);
+    setCrewSessionActive(true);
+    setCrewSessionMinimized(false);
+  }, []);
+
+  const endCrewSession = useCallback(() => {
+    console.log('[Session] Ending crew session');
+    setCrewSession(null);
+    setCrewSessionActive(false);
+    setCrewSessionMinimized(false);
+  }, []);
+
+  const minimizeCrewSession = useCallback(() => {
+    console.log('[Session] Minimizing crew session');
+    setCrewSessionMinimized(true);
+  }, []);
+
+  const expandCrewSession = useCallback(() => {
+    console.log('[Session] Expanding crew session');
+    setCrewSessionMinimized(false);
+  }, []);
+
   return useMemo(() => ({
     sessionType,
     sessionState,
@@ -198,6 +250,8 @@ export const [SessionProvider, useSession] = createContextHook<SessionContextVal
     lastRound,
     sensorsEnabled,
     showPracticeSummary,
+    crewSession,
+    crewSessionActive: crewSessionActive && !crewSessionMinimized,
     setSensorsEnabled,
     startSetup,
     startBattlePractice,
@@ -210,11 +264,17 @@ export const [SessionProvider, useSession] = createContextHook<SessionContextVal
     finishRoundWithData,
     quitSession,
     dismissPracticeSummary,
+    startCrewSession,
+    endCrewSession,
+    minimizeCrewSession,
+    expandCrewSession,
   }), [
     sessionType, sessionState, setupStep, sessionStartTime,
     roundName, roundDate, isPrivate, lastRound, sensorsEnabled,
-    showPracticeSummary, setSensorsEnabled, startSetup, startBattlePractice, nextSetupStep,
+    showPracticeSummary, crewSession, crewSessionActive, crewSessionMinimized,
+    setSensorsEnabled, startSetup, startBattlePractice, nextSetupStep,
     prevSetupStep, startSession, minimizeSession, expandSession,
     finishSession, finishRoundWithData, quitSession, dismissPracticeSummary,
+    startCrewSession, endCrewSession, minimizeCrewSession, expandCrewSession,
   ]);
 });
