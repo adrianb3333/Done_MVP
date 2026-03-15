@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   Platform,
   TouchableOpacity,
-  Text,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -103,17 +102,13 @@ export default function WeatherScreen() {
       style={styles.background}
     >
       <SafeAreaView style={styles.container} edges={["top"]}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigateTo("mygame")}
-            activeOpacity={0.7}
-          >
-            <ArrowLeft size={22} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Weather</Text>
-          <View style={styles.headerSpacer} />
-        </View>
+        <TouchableOpacity
+          style={styles.floatingBackButton}
+          onPress={() => navigateTo("mygame")}
+          activeOpacity={0.7}
+        >
+          <ArrowLeft size={22} color="#FFFFFF" />
+        </TouchableOpacity>
 
         <ScrollView
           style={styles.scrollView}
@@ -228,28 +223,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: "row" as const,
-    alignItems: "center" as const,
-    justifyContent: "space-between" as const,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  backButton: {
+  floatingBackButton: {
+    position: "absolute" as const,
+    top: 12,
+    left: 16,
+    zIndex: 10,
     width: 40,
     height: 40,
     borderRadius: 20,
     backgroundColor: "rgba(255,255,255,0.15)",
     alignItems: "center" as const,
     justifyContent: "center" as const,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "700" as const,
-    color: "#FFFFFF",
-  },
-  headerSpacer: {
-    width: 40,
   },
   scrollView: {
     flex: 1,

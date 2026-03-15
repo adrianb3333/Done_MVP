@@ -176,7 +176,7 @@ export default function Sidebar() {
               onPress={() => navigateTo('weather')}
               activeOpacity={0.7}
             >
-              <Text style={styles.weatherLabel}>Weather 🧭</Text>
+              <Text style={styles.weatherLabel}>Weather Data 🧭</Text>
             </TouchableOpacity>
           </View>
 
