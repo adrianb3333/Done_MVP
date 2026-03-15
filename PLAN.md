@@ -1,36 +1,51 @@
-# Live orientation-based wind adjustments for Wind & Flight tabs
+# Golf Bag Club Selector on GPS Map Screen
 
-## Summary
-Replace the static (hardcoded to 0°) target heading with a real-time device compass heading so the "Played As" / Adjusted Distance updates live as you rotate your phone.
+## Features
 
----
+- [x] **Golf bag button** appears in the bottom-left corner of the GPS tab during a Play session — only when sensors are NOT paired
+- [x] Tapping the golf bag button opens a **popup card** with all available clubs (same clubs as in the Pairing screen: Woods, Hybrids, Irons, Wedges + Putter)
+- [x] Selecting a club **saves to Supabase**: which club was selected, exact timestamp, and the phone's GPS coordinates at that moment
+- [x] A **close button** on the popup to dismiss it without selecting
+- [x] The popup also appears when the user skipped "Sensors ON" in the last setup step before starting Play
 
-## What changes
+## Design
 
-### 1. New shared compass hook
-- A reusable hook that listens to the device compass at ~30Hz
-- Applies a **moving average filter** (last 5 readings) to smooth out jitter so the numbers don't flicker
-- Only triggers recalculation when heading changes by more than 1°
-- Falls back gracefully on web (uses 0° heading)
+- [x] **Golf bag button**: White circle (~56px) in the bottom-left corner of the map, with a golf bag icon
+- [x] **Club popup card**: Large white card that slides up from the bottom with dark frosted-glass club circles
+- [x] Clubs displayed as **dark frosted-glass circles** with white text labels organized by category rows
+- [x] A **downward chevron button** in the top-right of the popup to close it
+- [x] Smooth fade/slide animation when opening and closing the popup
+- [x] Selected club gets a brief highlight animation before the popup closes
 
-### 2. Fix the wind vector math
-- **Current bug:** The weather API inverts the head/tail sign, causing headwinds and tailwinds to be swapped
-- **Fix:** Remove the manual negation so the formula correctly outputs:
-  - **Positive longitudinal** → Headwind → Distance **increases**
-  - **Negative longitudinal** → Tailwind → Distance **decreases**
+## Screens / Changes
 
-### 3. Real-time recalculation in Wind & Flight tabs
-- Both tabs currently pass a fixed `0` as the target heading — this will be replaced with the live smoothed compass heading
-- The head/tail and crosswind values are **recalculated locally** each time the heading changes (without re-fetching the weather API — only wind speed and direction from the API are needed, the vector decomposition happens on-device)
-- The Adjusted Distance, Wind breakdown stats (Cross, Head/Tail) all update instantly as the user scans the horizon
+- [x] **GPS Tab (Play session)**: Added golf bag circle button + club selector popup overlay — only visible when sensors not paired
+- [x] **Club selection service**: `services/clubSelectionService.ts` — saves club_id, timestamp, GPS coordinates to `club_selections` table
 
-### 4. Compass component reuse
-- The existing WindCompass already tracks device heading for the arrow — the new hook will be shared between the compass visual and the calculation, keeping them perfectly in sync
+## Supabase Setup Required
 
----
+Run this SQL in Supabase SQL Editor:
 
-## What stays the same
-- All visual design, layout, colors, and UI components remain untouched
-- The ball flight toggle (Low/Normal/High) and distance input work exactly as before
-- Weather data still fetches from the same API at the same intervals
-- The compass arrow and ring animations stay the same
+```sql
+CREATE TABLE club_selections (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  club_id text NOT NULL,
+  selected_at timestamptz DEFAULT now() NOT NULL,
+  latitude double precision NOT NULL,
+  longitude double precision NOT NULL,
+  session_id text,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX idx_club_selections_user_id ON club_selections(user_id);
+CREATE INDEX idx_club_selections_selected_at ON club_selections(selected_at);
+
+ALTER TABLE club_selections ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own club selections"
+  ON club_selections FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own club selections"
+  ON club_selections FOR INSERT WITH CHECK (auth.uid() = user_id);
+```

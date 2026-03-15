@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, Platform, Linking, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MapPin, Flag, ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { MapPin, Flag, ChevronLeft, ChevronRight, Backpack } from 'lucide-react-native';
+import { useSensor } from '@/contexts/SensorContext';
+import ClubSelectorPopup from '@/components/ClubSelectorPopup';
 import Svg, { Circle, Line, Polygon, Text as SvgText } from 'react-native-svg';
 import { useWeather } from '@/hooks/useWeather';
 import { useDeviceHeading } from '@/hooks/useDeviceHeading';
@@ -130,6 +132,9 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
   const insets = useSafeAreaInsets();
   const { holes } = useScoring();
   const deviceHeading = useDeviceHeading();
+  const { isPaired } = useSensor();
+  const [clubSelectorVisible, setClubSelectorVisible] = useState<boolean>(false);
+  const showClubBag = !isPaired;
 
   const mapRef = useRef<any>(null);
   const locationWatchRef = useRef<any>(null);
@@ -592,6 +597,24 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
           <MiniWindCompass windDeg={weather.windDeg} windMs={weather.windMs} deviceHeading={deviceHeading} />
         </View>
       )}
+
+      {showClubBag && (
+        <TouchableOpacity
+          style={styles.clubBagBtn}
+          onPress={() => setClubSelectorVisible(true)}
+          activeOpacity={0.8}
+          testID="club-bag-button"
+        >
+          <Backpack size={26} color="#333" strokeWidth={2} />
+        </TouchableOpacity>
+      )}
+
+      {showClubBag && (
+        <ClubSelectorPopup
+          visible={clubSelectorVisible}
+          onClose={() => setClubSelectorVisible(false)}
+        />
+      )}
     </View>
   );
 }
@@ -859,6 +882,22 @@ const styles = StyleSheet.create({
   miniCompassBox: {
     position: 'absolute' as const,
     right: 16,
+  },
+  clubBagBtn: {
+    position: 'absolute' as const,
+    bottom: 24,
+    left: 16,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 6,
   },
   webFallback: {
     flex: 1,
