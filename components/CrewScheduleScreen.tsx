@@ -62,6 +62,7 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
     saveScheduledDrill, saveScheduledRound, saveScheduledTournament,
     deleteScheduledDrill, deleteScheduledRound, deleteScheduledTournament,
     allUsers,
+    crewRole,
   } = useProfile();
   const bgColor = crewColor || '#FFFFFF';
   const isDark = bgColor !== '#FFFFFF';
@@ -517,80 +518,82 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
           </TouchableOpacity>
         ))}
 
-        <View style={styles.scheduleButtonsRow}>
-          {crewDrills.length > 0 && (
-            <TouchableOpacity
-              style={styles.scheduleDrillsBtn}
-              onPress={() => {
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                setScheduleType('drill');
-                setSelectedIds([]);
-                setScheduleTime('');
-                setSelectedDay(null);
-                setSchedulePickerVisible(true);
-              }}
-              activeOpacity={0.8}
-            >
-              <LinearGradient
-                colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.scheduleDrillsBtnGradient}
+        {crewRole !== 'player' && (
+          <View style={styles.scheduleButtonsRow}>
+            {crewDrills.length > 0 && (
+              <TouchableOpacity
+                style={styles.scheduleDrillsBtn}
+                onPress={() => {
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  setScheduleType('drill');
+                  setSelectedIds([]);
+                  setScheduleTime('');
+                  setSelectedDay(null);
+                  setSchedulePickerVisible(true);
+                }}
+                activeOpacity={0.8}
               >
-                <Calendar size={16} color="#FFFFFF" />
-                <Text style={styles.scheduleDrillsBtnText}>Schedule Drills</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          )}
-          {crewRounds.length > 0 && (
-            <TouchableOpacity
-              style={styles.scheduleDrillsBtn}
-              onPress={() => {
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                setScheduleType('round');
-                setSelectedIds([]);
-                setScheduleTime('');
-                setSelectedDay(null);
-                setSchedulePickerVisible(true);
-              }}
-              activeOpacity={0.8}
-            >
-              <LinearGradient
-                colors={['#60A5FA', '#3B82F6', '#2563EB']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.scheduleDrillsBtnGradient}
+                <LinearGradient
+                  colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.scheduleDrillsBtnGradient}
+                >
+                  <Calendar size={16} color="#FFFFFF" />
+                  <Text style={styles.scheduleDrillsBtnText}>Schedule Drills</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
+            {crewRounds.length > 0 && (
+              <TouchableOpacity
+                style={styles.scheduleDrillsBtn}
+                onPress={() => {
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  setScheduleType('round');
+                  setSelectedIds([]);
+                  setScheduleTime('');
+                  setSelectedDay(null);
+                  setSchedulePickerVisible(true);
+                }}
+                activeOpacity={0.8}
               >
-                <Calendar size={16} color="#FFFFFF" />
-                <Text style={styles.scheduleDrillsBtnText}>Schedule Rounds</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          )}
-          {crewTournaments.length > 0 && (
-            <TouchableOpacity
-              style={styles.scheduleDrillsBtn}
-              onPress={() => {
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                setScheduleType('tournament');
-                setSelectedIds([]);
-                setScheduleTime('');
-                setSelectedDay(null);
-                setSchedulePickerVisible(true);
-              }}
-              activeOpacity={0.8}
-            >
-              <LinearGradient
-                colors={['#FBBF24', '#F59E0B', '#D97706']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.scheduleDrillsBtnGradient}
+                <LinearGradient
+                  colors={['#60A5FA', '#3B82F6', '#2563EB']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.scheduleDrillsBtnGradient}
+                >
+                  <Calendar size={16} color="#FFFFFF" />
+                  <Text style={styles.scheduleDrillsBtnText}>Schedule Rounds</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
+            {crewTournaments.length > 0 && (
+              <TouchableOpacity
+                style={styles.scheduleDrillsBtn}
+                onPress={() => {
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  setScheduleType('tournament');
+                  setSelectedIds([]);
+                  setScheduleTime('');
+                  setSelectedDay(null);
+                  setSchedulePickerVisible(true);
+                }}
+                activeOpacity={0.8}
               >
-                <Calendar size={16} color="#FFFFFF" />
-                <Text style={styles.scheduleDrillsBtnText}>Schedule Tournaments</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          )}
-        </View>
+                <LinearGradient
+                  colors={['#FBBF24', '#F59E0B', '#D97706']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.scheduleDrillsBtnGradient}
+                >
+                  <Calendar size={16} color="#FFFFFF" />
+                  <Text style={styles.scheduleDrillsBtnText}>Schedule Tournaments</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </View>
     );
   };

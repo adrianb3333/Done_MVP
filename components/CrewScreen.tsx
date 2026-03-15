@@ -66,6 +66,7 @@ export default function CrewScreen() {
     crewName, crewColor, crewLogo, crewPlayers, crewManagers,
     allUsers, profile,
     crewScheduled, crewScheduledRounds, crewScheduledTournaments,
+    crewRole,
   } = useProfile();
   const displayName = crewName || 'Crew';
   const bgColor = crewColor || '#FFFFFF';
@@ -212,28 +213,32 @@ export default function CrewScreen() {
           </View>
           <Text style={[styles.headerTitle, isDark && { color: '#FFFFFF' }]}>{displayName}</Text>
           <View style={styles.headerRight}>
-            <TouchableOpacity
-              style={styles.glassIconBtn}
-              onPress={() => {
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setCreateVisible(true);
-              }}
-              activeOpacity={0.7}
-              testID="crew-create-button"
-            >
-              <Plus size={20} color="#FFFFFF" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.glassIconBtn}
-              onPress={() => {
-                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setSettingsVisible(true);
-              }}
-              activeOpacity={0.7}
-              testID="crew-settings-button"
-            >
-              <Settings size={18} color="#FFFFFF" />
-            </TouchableOpacity>
+            {(crewRole === 'leader' || crewRole === 'manager') && (
+              <TouchableOpacity
+                style={styles.glassIconBtn}
+                onPress={() => {
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setCreateVisible(true);
+                }}
+                activeOpacity={0.7}
+                testID="crew-create-button"
+              >
+                <Plus size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+            )}
+            {crewRole === 'leader' && (
+              <TouchableOpacity
+                style={styles.glassIconBtn}
+                onPress={() => {
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setSettingsVisible(true);
+                }}
+                activeOpacity={0.7}
+                testID="crew-settings-button"
+              >
+                <Settings size={18} color="#FFFFFF" />
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               style={styles.glassIconBtn}
               onPress={() => {

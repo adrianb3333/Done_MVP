@@ -516,11 +516,11 @@ export default function ProfileScreen() {
     allUsers,
     isLoadingAllUsers,
     backgroundImageUri,
-    isCoachMode,
     crewName,
     crewColor,
     crewLogo,
     pendingCrewInvites,
+    hasCrewAccess,
   } = useProfile();
 
   const { lastRound } = useSession();
@@ -967,7 +967,7 @@ export default function ProfileScreen() {
 
             </View>
 
-            {isCoachMode && (
+            {hasCrewAccess && (
               <View style={styles.crewSection}>
                 <View style={styles.crewTitleRow}>
                   {'CREW'.split('').map((letter, idx) => {

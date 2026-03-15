@@ -61,6 +61,9 @@ const CREW_SCHEDULED_ROUNDS_KEY = 'crew_scheduled_rounds';
 const CREW_TOURNAMENTS_KEY = 'crew_tournaments';
 const CREW_SCHEDULED_TOURNAMENTS_KEY = 'crew_scheduled_tournaments';
 const CREW_INVITES_KEY = 'crew_invites';
+const CREW_MEMBERSHIP_KEY = 'crew_membership';
+
+export type CrewRole = 'leader' | 'manager' | 'player' | null;
 
 export interface CrewDrill {
   id: string;
@@ -185,6 +188,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const [crewTournaments, setCrewTournamentsState] = useState<CrewTournament[]>([]);
   const [crewScheduledTournaments, setCrewScheduledTournamentsState] = useState<ScheduledTournament[]>([]);
   const [crewInvites, setCrewInvitesState] = useState<CrewInvite[]>([]);
+  const [crewMembershipRole, setCrewMembershipRoleState] = useState<CrewRole>(null);
 
   useEffect(() => {
     AsyncStorage.getItem(BG_IMAGE_KEY).then((val) => {
@@ -234,6 +238,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     }).catch(() => {});
     AsyncStorage.getItem(CREW_INVITES_KEY).then((val) => {
       if (val) setCrewInvitesState(JSON.parse(val));
+    }).catch(() => {});
+    AsyncStorage.getItem(CREW_MEMBERSHIP_KEY).then((val) => {
+      if (val) {
+        console.log('[ProfileContext] Loaded crew membership role:', val);
+        setCrewMembershipRoleState(val as CrewRole);
+      }
     }).catch(() => {});
   }, []);
 
@@ -581,10 +591,16 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         const newPlayers = [...crewPlayers, invite.userId].filter((v, i, a) => a.indexOf(v) === i);
         setCrewPlayersState(newPlayers);
         await AsyncStorage.setItem(CREW_PLAYERS_KEY, JSON.stringify(newPlayers));
+        setCrewMembershipRoleState('player');
+        await AsyncStorage.setItem(CREW_MEMBERSHIP_KEY, 'player');
+        console.log('[ProfileContext] User accepted as player, crew membership set');
       } else {
         const newManagers = [...crewManagers, invite.userId].filter((v, i, a) => a.indexOf(v) === i);
         setCrewManagersState(newManagers);
         await AsyncStorage.setItem(CREW_MANAGERS_KEY, JSON.stringify(newManagers));
+        setCrewMembershipRoleState('manager');
+        await AsyncStorage.setItem(CREW_MEMBERSHIP_KEY, 'manager');
+        console.log('[ProfileContext] User accepted as manager, crew membership set');
       }
     }
   }, [crewInvites, crewPlayers, crewManagers]);
@@ -599,6 +615,17 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const pendingCrewInvites = useMemo(() => {
     return crewInvites.filter((i) => i.status === 'pending');
   }, [crewInvites]);
+
+  const crewRole = useMemo<CrewRole>(() => {
+    if (isCoachMode) return 'leader';
+    if (crewMembershipRole === 'manager') return 'manager';
+    if (crewMembershipRole === 'player') return 'player';
+    return null;
+  }, [isCoachMode, crewMembershipRole]);
+
+  const hasCrewAccess = useMemo(() => {
+    return crewRole !== null;
+  }, [crewRole]);
 
   const uploadAvatar = useCallback(async (uri: string) => {
     if (!userId) throw new Error('Not authenticated');
@@ -710,6 +737,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     pendingCrewInvites,
     acceptCrewInvite,
     declineCrewInvite,
+    crewRole,
+    hasCrewAccess,
+    crewMembershipRole,
   }), [
     userId,
     profileQuery.data,
@@ -758,5 +788,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     pendingCrewInvites,
     acceptCrewInvite,
     declineCrewInvite,
+    crewRole,
+    hasCrewAccess,
+    crewMembershipRole,
   ]);
 });
