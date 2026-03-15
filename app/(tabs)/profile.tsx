@@ -967,20 +967,54 @@ export default function ProfileScreen() {
             {isCoachMode && (
               <View style={styles.crewSection}>
                 <View style={styles.crewTitleRow}>
-                  {'CREW'.split('').map((letter, idx) => (
-                    <View
-                      key={idx}
-                      style={[
-                        styles.crewLetterBox,
-                        crewColor && crewColor !== '#1A1A1A' && { borderColor: crewColor },
-                      ]}
-                    >
-                      <Text style={[
-                        styles.crewLetterText,
-                        crewColor && crewColor !== '#1A1A1A' && { color: crewColor },
-                      ]}>{letter}</Text>
-                    </View>
-                  ))}
+                  {'CREW'.split('').map((letter, idx) => {
+                    const strokeColor = (crewColor && crewColor !== '#1A1A1A') ? crewColor : '#1A1A1A';
+                    const offset = 0.8;
+                    return (
+                      <View key={idx} style={styles.crewLetterContainer}>
+                        <Text style={[
+                          styles.crewLetterStroke,
+                          { textShadowColor: strokeColor, textShadowOffset: { width: offset, height: 0 }, textShadowRadius: 0.3 },
+                        ]}>{letter}</Text>
+                        <Text style={[
+                          styles.crewLetterStroke,
+                          styles.crewLetterStrokeAbsolute,
+                          { textShadowColor: strokeColor, textShadowOffset: { width: -offset, height: 0 }, textShadowRadius: 0.3 },
+                        ]}>{letter}</Text>
+                        <Text style={[
+                          styles.crewLetterStroke,
+                          styles.crewLetterStrokeAbsolute,
+                          { textShadowColor: strokeColor, textShadowOffset: { width: 0, height: offset }, textShadowRadius: 0.3 },
+                        ]}>{letter}</Text>
+                        <Text style={[
+                          styles.crewLetterStroke,
+                          styles.crewLetterStrokeAbsolute,
+                          { textShadowColor: strokeColor, textShadowOffset: { width: 0, height: -offset }, textShadowRadius: 0.3 },
+                        ]}>{letter}</Text>
+                        <Text style={[
+                          styles.crewLetterStroke,
+                          styles.crewLetterStrokeAbsolute,
+                          { textShadowColor: strokeColor, textShadowOffset: { width: offset, height: offset }, textShadowRadius: 0.3 },
+                        ]}>{letter}</Text>
+                        <Text style={[
+                          styles.crewLetterStroke,
+                          styles.crewLetterStrokeAbsolute,
+                          { textShadowColor: strokeColor, textShadowOffset: { width: -offset, height: -offset }, textShadowRadius: 0.3 },
+                        ]}>{letter}</Text>
+                        <Text style={[
+                          styles.crewLetterStroke,
+                          styles.crewLetterStrokeAbsolute,
+                          { textShadowColor: strokeColor, textShadowOffset: { width: offset, height: -offset }, textShadowRadius: 0.3 },
+                        ]}>{letter}</Text>
+                        <Text style={[
+                          styles.crewLetterStroke,
+                          styles.crewLetterStrokeAbsolute,
+                          { textShadowColor: strokeColor, textShadowOffset: { width: -offset, height: offset }, textShadowRadius: 0.3 },
+                        ]}>{letter}</Text>
+                        <Text style={[styles.crewLetterText]}>{letter}</Text>
+                      </View>
+                    );
+                  })}
                 </View>
                 <TouchableOpacity
                   style={[styles.crewCard, crewColor && crewColor !== '#1A1A1A' && { backgroundColor: crewColor }]}
@@ -2611,18 +2645,28 @@ const styles = StyleSheet.create({
     gap: 4,
     marginBottom: 10,
   },
-  crewLetterBox: {
-    borderWidth: 0.8,
-    borderColor: '#1A1A1A',
-    borderRadius: 4,
-    paddingHorizontal: 5,
-    paddingVertical: 2,
+  crewLetterContainer: {
+    position: 'relative' as const,
+  },
+  crewLetterStroke: {
+    fontSize: 20,
+    fontWeight: '900' as const,
+    color: 'transparent',
+    letterSpacing: 0.5,
+  },
+  crewLetterStrokeAbsolute: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
   },
   crewLetterText: {
-    fontSize: 18,
-    fontWeight: '800' as const,
+    fontSize: 20,
+    fontWeight: '900' as const,
     color: '#1A1A1A',
     letterSpacing: 0.5,
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
   },
   crewCard: {
     backgroundColor: '#FFFFFF',
