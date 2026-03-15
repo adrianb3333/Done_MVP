@@ -58,6 +58,8 @@ const CREW_DRILLS_KEY = 'crew_drills';
 const CREW_SCHEDULED_KEY = 'crew_scheduled';
 const CREW_ROUNDS_KEY = 'crew_rounds';
 const CREW_SCHEDULED_ROUNDS_KEY = 'crew_scheduled_rounds';
+const CREW_TOURNAMENTS_KEY = 'crew_tournaments';
+const CREW_SCHEDULED_TOURNAMENTS_KEY = 'crew_scheduled_tournaments';
 
 export interface CrewDrill {
   id: string;
@@ -114,6 +116,37 @@ export interface ScheduledRound {
   createdAt: number;
 }
 
+export interface CrewTournament {
+  id: string;
+  name: string;
+  info: string;
+  courseName: string;
+  courseClubName?: string;
+  courseCity?: string;
+  courseCountry?: string;
+  holeOption: string;
+  format: string;
+  groups: CrewRoundGroup[];
+  createdAt: number;
+}
+
+export interface ScheduledTournament {
+  id: string;
+  tournamentId: string;
+  tournamentName: string;
+  courseName?: string;
+  courseClubName?: string;
+  courseCity?: string;
+  courseCountry?: string;
+  holeOption?: string;
+  format?: string;
+  groups?: CrewRoundGroup[];
+  info?: string;
+  date: string;
+  time: string;
+  createdAt: number;
+}
+
 export interface CrewSettings {
   name: string;
   color: string;
@@ -136,6 +169,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const [crewScheduled, setCrewScheduledState] = useState<ScheduledDrill[]>([]);
   const [crewRounds, setCrewRoundsState] = useState<CrewRound[]>([]);
   const [crewScheduledRounds, setCrewScheduledRoundsState] = useState<ScheduledRound[]>([]);
+  const [crewTournaments, setCrewTournamentsState] = useState<CrewTournament[]>([]);
+  const [crewScheduledTournaments, setCrewScheduledTournamentsState] = useState<ScheduledTournament[]>([]);
 
   useEffect(() => {
     AsyncStorage.getItem(BG_IMAGE_KEY).then((val) => {
@@ -176,6 +211,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     }).catch(() => {});
     AsyncStorage.getItem(CREW_SCHEDULED_ROUNDS_KEY).then((val) => {
       if (val) setCrewScheduledRoundsState(JSON.parse(val));
+    }).catch(() => {});
+    AsyncStorage.getItem(CREW_TOURNAMENTS_KEY).then((val) => {
+      if (val) setCrewTournamentsState(JSON.parse(val));
+    }).catch(() => {});
+    AsyncStorage.getItem(CREW_SCHEDULED_TOURNAMENTS_KEY).then((val) => {
+      if (val) setCrewScheduledTournamentsState(JSON.parse(val));
     }).catch(() => {});
   }, []);
 
@@ -411,6 +452,34 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     await AsyncStorage.setItem(CREW_SCHEDULED_ROUNDS_KEY, JSON.stringify(updated));
   }, [crewScheduledRounds]);
 
+  const saveCrewTournament = useCallback(async (tournament: CrewTournament) => {
+    console.log('[ProfileContext] Saving crew tournament:', tournament.name);
+    const updated = [...crewTournaments, tournament];
+    setCrewTournamentsState(updated);
+    await AsyncStorage.setItem(CREW_TOURNAMENTS_KEY, JSON.stringify(updated));
+  }, [crewTournaments]);
+
+  const deleteCrewTournament = useCallback(async (tournamentId: string) => {
+    console.log('[ProfileContext] Deleting crew tournament:', tournamentId);
+    const updated = crewTournaments.filter((t) => t.id !== tournamentId);
+    setCrewTournamentsState(updated);
+    await AsyncStorage.setItem(CREW_TOURNAMENTS_KEY, JSON.stringify(updated));
+  }, [crewTournaments]);
+
+  const saveScheduledTournament = useCallback(async (scheduled: ScheduledTournament) => {
+    console.log('[ProfileContext] Saving scheduled tournament:', scheduled.tournamentName);
+    const updated = [...crewScheduledTournaments, scheduled];
+    setCrewScheduledTournamentsState(updated);
+    await AsyncStorage.setItem(CREW_SCHEDULED_TOURNAMENTS_KEY, JSON.stringify(updated));
+  }, [crewScheduledTournaments]);
+
+  const deleteScheduledTournament = useCallback(async (scheduledId: string) => {
+    console.log('[ProfileContext] Deleting scheduled tournament:', scheduledId);
+    const updated = crewScheduledTournaments.filter((s) => s.id !== scheduledId);
+    setCrewScheduledTournamentsState(updated);
+    await AsyncStorage.setItem(CREW_SCHEDULED_TOURNAMENTS_KEY, JSON.stringify(updated));
+  }, [crewScheduledTournaments]);
+
   const saveCrewSettings = useCallback(async (settings: CrewSettings) => {
     console.log('[ProfileContext] Saving crew settings:', settings.name, settings.color);
     setCrewNameState(settings.name);
@@ -528,6 +597,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     crewScheduledRounds,
     saveScheduledRound,
     deleteScheduledRound,
+    crewTournaments,
+    saveCrewTournament,
+    deleteCrewTournament,
+    crewScheduledTournaments,
+    saveScheduledTournament,
+    deleteScheduledTournament,
     saveCrewSettings,
   }), [
     userId,
@@ -566,6 +641,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     crewScheduledRounds,
     saveScheduledRound,
     deleteScheduledRound,
+    crewTournaments,
+    saveCrewTournament,
+    deleteCrewTournament,
+    crewScheduledTournaments,
+    saveScheduledTournament,
+    deleteScheduledTournament,
     saveCrewSettings,
   ]);
 });

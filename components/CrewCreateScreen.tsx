@@ -21,7 +21,7 @@ import { ChevronLeft, Plus, Trash2, X, Search, MapPin, Star, ChevronRight } from
 import { CircleCheck } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { useProfile, CrewDrill, CrewRound } from '@/contexts/ProfileContext';
+import { useProfile, CrewDrill, CrewRound, CrewTournament } from '@/contexts/ProfileContext';
 import TabCourse, { CourseTab } from '@/components/PlaSta/TabCourse';
 import {
   searchGolfCourses,
@@ -50,7 +50,7 @@ interface DisplayCourse {
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const SEGMENT_KEYS = ['Drill', 'Round', 'Tournament'] as const;
-type CreateSegment = typeof SEGMENT_KEYS[number];
+type _CreateSegment = typeof SEGMENT_KEYS[number];
 
 const CATEGORIES = [
   { label: 'Putting', color: '#2D6A4F' },
@@ -76,7 +76,7 @@ const HOLE_OPTIONS: { key: HoleOption; title: string; subtitle: string }[] = [
 
 export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
   const insets = useSafeAreaInsets();
-  const { crewColor, saveCrewDrill, saveCrewRound, crewPlayers, crewManagers, allUsers } = useProfile();
+  const { crewColor, saveCrewDrill, saveCrewRound, saveCrewTournament, crewPlayers, crewManagers, allUsers } = useProfile();
   const bgColor = crewColor || '#FFFFFF';
   const isDark = bgColor !== '#FFFFFF';
   const [activeSegment, setActiveSegment] = useState<number>(0);
@@ -103,6 +103,22 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
   const [selectedGroupsToDelete, setSelectedGroupsToDelete] = useState<string[]>([]);
   const [playerPickerVisible, setPlayerPickerVisible] = useState<boolean>(false);
   const [playerPickerTarget, setPlayerPickerTarget] = useState<{ groupId: string; slotIndex: number } | null>(null);
+  const [playerPickerSource, setPlayerPickerSource] = useState<'round' | 'tournament'>('round');
+
+  const [tournamentName, setTournamentName] = useState<string>('');
+  const [tournamentInfo, setTournamentInfo] = useState<string>('');
+  const [tournamentCourseName, setTournamentCourseName] = useState<string>('');
+  const [tournamentCourseClubName, setTournamentCourseClubName] = useState<string>('');
+  const [tournamentCourseCity, setTournamentCourseCity] = useState<string>('');
+  const [tournamentCourseCountry, setTournamentCourseCountry] = useState<string>('');
+  const [tournamentHoleOption, setTournamentHoleOption] = useState<HoleOption>('18');
+  const [tournamentFormat, setTournamentFormat] = useState<string>('');
+  const [tournamentGroups, setTournamentGroups] = useState<{ id: string; players: (string | null)[] }[]>([
+    { id: '1', players: [null, null, null, null] },
+  ]);
+  const [tournamentDeleteGroupMode, setTournamentDeleteGroupMode] = useState<boolean>(false);
+  const [tournamentSelectedGroupsToDelete, setTournamentSelectedGroupsToDelete] = useState<string[]>([]);
+  const [formatPickerVisible, setFormatPickerVisible] = useState<boolean>(false);
 
   const [courseModalVisible, setCourseModalVisible] = useState<boolean>(false);
   const [courseSearchQuery, setCourseSearchQuery] = useState<string>('');
@@ -169,6 +185,12 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
     setRoundGroups((prev) => [...prev, { id: newId, players: [null, null, null, null] }]);
   }, [roundGroups.length]);
 
+  const handleAddTournamentGroup = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const newId = (tournamentGroups.length + 1).toString() + '_' + Date.now();
+    setTournamentGroups((prev) => [...prev, { id: newId, players: [null, null, null, null] }]);
+  }, [tournamentGroups.length]);
+
   const handleToggleDeleteGroup = useCallback((groupId: string) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedGroupsToDelete((prev) =>
@@ -187,30 +209,72 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
     setDeleteGroupMode(false);
   }, [selectedGroupsToDelete]);
 
-  const handleOpenPlayerPicker = useCallback((groupId: string, slotIndex: number) => {
+  const handleToggleTournamentDeleteGroup = useCallback((groupId: string) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setTournamentSelectedGroupsToDelete((prev) =>
+      prev.includes(groupId) ? prev.filter((id) => id !== groupId) : [...prev, groupId]
+    );
+  }, []);
+
+  const handleConfirmTournamentDeleteGroups = useCallback(() => {
+    if (tournamentSelectedGroupsToDelete.length === 0) return;
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setTournamentGroups((prev) => {
+      const filtered = prev.filter((g) => !tournamentSelectedGroupsToDelete.includes(g.id));
+      return filtered.length === 0 ? [{ id: '1', players: [null, null, null, null] }] : filtered;
+    });
+    setTournamentSelectedGroupsToDelete([]);
+    setTournamentDeleteGroupMode(false);
+  }, [tournamentSelectedGroupsToDelete]);
+
+  const handleOpenPlayerPicker = useCallback((groupId: string, slotIndex: number, source: 'round' | 'tournament' = 'round') => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setPlayerPickerTarget({ groupId, slotIndex });
+    setPlayerPickerSource(source);
     setPlayerPickerVisible(true);
   }, []);
 
   const handleSelectPlayer = useCallback((playerId: string) => {
     if (!playerPickerTarget) return;
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setRoundGroups((prev) =>
-      prev.map((g) => {
-        if (g.id !== playerPickerTarget.groupId) return g;
-        const updated = [...g.players];
-        updated[playerPickerTarget.slotIndex] = playerId;
-        return { ...g, players: updated };
-      })
-    );
+    if (playerPickerSource === 'tournament') {
+      setTournamentGroups((prev) =>
+        prev.map((g) => {
+          if (g.id !== playerPickerTarget.groupId) return g;
+          const updated = [...g.players];
+          updated[playerPickerTarget.slotIndex] = playerId;
+          return { ...g, players: updated };
+        })
+      );
+    } else {
+      setRoundGroups((prev) =>
+        prev.map((g) => {
+          if (g.id !== playerPickerTarget.groupId) return g;
+          const updated = [...g.players];
+          updated[playerPickerTarget.slotIndex] = playerId;
+          return { ...g, players: updated };
+        })
+      );
+    }
     setPlayerPickerVisible(false);
     setPlayerPickerTarget(null);
-  }, [playerPickerTarget]);
+  }, [playerPickerTarget, playerPickerSource]);
 
   const handleRemovePlayerFromSlot = useCallback((groupId: string, slotIndex: number) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setRoundGroups((prev) =>
+      prev.map((g) => {
+        if (g.id !== groupId) return g;
+        const updated = [...g.players];
+        updated[slotIndex] = null;
+        return { ...g, players: updated };
+      })
+    );
+  }, []);
+
+  const handleRemoveTournamentPlayerFromSlot = useCallback((groupId: string, slotIndex: number) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setTournamentGroups((prev) =>
       prev.map((g) => {
         if (g.id !== groupId) return g;
         const updated = [...g.players];
@@ -269,7 +333,9 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
     return user?.avatar_url || null;
   }, [allUsers]);
 
-  const allAssignedPlayers = roundGroups.flatMap((g) => g.players.filter((p): p is string => p !== null));
+  const allAssignedPlayers = playerPickerSource === 'tournament'
+    ? tournamentGroups.flatMap((g) => g.players.filter((p): p is string => p !== null))
+    : roundGroups.flatMap((g) => g.players.filter((p): p is string => p !== null));
 
   const loadCourseFavorites = useCallback(async () => {
     try {
@@ -330,8 +396,9 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
     }
   }, []);
 
-  const handleOpenCourseModal = useCallback(() => {
+  const handleOpenCourseModal = useCallback((target: 'round' | 'tournament' = 'round') => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setCourseSelectTarget(target);
     setCourseModalVisible(true);
     if (!courseNearbyLoaded) {
       void loadCourseFavorites();
@@ -373,33 +440,46 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
     }
   }, [courseSearchQuery, courseUserLocation]);
 
+  const [courseSelectTarget, setCourseSelectTarget] = useState<'round' | 'tournament'>('round');
+
   const handleSelectCourse = useCallback(async (course: DisplayCourse) => {
     setCourseIsSelecting(true);
     try {
       const detail = await getGolfCourseDetail(course.apiId);
-      if (detail) {
-        setRoundCourseName(detail.course_name);
-        setRoundCourseClubName(detail.club_name);
-        setRoundCourseCity(detail.location?.city ?? '');
-        setRoundCourseCountry(detail.location?.country ?? '');
-        console.log('[CrewCreate] Selected course:', detail.course_name);
+      const cName = detail ? detail.course_name : course.name;
+      const cClub = detail ? detail.club_name : course.clubName;
+      const cCity = detail ? (detail.location?.city ?? '') : course.city;
+      const cCountry = detail ? (detail.location?.country ?? '') : course.country;
+      if (courseSelectTarget === 'tournament') {
+        setTournamentCourseName(cName);
+        setTournamentCourseClubName(cClub);
+        setTournamentCourseCity(cCity);
+        setTournamentCourseCountry(cCountry);
+      } else {
+        setRoundCourseName(cName);
+        setRoundCourseClubName(cClub);
+        setRoundCourseCity(cCity);
+        setRoundCourseCountry(cCountry);
+      }
+      console.log('[CrewCreate] Selected course:', cName);
+    } catch (e) {
+      console.log('[CrewCreate] Course select error:', e);
+      if (courseSelectTarget === 'tournament') {
+        setTournamentCourseName(course.name);
+        setTournamentCourseClubName(course.clubName);
+        setTournamentCourseCity(course.city);
+        setTournamentCourseCountry(course.country);
       } else {
         setRoundCourseName(course.name);
         setRoundCourseClubName(course.clubName);
         setRoundCourseCity(course.city);
         setRoundCourseCountry(course.country);
       }
-    } catch (e) {
-      console.log('[CrewCreate] Course select error:', e);
-      setRoundCourseName(course.name);
-      setRoundCourseClubName(course.clubName);
-      setRoundCourseCity(course.city);
-      setRoundCourseCountry(course.country);
     } finally {
       setCourseIsSelecting(false);
       setCourseModalVisible(false);
     }
-  }, []);
+  }, [courseSelectTarget]);
 
   const toggleCourseFavorite = useCallback(async (courseId: string) => {
     setCourseFavorites((prev) => {
@@ -750,7 +830,7 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
           <Text style={[styles.sectionLabel, isDark && { color: '#FFFFFF' }]}>SELECT COURSE</Text>
           <TouchableOpacity
             style={[styles.roundCourseBanner, isDark && { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.12)' }]}
-            onPress={roundCourseName ? undefined : handleOpenCourseModal}
+            onPress={roundCourseName ? undefined : () => handleOpenCourseModal('round')}
             activeOpacity={roundCourseName ? 1 : 0.8}
           >
             <View style={styles.roundCourseInner}>
@@ -1069,29 +1149,451 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
     );
   };
 
-  const renderEmptyContent = (segment: CreateSegment) => {
-    const emojiMap: Record<CreateSegment, string> = {
-      Drill: '🎯',
-      Round: '⛳',
-      Tournament: '🏆',
+  const PLAYING_FORMATS = [
+    { key: 'stroke_play', label: 'Stroke Play', desc: 'Lowest total strokes wins' },
+    { key: 'match_play', label: 'Match Play', desc: 'Win individual holes' },
+    { key: 'stableford', label: 'Stableford', desc: 'Points based on score per hole' },
+    { key: 'best_ball', label: 'Best Ball / Four Ball', desc: 'Best score in team counts' },
+    { key: 'scramble', label: 'Scramble', desc: 'All play from best shot' },
+    { key: 'chapman', label: 'Chapman / Pinehurst', desc: 'Alternate shot format' },
+    { key: 'greensome', label: 'Greensome', desc: 'Both drive, choose best, alternate' },
+    { key: 'skins', label: 'Skins', desc: 'Win value for each hole' },
+  ];
+
+  const tournamentAllAssignedPlayers = tournamentGroups.flatMap((g) => g.players.filter((p): p is string => p !== null));
+
+  const handleSaveTournament = useCallback(async () => {
+    if (!tournamentName.trim()) {
+      Alert.alert('Missing Name', 'Please enter a tournament name.');
+      return;
+    }
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const tournament: CrewTournament = {
+      id: Date.now().toString(),
+      name: tournamentName.trim(),
+      info: tournamentInfo.trim(),
+      courseName: tournamentCourseName.trim(),
+      courseClubName: tournamentCourseClubName.trim(),
+      courseCity: tournamentCourseCity.trim(),
+      courseCountry: tournamentCourseCountry.trim(),
+      holeOption: tournamentHoleOption,
+      format: tournamentFormat,
+      groups: tournamentGroups.map((g, idx) => ({
+        id: (idx + 1).toString(),
+        players: g.players.filter((p): p is string => p !== null),
+      })),
+      createdAt: Date.now(),
     };
-    const descMap: Record<CreateSegment, string> = {
-      Drill: 'Create practice drills and training exercises for your crew.',
-      Round: 'Set up a round for your crew members to play together.',
-      Tournament: 'Organize tournaments and competitions for your crew.',
-    };
+    try {
+      await saveCrewTournament(tournament);
+      console.log('[CrewCreate] Tournament saved:', tournament.name);
+      Alert.alert('Tournament Saved', `"${tournament.name}" has been saved to Storage.`);
+      setTournamentName('');
+      setTournamentInfo('');
+      setTournamentCourseName('');
+      setTournamentCourseClubName('');
+      setTournamentCourseCity('');
+      setTournamentCourseCountry('');
+      setTournamentHoleOption('18');
+      setTournamentFormat('');
+      setTournamentGroups([{ id: '1', players: [null, null, null, null] }]);
+    } catch (err: any) {
+      console.log('[CrewCreate] Save tournament error:', err.message);
+      Alert.alert('Error', 'Failed to save tournament.');
+    }
+  }, [tournamentName, tournamentInfo, tournamentCourseName, tournamentCourseClubName, tournamentCourseCity, tournamentCourseCountry, tournamentHoleOption, tournamentFormat, tournamentGroups, saveCrewTournament]);
+
+  const renderTournamentContent = () => {
     return (
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.emptyState}>
-          <View style={[styles.emptyIcon, isDark && { backgroundColor: 'rgba(255,255,255,0.1)' }]}>
-            <Text style={styles.emptyEmoji}>{emojiMap[segment]}</Text>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={[styles.sectionLabel, isDark && { color: '#FFFFFF' }, { marginTop: 4 }]}>NAME</Text>
+          <View style={[styles.inputWrapper, isDark && { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
+            <TextInput
+              style={[styles.textInput, isDark && { color: '#FFFFFF' }]}
+              placeholder="e.g. Summer Championship"
+              placeholderTextColor={isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)'}
+              value={tournamentName}
+              onChangeText={setTournamentName}
+              returnKeyType="done"
+            />
           </View>
-          <Text style={[styles.emptyTitle, isDark && { color: '#FFFFFF' }]}>{segment}</Text>
-          <Text style={[styles.emptyText, isDark && { color: 'rgba(255,255,255,0.5)' }]}>{descMap[segment]}</Text>
-        </View>
-      </ScrollView>
+
+          <Text style={[styles.sectionLabel, isDark && { color: '#FFFFFF' }]}>INFORMATION</Text>
+          <View style={[styles.infoInputWrapper, isDark && { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
+            <TextInput
+              style={[styles.infoInput, isDark && { color: '#FFFFFF' }]}
+              placeholder="Add details about this tournament..."
+              placeholderTextColor={isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.3)'}
+              value={tournamentInfo}
+              onChangeText={setTournamentInfo}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+          </View>
+
+          <Text style={[styles.sectionLabel, isDark && { color: '#FFFFFF' }]}>SELECT COURSE</Text>
+          <TouchableOpacity
+            style={[styles.roundCourseBanner, isDark && { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.12)' }]}
+            onPress={tournamentCourseName ? undefined : () => handleOpenCourseModal('tournament')}
+            activeOpacity={tournamentCourseName ? 1 : 0.8}
+          >
+            <View style={styles.roundCourseInner}>
+              {tournamentCourseName ? (
+                <View style={styles.roundCourseSelected}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.roundCourseName, isDark && { color: '#FFFFFF' }]}>{tournamentCourseName}</Text>
+                    {tournamentCourseClubName ? (
+                      <Text style={[styles.roundCourseClub, isDark && { color: 'rgba(255,255,255,0.5)' }]}>{tournamentCourseClubName}</Text>
+                    ) : null}
+                    {(tournamentCourseCity || tournamentCourseCountry) ? (
+                      <Text style={[styles.roundCourseLocation, isDark && { color: 'rgba(255,255,255,0.4)' }]}>
+                        {[tournamentCourseCity, tournamentCourseCountry].filter(Boolean).join(', ')}
+                      </Text>
+                    ) : null}
+                  </View>
+                  <TouchableOpacity onPress={() => {
+                    setTournamentCourseName('');
+                    setTournamentCourseClubName('');
+                    setTournamentCourseCity('');
+                    setTournamentCourseCountry('');
+                  }}>
+                    <X size={18} color={isDark ? 'rgba(255,255,255,0.5)' : '#999'} />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.roundCourseSearchRow}>
+                  <Search size={18} color={isDark ? 'rgba(255,255,255,0.5)' : '#999'} />
+                  <Text style={[styles.roundCourseSearchText, isDark && { color: 'rgba(255,255,255,0.5)' }]}>Sök banor</Text>
+                  <View style={{ flex: 1 }} />
+                  <View style={[styles.roundCourseArrow, isDark && { backgroundColor: 'rgba(255,255,255,0.12)' }]}>
+                    <ChevronRight size={18} color={isDark ? '#FFFFFF' : '#999'} />
+                  </View>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+
+          <Text style={[styles.sectionLabel, isDark && { color: '#FFFFFF' }]}>SELECT HOLES</Text>
+          <View style={styles.holeOptionsContainer}>
+            {HOLE_OPTIONS.map((opt) => {
+              const isActive = tournamentHoleOption === opt.key;
+              return (
+                <TouchableOpacity
+                  key={opt.key}
+                  style={[
+                    styles.holeOptionCard,
+                    isDark && { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.12)' },
+                    isActive && styles.holeOptionCardActive,
+                    isActive && isDark && { borderColor: '#FFFFFF', backgroundColor: 'rgba(255,255,255,0.15)' },
+                  ]}
+                  onPress={() => {
+                    setTournamentHoleOption(opt.key);
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.holeOptionContent}>
+                    <Text style={[styles.holeOptionTitle, isDark && { color: '#FFFFFF' }]}>{opt.title}</Text>
+                    <Text style={[styles.holeOptionSubtitle, isDark && { color: 'rgba(255,255,255,0.5)' }]}>{opt.subtitle}</Text>
+                  </View>
+                  {isActive && <CircleCheck size={22} color={isDark ? '#FFFFFF' : '#2E7D32'} />}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <Text style={[styles.sectionLabel, isDark && { color: '#FFFFFF' }]}>FORMAT</Text>
+          <TouchableOpacity
+            style={[styles.roundCourseBanner, isDark && { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.12)' }]}
+            onPress={() => {
+              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setFormatPickerVisible(true);
+            }}
+            activeOpacity={0.8}
+          >
+            <View style={styles.roundCourseInner}>
+              {tournamentFormat ? (
+                <View style={styles.roundCourseSelected}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.roundCourseName, isDark && { color: '#FFFFFF' }]}>{tournamentFormat}</Text>
+                    <Text style={[styles.roundCourseClub, isDark && { color: 'rgba(255,255,255,0.5)' }]}>
+                      {PLAYING_FORMATS.find((f) => f.label === tournamentFormat)?.desc ?? ''}
+                    </Text>
+                  </View>
+                  <TouchableOpacity onPress={() => setTournamentFormat('')}>
+                    <X size={18} color={isDark ? 'rgba(255,255,255,0.5)' : '#999'} />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.roundCourseSearchRow}>
+                  <Text style={{ fontSize: 18 }}>🏆</Text>
+                  <Text style={[styles.roundCourseSearchText, isDark && { color: 'rgba(255,255,255,0.5)' }]}>Select Playing Format</Text>
+                  <View style={{ flex: 1 }} />
+                  <View style={[styles.roundCourseArrow, isDark && { backgroundColor: 'rgba(255,255,255,0.12)' }]}>
+                    <ChevronRight size={18} color={isDark ? '#FFFFFF' : '#999'} />
+                  </View>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+
+          <Text style={[styles.sectionLabel, isDark && { color: '#FFFFFF' }]}>SELECT GROUPS AND PLAYERS</Text>
+
+          {tournamentGroups.map((group, groupIdx) => {
+            const isSelectedForDelete = tournamentSelectedGroupsToDelete.includes(group.id);
+            return (
+              <View
+                key={group.id}
+                style={[
+                  styles.groupCard,
+                  isDark && { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.12)' },
+                  tournamentDeleteGroupMode && isSelectedForDelete && { borderColor: '#FF3B30', borderWidth: 2 },
+                ]}
+              >
+                <View style={styles.groupHeader}>
+                  <Text style={[styles.groupHeaderText, isDark && { color: '#FFFFFF' }]}>Group {groupIdx + 1}</Text>
+                  {tournamentDeleteGroupMode && tournamentGroups.length > 1 && (
+                    <TouchableOpacity
+                      onPress={() => handleToggleTournamentDeleteGroup(group.id)}
+                      style={[styles.groupDeleteCheck, isSelectedForDelete && { backgroundColor: '#FF3B30', borderColor: '#FF3B30' }]}
+                    >
+                      {isSelectedForDelete && <CircleCheck size={16} color="#FFFFFF" />}
+                    </TouchableOpacity>
+                  )}
+                </View>
+                <View style={styles.groupSlots}>
+                  {group.players.map((playerId, slotIdx) => (
+                    <View key={slotIdx} style={styles.roundSlot}>
+                      {playerId ? (
+                        <View style={[styles.roundPlayerSlot, isDark && { backgroundColor: 'rgba(0,0,0,0.3)' }]}>
+                          {getPlayerAvatar(playerId) ? (
+                            <Image source={{ uri: getPlayerAvatar(playerId)! }} style={styles.roundAvatar} />
+                          ) : (
+                            <View style={styles.roundAvatarPlaceholder}>
+                              <Text style={styles.roundAvatarInitial}>
+                                {getPlayerName(playerId).charAt(0).toUpperCase()}
+                              </Text>
+                            </View>
+                          )}
+                          <Text style={[styles.roundPlayerName, isDark && { color: '#FFFFFF' }]} numberOfLines={1}>
+                            {getPlayerName(playerId)}
+                          </Text>
+                          <TouchableOpacity
+                            style={styles.roundRemoveBtn}
+                            onPress={() => handleRemoveTournamentPlayerFromSlot(group.id, slotIdx)}
+                          >
+                            <X size={12} color="#fff" />
+                          </TouchableOpacity>
+                        </View>
+                      ) : (
+                        <TouchableOpacity
+                          style={[styles.roundAddSlot, isDark && { borderColor: 'rgba(255,255,255,0.2)', backgroundColor: 'rgba(0,0,0,0.2)' }]}
+                          onPress={() => handleOpenPlayerPicker(group.id, slotIdx, 'tournament')}
+                          activeOpacity={0.7}
+                        >
+                          <Plus size={18} color={isDark ? '#FFFFFF' : '#999'} />
+                          <Text style={[styles.roundAddSlotText, isDark && { color: 'rgba(255,255,255,0.6)' }]}>Add</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  ))}
+                </View>
+              </View>
+            );
+          })}
+
+          <View style={styles.groupActions}>
+            <TouchableOpacity
+              style={[styles.groupActionBtn, isDark && { backgroundColor: 'rgba(255,255,255,0.12)' }]}
+              onPress={handleAddTournamentGroup}
+              activeOpacity={0.7}
+            >
+              <Plus size={20} color={isDark ? '#FFFFFF' : '#333'} />
+            </TouchableOpacity>
+            {tournamentGroups.length > 1 && (
+              <TouchableOpacity
+                style={[
+                  styles.groupActionBtn,
+                  isDark && { backgroundColor: 'rgba(255,255,255,0.12)' },
+                  tournamentDeleteGroupMode && { backgroundColor: '#FF3B30' },
+                ]}
+                onPress={() => {
+                  if (tournamentDeleteGroupMode) {
+                    handleConfirmTournamentDeleteGroups();
+                  } else {
+                    setTournamentDeleteGroupMode(true);
+                    setTournamentSelectedGroupsToDelete([]);
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  }
+                }}
+                activeOpacity={0.7}
+              >
+                {tournamentDeleteGroupMode ? (
+                  <CircleCheck size={20} color="#FFFFFF" />
+                ) : (
+                  <Trash2 size={20} color={isDark ? '#FFFFFF' : '#333'} />
+                )}
+              </TouchableOpacity>
+            )}
+            {tournamentDeleteGroupMode && (
+              <TouchableOpacity
+                style={[styles.groupActionBtn, { backgroundColor: 'rgba(0,0,0,0.2)' }]}
+                onPress={() => {
+                  setTournamentDeleteGroupMode(false);
+                  setTournamentSelectedGroupsToDelete([]);
+                }}
+                activeOpacity={0.7}
+              >
+                <X size={20} color={isDark ? '#FFFFFF' : '#333'} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <TouchableOpacity
+            onPress={handleSaveTournament}
+            activeOpacity={0.8}
+            disabled={!tournamentName.trim()}
+            style={[styles.saveDrillBtnOuter, { opacity: tournamentName.trim() ? 1 : 0.5 }]}
+          >
+            <View style={[styles.saveDrillBtn, isDark && { backgroundColor: 'rgba(0,0,0,0.35)' }]}>
+              <Text style={styles.saveDrillBtnText}>Save Tournament</Text>
+            </View>
+          </TouchableOpacity>
+        </ScrollView>
+
+        <Modal
+          visible={formatPickerVisible}
+          animationType="slide"
+          presentationStyle="fullScreen"
+          onRequestClose={() => setFormatPickerVisible(false)}
+        >
+          <View style={[styles.container, { backgroundColor: bgColor }]}>
+            <View style={[styles.headerArea, { paddingTop: insets.top + 10, backgroundColor: bgColor }]}>
+              <View style={styles.headerRow}>
+                <TouchableOpacity
+                  onPress={() => {
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setFormatPickerVisible(false);
+                  }}
+                  style={styles.glassBackBtn}
+                  activeOpacity={0.7}
+                >
+                  <ChevronLeft size={22} color="#FFFFFF" />
+                </TouchableOpacity>
+                <Text style={[styles.formatPickerTitle, isDark && { color: '#FFFFFF' }]}>Playing Format</Text>
+                <View style={{ width: 40 }} />
+              </View>
+              <View style={[styles.segmentDivider, isDark && { backgroundColor: 'rgba(255,255,255,0.1)' }]} />
+            </View>
+            <ScrollView
+              style={styles.scrollView}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+            >
+              {PLAYING_FORMATS.map((fmt) => {
+                const isActive = tournamentFormat === fmt.label;
+                return (
+                  <TouchableOpacity
+                    key={fmt.key}
+                    style={[
+                      styles.formatCard,
+                      isDark && { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.12)' },
+                      isActive && styles.formatCardActive,
+                      isActive && isDark && { borderColor: '#FFFFFF', backgroundColor: 'rgba(255,255,255,0.15)' },
+                    ]}
+                    onPress={() => {
+                      setTournamentFormat(fmt.label);
+                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                      setTimeout(() => setFormatPickerVisible(false), 200);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.holeOptionContent}>
+                      <Text style={[styles.holeOptionTitle, isDark && { color: '#FFFFFF' }]}>{fmt.label}</Text>
+                      <Text style={[styles.holeOptionSubtitle, isDark && { color: 'rgba(255,255,255,0.5)' }]}>{fmt.desc}</Text>
+                    </View>
+                    {isActive && <CircleCheck size={22} color={isDark ? '#FFFFFF' : '#2E7D32'} />}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </Modal>
+
+        <Modal
+          visible={playerPickerVisible && playerPickerSource === 'tournament'}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setPlayerPickerVisible(false)}
+        >
+          <View style={styles.playerPickerOverlay}>
+            <View style={[styles.playerPickerCard, { backgroundColor: isDark ? bgColor : '#FFFFFF' }]}>
+              <View style={styles.playerPickerHeader}>
+                <Text style={[styles.playerPickerTitle, isDark && { color: '#FFFFFF' }]}>Select Player</Text>
+                <TouchableOpacity onPress={() => setPlayerPickerVisible(false)}>
+                  <X size={22} color={isDark ? '#FFFFFF' : '#1A1A1A'} />
+                </TouchableOpacity>
+              </View>
+              <ScrollView style={styles.playerPickerList} showsVerticalScrollIndicator={false}>
+                {crewMemberProfiles.length === 0 ? (
+                  <View style={styles.playerPickerEmpty}>
+                    <Text style={[styles.playerPickerEmptyText, isDark && { color: 'rgba(255,255,255,0.5)' }]}>
+                      No crew members added yet. Add players in Crew Settings.
+                    </Text>
+                  </View>
+                ) : (
+                  crewMemberProfiles.map((user) => {
+                    const isAlreadyAssigned = tournamentAllAssignedPlayers.includes(user.id);
+                    return (
+                      <TouchableOpacity
+                        key={user.id}
+                        style={[
+                          styles.playerPickerItem,
+                          isDark && { backgroundColor: 'rgba(255,255,255,0.08)' },
+                          isAlreadyAssigned && { opacity: 0.4 },
+                        ]}
+                        onPress={() => !isAlreadyAssigned && handleSelectPlayer(user.id)}
+                        activeOpacity={isAlreadyAssigned ? 1 : 0.7}
+                        disabled={isAlreadyAssigned}
+                      >
+                        {user.avatar_url ? (
+                          <Image source={{ uri: user.avatar_url }} style={styles.playerPickerAvatar} />
+                        ) : (
+                          <View style={styles.playerPickerAvatarPlaceholder}>
+                            <Text style={styles.playerPickerAvatarInitial}>
+                              {(user.display_name || user.username).charAt(0).toUpperCase()}
+                            </Text>
+                          </View>
+                        )}
+                        <Text style={[styles.playerPickerName, isDark && { color: '#FFFFFF' }]}>
+                          {user.display_name || user.username}
+                        </Text>
+                        {isAlreadyAssigned && (
+                          <Text style={[styles.playerPickerAssigned, isDark && { color: 'rgba(255,255,255,0.3)' }]}>Assigned</Text>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })
+                )}
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+      </KeyboardAvoidingView>
     );
   };
+
+
 
   return (
     <View style={[styles.container, { backgroundColor: bgColor }]}>
@@ -1147,7 +1649,7 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
 
       {activeSegment === 0 && renderDrillContent()}
       {activeSegment === 1 && renderRoundContent()}
-      {activeSegment === 2 && renderEmptyContent('Tournament')}
+      {activeSegment === 2 && renderTournamentContent()}
     </View>
   );
 }
@@ -1818,5 +2320,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600' as const,
     color: '#BBB',
+  },
+  formatPickerTitle: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: '#1A1A1A',
+    letterSpacing: 0.3,
+  },
+  formatCard: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: '#ECECEC',
+    marginBottom: 10,
+  },
+  formatCardActive: {
+    borderColor: '#2E7D32',
+    backgroundColor: 'rgba(46,125,50,0.06)',
   },
 });

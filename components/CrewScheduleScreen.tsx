@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft, Clock, Calendar, Trash2, Check, X, ChevronRight, MapPin, Users } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { useProfile, CrewDrill, CrewRound, ScheduledDrill, ScheduledRound } from '@/contexts/ProfileContext';
+import { useProfile, CrewDrill, CrewRound, CrewTournament, ScheduledDrill, ScheduledRound, ScheduledTournament } from '@/contexts/ProfileContext';
 
 interface CrewScheduleScreenProps {
   onClose: () => void;
@@ -52,15 +52,15 @@ function getMonthDays(year: number, month: number): { day: number; isCurrentMont
   return days;
 }
 
-type ScheduleType = 'drill' | 'round';
+type ScheduleType = 'drill' | 'round' | 'tournament';
 
 export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps) {
   const insets = useSafeAreaInsets();
   const {
-    crewColor, crewDrills, crewRounds, crewScheduled, crewScheduledRounds,
-    deleteCrewDrill, deleteCrewRound,
-    saveScheduledDrill, saveScheduledRound,
-    deleteScheduledDrill, deleteScheduledRound,
+    crewColor, crewDrills, crewRounds, crewTournaments, crewScheduled, crewScheduledRounds, crewScheduledTournaments,
+    deleteCrewDrill, deleteCrewRound, deleteCrewTournament,
+    saveScheduledDrill, saveScheduledRound, saveScheduledTournament,
+    deleteScheduledDrill, deleteScheduledRound, deleteScheduledTournament,
     allUsers,
   } = useProfile();
   const bgColor = crewColor || '#FFFFFF';
@@ -70,12 +70,13 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
 
   const [drillDetailVisible, setDrillDetailVisible] = useState<CrewDrill | null>(null);
   const [roundDetailVisible, setRoundDetailVisible] = useState<CrewRound | null>(null);
-  const [scheduledDetailVisible, setScheduledDetailVisible] = useState<{ itemType: 'drill' | 'round'; id: string; date: string; time: string; [key: string]: any } | null>(null);
+  const [tournamentDetailVisible, setTournamentDetailVisible] = useState<CrewTournament | null>(null);
+  const [scheduledDetailVisible, setScheduledDetailVisible] = useState<{ itemType: 'drill' | 'round' | 'tournament'; id: string; date: string; time: string; [key: string]: any } | null>(null);
   const [schedulePickerVisible, setSchedulePickerVisible] = useState<boolean>(false);
   const [scheduleType, setScheduleType] = useState<ScheduleType>('drill');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [scheduleTime, setScheduleTime] = useState<string>('');
-  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string; type: 'drill' | 'round' | 'scheduled_drill' | 'scheduled_round' } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string; type: 'drill' | 'round' | 'tournament' | 'scheduled_drill' | 'scheduled_round' | 'scheduled_tournament' } | null>(null);
 
   const now = new Date();
   const [calendarYear, setCalendarYear] = useState<number>(now.getFullYear());
@@ -137,17 +138,21 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
         await deleteCrewDrill(deleteConfirm.id);
       } else if (deleteConfirm.type === 'round') {
         await deleteCrewRound(deleteConfirm.id);
+      } else if (deleteConfirm.type === 'tournament') {
+        await deleteCrewTournament(deleteConfirm.id);
       } else if (deleteConfirm.type === 'scheduled_drill') {
         await deleteScheduledDrill(deleteConfirm.id);
       } else if (deleteConfirm.type === 'scheduled_round') {
         await deleteScheduledRound(deleteConfirm.id);
+      } else if (deleteConfirm.type === 'scheduled_tournament') {
+        await deleteScheduledTournament(deleteConfirm.id);
       }
       console.log('[CrewSchedule] Deleted:', deleteConfirm.name);
     } catch (err: any) {
       console.log('[CrewSchedule] Delete error:', err.message);
     }
     setDeleteConfirm(null);
-  }, [deleteConfirm, deleteCrewDrill, deleteCrewRound, deleteScheduledDrill, deleteScheduledRound]);
+  }, [deleteConfirm, deleteCrewDrill, deleteCrewRound, deleteCrewTournament, deleteScheduledDrill, deleteScheduledRound, deleteScheduledTournament]);
 
   const toggleSelection = useCallback((id: string) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -181,7 +186,7 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
           };
           await saveScheduledDrill(scheduled);
         }
-      } else {
+      } else if (scheduleType === 'round') {
         for (const roundId of selectedIds) {
           const round = crewRounds.find((r) => r.id === roundId);
           if (!round) continue;
@@ -202,6 +207,28 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
           };
           await saveScheduledRound(scheduled);
         }
+      } else {
+        for (const tournamentId of selectedIds) {
+          const tournament = crewTournaments.find((t) => t.id === tournamentId);
+          if (!tournament) continue;
+          const scheduled: ScheduledTournament = {
+            id: Date.now().toString() + '_' + tournamentId,
+            tournamentId: tournament.id,
+            tournamentName: tournament.name,
+            courseName: tournament.courseName || undefined,
+            courseClubName: tournament.courseClubName || undefined,
+            courseCity: tournament.courseCity || undefined,
+            courseCountry: tournament.courseCountry || undefined,
+            holeOption: tournament.holeOption || undefined,
+            format: tournament.format || undefined,
+            groups: tournament.groups || undefined,
+            info: tournament.info || undefined,
+            date: selectedDateString,
+            time: scheduleTime.trim(),
+            createdAt: Date.now(),
+          };
+          await saveScheduledTournament(scheduled);
+        }
       }
       console.log('[CrewSchedule] Items scheduled successfully');
       Alert.alert('Scheduled', `${selectedIds.length} item(s) have been scheduled.`);
@@ -215,7 +242,7 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
       console.log('[CrewSchedule] Schedule error:', err.message);
       Alert.alert('Error', 'Failed to schedule items.');
     }
-  }, [selectedIds, selectedDateString, scheduleTime, scheduleType, crewDrills, crewRounds, saveScheduledDrill, saveScheduledRound, indicatorAnim]);
+  }, [selectedIds, selectedDateString, scheduleTime, scheduleType, crewDrills, crewRounds, crewTournaments, saveScheduledDrill, saveScheduledRound, saveScheduledTournament, indicatorAnim]);
 
   const formatDate = (timestamp: number) => {
     const d = new Date(timestamp);
@@ -237,12 +264,13 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
   const allScheduledItems = useMemo(() => {
     const drillItems = crewScheduled.map((s) => ({ ...s, itemType: 'drill' as const }));
     const roundItems = crewScheduledRounds.map((s) => ({ ...s, itemType: 'round' as const }));
-    return [...drillItems, ...roundItems].sort((a, b) => {
+    const tournamentItems = crewScheduledTournaments.map((s) => ({ ...s, itemType: 'tournament' as const }));
+    return [...drillItems, ...roundItems, ...tournamentItems].sort((a, b) => {
       const dateA = a.date + ' ' + a.time;
       const dateB = b.date + ' ' + b.time;
       return dateA.localeCompare(dateB);
     });
-  }, [crewScheduled, crewScheduledRounds]);
+  }, [crewScheduled, crewScheduledRounds, crewScheduledTournaments]);
 
   const renderScheduleTab = () => {
     if (allScheduledItems.length === 0) {
@@ -262,9 +290,10 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
     return (
       <View style={styles.cardList}>
         {allScheduledItems.map((item) => {
-          const name = item.itemType === 'drill' ? (item as any).drillName : (item as any).roundName;
-          const deleteType = item.itemType === 'drill' ? 'scheduled_drill' as const : 'scheduled_round' as const;
+          const name = item.itemType === 'drill' ? (item as any).drillName : item.itemType === 'round' ? (item as any).roundName : (item as any).tournamentName;
+          const deleteType = item.itemType === 'drill' ? 'scheduled_drill' as const : item.itemType === 'round' ? 'scheduled_round' as const : 'scheduled_tournament' as const;
           const scheduledRound = item.itemType === 'round' ? item as (ScheduledRound & { itemType: 'round' }) : null;
+          const scheduledTournament = item.itemType === 'tournament' ? item as (ScheduledTournament & { itemType: 'tournament' }) : null;
           return (
             <TouchableOpacity
               key={item.id}
@@ -277,8 +306,8 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
             >
               <View style={styles.scheduleCardTop}>
                 <View style={styles.scheduleCardNameRow}>
-                  <View style={[styles.scheduleTypeBadge, item.itemType === 'round' ? { backgroundColor: '#3B82F6' } : { backgroundColor: '#2E7D32' }]}>
-                    <Text style={styles.scheduleTypeBadgeText}>{item.itemType === 'round' ? 'Round' : 'Drill'}</Text>
+                  <View style={[styles.scheduleTypeBadge, item.itemType === 'round' ? { backgroundColor: '#3B82F6' } : item.itemType === 'tournament' ? { backgroundColor: '#F59E0B' } : { backgroundColor: '#2E7D32' }]}>
+                    <Text style={styles.scheduleTypeBadgeText}>{item.itemType === 'round' ? 'Round' : item.itemType === 'tournament' ? 'Tournament' : 'Drill'}</Text>
                   </View>
                   <Text style={[styles.scheduleCardName, isDark && { color: '#FFFFFF' }]} numberOfLines={1}>{name}</Text>
                 </View>
@@ -292,11 +321,11 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
                   <Trash2 size={14} color="#FF3B30" />
                 </TouchableOpacity>
               </View>
-              {scheduledRound?.courseName ? (
+              {(scheduledRound?.courseName || scheduledTournament?.courseName) ? (
                 <View style={styles.scheduleCardCourse}>
                   <MapPin size={12} color={isDark ? 'rgba(255,255,255,0.5)' : '#888'} />
                   <Text style={[styles.scheduleCardCourseText, isDark && { color: 'rgba(255,255,255,0.6)' }]} numberOfLines={1}>
-                    {scheduledRound.courseName}
+                    {scheduledRound?.courseName || scheduledTournament?.courseName}
                   </Text>
                 </View>
               ) : null}
@@ -318,7 +347,7 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
   };
 
   const renderStorageTab = () => {
-    const hasItems = crewDrills.length > 0 || crewRounds.length > 0;
+    const hasItems = crewDrills.length > 0 || crewRounds.length > 0 || crewTournaments.length > 0;
     if (!hasItems) {
       return (
         <View style={styles.emptyState}>
@@ -428,6 +457,58 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
           </TouchableOpacity>
         ))}
 
+        {crewTournaments.length > 0 && (
+          <Text style={[styles.storageSectionLabel, isDark && { color: 'rgba(255,255,255,0.5)' }, (crewDrills.length > 0 || crewRounds.length > 0) && { marginTop: 16 }]}>TOURNAMENTS</Text>
+        )}
+        {crewTournaments.map((tournament) => (
+          <TouchableOpacity
+            key={tournament.id}
+            style={[styles.drillCard, isDark && { backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.1)' }]}
+            onPress={() => {
+              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setTournamentDetailVisible(tournament);
+            }}
+            activeOpacity={0.7}
+          >
+            <View style={styles.drillCardTop}>
+              <View style={styles.drillCardLeft}>
+                <View style={[styles.categoryDot, { backgroundColor: '#F59E0B' }]} />
+                <Text style={[styles.drillCardName, isDark && { color: '#FFFFFF' }]}>{tournament.name}</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  setDeleteConfirm({ id: tournament.id, name: tournament.name, type: 'tournament' });
+                }}
+                style={[styles.deleteBtn, isDark && { backgroundColor: 'rgba(255,59,48,0.2)' }]}
+              >
+                <Trash2 size={14} color="#FF3B30" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.drillCardMeta}>
+              <View style={styles.roundMetaRow}>
+                {tournament.courseName ? (
+                  <View style={styles.roundMetaItem}>
+                    <MapPin size={12} color={isDark ? 'rgba(255,255,255,0.5)' : '#888'} />
+                    <Text style={[styles.drillCardCategory, isDark && { color: 'rgba(255,255,255,0.5)' }]}>{tournament.courseName}</Text>
+                  </View>
+                ) : null}
+                {tournament.format ? (
+                  <View style={styles.roundMetaItem}>
+                    <Text style={[styles.drillCardStats, isDark && { color: 'rgba(255,255,255,0.5)' }]}>{tournament.format}</Text>
+                  </View>
+                ) : null}
+              </View>
+              <Text style={[styles.drillCardStats, isDark && { color: 'rgba(255,255,255,0.5)' }]}>
+                {getHoleLabel(tournament.holeOption)}
+              </Text>
+            </View>
+            <Text style={[styles.drillCardDate, isDark && { color: 'rgba(255,255,255,0.3)' }]}>
+              Created {formatDate(tournament.createdAt)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+
         <View style={styles.scheduleButtonsRow}>
           {crewDrills.length > 0 && (
             <TouchableOpacity
@@ -474,6 +555,30 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
               >
                 <Calendar size={16} color="#FFFFFF" />
                 <Text style={styles.scheduleDrillsBtnText}>Schedule Rounds</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+          {crewTournaments.length > 0 && (
+            <TouchableOpacity
+              style={styles.scheduleDrillsBtn}
+              onPress={() => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                setScheduleType('tournament');
+                setSelectedIds([]);
+                setScheduleTime('');
+                setSelectedDay(null);
+                setSchedulePickerVisible(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={['#FBBF24', '#F59E0B', '#D97706']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.scheduleDrillsBtnGradient}
+              >
+                <Calendar size={16} color="#FFFFFF" />
+                <Text style={styles.scheduleDrillsBtnText}>Schedule Tournaments</Text>
               </LinearGradient>
             </TouchableOpacity>
           )}
@@ -737,6 +842,87 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
         </View>
       </Modal>
 
+      {/* Tournament Detail Modal */}
+      <Modal
+        visible={tournamentDetailVisible !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setTournamentDetailVisible(null)}
+      >
+        <View style={styles.detailOverlay}>
+          <ScrollView contentContainerStyle={styles.detailScrollContent} showsVerticalScrollIndicator={false}>
+            <View style={[styles.detailCard, isDark && { backgroundColor: bgColor }]}>
+              <View style={styles.detailHeader}>
+                <Text style={styles.detailTitle}>{tournamentDetailVisible?.name}</Text>
+                <TouchableOpacity onPress={() => setTournamentDetailVisible(null)}>
+                  <X size={22} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.detailDivider} />
+              {tournamentDetailVisible?.format ? (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Format</Text>
+                  <Text style={styles.detailValue}>{tournamentDetailVisible.format}</Text>
+                </View>
+              ) : null}
+              {tournamentDetailVisible?.courseName ? (
+                <>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Course</Text>
+                    <Text style={styles.detailValue}>{tournamentDetailVisible.courseName}</Text>
+                  </View>
+                  {tournamentDetailVisible.courseClubName ? (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>Club</Text>
+                      <Text style={styles.detailValue}>{tournamentDetailVisible.courseClubName}</Text>
+                    </View>
+                  ) : null}
+                  {(tournamentDetailVisible.courseCity || tournamentDetailVisible.courseCountry) ? (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>Location</Text>
+                      <Text style={styles.detailValue}>
+                        {[tournamentDetailVisible.courseCity, tournamentDetailVisible.courseCountry].filter(Boolean).join(', ')}
+                      </Text>
+                    </View>
+                  ) : null}
+                </>
+              ) : null}
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Holes</Text>
+                <Text style={styles.detailValue}>{getHoleLabel(tournamentDetailVisible?.holeOption ?? '18')}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Groups</Text>
+                <Text style={styles.detailValue}>{tournamentDetailVisible?.groups.length}</Text>
+              </View>
+              {tournamentDetailVisible?.groups.map((group, gIdx) => (
+                <View key={group.id}>
+                  <View style={styles.detailDivider} />
+                  <Text style={styles.detailSubheader}>Group {gIdx + 1}</Text>
+                  {group.players.length === 0 ? (
+                    <Text style={styles.detailInfo}>No players assigned</Text>
+                  ) : (
+                    group.players.map((pid, pIdx) => (
+                      <View key={pIdx} style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Player {pIdx + 1}</Text>
+                        <Text style={styles.detailValue}>{getPlayerName(pid)}</Text>
+                      </View>
+                    ))
+                  )}
+                </View>
+              ))}
+              {tournamentDetailVisible?.info ? (
+                <>
+                  <View style={styles.detailDivider} />
+                  <Text style={styles.detailSubheader}>Info</Text>
+                  <Text style={styles.detailInfo}>{tournamentDetailVisible.info}</Text>
+                </>
+              ) : null}
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
+
       {/* Schedule Picker Modal with Calendar */}
       <Modal
         visible={schedulePickerVisible}
@@ -750,14 +936,14 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
               <X size={22} color={isDark ? '#FFFFFF' : '#1A1A1A'} />
             </TouchableOpacity>
             <Text style={[styles.schedulePickerTitle, isDark && { color: '#FFFFFF' }]}>
-              Schedule {scheduleType === 'drill' ? 'Drills' : 'Rounds'}
+              Schedule {scheduleType === 'drill' ? 'Drills' : scheduleType === 'round' ? 'Rounds' : 'Tournaments'}
             </Text>
             <View style={{ width: 22 }} />
           </View>
 
           <ScrollView style={styles.scrollView} contentContainerStyle={styles.schedulePickerContent} showsVerticalScrollIndicator={false}>
             <Text style={[styles.schedulePickerLabel, isDark && { color: 'rgba(255,255,255,0.6)' }]}>
-              SELECT {scheduleType === 'drill' ? 'DRILLS' : 'ROUNDS'}
+              SELECT {scheduleType === 'drill' ? 'DRILLS' : scheduleType === 'round' ? 'ROUNDS' : 'TOURNAMENTS'}
             </Text>
             {scheduleType === 'drill' ? (
               crewDrills.map((drill) => {
@@ -779,7 +965,7 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
                   </TouchableOpacity>
                 );
               })
-            ) : (
+            ) : scheduleType === 'round' ? (
               crewRounds.map((round) => {
                 const isSelected = selectedIds.includes(round.id);
                 return (
@@ -792,6 +978,26 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
                     <View style={styles.schedulePickerDrillInfo}>
                       <View style={[styles.categoryDot, { backgroundColor: '#3B82F6' }]} />
                       <Text style={[styles.schedulePickerDrillName, isDark && { color: '#FFFFFF' }]}>{round.name}</Text>
+                    </View>
+                    <View style={[styles.schedulePickerCheck, isSelected && styles.schedulePickerCheckActive]}>
+                      {isSelected && <Check size={14} color="#FFFFFF" strokeWidth={3} />}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })
+            ) : (
+              crewTournaments.map((tournament) => {
+                const isSelected = selectedIds.includes(tournament.id);
+                return (
+                  <TouchableOpacity
+                    key={tournament.id}
+                    style={[styles.schedulePickerDrill, isDark && { backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.08)' }]}
+                    onPress={() => toggleSelection(tournament.id)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.schedulePickerDrillInfo}>
+                      <View style={[styles.categoryDot, { backgroundColor: '#F59E0B' }]} />
+                      <Text style={[styles.schedulePickerDrillName, isDark && { color: '#FFFFFF' }]}>{tournament.name}</Text>
                     </View>
                     <View style={[styles.schedulePickerCheck, isSelected && styles.schedulePickerCheckActive]}>
                       {isSelected && <Check size={14} color="#FFFFFF" strokeWidth={3} />}
@@ -827,7 +1033,7 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
               style={[styles.schedulePickerSaveOuter, { opacity: selectedIds.length > 0 && selectedDateString && scheduleTime.trim() ? 1 : 0.5 }]}
             >
               <LinearGradient
-                colors={scheduleType === 'drill' ? ['#86D9A5', '#5BBF7F', '#3A8E56'] : ['#60A5FA', '#3B82F6', '#2563EB']}
+                colors={scheduleType === 'drill' ? ['#86D9A5', '#5BBF7F', '#3A8E56'] : scheduleType === 'round' ? ['#60A5FA', '#3B82F6', '#2563EB'] : ['#FBBF24', '#F59E0B', '#D97706']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.schedulePickerSaveBtn}
@@ -853,7 +1059,9 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
                 <Text style={styles.detailTitle}>
                   {scheduledDetailVisible?.itemType === 'drill'
                     ? scheduledDetailVisible?.drillName
-                    : scheduledDetailVisible?.roundName}
+                    : scheduledDetailVisible?.itemType === 'round'
+                    ? scheduledDetailVisible?.roundName
+                    : scheduledDetailVisible?.tournamentName}
                 </Text>
                 <TouchableOpacity onPress={() => setScheduledDetailVisible(null)}>
                   <X size={22} color="#FFFFFF" />
@@ -863,7 +1071,7 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Type</Text>
                 <Text style={styles.detailValue}>
-                  {scheduledDetailVisible?.itemType === 'drill' ? 'Drill' : 'Round'}
+                  {scheduledDetailVisible?.itemType === 'drill' ? 'Drill' : scheduledDetailVisible?.itemType === 'round' ? 'Round' : 'Tournament'}
                 </Text>
               </View>
               <View style={styles.detailRow}>
@@ -874,7 +1082,7 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
                 <Text style={styles.detailLabel}>Time</Text>
                 <Text style={styles.detailValue}>{scheduledDetailVisible?.time}</Text>
               </View>
-              {scheduledDetailVisible?.itemType === 'round' && scheduledDetailVisible?.courseName ? (
+              {(scheduledDetailVisible?.itemType === 'round' || scheduledDetailVisible?.itemType === 'tournament') && scheduledDetailVisible?.courseName ? (
                 <>
                   <View style={styles.detailDivider} />
                   <View style={styles.detailRow}>
@@ -897,13 +1105,19 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
                   ) : null}
                 </>
               ) : null}
-              {scheduledDetailVisible?.itemType === 'round' && scheduledDetailVisible?.holeOption ? (
+              {scheduledDetailVisible?.itemType === 'tournament' && scheduledDetailVisible?.format ? (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Format</Text>
+                  <Text style={styles.detailValue}>{scheduledDetailVisible.format}</Text>
+                </View>
+              ) : null}
+              {(scheduledDetailVisible?.itemType === 'round' || scheduledDetailVisible?.itemType === 'tournament') && scheduledDetailVisible?.holeOption ? (
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Holes</Text>
                   <Text style={styles.detailValue}>{getHoleLabel(scheduledDetailVisible.holeOption)}</Text>
                 </View>
               ) : null}
-              {scheduledDetailVisible?.itemType === 'round' && scheduledDetailVisible?.groups?.length > 0 ? (
+              {(scheduledDetailVisible?.itemType === 'round' || scheduledDetailVisible?.itemType === 'tournament') && scheduledDetailVisible?.groups?.length > 0 ? (
                 scheduledDetailVisible.groups.map((group: any, gIdx: number) => (
                   <View key={group.id || gIdx}>
                     <View style={styles.detailDivider} />
@@ -921,7 +1135,7 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
                   </View>
                 ))
               ) : null}
-              {scheduledDetailVisible?.itemType === 'round' && scheduledDetailVisible?.info ? (
+              {(scheduledDetailVisible?.itemType === 'round' || scheduledDetailVisible?.itemType === 'tournament') && scheduledDetailVisible?.info ? (
                 <>
                   <View style={styles.detailDivider} />
                   <Text style={styles.detailSubheader}>Info</Text>
