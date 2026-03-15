@@ -19,7 +19,7 @@ import CrewScheduleScreen from '@/components/CrewScheduleScreen';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const TAB_KEYS = ['crew', 'latest'] as const;
+const TAB_KEYS = ['crew', 'latest', 'stats'] as const;
 type CrewTab = typeof TAB_KEYS[number];
 
 export default function CrewScreen() {
@@ -30,20 +30,21 @@ export default function CrewScreen() {
   const [scheduleVisible, setScheduleVisible] = useState<boolean>(false);
   const underlineAnim = useRef(new Animated.Value(0)).current;
 
-  const tabWidth = (SCREEN_WIDTH - 40) / 2;
+  const tabWidth = (SCREEN_WIDTH - 40) / 3;
   const underlineWidth = 50;
 
   const underlineTranslateX = underlineAnim.interpolate({
-    inputRange: [0, 1],
+    inputRange: [0, 1, 2],
     outputRange: [
       (tabWidth - underlineWidth) / 2,
       tabWidth + (tabWidth - underlineWidth) / 2,
+      2 * tabWidth + (tabWidth - underlineWidth) / 2,
     ],
   });
 
   const handleTabChange = useCallback((tab: CrewTab) => {
     setActiveTab(tab);
-    const idx = tab === 'crew' ? 0 : 1;
+    const idx = TAB_KEYS.indexOf(tab);
     Animated.spring(underlineAnim, {
       toValue: idx,
       useNativeDriver: true,
@@ -123,7 +124,7 @@ export default function CrewScreen() {
                   styles.tabText,
                   activeTab === tab && styles.tabTextActive,
                 ]}>
-                  {tab === 'crew' ? 'Crew' : 'Latest'}
+                  {tab === 'crew' ? 'Crew' : tab === 'latest' ? 'Latest' : 'Stats'}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -166,7 +167,7 @@ export default function CrewScreen() {
               <Text style={styles.addBtnText}>Add Member</Text>
             </TouchableOpacity>
           </View>
-        ) : (
+        ) : activeTab === 'latest' ? (
           <View style={styles.emptyState}>
             <View style={styles.emptyIcon}>
               <Text style={styles.emptyEmoji}>📋</Text>
@@ -174,6 +175,16 @@ export default function CrewScreen() {
             <Text style={styles.emptyTitle}>Latest Activity</Text>
             <Text style={styles.emptyText}>
               Recent sessions and updates from your crew will appear here.
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.emptyState}>
+            <View style={styles.emptyIcon}>
+              <Text style={styles.emptyEmoji}>📊</Text>
+            </View>
+            <Text style={styles.emptyTitle}>Crew Stats</Text>
+            <Text style={styles.emptyText}>
+              Performance statistics and progress tracking for your crew will appear here.
             </Text>
           </View>
         )}
