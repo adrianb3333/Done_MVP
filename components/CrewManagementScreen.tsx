@@ -13,8 +13,9 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft, Plus, Search, X, Check } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { useProfile, UserProfile } from '@/contexts/ProfileContext';
@@ -27,12 +28,19 @@ const COLOR_OPTIONS = [
 
 type PickerMode = 'players' | 'managers' | null;
 
+interface RemoveConfirm {
+  userId: string;
+  type: 'players' | 'managers';
+  name: string;
+}
+
 interface CrewManagementScreenProps {
   initialSegment?: number;
   onClose: () => void;
 }
 
 export default function CrewManagementScreen({ onClose }: CrewManagementScreenProps) {
+  const insets = useSafeAreaInsets();
   const {
     allUsers,
     isLoadingAllUsers,
@@ -44,12 +52,15 @@ export default function CrewManagementScreen({ onClose }: CrewManagementScreenPr
     saveCrewSettings,
   } = useProfile();
 
+  const bgColor = savedColor || '#1A1A1A';
+
   const [crewName, setCrewName] = useState<string>(savedName || '');
   const [selectedColor, setSelectedColor] = useState<string>(savedColor || '#1A1A1A');
   const [crewLogo, setCrewLogo] = useState<string | null>(savedLogo || null);
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>(savedPlayers || []);
   const [selectedManagers, setSelectedManagers] = useState<string[]>(savedManagers || []);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [removeConfirm, setRemoveConfirm] = useState<RemoveConfirm | null>(null);
 
   const [pickerMode, setPickerMode] = useState<PickerMode>(null);
   const [pickerSearch, setPickerSearch] = useState<string>('');
@@ -133,6 +144,26 @@ export default function CrewManagementScreen({ onClose }: CrewManagementScreenPr
     }
   }, [crewName, selectedColor, crewLogo, selectedPlayers, selectedManagers, saveCrewSettings, onClose]);
 
+  const handleRemovePress = useCallback((userId: string, type: 'players' | 'managers', name: string) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setRemoveConfirm({ userId, type, name });
+  }, []);
+
+  const handleConfirmRemove = useCallback(() => {
+    if (!removeConfirm) return;
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (removeConfirm.type === 'players') {
+      setSelectedPlayers((prev) => prev.filter((id) => id !== removeConfirm.userId));
+    } else {
+      setSelectedManagers((prev) => prev.filter((id) => id !== removeConfirm.userId));
+    }
+    setRemoveConfirm(null);
+  }, [removeConfirm]);
+
+  const handleCancelRemove = useCallback(() => {
+    setRemoveConfirm(null);
+  }, []);
+
   const renderPickerUser = useCallback(({ item }: { item: UserProfile }) => {
     const isSelected = selectedSet.includes(item.id);
     const initials = (item.display_name || item.username || '?')
@@ -171,8 +202,8 @@ export default function CrewManagementScreen({ onClose }: CrewManagementScreenPr
   }, [allUsers]);
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView edges={['top']} style={styles.safeTop}>
+    <View style={[styles.container, { backgroundColor: bgColor }]}>
+      <View style={[styles.headerContainer, { paddingTop: insets.top + 10, backgroundColor: bgColor }]}>
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => {
@@ -185,7 +216,7 @@ export default function CrewManagementScreen({ onClose }: CrewManagementScreenPr
           >
             <ChevronLeft size={22} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Settings</Text>
+          <Text style={[styles.headerTitle, bgColor !== '#FFFFFF' && { color: '#FFFFFF' }]}>Settings</Text>
           <TouchableOpacity
             onPress={handleSave}
             style={styles.saveBtn}
@@ -203,7 +234,7 @@ export default function CrewManagementScreen({ onClose }: CrewManagementScreenPr
             )}
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
 
       <ScrollView
         style={styles.scrollView}
@@ -220,9 +251,9 @@ export default function CrewManagementScreen({ onClose }: CrewManagementScreenPr
             >
               <Plus size={28} color="#FFFFFF" />
             </TouchableOpacity>
-            <Text style={styles.addCircleLabel}>Add Players</Text>
+            <Text style={[styles.addCircleLabel, bgColor !== '#FFFFFF' && { color: '#FFFFFF' }]}>Add Players</Text>
             {selectedPlayers.length > 0 && (
-              <Text style={styles.addCircleCount}>{selectedPlayers.length} selected</Text>
+              <Text style={[styles.addCircleCount, bgColor !== '#FFFFFF' && { color: 'rgba(255,255,255,0.6)' }]}>{selectedPlayers.length} selected</Text>
             )}
           </View>
           <View style={styles.addButtonCol}>
@@ -234,16 +265,16 @@ export default function CrewManagementScreen({ onClose }: CrewManagementScreenPr
             >
               <Plus size={28} color="#FFFFFF" />
             </TouchableOpacity>
-            <Text style={styles.addCircleLabel}>Add Manager</Text>
+            <Text style={[styles.addCircleLabel, bgColor !== '#FFFFFF' && { color: '#FFFFFF' }]}>Add Manager</Text>
             {selectedManagers.length > 0 && (
-              <Text style={styles.addCircleCount}>{selectedManagers.length} selected</Text>
+              <Text style={[styles.addCircleCount, bgColor !== '#FFFFFF' && { color: 'rgba(255,255,255,0.6)' }]}>{selectedManagers.length} selected</Text>
             )}
           </View>
         </View>
 
         {selectedPlayers.length > 0 && (
           <View style={styles.selectedSection}>
-            <Text style={styles.selectedSectionTitle}>Players ({selectedPlayers.length})</Text>
+            <Text style={[styles.selectedSectionTitle, bgColor !== '#FFFFFF' && { color: '#FFFFFF' }]}>Players ({selectedPlayers.length})</Text>
             {getSelectedUsers(selectedPlayers).map((user) => {
               const initials = (user.display_name || user.username || '?')
                 .split(' ')
@@ -260,12 +291,9 @@ export default function CrewManagementScreen({ onClose }: CrewManagementScreenPr
                       <Text style={styles.selectedUserInitials}>{initials}</Text>
                     </View>
                   )}
-                  <Text style={styles.selectedUserName}>{user.display_name || user.username}</Text>
+                  <Text style={[styles.selectedUserName, bgColor !== '#FFFFFF' && { color: '#FFFFFF' }]}>{user.display_name || user.username}</Text>
                   <TouchableOpacity
-                    onPress={() => {
-                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      setSelectedPlayers((prev) => prev.filter((id) => id !== user.id));
-                    }}
+                    onPress={() => handleRemovePress(user.id, 'players', user.display_name || user.username)}
                     style={styles.removeBtn}
                   >
                     <X size={14} color="#FF3B30" />
@@ -278,7 +306,7 @@ export default function CrewManagementScreen({ onClose }: CrewManagementScreenPr
 
         {selectedManagers.length > 0 && (
           <View style={styles.selectedSection}>
-            <Text style={styles.selectedSectionTitle}>Managers ({selectedManagers.length})</Text>
+            <Text style={[styles.selectedSectionTitle, bgColor !== '#FFFFFF' && { color: '#FFFFFF' }]}>Managers ({selectedManagers.length})</Text>
             {getSelectedUsers(selectedManagers).map((user) => {
               const initials = (user.display_name || user.username || '?')
                 .split(' ')
@@ -295,12 +323,9 @@ export default function CrewManagementScreen({ onClose }: CrewManagementScreenPr
                       <Text style={styles.selectedUserInitials}>{initials}</Text>
                     </View>
                   )}
-                  <Text style={styles.selectedUserName}>{user.display_name || user.username}</Text>
+                  <Text style={[styles.selectedUserName, bgColor !== '#FFFFFF' && { color: '#FFFFFF' }]}>{user.display_name || user.username}</Text>
                   <TouchableOpacity
-                    onPress={() => {
-                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      setSelectedManagers((prev) => prev.filter((id) => id !== user.id));
-                    }}
+                    onPress={() => handleRemovePress(user.id, 'managers', user.display_name || user.username)}
                     style={styles.removeBtn}
                   >
                     <X size={14} color="#FF3B30" />
@@ -311,21 +336,21 @@ export default function CrewManagementScreen({ onClose }: CrewManagementScreenPr
           </View>
         )}
 
-        <View style={styles.settingsDivider} />
+        <View style={[styles.settingsDivider, bgColor !== '#FFFFFF' && { backgroundColor: 'rgba(255,255,255,0.15)' }]} />
 
-        <View style={styles.settingsCard}>
-          <Text style={styles.settingsCardLabel}>Name</Text>
+        <View style={[styles.settingsCard, bgColor !== '#FFFFFF' && { backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.1)' }]}>
+          <Text style={[styles.settingsCardLabel, bgColor !== '#FFFFFF' && { color: '#FFFFFF' }]}>Name</Text>
           <TextInput
-            style={styles.settingsCardInput}
+            style={[styles.settingsCardInput, bgColor !== '#FFFFFF' && { backgroundColor: 'rgba(255,255,255,0.15)', color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.1)' }]}
             placeholder="Enter crew name..."
-            placeholderTextColor="rgba(0,0,0,0.3)"
+            placeholderTextColor={bgColor !== '#FFFFFF' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)'}
             value={crewName}
             onChangeText={setCrewName}
           />
         </View>
 
-        <View style={styles.settingsCard}>
-          <Text style={styles.settingsCardLabel}>Color</Text>
+        <View style={[styles.settingsCard, bgColor !== '#FFFFFF' && { backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.1)' }]}>
+          <Text style={[styles.settingsCardLabel, bgColor !== '#FFFFFF' && { color: '#FFFFFF' }]}>Color</Text>
           <View style={styles.colorGrid}>
             {COLOR_OPTIONS.map((color) => (
               <TouchableOpacity
@@ -347,8 +372,8 @@ export default function CrewManagementScreen({ onClose }: CrewManagementScreenPr
           </View>
         </View>
 
-        <View style={styles.settingsCard}>
-          <Text style={styles.settingsCardLabel}>Logo</Text>
+        <View style={[styles.settingsCard, bgColor !== '#FFFFFF' && { backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.1)' }]}>
+          <Text style={[styles.settingsCardLabel, bgColor !== '#FFFFFF' && { color: '#FFFFFF' }]}>Logo</Text>
           <TouchableOpacity
             style={styles.logoUploadBtn}
             onPress={handlePickLogo}
@@ -369,9 +394,9 @@ export default function CrewManagementScreen({ onClose }: CrewManagementScreenPr
                 </TouchableOpacity>
               </View>
             ) : (
-              <View style={styles.logoPlaceholder}>
-                <Plus size={24} color="rgba(0,0,0,0.3)" />
-                <Text style={styles.logoPlaceholderText}>Upload Logo</Text>
+              <View style={[styles.logoPlaceholder, bgColor !== '#FFFFFF' && { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.2)' }]}>
+                <Plus size={24} color={bgColor !== '#FFFFFF' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.3)'} />
+                <Text style={[styles.logoPlaceholderText, bgColor !== '#FFFFFF' && { color: 'rgba(255,255,255,0.4)' }]}>Upload Logo</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -379,12 +404,51 @@ export default function CrewManagementScreen({ onClose }: CrewManagementScreenPr
       </ScrollView>
 
       <Modal
+        visible={removeConfirm !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={handleCancelRemove}
+      >
+        <View style={styles.confirmOverlay}>
+          <View style={[styles.confirmCard, { backgroundColor: bgColor !== '#FFFFFF' ? bgColor : '#1A1A1A' }]}>
+            <Text style={styles.confirmTitle}>Are you sure?</Text>
+            <Text style={styles.confirmMessage}>
+              Remove {removeConfirm?.name} from {removeConfirm?.type === 'players' ? 'players' : 'managers'}?
+            </Text>
+            <View style={styles.confirmButtons}>
+              <TouchableOpacity
+                style={styles.confirmNoBtn}
+                onPress={handleCancelRemove}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.confirmNoBtnText}>No</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleConfirmRemove}
+                activeOpacity={0.7}
+                style={styles.confirmYesBtnOuter}
+              >
+                <LinearGradient
+                  colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.confirmYesBtn}
+                >
+                  <Text style={styles.confirmYesBtnText}>Yes</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
         visible={pickerMode !== null}
         animationType="slide"
         presentationStyle="pageSheet"
         onRequestClose={closePicker}
       >
-        <SafeAreaView edges={['top']} style={styles.pickerSafeTop}>
+        <View style={[styles.pickerSafeTop, { paddingTop: insets.top }]}>
           <View style={styles.pickerHeader}>
             <Text style={styles.pickerTitle}>
               {pickerMode === 'players' ? 'Add Players' : 'Add Manager'}
@@ -414,7 +478,7 @@ export default function CrewManagementScreen({ onClose }: CrewManagementScreenPr
               </TouchableOpacity>
             )}
           </View>
-        </SafeAreaView>
+        </View>
 
         {isLoadingAllUsers ? (
           <View style={styles.pickerLoading}>
@@ -442,17 +506,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  safeTop: {
-    backgroundColor: '#FFFFFF',
+  headerContainer: {
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   header: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'space-between' as const,
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingBottom: 12,
   },
   glassBackBtn: {
     width: 40,
@@ -568,7 +631,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#FFF0F0',
+    backgroundColor: 'rgba(255,59,48,0.15)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
@@ -660,6 +723,69 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: 'rgba(0,0,0,0.3)',
     fontWeight: '600' as const,
+  },
+  confirmOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 40,
+  },
+  confirmCard: {
+    width: '100%' as const,
+    borderRadius: 20,
+    padding: 28,
+    alignItems: 'center' as const,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  confirmTitle: {
+    fontSize: 20,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  confirmMessage: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)',
+    textAlign: 'center' as const,
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  confirmButtons: {
+    flexDirection: 'row' as const,
+    gap: 12,
+    width: '100%' as const,
+  },
+  confirmNoBtn: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: 'center' as const,
+  },
+  confirmNoBtnText: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: '#1A1A1A',
+  },
+  confirmYesBtnOuter: {
+    flex: 1,
+    borderRadius: 14,
+    overflow: 'hidden' as const,
+  },
+  confirmYesBtn: {
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: 'center' as const,
+  },
+  confirmYesBtnText: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
   },
   pickerSafeTop: {
     backgroundColor: '#FFFFFF',

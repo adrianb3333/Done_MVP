@@ -54,6 +54,29 @@ const CREW_COLOR_KEY = 'crew_color';
 const CREW_LOGO_KEY = 'crew_logo';
 const CREW_PLAYERS_KEY = 'crew_players';
 const CREW_MANAGERS_KEY = 'crew_managers';
+const CREW_DRILLS_KEY = 'crew_drills';
+const CREW_SCHEDULED_KEY = 'crew_scheduled';
+
+export interface CrewDrill {
+  id: string;
+  name: string;
+  category: string;
+  rounds: number;
+  shotsPerRound: number;
+  totalShots: number;
+  acceptedDistances: number[];
+  info: string;
+  createdAt: number;
+}
+
+export interface ScheduledDrill {
+  id: string;
+  drillId: string;
+  drillName: string;
+  date: string;
+  time: string;
+  createdAt: number;
+}
 
 export interface CrewSettings {
   name: string;
@@ -73,6 +96,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const [crewLogo, setCrewLogoState] = useState<string | null>(null);
   const [crewPlayers, setCrewPlayersState] = useState<string[]>([]);
   const [crewManagers, setCrewManagersState] = useState<string[]>([]);
+  const [crewDrills, setCrewDrillsState] = useState<CrewDrill[]>([]);
+  const [crewScheduled, setCrewScheduledState] = useState<ScheduledDrill[]>([]);
 
   useEffect(() => {
     AsyncStorage.getItem(BG_IMAGE_KEY).then((val) => {
@@ -101,6 +126,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     }).catch(() => {});
     AsyncStorage.getItem(CREW_MANAGERS_KEY).then((val) => {
       if (val) setCrewManagersState(JSON.parse(val));
+    }).catch(() => {});
+    AsyncStorage.getItem(CREW_DRILLS_KEY).then((val) => {
+      if (val) setCrewDrillsState(JSON.parse(val));
+    }).catch(() => {});
+    AsyncStorage.getItem(CREW_SCHEDULED_KEY).then((val) => {
+      if (val) setCrewScheduledState(JSON.parse(val));
     }).catch(() => {});
   }, []);
 
@@ -280,6 +311,34 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     await AsyncStorage.removeItem(COACH_MODE_KEY);
   }, []);
 
+  const saveCrewDrill = useCallback(async (drill: CrewDrill) => {
+    console.log('[ProfileContext] Saving crew drill:', drill.name);
+    const updated = [...crewDrills, drill];
+    setCrewDrillsState(updated);
+    await AsyncStorage.setItem(CREW_DRILLS_KEY, JSON.stringify(updated));
+  }, [crewDrills]);
+
+  const deleteCrewDrill = useCallback(async (drillId: string) => {
+    console.log('[ProfileContext] Deleting crew drill:', drillId);
+    const updated = crewDrills.filter((d) => d.id !== drillId);
+    setCrewDrillsState(updated);
+    await AsyncStorage.setItem(CREW_DRILLS_KEY, JSON.stringify(updated));
+  }, [crewDrills]);
+
+  const saveScheduledDrill = useCallback(async (scheduled: ScheduledDrill) => {
+    console.log('[ProfileContext] Saving scheduled drill:', scheduled.drillName);
+    const updated = [...crewScheduled, scheduled];
+    setCrewScheduledState(updated);
+    await AsyncStorage.setItem(CREW_SCHEDULED_KEY, JSON.stringify(updated));
+  }, [crewScheduled]);
+
+  const deleteScheduledDrill = useCallback(async (scheduledId: string) => {
+    console.log('[ProfileContext] Deleting scheduled drill:', scheduledId);
+    const updated = crewScheduled.filter((s) => s.id !== scheduledId);
+    setCrewScheduledState(updated);
+    await AsyncStorage.setItem(CREW_SCHEDULED_KEY, JSON.stringify(updated));
+  }, [crewScheduled]);
+
   const saveCrewSettings = useCallback(async (settings: CrewSettings) => {
     console.log('[ProfileContext] Saving crew settings:', settings.name, settings.color);
     setCrewNameState(settings.name);
@@ -385,6 +444,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     crewLogo,
     crewPlayers,
     crewManagers,
+    crewDrills,
+    saveCrewDrill,
+    deleteCrewDrill,
+    crewScheduled,
+    saveScheduledDrill,
+    deleteScheduledDrill,
     saveCrewSettings,
   }), [
     userId,
@@ -411,6 +476,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     crewLogo,
     crewPlayers,
     crewManagers,
+    crewDrills,
+    saveCrewDrill,
+    deleteCrewDrill,
+    crewScheduled,
+    saveScheduledDrill,
+    deleteScheduledDrill,
     saveCrewSettings,
   ]);
 });

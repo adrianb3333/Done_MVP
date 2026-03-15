@@ -966,7 +966,7 @@ export default function ProfileScreen() {
 
             {isCoachMode && (
               <View style={styles.crewSection}>
-                <Text style={styles.crewSectionTitle}>{crewName || 'CREW'}</Text>
+                <Text style={styles.crewSectionTitle}>CREW</Text>
                 <TouchableOpacity
                   style={[styles.crewCard, crewColor && crewColor !== '#1A1A1A' && { backgroundColor: crewColor }]}
                   onPress={() => {
