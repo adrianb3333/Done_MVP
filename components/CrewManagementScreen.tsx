@@ -50,6 +50,7 @@ export default function CrewManagementScreen({ onClose }: CrewManagementScreenPr
     crewPlayers: savedPlayers,
     crewManagers: savedManagers,
     saveCrewSettings,
+    crewInvites: _crewInvites,
   } = useProfile();
 
   const bgColor = savedColor || '#1A1A1A';

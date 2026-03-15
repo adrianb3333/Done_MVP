@@ -12,11 +12,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Swords, User } from 'lucide-react-native';
 import { useBattle, BattleInvite } from '@/contexts/BattleContext';
+import { useSession } from '@/contexts/SessionContext';
 import * as Haptics from 'expo-haptics';
 
 export default function BattleInviteBanner() {
   const insets = useSafeAreaInsets();
-  const { pendingInvites, acceptInvite, declineInvite } = useBattle();
+  const { pendingInvites, acceptInvite, declineInvite, shouldNavigateToPractice, clearNavigateToPractice, activeBattle } = useBattle();
+  const { startBattlePractice } = useSession();
   const slideAnim = useRef(new Animated.Value(-200)).current;
   const currentInvite = pendingInvites.length > 0 ? pendingInvites[0] : null;
 
@@ -38,6 +40,16 @@ export default function BattleInviteBanner() {
       }).start();
     }
   }, [currentInvite, slideAnim]);
+
+  useEffect(() => {
+    if (shouldNavigateToPractice && activeBattle) {
+      console.log('[BattleInviteBanner] Navigating to practice for battle:', activeBattle.battle_name);
+      clearNavigateToPractice();
+      setTimeout(() => {
+        startBattlePractice();
+      }, 300);
+    }
+  }, [shouldNavigateToPractice, activeBattle, clearNavigateToPractice, startBattlePractice]);
 
   const handleAccept = useCallback(async (invite: BattleInvite) => {
     console.log('[BattleInviteBanner] Accepting invite:', invite.id);
@@ -63,10 +75,15 @@ export default function BattleInviteBanner() {
         },
       ]}
     >
-      <View style={styles.bannerCard}>
+      <LinearGradient
+        colors={['#1C8CFF', '#1075E3', '#0059B2']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.bannerCard}
+      >
         <View style={styles.topRow}>
           <View style={styles.iconWrap}>
-            <Swords size={20} color="#C0392B" />
+            <Swords size={20} color="#FFFFFF" />
           </View>
           <View style={styles.textBlock}>
             <Text style={styles.headerText}>Battle Invite</Text>
@@ -78,7 +95,7 @@ export default function BattleInviteBanner() {
             <Image source={{ uri: currentInvite.from_avatar_url }} style={styles.avatar} />
           ) : (
             <View style={styles.avatarPlaceholder}>
-              <User size={16} color="rgba(0,0,0,0.4)" />
+              <User size={16} color="rgba(255,255,255,0.6)" />
             </View>
           )}
         </View>
@@ -94,7 +111,7 @@ export default function BattleInviteBanner() {
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={['#C62828', '#E53935']}
+              colors={['#FF1C1C', '#E31010', '#B20000']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.btnGradient}
@@ -109,7 +126,7 @@ export default function BattleInviteBanner() {
             activeOpacity={0.8}
           >
             <LinearGradient
-              colors={['#2E7D32', '#388E3C']}
+              colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.btnGradient}
@@ -118,7 +135,7 @@ export default function BattleInviteBanner() {
             </LinearGradient>
           </TouchableOpacity>
         </View>
-      </View>
+      </LinearGradient>
     </Animated.View>
   );
 }
@@ -134,7 +151,6 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
   },
   bannerCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 18,
     padding: 16,
     shadowColor: '#000',
@@ -153,7 +169,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(192,57,43,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
@@ -163,12 +179,12 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 17,
     fontWeight: '800' as const,
-    color: '#1A1A1A',
+    color: '#FFFFFF',
   },
   fromText: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: 'rgba(0,0,0,0.5)',
+    color: 'rgba(255,255,255,0.7)',
     marginTop: 1,
   },
   avatar: {
@@ -180,14 +196,14 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(0,0,0,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
   detailsText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: 'rgba(0,0,0,0.4)',
+    color: 'rgba(255,255,255,0.6)',
     marginBottom: 12,
     letterSpacing: 0.3,
   },

@@ -40,6 +40,7 @@ interface SessionContextValue {
   showPracticeSummary: boolean;
   setSensorsEnabled: (val: boolean) => void;
   startSetup: (type: 'play' | 'practice') => void;
+  startBattlePractice: () => void;
   nextSetupStep: () => void;
   prevSetupStep: () => void;
   startSession: (name?: string, date?: string) => void;
@@ -91,6 +92,16 @@ export const [SessionProvider, useSession] = createContextHook<SessionContextVal
     } else {
       router.push('/practice-setup/step1' as any);
     }
+  }, []);
+
+  const startBattlePractice = useCallback(() => {
+    console.log('[Session] Starting battle practice session directly');
+    setSessionType('practice');
+    setSessionState('active');
+    setSetupStep(1);
+    setSessionStartTime(Date.now());
+    setRoundName('Battle');
+    setRoundDate(new Date().toISOString().split('T')[0]);
   }, []);
 
   const nextSetupStep = useCallback(() => {
@@ -189,6 +200,7 @@ export const [SessionProvider, useSession] = createContextHook<SessionContextVal
     showPracticeSummary,
     setSensorsEnabled,
     startSetup,
+    startBattlePractice,
     nextSetupStep,
     prevSetupStep,
     startSession,
@@ -201,7 +213,7 @@ export const [SessionProvider, useSession] = createContextHook<SessionContextVal
   }), [
     sessionType, sessionState, setupStep, sessionStartTime,
     roundName, roundDate, isPrivate, lastRound, sensorsEnabled,
-    showPracticeSummary, setSensorsEnabled, startSetup, nextSetupStep,
+    showPracticeSummary, setSensorsEnabled, startSetup, startBattlePractice, nextSetupStep,
     prevSetupStep, startSession, minimizeSession, expandSession,
     finishSession, finishRoundWithData, quitSession, dismissPracticeSummary,
   ]);

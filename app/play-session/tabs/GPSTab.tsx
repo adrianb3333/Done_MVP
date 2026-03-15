@@ -5,7 +5,7 @@ import { MapPin, Flag, ChevronLeft, ChevronRight } from 'lucide-react-native';
 import Svg, { Circle, Line, Polygon, Text as SvgText } from 'react-native-svg';
 import { useWeather } from '@/hooks/useWeather';
 import { useDeviceHeading } from '@/hooks/useDeviceHeading';
-import { calculateGolfShot } from '@/services/golfCalculations';
+import { calculateGolfShot, decomposeWind } from '@/services/golfCalculations';
 import { useScoring } from '@/contexts/ScoringContext';
 import { loadCourseLocation } from '@/mocks/courseData';
 import type { CourseLocation } from '@/mocks/courseData';
@@ -148,10 +148,15 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
 
   const { weather } = useWeather(geoLocation?.lat || null, geoLocation?.lon || null, 0);
 
+  const liveWind = useMemo(() => {
+    if (!weather) return null;
+    return decomposeWind(weather.windMs, weather.windDeg, deviceHeading);
+  }, [weather, deviceHeading]);
+
   const adjustedDistance = useMemo(() => {
-    if (!weather || totalDistance <= 0) return null;
-    return calculateGolfShot(totalDistance, 'Normal', weather.windMs, weather.headTail, weather.cross, weather.temp, weather.pressureMb);
-  }, [weather, totalDistance]);
+    if (!weather || !liveWind || totalDistance <= 0) return null;
+    return calculateGolfShot(totalDistance, 'Normal', weather.windMs, liveWind.headTail, liveWind.cross, weather.temp, weather.pressureMb);
+  }, [weather, liveWind, totalDistance]);
 
   useEffect(() => {
     if (adjustedDistance) {

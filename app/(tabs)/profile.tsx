@@ -520,6 +520,7 @@ export default function ProfileScreen() {
     crewName,
     crewColor,
     crewLogo,
+    pendingCrewInvites,
   } = useProfile();
 
   const { lastRound } = useSession();
@@ -562,7 +563,8 @@ export default function ProfileScreen() {
   const [notificationsRead, setNotificationsRead] = useState<boolean>(false);
 
   const { hasUnreadChats } = useChat();
-  const hasUnreadNotifications = (followers.length > 0 && !notificationsRead) || hasUnreadChats;
+  const hasPendingCrewInvites = pendingCrewInvites.length > 0;
+  const hasUnreadNotifications = (followers.length > 0 && !notificationsRead) || hasUnreadChats || hasPendingCrewInvites;
   const hasNewNews = !newsRead;
 
   useEffect(() => {
@@ -766,6 +768,7 @@ export default function ProfileScreen() {
               testID="help-menu-button"
             >
               <HelpCircle size={26} color={backgroundImageUri ? '#FFFFFF' : '#888'} />
+              {(hasUnreadNotifications || hasNewNews) && <View style={styles.helpIconRedDot} />}
             </TouchableOpacity>
           </View>
         </View>
@@ -2698,5 +2701,16 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 4,
+  },
+  helpIconRedDot: {
+    position: 'absolute' as const,
+    top: 6,
+    right: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#FF3B30',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
   },
 });

@@ -60,6 +60,7 @@ const CREW_ROUNDS_KEY = 'crew_rounds';
 const CREW_SCHEDULED_ROUNDS_KEY = 'crew_scheduled_rounds';
 const CREW_TOURNAMENTS_KEY = 'crew_tournaments';
 const CREW_SCHEDULED_TOURNAMENTS_KEY = 'crew_scheduled_tournaments';
+const CREW_INVITES_KEY = 'crew_invites';
 
 export interface CrewDrill {
   id: string;
@@ -155,6 +156,18 @@ export interface CrewSettings {
   managers: string[];
 }
 
+export interface CrewInvite {
+  id: string;
+  userId: string;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  role: 'player' | 'manager';
+  status: 'pending' | 'accepted' | 'declined';
+  crewName: string;
+  createdAt: number;
+}
+
 export const [ProfileProvider, useProfile] = createContextHook(() => {
   const queryClient = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
@@ -171,6 +184,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const [crewScheduledRounds, setCrewScheduledRoundsState] = useState<ScheduledRound[]>([]);
   const [crewTournaments, setCrewTournamentsState] = useState<CrewTournament[]>([]);
   const [crewScheduledTournaments, setCrewScheduledTournamentsState] = useState<ScheduledTournament[]>([]);
+  const [crewInvites, setCrewInvitesState] = useState<CrewInvite[]>([]);
 
   useEffect(() => {
     AsyncStorage.getItem(BG_IMAGE_KEY).then((val) => {
@@ -217,6 +231,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     }).catch(() => {});
     AsyncStorage.getItem(CREW_SCHEDULED_TOURNAMENTS_KEY).then((val) => {
       if (val) setCrewScheduledTournamentsState(JSON.parse(val));
+    }).catch(() => {});
+    AsyncStorage.getItem(CREW_INVITES_KEY).then((val) => {
+      if (val) setCrewInvitesState(JSON.parse(val));
     }).catch(() => {});
   }, []);
 
@@ -482,11 +499,65 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const saveCrewSettings = useCallback(async (settings: CrewSettings) => {
     console.log('[ProfileContext] Saving crew settings:', settings.name, settings.color);
+    const previousPlayers = crewPlayers;
+    const previousManagers = crewManagers;
+    const newPlayers = settings.players.filter((id) => !previousPlayers.includes(id));
+    const newManagers = settings.managers.filter((id) => !previousManagers.includes(id));
+
+    const newInvites: CrewInvite[] = [];
+    const allUsersList = allUsersQuery.data ?? [];
+
+    newPlayers.forEach((playerId) => {
+      const user = allUsersList.find((u) => u.id === playerId);
+      if (user) {
+        newInvites.push({
+          id: Date.now().toString(36) + Math.random().toString(36).slice(2, 10),
+          userId: user.id,
+          username: user.username,
+          displayName: user.display_name,
+          avatarUrl: user.avatar_url,
+          role: 'player',
+          status: 'pending',
+          crewName: settings.name || 'Crew',
+          createdAt: Date.now(),
+        });
+      }
+    });
+
+    newManagers.forEach((managerId) => {
+      const user = allUsersList.find((u) => u.id === managerId);
+      if (user) {
+        newInvites.push({
+          id: Date.now().toString(36) + Math.random().toString(36).slice(2, 10),
+          userId: user.id,
+          username: user.username,
+          displayName: user.display_name,
+          avatarUrl: user.avatar_url,
+          role: 'manager',
+          status: 'pending',
+          crewName: settings.name || 'Crew',
+          createdAt: Date.now(),
+        });
+      }
+    });
+
+    if (newInvites.length > 0) {
+      const updatedInvites = [...crewInvites, ...newInvites];
+      setCrewInvitesState(updatedInvites);
+      await AsyncStorage.setItem(CREW_INVITES_KEY, JSON.stringify(updatedInvites));
+      console.log('[ProfileContext] Created', newInvites.length, 'crew invites');
+    }
+
+    const acceptedPlayerIds = crewInvites.filter((i) => i.role === 'player' && i.status === 'accepted').map((i) => i.userId);
+    const acceptedManagerIds = crewInvites.filter((i) => i.role === 'manager' && i.status === 'accepted').map((i) => i.userId);
+    const confirmedPlayers = settings.players.filter((id) => previousPlayers.includes(id) || acceptedPlayerIds.includes(id));
+    const confirmedManagers = settings.managers.filter((id) => previousManagers.includes(id) || acceptedManagerIds.includes(id));
+
     setCrewNameState(settings.name);
     setCrewColorState(settings.color);
     setCrewLogoState(settings.logo);
-    setCrewPlayersState(settings.players);
-    setCrewManagersState(settings.managers);
+    setCrewPlayersState(confirmedPlayers);
+    setCrewManagersState(confirmedManagers);
     await AsyncStorage.setItem(CREW_NAME_KEY, settings.name);
     await AsyncStorage.setItem(CREW_COLOR_KEY, settings.color);
     if (settings.logo) {
@@ -494,9 +565,40 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     } else {
       await AsyncStorage.removeItem(CREW_LOGO_KEY);
     }
-    await AsyncStorage.setItem(CREW_PLAYERS_KEY, JSON.stringify(settings.players));
-    await AsyncStorage.setItem(CREW_MANAGERS_KEY, JSON.stringify(settings.managers));
-  }, []);
+    await AsyncStorage.setItem(CREW_PLAYERS_KEY, JSON.stringify(confirmedPlayers));
+    await AsyncStorage.setItem(CREW_MANAGERS_KEY, JSON.stringify(confirmedManagers));
+  }, [crewPlayers, crewManagers, crewInvites, allUsersQuery.data]);
+
+  const acceptCrewInvite = useCallback(async (inviteId: string) => {
+    console.log('[ProfileContext] Accepting crew invite:', inviteId);
+    const updated = crewInvites.map((i) => i.id === inviteId ? { ...i, status: 'accepted' as const } : i);
+    setCrewInvitesState(updated);
+    await AsyncStorage.setItem(CREW_INVITES_KEY, JSON.stringify(updated));
+
+    const invite = updated.find((i) => i.id === inviteId);
+    if (invite) {
+      if (invite.role === 'player') {
+        const newPlayers = [...crewPlayers, invite.userId].filter((v, i, a) => a.indexOf(v) === i);
+        setCrewPlayersState(newPlayers);
+        await AsyncStorage.setItem(CREW_PLAYERS_KEY, JSON.stringify(newPlayers));
+      } else {
+        const newManagers = [...crewManagers, invite.userId].filter((v, i, a) => a.indexOf(v) === i);
+        setCrewManagersState(newManagers);
+        await AsyncStorage.setItem(CREW_MANAGERS_KEY, JSON.stringify(newManagers));
+      }
+    }
+  }, [crewInvites, crewPlayers, crewManagers]);
+
+  const declineCrewInvite = useCallback(async (inviteId: string) => {
+    console.log('[ProfileContext] Declining crew invite:', inviteId);
+    const updated = crewInvites.map((i) => i.id === inviteId ? { ...i, status: 'declined' as const } : i);
+    setCrewInvitesState(updated);
+    await AsyncStorage.setItem(CREW_INVITES_KEY, JSON.stringify(updated));
+  }, [crewInvites]);
+
+  const pendingCrewInvites = useMemo(() => {
+    return crewInvites.filter((i) => i.status === 'pending');
+  }, [crewInvites]);
 
   const uploadAvatar = useCallback(async (uri: string) => {
     if (!userId) throw new Error('Not authenticated');
@@ -604,6 +706,10 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     saveScheduledTournament,
     deleteScheduledTournament,
     saveCrewSettings,
+    crewInvites,
+    pendingCrewInvites,
+    acceptCrewInvite,
+    declineCrewInvite,
   }), [
     userId,
     profileQuery.data,
@@ -648,5 +754,9 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     saveScheduledTournament,
     deleteScheduledTournament,
     saveCrewSettings,
+    crewInvites,
+    pendingCrewInvites,
+    acceptCrewInvite,
+    declineCrewInvite,
   ]);
 });

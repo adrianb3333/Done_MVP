@@ -65,6 +65,7 @@ function useBattleState() {
   const [pendingInvites, setPendingInvites] = useState<BattleInvite[]>([]);
   const [activeBattle, setActiveBattle] = useState<ActiveBattle | null>(null);
   const [hasNewInvite, setHasNewInvite] = useState<boolean>(false);
+  const [shouldNavigateToPractice, setShouldNavigateToPractice] = useState<boolean>(false);
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data: { session } }) => {
@@ -169,6 +170,7 @@ function useBattleState() {
     setActiveBattle(battle);
     await AsyncStorage.setItem(ACTIVE_BATTLE_KEY, JSON.stringify(battle));
     setHasNewInvite(false);
+    setShouldNavigateToPractice(true);
 
     return battle;
   }, []);
@@ -274,6 +276,8 @@ function useBattleState() {
     activeBattle,
     pendingInvites: myPendingInvites,
     hasNewInvite,
+    shouldNavigateToPractice,
+    clearNavigateToPractice: () => setShouldNavigateToPractice(false),
     sendInvite: sendInviteMutation.mutateAsync,
     isSendingInvite: sendInviteMutation.isPending,
     acceptInvite,
@@ -288,6 +292,7 @@ function useBattleState() {
     activeBattle,
     myPendingInvites,
     hasNewInvite,
+    shouldNavigateToPractice,
     sendInviteMutation.mutateAsync,
     sendInviteMutation.isPending,
     acceptInvite,
