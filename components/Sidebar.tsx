@@ -170,6 +170,16 @@ export default function Sidebar() {
             )}
           </View>
 
+          <View style={styles.weatherSection}>
+            <TouchableOpacity
+              style={styles.weatherItem}
+              onPress={() => navigateTo('weather')}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.weatherLabel}>Weather 🧭</Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={styles.sidebarFooter}>
             <View style={styles.footerDivider} />
             <Text style={styles.footerText}>Golf App v1.0</Text>
@@ -272,5 +282,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#E8E8E8',
     marginHorizontal: 16,
     marginVertical: 10,
+  },
+  weatherSection: {
+    paddingHorizontal: 12,
+    marginBottom: 8,
+  },
+  weatherItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+  },
+  weatherLabel: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#999999',
   },
 });

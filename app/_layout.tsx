@@ -19,6 +19,7 @@ import Sidebar from "@/components/Sidebar";
 import DataOverviewScreen from "@/components/DataOverviewScreen";
 import CommunityScreen from "@/components/CommunityScreen";
 import CrewScreen from "@/components/CrewScreen";
+import WeatherScreen from "@/components/WeatherScreen";
 import ProfileScreen from "@/app/(tabs)/profile";
 import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
@@ -143,6 +144,15 @@ function AppContent() {
     return (
       <View style={styles.container}>
         <CrewScreen />
+        <Sidebar />
+      </View>
+    );
+  }
+
+  if (currentSection === 'weather') {
+    return (
+      <View style={styles.container}>
+        <WeatherScreen />
         <Sidebar />
       </View>
     );
