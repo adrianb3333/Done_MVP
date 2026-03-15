@@ -265,11 +265,19 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
     const drillItems = crewScheduled.map((s) => ({ ...s, itemType: 'drill' as const }));
     const roundItems = crewScheduledRounds.map((s) => ({ ...s, itemType: 'round' as const }));
     const tournamentItems = crewScheduledTournaments.map((s) => ({ ...s, itemType: 'tournament' as const }));
-    return [...drillItems, ...roundItems, ...tournamentItems].sort((a, b) => {
-      const dateA = a.date + ' ' + a.time;
-      const dateB = b.date + ' ' + b.time;
-      return dateA.localeCompare(dateB);
-    });
+    const now = new Date();
+    return [...drillItems, ...roundItems, ...tournamentItems]
+      .filter((item) => {
+        const [year, month, day] = item.date.split('-').map(Number);
+        const [hours, minutes] = (item.time || '00:00').split(':').map(Number);
+        const itemDate = new Date(year, month - 1, day, hours || 0, minutes || 0);
+        return itemDate.getTime() >= now.getTime();
+      })
+      .sort((a, b) => {
+        const dateA = a.date + ' ' + a.time;
+        const dateB = b.date + ' ' + b.time;
+        return dateA.localeCompare(dateB);
+      });
   }, [crewScheduled, crewScheduledRounds, crewScheduledTournaments]);
 
   const renderScheduleTab = () => {
