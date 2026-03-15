@@ -16,6 +16,11 @@
 - [x] A **downward chevron button** in the top-right of the popup to close it
 - [x] Smooth fade/slide animation when opening and closing the popup
 - [x] Selected club gets a brief highlight animation before the popup closes
+- [x] **Auto-close**: Club selector popup closes immediately after selecting a club
+- [x] **Shot markers**: Black-green dots appear on the GPS map at the exact location where each club was selected
+- [x] **Shot path lines**: White lines connect sequential shot markers on the same hole
+- [x] **Per-hole tracking**: Shot markers and lines reset when switching to a new hole (each hole tracks independently)
+- [x] **Club label**: Each shot marker displays the selected club name in a dark label bubble below the dot
 
 ## Screens / Changes
 

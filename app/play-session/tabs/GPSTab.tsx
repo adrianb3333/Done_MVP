@@ -119,6 +119,12 @@ const miniStyles = StyleSheet.create({
   },
 });
 
+interface ShotMarker {
+  clubId: string;
+  latitude: number;
+  longitude: number;
+}
+
 interface GPSTabProps {
   onDistanceChange?: (distance: number) => void;
   onAdjustedDistanceChange?: (adjustedDistance: number) => void;
@@ -140,6 +146,23 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
   const locationWatchRef = useRef<any>(null);
   const [courseLocation, setCourseLocation] = useState<CourseLocation | null>(null);
   const [currentGpsHoleIndex, setCurrentGpsHoleIndex] = useState<number>(externalHoleIndex ?? 0);
+
+  const [shotMarkersMap, setShotMarkersMap] = useState<Record<number, ShotMarker[]>>({});
+
+  const currentShotMarkers = useMemo(() => {
+    return shotMarkersMap[currentGpsHoleIndex] ?? [];
+  }, [shotMarkersMap, currentGpsHoleIndex]);
+
+  const handleClubSelected = useCallback((marker: ShotMarker) => {
+    console.log('[GPSTab] Shot marker added:', marker.clubId, marker.latitude, marker.longitude, 'hole:', currentGpsHoleIndex);
+    setShotMarkersMap(prev => {
+      const existing = prev[currentGpsHoleIndex] ?? [];
+      return {
+        ...prev,
+        [currentGpsHoleIndex]: [...existing, marker],
+      };
+    });
+  }, [currentGpsHoleIndex]);
   const [teePosition, setTeePosition] = useState<Coordinate | null>(null);
   const [greenPosition, setGreenPosition] = useState<Coordinate | null>(null);
   const [midPosition, setMidPosition] = useState<Coordinate | null>(null);
@@ -506,6 +529,32 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
               </Marker>
             )}
 
+            {currentShotMarkers.length >= 2 && (
+              <Polyline
+                coordinates={currentShotMarkers.map(m => ({ latitude: m.latitude, longitude: m.longitude }))}
+                strokeColor="rgba(255,255,255,0.85)"
+                strokeWidth={3}
+              />
+            )}
+
+            {currentShotMarkers.map((marker, idx) => (
+              <Marker
+                key={`shot-${currentGpsHoleIndex}-${idx}`}
+                coordinate={{ latitude: marker.latitude, longitude: marker.longitude }}
+                anchor={{ x: 0.5, y: 0.5 }}
+                tracksViewChanges={true}
+              >
+                <View style={styles.shotMarkerContainer}>
+                  <View style={styles.shotMarkerDot}>
+                    <View style={styles.shotMarkerInner} />
+                  </View>
+                  <View style={styles.shotLabelBubble}>
+                    <Text style={styles.shotLabelText}>{marker.clubId}</Text>
+                  </View>
+                </View>
+              </Marker>
+            ))}
+
             <Marker
               coordinate={{
                 latitude: (displayMid.latitude + displayGreen.latitude) / 2,
@@ -613,6 +662,7 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
         <ClubSelectorPopup
           visible={clubSelectorVisible}
           onClose={() => setClubSelectorVisible(false)}
+          onClubSelected={handleClubSelected}
         />
       )}
     </View>
@@ -938,5 +988,44 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 15,
     fontWeight: '600' as const,
+  },
+  shotMarkerContainer: {
+    alignItems: 'center' as const,
+  },
+  shotMarkerDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#1a1a1a',
+    borderWidth: 3,
+    borderColor: '#34C759',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  shotMarkerInner: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#34C759',
+  },
+  shotLabelBubble: {
+    marginTop: 3,
+    backgroundColor: 'rgba(20,20,20,0.9)',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(52,199,89,0.4)',
+  },
+  shotLabelText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '800' as const,
+    letterSpacing: -0.3,
   },
 });

@@ -43,13 +43,20 @@ const CLUB_CATEGORIES: ClubCategory[] = [
   },
 ];
 
+interface ShotMarker {
+  clubId: string;
+  latitude: number;
+  longitude: number;
+}
+
 interface ClubSelectorPopupProps {
   visible: boolean;
   onClose: () => void;
+  onClubSelected?: (marker: ShotMarker) => void;
   sessionId?: string;
 }
 
-export default function ClubSelectorPopup({ visible, onClose, sessionId }: ClubSelectorPopupProps) {
+export default function ClubSelectorPopup({ visible, onClose, onClubSelected, sessionId }: ClubSelectorPopupProps) {
   const slideAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [selectedClub, setSelectedClub] = useState<string | null>(null);
@@ -102,28 +109,29 @@ export default function ClubSelectorPopup({ visible, onClose, sessionId }: ClubS
 
     const position = await getCurrentGpsPosition();
 
-    if (position) {
-      await saveClubSelection({
-        clubId,
-        latitude: position.latitude,
-        longitude: position.longitude,
-        sessionId,
-      });
-    } else {
+    const lat = position?.latitude ?? 0;
+    const lon = position?.longitude ?? 0;
+
+    if (!position) {
       console.warn('[ClubSelector] Could not get GPS position, saving with 0,0');
-      await saveClubSelection({
-        clubId,
-        latitude: 0,
-        longitude: 0,
-        sessionId,
-      });
     }
 
-    setTimeout(() => {
-      setSaving(false);
-      onClose();
-    }, 400);
-  }, [saving, sessionId, onClose]);
+    await saveClubSelection({
+      clubId,
+      latitude: lat,
+      longitude: lon,
+      sessionId,
+    });
+
+    onClubSelected?.({
+      clubId,
+      latitude: lat,
+      longitude: lon,
+    });
+
+    setSaving(false);
+    onClose();
+  }, [saving, sessionId, onClose, onClubSelected]);
 
   if (!showContent) return null;
 
