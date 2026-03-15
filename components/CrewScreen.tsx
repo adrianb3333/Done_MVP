@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CalendarDays, Settings, Plus, ChevronLeft } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useAppNavigation } from '@/contexts/AppNavigationContext';
+import { useProfile } from '@/contexts/ProfileContext';
 import CrewManagementScreen from '@/components/CrewManagementScreen';
 import CrewCreateScreen from '@/components/CrewCreateScreen';
 import CrewScheduleScreen from '@/components/CrewScheduleScreen';
@@ -24,6 +25,9 @@ type CrewTab = typeof TAB_KEYS[number];
 
 export default function CrewScreen() {
   const { navigateTo } = useAppNavigation();
+  const { crewName, crewColor } = useProfile();
+  const displayName = crewName || 'Crew';
+  const bgColor = crewColor || '#FFFFFF';
   const [activeTab, setActiveTab] = useState<CrewTab>('crew');
   const [createVisible, setCreateVisible] = useState<boolean>(false);
   const [settingsVisible, setSettingsVisible] = useState<boolean>(false);
@@ -60,8 +64,8 @@ export default function CrewScreen() {
   }, [navigateTo]);
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView edges={['top']} style={styles.safeTop}>
+    <View style={[styles.container, { backgroundColor: bgColor }]}>
+      <SafeAreaView edges={['top']} style={[styles.safeTop, { backgroundColor: bgColor }]}>
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <TouchableOpacity
@@ -73,7 +77,7 @@ export default function CrewScreen() {
               <ChevronLeft size={22} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
-          <Text style={styles.headerTitle}>Crew</Text>
+          <Text style={[styles.headerTitle, bgColor !== '#FFFFFF' && { color: '#FFFFFF' }]}>{displayName}</Text>
           <View style={styles.headerRight}>
             <TouchableOpacity
               style={styles.glassIconBtn}
@@ -122,7 +126,9 @@ export default function CrewScreen() {
               >
                 <Text style={[
                   styles.tabText,
+                  bgColor !== '#FFFFFF' && { color: 'rgba(255,255,255,0.5)' },
                   activeTab === tab && styles.tabTextActive,
+                  activeTab === tab && bgColor !== '#FFFFFF' && { color: '#FFFFFF' },
                 ]}>
                   {tab === 'crew' ? 'Crew' : tab === 'latest' ? 'Latest' : 'Stats'}
                 </Text>
@@ -135,6 +141,7 @@ export default function CrewScreen() {
               {
                 width: underlineWidth,
                 transform: [{ translateX: underlineTranslateX }],
+                backgroundColor: bgColor !== '#FFFFFF' ? '#FFFFFF' : '#1A1A1A',
               },
             ]}
           />
@@ -142,7 +149,7 @@ export default function CrewScreen() {
       </SafeAreaView>
 
       <ScrollView
-        style={styles.scrollView}
+        style={[styles.scrollView, { backgroundColor: bgColor }]}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -227,8 +234,7 @@ const styles = StyleSheet.create({
   },
   safeTop: {
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomWidth: 0,
   },
   header: {
     flexDirection: 'row' as const,

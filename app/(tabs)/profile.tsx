@@ -517,6 +517,9 @@ export default function ProfileScreen() {
     isLoadingAllUsers,
     backgroundImageUri,
     isCoachMode,
+    crewName,
+    crewColor,
+    crewLogo,
   } = useProfile();
 
   const { lastRound } = useSession();
@@ -963,9 +966,9 @@ export default function ProfileScreen() {
 
             {isCoachMode && (
               <View style={styles.crewSection}>
-                <Text style={styles.crewSectionTitle}>CREW</Text>
+                <Text style={styles.crewSectionTitle}>{crewName || 'CREW'}</Text>
                 <TouchableOpacity
-                  style={styles.crewCard}
+                  style={[styles.crewCard, crewColor && crewColor !== '#1A1A1A' && { backgroundColor: crewColor }]}
                   onPress={() => {
                     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     navigateTo('crew' as any);
@@ -974,8 +977,14 @@ export default function ProfileScreen() {
                   testID="crew-card"
                 >
                   <View style={styles.crewCardInner}>
-                    <View style={styles.crewDot} />
-                    <Text style={styles.crewCardText}>No Crew for the moment</Text>
+                    {crewLogo ? (
+                      <Image source={{ uri: crewLogo }} style={styles.crewLogoMini} />
+                    ) : (
+                      <View style={styles.crewDot} />
+                    )}
+                    <Text style={[styles.crewCardText, crewColor && crewColor !== '#1A1A1A' && { color: '#FFFFFF' }]}>
+                      {crewName ? crewName : 'No Crew for the moment'}
+                    </Text>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -2606,5 +2615,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#999',
     fontWeight: '500' as const,
+  },
+  crewLogoMini: {
+    width: 22,
+    height: 22,
+    borderRadius: 4,
   },
 });

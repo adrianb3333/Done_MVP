@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { useProfile } from '@/contexts/ProfileContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -22,6 +23,8 @@ interface CrewCreateScreenProps {
 }
 
 export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
+  const { crewColor } = useProfile();
+  const bgColor = crewColor || '#FFFFFF';
   const [activeSegment, setActiveSegment] = useState<number>(0);
   const underlineAnim = useRef(new Animated.Value(0)).current;
 
@@ -73,8 +76,8 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
   }, [activeSegment]);
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView edges={['top']} style={styles.safeTop}>
+    <View style={[styles.container, { backgroundColor: bgColor }]}>
+      <SafeAreaView edges={['top']} style={[styles.safeTop, { backgroundColor: bgColor }]}>
         <View style={styles.headerRow}>
           <TouchableOpacity
             onPress={() => {
@@ -98,7 +101,9 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
               >
                 <Text style={[
                   styles.segmentText,
+                  bgColor !== '#FFFFFF' && { color: 'rgba(255,255,255,0.5)' },
                   activeSegment === idx && styles.segmentTextActive,
+                  activeSegment === idx && bgColor !== '#FFFFFF' && { color: '#FFFFFF' },
                 ]}>
                   {seg}
                 </Text>
@@ -122,7 +127,7 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
       </SafeAreaView>
 
       <ScrollView
-        style={styles.scrollView}
+        style={[styles.scrollView, { backgroundColor: bgColor }]}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >

@@ -49,12 +49,30 @@ function resolveProfileAvatar(profile: UserProfile): UserProfile {
 
 const BG_IMAGE_KEY = 'profile_background_image';
 const COACH_MODE_KEY = 'coach_mode_activated';
+const CREW_NAME_KEY = 'crew_name';
+const CREW_COLOR_KEY = 'crew_color';
+const CREW_LOGO_KEY = 'crew_logo';
+const CREW_PLAYERS_KEY = 'crew_players';
+const CREW_MANAGERS_KEY = 'crew_managers';
+
+export interface CrewSettings {
+  name: string;
+  color: string;
+  logo: string | null;
+  players: string[];
+  managers: string[];
+}
 
 export const [ProfileProvider, useProfile] = createContextHook(() => {
   const queryClient = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
   const [backgroundImageUri, setBackgroundImageUriState] = useState<string | null>(null);
   const [isCoachMode, setIsCoachModeState] = useState<boolean>(false);
+  const [crewName, setCrewNameState] = useState<string>('');
+  const [crewColor, setCrewColorState] = useState<string>('#1A1A1A');
+  const [crewLogo, setCrewLogoState] = useState<string | null>(null);
+  const [crewPlayers, setCrewPlayersState] = useState<string[]>([]);
+  const [crewManagers, setCrewManagersState] = useState<string[]>([]);
 
   useEffect(() => {
     AsyncStorage.getItem(BG_IMAGE_KEY).then((val) => {
@@ -68,6 +86,21 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
         console.log('[ProfileContext] Coach mode loaded from storage');
         setIsCoachModeState(true);
       }
+    }).catch(() => {});
+    AsyncStorage.getItem(CREW_NAME_KEY).then((val) => {
+      if (val) setCrewNameState(val);
+    }).catch(() => {});
+    AsyncStorage.getItem(CREW_COLOR_KEY).then((val) => {
+      if (val) setCrewColorState(val);
+    }).catch(() => {});
+    AsyncStorage.getItem(CREW_LOGO_KEY).then((val) => {
+      if (val) setCrewLogoState(val);
+    }).catch(() => {});
+    AsyncStorage.getItem(CREW_PLAYERS_KEY).then((val) => {
+      if (val) setCrewPlayersState(JSON.parse(val));
+    }).catch(() => {});
+    AsyncStorage.getItem(CREW_MANAGERS_KEY).then((val) => {
+      if (val) setCrewManagersState(JSON.parse(val));
     }).catch(() => {});
   }, []);
 
@@ -247,6 +280,24 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     await AsyncStorage.removeItem(COACH_MODE_KEY);
   }, []);
 
+  const saveCrewSettings = useCallback(async (settings: CrewSettings) => {
+    console.log('[ProfileContext] Saving crew settings:', settings.name, settings.color);
+    setCrewNameState(settings.name);
+    setCrewColorState(settings.color);
+    setCrewLogoState(settings.logo);
+    setCrewPlayersState(settings.players);
+    setCrewManagersState(settings.managers);
+    await AsyncStorage.setItem(CREW_NAME_KEY, settings.name);
+    await AsyncStorage.setItem(CREW_COLOR_KEY, settings.color);
+    if (settings.logo) {
+      await AsyncStorage.setItem(CREW_LOGO_KEY, settings.logo);
+    } else {
+      await AsyncStorage.removeItem(CREW_LOGO_KEY);
+    }
+    await AsyncStorage.setItem(CREW_PLAYERS_KEY, JSON.stringify(settings.players));
+    await AsyncStorage.setItem(CREW_MANAGERS_KEY, JSON.stringify(settings.managers));
+  }, []);
+
   const uploadAvatar = useCallback(async (uri: string) => {
     if (!userId) throw new Error('Not authenticated');
     console.log('[ProfileContext] Uploading avatar from:', uri);
@@ -329,6 +380,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     isCoachMode,
     activateCoachMode,
     deactivateCoachMode,
+    crewName,
+    crewColor,
+    crewLogo,
+    crewPlayers,
+    crewManagers,
+    saveCrewSettings,
   }), [
     userId,
     profileQuery.data,
@@ -349,5 +406,11 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     isCoachMode,
     activateCoachMode,
     deactivateCoachMode,
+    crewName,
+    crewColor,
+    crewLogo,
+    crewPlayers,
+    crewManagers,
+    saveCrewSettings,
   ]);
 });

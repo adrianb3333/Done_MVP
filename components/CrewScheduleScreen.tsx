@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { useProfile } from '@/contexts/ProfileContext';
 
 interface CrewScheduleScreenProps {
   onClose: () => void;
@@ -22,6 +23,8 @@ type Tab = typeof TABS[number];
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps) {
+  const { crewColor } = useProfile();
+  const bgColor = crewColor || '#FFFFFF';
   const [activeTab, setActiveTab] = useState<Tab>('Schedule');
   const indicatorAnim = useRef(new Animated.Value(0)).current;
 
@@ -44,8 +47,8 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
   });
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView edges={['top']} style={styles.safeTop}>
+    <View style={[styles.container, { backgroundColor: bgColor }]}>
+      <SafeAreaView edges={['top']} style={[styles.safeTop, { backgroundColor: bgColor }]}>
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => {
@@ -58,7 +61,7 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
           >
             <ChevronLeft size={22} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{activeTab}</Text>
+          <Text style={[styles.headerTitle, bgColor !== '#FFFFFF' && { color: '#FFFFFF' }]}>{activeTab}</Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -75,7 +78,9 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
                 <Text
                   style={[
                     styles.segmentLabel,
+                    bgColor !== '#FFFFFF' && { color: 'rgba(255,255,255,0.5)' },
                     activeTab === tab && styles.segmentLabelActive,
+                    activeTab === tab && bgColor !== '#FFFFFF' && { color: '#FFFFFF' },
                   ]}
                 >
                   {tab}

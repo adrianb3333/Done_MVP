@@ -10,10 +10,13 @@ import {
   Image,
   Modal,
   FlatList,
+  Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Plus, Search, X, Check } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import * as ImagePicker from 'expo-image-picker';
 import { useProfile, UserProfile } from '@/contexts/ProfileContext';
 
 const COLOR_OPTIONS = [
@@ -30,14 +33,23 @@ interface CrewManagementScreenProps {
 }
 
 export default function CrewManagementScreen({ onClose }: CrewManagementScreenProps) {
-  const { allUsers, isLoadingAllUsers } = useProfile();
+  const {
+    allUsers,
+    isLoadingAllUsers,
+    crewName: savedName,
+    crewColor: savedColor,
+    crewLogo: savedLogo,
+    crewPlayers: savedPlayers,
+    crewManagers: savedManagers,
+    saveCrewSettings,
+  } = useProfile();
 
-  const [crewName, setCrewName] = useState<string>('');
-  const [selectedColor, setSelectedColor] = useState<string>('#1A1A1A');
-  const [crewLogo, _setCrewLogo] = useState<string | null>(null);
-
-  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
-  const [selectedManagers, setSelectedManagers] = useState<string[]>([]);
+  const [crewName, setCrewName] = useState<string>(savedName || '');
+  const [selectedColor, setSelectedColor] = useState<string>(savedColor || '#1A1A1A');
+  const [crewLogo, setCrewLogo] = useState<string | null>(savedLogo || null);
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>(savedPlayers || []);
+  const [selectedManagers, setSelectedManagers] = useState<string[]>(savedManagers || []);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   const [pickerMode, setPickerMode] = useState<PickerMode>(null);
   const [pickerSearch, setPickerSearch] = useState<string>('');
@@ -73,6 +85,53 @@ export default function CrewManagementScreen({ onClose }: CrewManagementScreenPr
     const q = pickerSearch.toLowerCase();
     return (u.display_name || '').toLowerCase().includes(q) || (u.username || '').toLowerCase().includes(q);
   });
+
+  const handlePickLogo = useCallback(async () => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    console.log('[CrewSettings] Logo upload pressed');
+    try {
+      if (Platform.OS !== 'web') {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission needed', 'Please allow access to your photo library to upload a logo.');
+          return;
+        }
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        console.log('[CrewSettings] Logo selected:', result.assets[0].uri);
+        setCrewLogo(result.assets[0].uri);
+      }
+    } catch (err: any) {
+      console.log('[CrewSettings] Logo pick error:', err.message);
+    }
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setIsSaving(true);
+    try {
+      await saveCrewSettings({
+        name: crewName,
+        color: selectedColor,
+        logo: crewLogo,
+        players: selectedPlayers,
+        managers: selectedManagers,
+      });
+      console.log('[CrewSettings] Settings saved successfully');
+      onClose();
+    } catch (err: any) {
+      console.log('[CrewSettings] Save error:', err.message);
+      Alert.alert('Error', 'Failed to save crew settings.');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [crewName, selectedColor, crewLogo, selectedPlayers, selectedManagers, saveCrewSettings, onClose]);
 
   const renderPickerUser = useCallback(({ item }: { item: UserProfile }) => {
     const isSelected = selectedSet.includes(item.id);
@@ -127,7 +186,22 @@ export default function CrewManagementScreen({ onClose }: CrewManagementScreenPr
             <ChevronLeft size={22} color="#FFFFFF" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Settings</Text>
-          <View style={{ width: 40 }} />
+          <TouchableOpacity
+            onPress={handleSave}
+            style={styles.saveBtn}
+            activeOpacity={0.7}
+            disabled={isSaving}
+            testID="crew-settings-save"
+          >
+            {isSaving ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <>
+                <Check size={16} color="#FFFFFF" strokeWidth={3} />
+                <Text style={styles.saveBtnText}>Save</Text>
+              </>
+            )}
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
 
@@ -277,14 +351,23 @@ export default function CrewManagementScreen({ onClose }: CrewManagementScreenPr
           <Text style={styles.settingsCardLabel}>Logo</Text>
           <TouchableOpacity
             style={styles.logoUploadBtn}
-            onPress={() => {
-              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              console.log('[CrewSettings] Logo upload pressed');
-            }}
+            onPress={handlePickLogo}
             activeOpacity={0.7}
           >
             {crewLogo ? (
-              <Image source={{ uri: crewLogo }} style={styles.logoPreview} />
+              <View style={styles.logoPreviewContainer}>
+                <Image source={{ uri: crewLogo }} style={styles.logoPreview} />
+                <TouchableOpacity
+                  style={styles.logoRemoveBtn}
+                  onPress={() => {
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setCrewLogo(null);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <X size={14} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
             ) : (
               <View style={styles.logoPlaceholder}>
                 <Plus size={24} color="rgba(0,0,0,0.3)" />
@@ -386,6 +469,22 @@ const styles = StyleSheet.create({
     fontWeight: '800' as const,
     color: '#1A1A1A',
     letterSpacing: 0.3,
+  },
+  saveBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 6,
+    backgroundColor: '#34C759',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    minWidth: 80,
+    justifyContent: 'center' as const,
+  },
+  saveBtnText: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
   },
   scrollView: {
     flex: 1,
@@ -527,10 +626,24 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: 'hidden' as const,
   },
+  logoPreviewContainer: {
+    position: 'relative' as const,
+  },
   logoPreview: {
     width: '100%' as const,
     height: 120,
     borderRadius: 14,
+  },
+  logoRemoveBtn: {
+    position: 'absolute' as const,
+    top: 8,
+    right: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
   },
   logoPlaceholder: {
     height: 100,
