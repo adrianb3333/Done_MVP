@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,10 +12,10 @@ import {
   Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronLeft, Clock, Calendar, Trash2, Check, X } from 'lucide-react-native';
+import { ChevronLeft, Clock, Calendar, Trash2, Check, X, ChevronRight, MapPin, Users } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { useProfile, CrewDrill, ScheduledDrill } from '@/contexts/ProfileContext';
+import { useProfile, CrewDrill, CrewRound, ScheduledDrill, ScheduledRound } from '@/contexts/ProfileContext';
 
 interface CrewScheduleScreenProps {
   onClose: () => void;
@@ -26,20 +26,69 @@ type Tab = typeof TABS[number];
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+function getMonthDays(year: number, month: number): { day: number; isCurrentMonth: boolean }[] {
+  const firstDay = new Date(year, month, 1).getDay();
+  const adjustedFirstDay = firstDay === 0 ? 6 : firstDay - 1;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+  const days: { day: number; isCurrentMonth: boolean }[] = [];
+
+  for (let i = adjustedFirstDay - 1; i >= 0; i--) {
+    days.push({ day: daysInPrevMonth - i, isCurrentMonth: false });
+  }
+  for (let i = 1; i <= daysInMonth; i++) {
+    days.push({ day: i, isCurrentMonth: true });
+  }
+  const remaining = 7 - (days.length % 7);
+  if (remaining < 7) {
+    for (let i = 1; i <= remaining; i++) {
+      days.push({ day: i, isCurrentMonth: false });
+    }
+  }
+  return days;
+}
+
+type ScheduleType = 'drill' | 'round';
+
 export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps) {
   const insets = useSafeAreaInsets();
-  const { crewColor, crewDrills, crewScheduled, deleteCrewDrill, saveScheduledDrill, deleteScheduledDrill } = useProfile();
+  const {
+    crewColor, crewDrills, crewRounds, crewScheduled, crewScheduledRounds,
+    deleteCrewDrill, deleteCrewRound,
+    saveScheduledDrill, saveScheduledRound,
+    deleteScheduledDrill, deleteScheduledRound,
+    allUsers,
+  } = useProfile();
   const bgColor = crewColor || '#FFFFFF';
   const isDark = bgColor !== '#FFFFFF';
   const [activeTab, setActiveTab] = useState<Tab>('Schedule');
   const indicatorAnim = useRef(new Animated.Value(0)).current;
 
   const [drillDetailVisible, setDrillDetailVisible] = useState<CrewDrill | null>(null);
+  const [roundDetailVisible, setRoundDetailVisible] = useState<CrewRound | null>(null);
   const [schedulePickerVisible, setSchedulePickerVisible] = useState<boolean>(false);
-  const [selectedDrillIds, setSelectedDrillIds] = useState<string[]>([]);
-  const [scheduleDate, setScheduleDate] = useState<string>('');
+  const [scheduleType, setScheduleType] = useState<ScheduleType>('drill');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [scheduleTime, setScheduleTime] = useState<string>('');
-  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string; type: 'drill' | 'scheduled' } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string; type: 'drill' | 'round' | 'scheduled_drill' | 'scheduled_round' } | null>(null);
+
+  const now = new Date();
+  const [calendarYear, setCalendarYear] = useState<number>(now.getFullYear());
+  const [calendarMonth, setCalendarMonth] = useState<number>(now.getMonth());
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+
+  const calendarDays = useMemo(() => getMonthDays(calendarYear, calendarMonth), [calendarYear, calendarMonth]);
+
+  const selectedDateString = useMemo(() => {
+    if (!selectedDay) return '';
+    const m = String(calendarMonth + 1).padStart(2, '0');
+    const d = String(selectedDay).padStart(2, '0');
+    return `${calendarYear}-${m}-${d}`;
+  }, [calendarYear, calendarMonth, selectedDay]);
 
   const handleTabPress = useCallback((tab: Tab) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -59,74 +108,136 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
     outputRange: [0, tabWidth],
   });
 
-  const handleDeleteDrill = useCallback(async () => {
+  const handlePrevMonth = useCallback(() => {
+    if (calendarMonth === 0) {
+      setCalendarMonth(11);
+      setCalendarYear((y) => y - 1);
+    } else {
+      setCalendarMonth((m) => m - 1);
+    }
+    setSelectedDay(null);
+  }, [calendarMonth]);
+
+  const handleNextMonth = useCallback(() => {
+    if (calendarMonth === 11) {
+      setCalendarMonth(0);
+      setCalendarYear((y) => y + 1);
+    } else {
+      setCalendarMonth((m) => m + 1);
+    }
+    setSelectedDay(null);
+  }, [calendarMonth]);
+
+  const handleDeleteItem = useCallback(async () => {
     if (!deleteConfirm) return;
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     try {
       if (deleteConfirm.type === 'drill') {
         await deleteCrewDrill(deleteConfirm.id);
-      } else {
+      } else if (deleteConfirm.type === 'round') {
+        await deleteCrewRound(deleteConfirm.id);
+      } else if (deleteConfirm.type === 'scheduled_drill') {
         await deleteScheduledDrill(deleteConfirm.id);
+      } else if (deleteConfirm.type === 'scheduled_round') {
+        await deleteScheduledRound(deleteConfirm.id);
       }
       console.log('[CrewSchedule] Deleted:', deleteConfirm.name);
     } catch (err: any) {
       console.log('[CrewSchedule] Delete error:', err.message);
     }
     setDeleteConfirm(null);
-  }, [deleteConfirm, deleteCrewDrill, deleteScheduledDrill]);
+  }, [deleteConfirm, deleteCrewDrill, deleteCrewRound, deleteScheduledDrill, deleteScheduledRound]);
 
-  const toggleDrillSelection = useCallback((drillId: string) => {
+  const toggleSelection = useCallback((id: string) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedDrillIds((prev) =>
-      prev.includes(drillId) ? prev.filter((id) => id !== drillId) : [...prev, drillId]
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   }, []);
 
   const handleSaveSchedule = useCallback(async () => {
-    if (selectedDrillIds.length === 0) {
-      Alert.alert('No Drills Selected', 'Please select at least one drill to schedule.');
+    if (selectedIds.length === 0) {
+      Alert.alert('Nothing Selected', `Please select at least one ${scheduleType} to schedule.`);
       return;
     }
-    if (!scheduleDate.trim() || !scheduleTime.trim()) {
-      Alert.alert('Missing Info', 'Please enter both date and time.');
+    if (!selectedDateString || !scheduleTime.trim()) {
+      Alert.alert('Missing Info', 'Please select a date and enter a time.');
       return;
     }
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     try {
-      for (const drillId of selectedDrillIds) {
-        const drill = crewDrills.find((d) => d.id === drillId);
-        if (!drill) continue;
-        const scheduled: ScheduledDrill = {
-          id: Date.now().toString() + '_' + drillId,
-          drillId: drill.id,
-          drillName: drill.name,
-          date: scheduleDate.trim(),
-          time: scheduleTime.trim(),
-          createdAt: Date.now(),
-        };
-        await saveScheduledDrill(scheduled);
+      if (scheduleType === 'drill') {
+        for (const drillId of selectedIds) {
+          const drill = crewDrills.find((d) => d.id === drillId);
+          if (!drill) continue;
+          const scheduled: ScheduledDrill = {
+            id: Date.now().toString() + '_' + drillId,
+            drillId: drill.id,
+            drillName: drill.name,
+            date: selectedDateString,
+            time: scheduleTime.trim(),
+            createdAt: Date.now(),
+          };
+          await saveScheduledDrill(scheduled);
+        }
+      } else {
+        for (const roundId of selectedIds) {
+          const round = crewRounds.find((r) => r.id === roundId);
+          if (!round) continue;
+          const scheduled: ScheduledRound = {
+            id: Date.now().toString() + '_' + roundId,
+            roundId: round.id,
+            roundName: round.name,
+            date: selectedDateString,
+            time: scheduleTime.trim(),
+            createdAt: Date.now(),
+          };
+          await saveScheduledRound(scheduled);
+        }
       }
-      console.log('[CrewSchedule] Drills scheduled successfully');
-      Alert.alert('Scheduled', `${selectedDrillIds.length} drill(s) have been scheduled.`);
+      console.log('[CrewSchedule] Items scheduled successfully');
+      Alert.alert('Scheduled', `${selectedIds.length} item(s) have been scheduled.`);
       setSchedulePickerVisible(false);
-      setSelectedDrillIds([]);
-      setScheduleDate('');
+      setSelectedIds([]);
       setScheduleTime('');
+      setSelectedDay(null);
       setActiveTab('Schedule');
       Animated.spring(indicatorAnim, { toValue: 0, useNativeDriver: true, tension: 300, friction: 30 }).start();
     } catch (err: any) {
       console.log('[CrewSchedule] Schedule error:', err.message);
-      Alert.alert('Error', 'Failed to schedule drills.');
+      Alert.alert('Error', 'Failed to schedule items.');
     }
-  }, [selectedDrillIds, scheduleDate, scheduleTime, crewDrills, saveScheduledDrill, indicatorAnim]);
+  }, [selectedIds, selectedDateString, scheduleTime, scheduleType, crewDrills, crewRounds, saveScheduledDrill, saveScheduledRound, indicatorAnim]);
 
   const formatDate = (timestamp: number) => {
     const d = new Date(timestamp);
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
+  const getPlayerName = useCallback((playerId: string) => {
+    const user = allUsers.find((u) => u.id === playerId);
+    return user?.display_name || user?.username || 'Unknown';
+  }, [allUsers]);
+
+  const getHoleLabel = (opt: string) => {
+    if (opt === '18') return '18 holes';
+    if (opt === '9_first') return 'First 9';
+    if (opt === '9_back') return 'Back 9';
+    return opt;
+  };
+
+  const allScheduledItems = useMemo(() => {
+    const drillItems = crewScheduled.map((s) => ({ ...s, itemType: 'drill' as const }));
+    const roundItems = crewScheduledRounds.map((s) => ({ ...s, itemType: 'round' as const }));
+    return [...drillItems, ...roundItems].sort((a, b) => {
+      const dateA = a.date + ' ' + a.time;
+      const dateB = b.date + ' ' + b.time;
+      return dateA.localeCompare(dateB);
+    });
+  }, [crewScheduled, crewScheduledRounds]);
+
   const renderScheduleTab = () => {
-    if (crewScheduled.length === 0) {
+    if (allScheduledItems.length === 0) {
       return (
         <View style={styles.emptyState}>
           <View style={[styles.emptyIcon, isDark && { backgroundColor: 'rgba(255,255,255,0.1)' }]}>
@@ -134,7 +245,7 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
           </View>
           <Text style={[styles.emptyTitle, isDark && { color: '#FFFFFF' }]}>Schedule</Text>
           <Text style={[styles.emptyText, isDark && { color: 'rgba(255,255,255,0.5)' }]}>
-            No scheduled drills yet. Go to Storage to schedule drills.
+            No scheduled items yet. Go to Storage to schedule drills or rounds.
           </Text>
         </View>
       );
@@ -142,38 +253,48 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
 
     return (
       <View style={styles.cardList}>
-        {crewScheduled.map((item) => (
-          <View key={item.id} style={[styles.scheduleCard, isDark && { backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.1)' }]}>
-            <View style={styles.scheduleCardTop}>
-              <Text style={[styles.scheduleCardName, isDark && { color: '#FFFFFF' }]}>{item.drillName}</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                  setDeleteConfirm({ id: item.id, name: item.drillName, type: 'scheduled' });
-                }}
-                style={[styles.deleteBtn, isDark && { backgroundColor: 'rgba(255,59,48,0.2)' }]}
-              >
-                <Trash2 size={14} color="#FF3B30" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.scheduleCardMeta}>
-              <View style={styles.metaItem}>
-                <Calendar size={13} color={isDark ? 'rgba(255,255,255,0.5)' : '#888'} />
-                <Text style={[styles.metaText, isDark && { color: 'rgba(255,255,255,0.6)' }]}>{item.date}</Text>
+        {allScheduledItems.map((item) => {
+          const name = item.itemType === 'drill' ? (item as any).drillName : (item as any).roundName;
+          const deleteType = item.itemType === 'drill' ? 'scheduled_drill' as const : 'scheduled_round' as const;
+          return (
+            <View key={item.id} style={[styles.scheduleCard, isDark && { backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.1)' }]}>
+              <View style={styles.scheduleCardTop}>
+                <View style={styles.scheduleCardNameRow}>
+                  <View style={[styles.scheduleTypeBadge, item.itemType === 'round' ? { backgroundColor: '#3B82F6' } : { backgroundColor: '#2E7D32' }]}>
+                    <Text style={styles.scheduleTypeBadgeText}>{item.itemType === 'round' ? 'Round' : 'Drill'}</Text>
+                  </View>
+                  <Text style={[styles.scheduleCardName, isDark && { color: '#FFFFFF' }]} numberOfLines={1}>{name}</Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => {
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    setDeleteConfirm({ id: item.id, name, type: deleteType });
+                  }}
+                  style={[styles.deleteBtn, isDark && { backgroundColor: 'rgba(255,59,48,0.2)' }]}
+                >
+                  <Trash2 size={14} color="#FF3B30" />
+                </TouchableOpacity>
               </View>
-              <View style={styles.metaItem}>
-                <Clock size={13} color={isDark ? 'rgba(255,255,255,0.5)' : '#888'} />
-                <Text style={[styles.metaText, isDark && { color: 'rgba(255,255,255,0.6)' }]}>{item.time}</Text>
+              <View style={styles.scheduleCardMeta}>
+                <View style={styles.metaItem}>
+                  <Calendar size={13} color={isDark ? 'rgba(255,255,255,0.5)' : '#888'} />
+                  <Text style={[styles.metaText, isDark && { color: 'rgba(255,255,255,0.6)' }]}>{item.date}</Text>
+                </View>
+                <View style={styles.metaItem}>
+                  <Clock size={13} color={isDark ? 'rgba(255,255,255,0.5)' : '#888'} />
+                  <Text style={[styles.metaText, isDark && { color: 'rgba(255,255,255,0.6)' }]}>{item.time}</Text>
+                </View>
               </View>
             </View>
-          </View>
-        ))}
+          );
+        })}
       </View>
     );
   };
 
   const renderStorageTab = () => {
-    if (crewDrills.length === 0) {
+    const hasItems = crewDrills.length > 0 || crewRounds.length > 0;
+    if (!hasItems) {
       return (
         <View style={styles.emptyState}>
           <View style={[styles.emptyIcon, isDark && { backgroundColor: 'rgba(255,255,255,0.1)' }]}>
@@ -181,7 +302,7 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
           </View>
           <Text style={[styles.emptyTitle, isDark && { color: '#FFFFFF' }]}>Storage</Text>
           <Text style={[styles.emptyText, isDark && { color: 'rgba(255,255,255,0.5)' }]}>
-            No drills saved yet. Create drills from the Create screen.
+            No items saved yet. Create drills or rounds from the Create screen.
           </Text>
         </View>
       );
@@ -189,6 +310,9 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
 
     return (
       <View style={styles.cardList}>
+        {crewDrills.length > 0 && (
+          <Text style={[styles.storageSectionLabel, isDark && { color: 'rgba(255,255,255,0.5)' }]}>DRILLS</Text>
+        )}
         {crewDrills.map((drill) => (
           <TouchableOpacity
             key={drill.id}
@@ -226,27 +350,174 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
           </TouchableOpacity>
         ))}
 
-        <TouchableOpacity
-          style={styles.scheduleDrillsBtn}
-          onPress={() => {
-            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            setSelectedDrillIds([]);
-            setScheduleDate('');
-            setScheduleTime('');
-            setSchedulePickerVisible(true);
-          }}
-          activeOpacity={0.8}
-        >
-          <LinearGradient
-            colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.scheduleDrillsBtnGradient}
+        {crewRounds.length > 0 && (
+          <Text style={[styles.storageSectionLabel, isDark && { color: 'rgba(255,255,255,0.5)' }, crewDrills.length > 0 && { marginTop: 16 }]}>ROUNDS</Text>
+        )}
+        {crewRounds.map((round) => (
+          <TouchableOpacity
+            key={round.id}
+            style={[styles.drillCard, isDark && { backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.1)' }]}
+            onPress={() => {
+              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setRoundDetailVisible(round);
+            }}
+            activeOpacity={0.7}
           >
-            <Calendar size={18} color="#FFFFFF" />
-            <Text style={styles.scheduleDrillsBtnText}>Schedule Drills</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+            <View style={styles.drillCardTop}>
+              <View style={styles.drillCardLeft}>
+                <View style={[styles.categoryDot, { backgroundColor: '#3B82F6' }]} />
+                <Text style={[styles.drillCardName, isDark && { color: '#FFFFFF' }]}>{round.name}</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  setDeleteConfirm({ id: round.id, name: round.name, type: 'round' });
+                }}
+                style={[styles.deleteBtn, isDark && { backgroundColor: 'rgba(255,59,48,0.2)' }]}
+              >
+                <Trash2 size={14} color="#FF3B30" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.drillCardMeta}>
+              <View style={styles.roundMetaRow}>
+                {round.courseName ? (
+                  <View style={styles.roundMetaItem}>
+                    <MapPin size={12} color={isDark ? 'rgba(255,255,255,0.5)' : '#888'} />
+                    <Text style={[styles.drillCardCategory, isDark && { color: 'rgba(255,255,255,0.5)' }]}>{round.courseName}</Text>
+                  </View>
+                ) : null}
+                <View style={styles.roundMetaItem}>
+                  <Users size={12} color={isDark ? 'rgba(255,255,255,0.5)' : '#888'} />
+                  <Text style={[styles.drillCardStats, isDark && { color: 'rgba(255,255,255,0.5)' }]}>
+                    {round.groups.length} group{round.groups.length > 1 ? 's' : ''}
+                  </Text>
+                </View>
+              </View>
+              <Text style={[styles.drillCardStats, isDark && { color: 'rgba(255,255,255,0.5)' }]}>
+                {getHoleLabel(round.holeOption)}
+              </Text>
+            </View>
+            <Text style={[styles.drillCardDate, isDark && { color: 'rgba(255,255,255,0.3)' }]}>
+              Created {formatDate(round.createdAt)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+
+        <View style={styles.scheduleButtonsRow}>
+          {crewDrills.length > 0 && (
+            <TouchableOpacity
+              style={styles.scheduleDrillsBtn}
+              onPress={() => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                setScheduleType('drill');
+                setSelectedIds([]);
+                setScheduleTime('');
+                setSelectedDay(null);
+                setSchedulePickerVisible(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.scheduleDrillsBtnGradient}
+              >
+                <Calendar size={16} color="#FFFFFF" />
+                <Text style={styles.scheduleDrillsBtnText}>Schedule Drills</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+          {crewRounds.length > 0 && (
+            <TouchableOpacity
+              style={styles.scheduleDrillsBtn}
+              onPress={() => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                setScheduleType('round');
+                setSelectedIds([]);
+                setScheduleTime('');
+                setSelectedDay(null);
+                setSchedulePickerVisible(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={['#60A5FA', '#3B82F6', '#2563EB']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.scheduleDrillsBtnGradient}
+              >
+                <Calendar size={16} color="#FFFFFF" />
+                <Text style={styles.scheduleDrillsBtnText}>Schedule Rounds</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    );
+  };
+
+  const renderCalendar = () => {
+    const today = new Date();
+    const isCurrentMonth = calendarYear === today.getFullYear() && calendarMonth === today.getMonth();
+
+    return (
+      <View style={[styles.calendarContainer, isDark && { backgroundColor: 'rgba(255,255,255,0.06)' }]}>
+        <View style={styles.calendarHeader}>
+          <TouchableOpacity onPress={handlePrevMonth} style={styles.calendarNavBtn}>
+            <ChevronLeft size={20} color={isDark ? '#FFFFFF' : '#1A1A1A'} />
+          </TouchableOpacity>
+          <Text style={[styles.calendarMonthText, isDark && { color: '#FFFFFF' }]}>
+            {MONTH_NAMES[calendarMonth]} {calendarYear}
+          </Text>
+          <TouchableOpacity onPress={handleNextMonth} style={styles.calendarNavBtn}>
+            <ChevronRight size={20} color={isDark ? '#FFFFFF' : '#1A1A1A'} />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.calendarDayNames}>
+          {DAY_NAMES.map((name) => (
+            <View key={name} style={styles.calendarDayNameCell}>
+              <Text style={[styles.calendarDayNameText, isDark && { color: 'rgba(255,255,255,0.4)' }]}>{name}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.calendarGrid}>
+          {calendarDays.map((item, idx) => {
+            const isSelected = item.isCurrentMonth && item.day === selectedDay;
+            const isToday = isCurrentMonth && item.isCurrentMonth && item.day === today.getDate();
+            return (
+              <TouchableOpacity
+                key={idx}
+                style={[
+                  styles.calendarDayCell,
+                  isSelected && styles.calendarDayCellSelected,
+                  isSelected && isDark && { backgroundColor: '#FFFFFF' },
+                ]}
+                onPress={() => {
+                  if (item.isCurrentMonth) {
+                    setSelectedDay(item.day);
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  }
+                }}
+                activeOpacity={item.isCurrentMonth ? 0.7 : 1}
+                disabled={!item.isCurrentMonth}
+              >
+                <Text style={[
+                  styles.calendarDayText,
+                  !item.isCurrentMonth && styles.calendarDayTextMuted,
+                  isDark && item.isCurrentMonth && { color: '#FFFFFF' },
+                  isDark && !item.isCurrentMonth && { color: 'rgba(255,255,255,0.2)' },
+                  isSelected && { color: isDark ? '#1A1A1A' : '#FFFFFF' },
+                  isToday && !isSelected && { color: '#3B82F6' },
+                ]}>
+                  {item.day}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
     );
   };
@@ -313,6 +584,7 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
         {activeTab === 'Schedule' ? renderScheduleTab() : renderStorageTab()}
       </ScrollView>
 
+      {/* Drill Detail Modal */}
       <Modal
         visible={drillDetailVisible !== null}
         transparent
@@ -367,6 +639,64 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
         </View>
       </Modal>
 
+      {/* Round Detail Modal */}
+      <Modal
+        visible={roundDetailVisible !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setRoundDetailVisible(null)}
+      >
+        <View style={styles.detailOverlay}>
+          <View style={[styles.detailCard, isDark && { backgroundColor: bgColor }]}>
+            <View style={styles.detailHeader}>
+              <Text style={styles.detailTitle}>{roundDetailVisible?.name}</Text>
+              <TouchableOpacity onPress={() => setRoundDetailVisible(null)}>
+                <X size={22} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.detailDivider} />
+            {roundDetailVisible?.courseName ? (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Course</Text>
+                <Text style={styles.detailValue}>{roundDetailVisible.courseName}</Text>
+              </View>
+            ) : null}
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Holes</Text>
+              <Text style={styles.detailValue}>{getHoleLabel(roundDetailVisible?.holeOption ?? '18')}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Groups</Text>
+              <Text style={styles.detailValue}>{roundDetailVisible?.groups.length}</Text>
+            </View>
+            {roundDetailVisible?.groups.map((group, gIdx) => (
+              <View key={group.id}>
+                <View style={styles.detailDivider} />
+                <Text style={styles.detailSubheader}>Group {gIdx + 1}</Text>
+                {group.players.length === 0 ? (
+                  <Text style={styles.detailInfo}>No players assigned</Text>
+                ) : (
+                  group.players.map((pid, pIdx) => (
+                    <View key={pIdx} style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>Player {pIdx + 1}</Text>
+                      <Text style={styles.detailValue}>{getPlayerName(pid)}</Text>
+                    </View>
+                  ))
+                )}
+              </View>
+            ))}
+            {roundDetailVisible?.info ? (
+              <>
+                <View style={styles.detailDivider} />
+                <Text style={styles.detailSubheader}>Info</Text>
+                <Text style={styles.detailInfo}>{roundDetailVisible.info}</Text>
+              </>
+            ) : null}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Schedule Picker Modal with Calendar */}
       <Modal
         visible={schedulePickerVisible}
         animationType="slide"
@@ -378,43 +708,65 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
             <TouchableOpacity onPress={() => setSchedulePickerVisible(false)}>
               <X size={22} color={isDark ? '#FFFFFF' : '#1A1A1A'} />
             </TouchableOpacity>
-            <Text style={[styles.schedulePickerTitle, isDark && { color: '#FFFFFF' }]}>Schedule Drills</Text>
+            <Text style={[styles.schedulePickerTitle, isDark && { color: '#FFFFFF' }]}>
+              Schedule {scheduleType === 'drill' ? 'Drills' : 'Rounds'}
+            </Text>
             <View style={{ width: 22 }} />
           </View>
 
           <ScrollView style={styles.scrollView} contentContainerStyle={styles.schedulePickerContent} showsVerticalScrollIndicator={false}>
-            <Text style={[styles.schedulePickerLabel, isDark && { color: 'rgba(255,255,255,0.6)' }]}>SELECT DRILLS</Text>
-            {crewDrills.map((drill) => {
-              const isSelected = selectedDrillIds.includes(drill.id);
-              return (
-                <TouchableOpacity
-                  key={drill.id}
-                  style={[styles.schedulePickerDrill, isDark && { backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.08)' }]}
-                  onPress={() => toggleDrillSelection(drill.id)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.schedulePickerDrillInfo}>
-                    <View style={[styles.categoryDot, { backgroundColor: getCategoryColor(drill.category) }]} />
-                    <Text style={[styles.schedulePickerDrillName, isDark && { color: '#FFFFFF' }]}>{drill.name}</Text>
-                  </View>
-                  <View style={[styles.schedulePickerCheck, isSelected && styles.schedulePickerCheckActive]}>
-                    {isSelected && <Check size={14} color="#FFFFFF" strokeWidth={3} />}
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
+            <Text style={[styles.schedulePickerLabel, isDark && { color: 'rgba(255,255,255,0.6)' }]}>
+              SELECT {scheduleType === 'drill' ? 'DRILLS' : 'ROUNDS'}
+            </Text>
+            {scheduleType === 'drill' ? (
+              crewDrills.map((drill) => {
+                const isSelected = selectedIds.includes(drill.id);
+                return (
+                  <TouchableOpacity
+                    key={drill.id}
+                    style={[styles.schedulePickerDrill, isDark && { backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.08)' }]}
+                    onPress={() => toggleSelection(drill.id)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.schedulePickerDrillInfo}>
+                      <View style={[styles.categoryDot, { backgroundColor: getCategoryColor(drill.category) }]} />
+                      <Text style={[styles.schedulePickerDrillName, isDark && { color: '#FFFFFF' }]}>{drill.name}</Text>
+                    </View>
+                    <View style={[styles.schedulePickerCheck, isSelected && styles.schedulePickerCheckActive]}>
+                      {isSelected && <Check size={14} color="#FFFFFF" strokeWidth={3} />}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })
+            ) : (
+              crewRounds.map((round) => {
+                const isSelected = selectedIds.includes(round.id);
+                return (
+                  <TouchableOpacity
+                    key={round.id}
+                    style={[styles.schedulePickerDrill, isDark && { backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.08)' }]}
+                    onPress={() => toggleSelection(round.id)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.schedulePickerDrillInfo}>
+                      <View style={[styles.categoryDot, { backgroundColor: '#3B82F6' }]} />
+                      <Text style={[styles.schedulePickerDrillName, isDark && { color: '#FFFFFF' }]}>{round.name}</Text>
+                    </View>
+                    <View style={[styles.schedulePickerCheck, isSelected && styles.schedulePickerCheckActive]}>
+                      {isSelected && <Check size={14} color="#FFFFFF" strokeWidth={3} />}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })
+            )}
 
             <Text style={[styles.schedulePickerLabel, isDark && { color: 'rgba(255,255,255,0.6)' }, { marginTop: 24 }]}>DATE</Text>
-            <View style={[styles.schedulePickerInput, isDark && { backgroundColor: 'rgba(255,255,255,0.12)' }]}>
-              <Calendar size={16} color={isDark ? 'rgba(255,255,255,0.4)' : '#888'} />
-              <TextInput
-                style={[styles.schedulePickerInputText, isDark && { color: '#FFFFFF' }]}
-                placeholder="e.g. 2026-03-20"
-                placeholderTextColor={isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.3)'}
-                value={scheduleDate}
-                onChangeText={setScheduleDate}
-              />
-            </View>
+            {renderCalendar()}
+            {selectedDay && (
+              <Text style={[styles.selectedDateText, isDark && { color: 'rgba(255,255,255,0.7)' }]}>
+                Selected: {selectedDateString}
+              </Text>
+            )}
 
             <Text style={[styles.schedulePickerLabel, isDark && { color: 'rgba(255,255,255,0.6)' }, { marginTop: 16 }]}>TIME</Text>
             <View style={[styles.schedulePickerInput, isDark && { backgroundColor: 'rgba(255,255,255,0.12)' }]}>
@@ -431,10 +783,10 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
             <TouchableOpacity
               onPress={handleSaveSchedule}
               activeOpacity={0.8}
-              style={[styles.schedulePickerSaveOuter, { opacity: selectedDrillIds.length > 0 && scheduleDate.trim() && scheduleTime.trim() ? 1 : 0.5 }]}
+              style={[styles.schedulePickerSaveOuter, { opacity: selectedIds.length > 0 && selectedDateString && scheduleTime.trim() ? 1 : 0.5 }]}
             >
               <LinearGradient
-                colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
+                colors={scheduleType === 'drill' ? ['#86D9A5', '#5BBF7F', '#3A8E56'] : ['#60A5FA', '#3B82F6', '#2563EB']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.schedulePickerSaveBtn}
@@ -446,6 +798,7 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
         </View>
       </Modal>
 
+      {/* Delete Confirmation Modal */}
       <Modal
         visible={deleteConfirm !== null}
         transparent
@@ -465,7 +818,7 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
                 <Text style={styles.confirmNoBtnText}>No</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={handleDeleteDrill}
+                onPress={handleDeleteItem}
                 activeOpacity={0.7}
                 style={styles.confirmYesBtnOuter}
               >
@@ -598,6 +951,13 @@ const styles = StyleSheet.create({
   cardList: {
     gap: 12,
   },
+  storageSectionLabel: {
+    fontSize: 13,
+    fontWeight: '800' as const,
+    color: '#888',
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
   drillCard: {
     backgroundColor: '#F8F8F8',
     borderRadius: 16,
@@ -656,8 +1016,21 @@ const styles = StyleSheet.create({
     color: '#BBB',
     marginTop: 4,
   },
-  scheduleDrillsBtn: {
+  roundMetaRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 14,
+  },
+  roundMetaItem: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 4,
+  },
+  scheduleButtonsRow: {
+    gap: 10,
     marginTop: 8,
+  },
+  scheduleDrillsBtn: {
     borderRadius: 14,
     overflow: 'hidden' as const,
   },
@@ -686,6 +1059,23 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     justifyContent: 'space-between' as const,
     marginBottom: 10,
+  },
+  scheduleCardNameRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    flex: 1,
+    gap: 8,
+  },
+  scheduleTypeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  scheduleTypeBadgeText: {
+    fontSize: 10,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+    textTransform: 'uppercase' as const,
   },
   scheduleCardName: {
     fontSize: 16,
@@ -717,6 +1107,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#1A1A1A',
     borderRadius: 20,
     padding: 24,
+    maxHeight: '80%' as any,
   },
   detailHeader: {
     flexDirection: 'row' as const,
@@ -913,5 +1304,71 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800' as const,
     color: '#FFFFFF',
+  },
+  selectedDateText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#333',
+    marginTop: 10,
+    textAlign: 'center' as const,
+  },
+  calendarContainer: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 16,
+    padding: 16,
+    overflow: 'hidden' as const,
+  },
+  calendarHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    marginBottom: 16,
+  },
+  calendarNavBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  calendarMonthText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#1A1A1A',
+  },
+  calendarDayNames: {
+    flexDirection: 'row' as const,
+    marginBottom: 8,
+  },
+  calendarDayNameCell: {
+    flex: 1,
+    alignItems: 'center' as const,
+  },
+  calendarDayNameText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#999',
+  },
+  calendarGrid: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+  },
+  calendarDayCell: {
+    width: '14.28%' as any,
+    aspectRatio: 1,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    borderRadius: 20,
+  },
+  calendarDayCellSelected: {
+    backgroundColor: '#2E7D32',
+  },
+  calendarDayText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#1A1A1A',
+  },
+  calendarDayTextMuted: {
+    color: '#D0D0D0',
   },
 });

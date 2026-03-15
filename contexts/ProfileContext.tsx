@@ -56,6 +56,8 @@ const CREW_PLAYERS_KEY = 'crew_players';
 const CREW_MANAGERS_KEY = 'crew_managers';
 const CREW_DRILLS_KEY = 'crew_drills';
 const CREW_SCHEDULED_KEY = 'crew_scheduled';
+const CREW_ROUNDS_KEY = 'crew_rounds';
+const CREW_SCHEDULED_ROUNDS_KEY = 'crew_scheduled_rounds';
 
 export interface CrewDrill {
   id: string;
@@ -73,6 +75,30 @@ export interface ScheduledDrill {
   id: string;
   drillId: string;
   drillName: string;
+  date: string;
+  time: string;
+  createdAt: number;
+}
+
+export interface CrewRoundGroup {
+  id: string;
+  players: string[];
+}
+
+export interface CrewRound {
+  id: string;
+  name: string;
+  groups: CrewRoundGroup[];
+  courseName: string;
+  holeOption: string;
+  info: string;
+  createdAt: number;
+}
+
+export interface ScheduledRound {
+  id: string;
+  roundId: string;
+  roundName: string;
   date: string;
   time: string;
   createdAt: number;
@@ -98,6 +124,8 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const [crewManagers, setCrewManagersState] = useState<string[]>([]);
   const [crewDrills, setCrewDrillsState] = useState<CrewDrill[]>([]);
   const [crewScheduled, setCrewScheduledState] = useState<ScheduledDrill[]>([]);
+  const [crewRounds, setCrewRoundsState] = useState<CrewRound[]>([]);
+  const [crewScheduledRounds, setCrewScheduledRoundsState] = useState<ScheduledRound[]>([]);
 
   useEffect(() => {
     AsyncStorage.getItem(BG_IMAGE_KEY).then((val) => {
@@ -132,6 +160,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     }).catch(() => {});
     AsyncStorage.getItem(CREW_SCHEDULED_KEY).then((val) => {
       if (val) setCrewScheduledState(JSON.parse(val));
+    }).catch(() => {});
+    AsyncStorage.getItem(CREW_ROUNDS_KEY).then((val) => {
+      if (val) setCrewRoundsState(JSON.parse(val));
+    }).catch(() => {});
+    AsyncStorage.getItem(CREW_SCHEDULED_ROUNDS_KEY).then((val) => {
+      if (val) setCrewScheduledRoundsState(JSON.parse(val));
     }).catch(() => {});
   }, []);
 
@@ -339,6 +373,34 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     await AsyncStorage.setItem(CREW_SCHEDULED_KEY, JSON.stringify(updated));
   }, [crewScheduled]);
 
+  const saveCrewRound = useCallback(async (round: CrewRound) => {
+    console.log('[ProfileContext] Saving crew round:', round.name);
+    const updated = [...crewRounds, round];
+    setCrewRoundsState(updated);
+    await AsyncStorage.setItem(CREW_ROUNDS_KEY, JSON.stringify(updated));
+  }, [crewRounds]);
+
+  const deleteCrewRound = useCallback(async (roundId: string) => {
+    console.log('[ProfileContext] Deleting crew round:', roundId);
+    const updated = crewRounds.filter((r) => r.id !== roundId);
+    setCrewRoundsState(updated);
+    await AsyncStorage.setItem(CREW_ROUNDS_KEY, JSON.stringify(updated));
+  }, [crewRounds]);
+
+  const saveScheduledRound = useCallback(async (scheduled: ScheduledRound) => {
+    console.log('[ProfileContext] Saving scheduled round:', scheduled.roundName);
+    const updated = [...crewScheduledRounds, scheduled];
+    setCrewScheduledRoundsState(updated);
+    await AsyncStorage.setItem(CREW_SCHEDULED_ROUNDS_KEY, JSON.stringify(updated));
+  }, [crewScheduledRounds]);
+
+  const deleteScheduledRound = useCallback(async (scheduledId: string) => {
+    console.log('[ProfileContext] Deleting scheduled round:', scheduledId);
+    const updated = crewScheduledRounds.filter((s) => s.id !== scheduledId);
+    setCrewScheduledRoundsState(updated);
+    await AsyncStorage.setItem(CREW_SCHEDULED_ROUNDS_KEY, JSON.stringify(updated));
+  }, [crewScheduledRounds]);
+
   const saveCrewSettings = useCallback(async (settings: CrewSettings) => {
     console.log('[ProfileContext] Saving crew settings:', settings.name, settings.color);
     setCrewNameState(settings.name);
@@ -450,6 +512,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     crewScheduled,
     saveScheduledDrill,
     deleteScheduledDrill,
+    crewRounds,
+    saveCrewRound,
+    deleteCrewRound,
+    crewScheduledRounds,
+    saveScheduledRound,
+    deleteScheduledRound,
     saveCrewSettings,
   }), [
     userId,
@@ -482,6 +550,12 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     crewScheduled,
     saveScheduledDrill,
     deleteScheduledDrill,
+    crewRounds,
+    saveCrewRound,
+    deleteCrewRound,
+    crewScheduledRounds,
+    saveScheduledRound,
+    deleteScheduledRound,
     saveCrewSettings,
   ]);
 });
