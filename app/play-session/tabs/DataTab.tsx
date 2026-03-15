@@ -35,7 +35,12 @@ const SG_TITLES: Record<string, string> = {
   p: 'Putting',
 };
 
-export default function DataTab() {
+interface DataTabProps {
+  hideQuitButton?: boolean;
+  bottomOverride?: React.ReactNode;
+}
+
+export default function DataTab({ hideQuitButton, bottomOverride }: DataTabProps = {}) {
   const { quitSession } = useSession();
   const { allScores, holes } = useScoring();
   const { isPaired } = useSensor();
@@ -115,9 +120,11 @@ export default function DataTab() {
         </ScrollView>
       )}
 
-      <TouchableOpacity style={styles.quitButton} onPress={() => setShowQuitConfirm(true)}>
-        <Text style={styles.quitText}>Quit Round</Text>
-      </TouchableOpacity>
+      {bottomOverride ? bottomOverride : !hideQuitButton && (
+        <TouchableOpacity style={styles.quitButton} onPress={() => setShowQuitConfirm(true)}>
+          <Text style={styles.quitText}>Quit Round</Text>
+        </TouchableOpacity>
+      )}
 
       <Modal
         visible={showDistancesModal}

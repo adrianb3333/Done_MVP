@@ -69,6 +69,7 @@ function CrewRoundContent({ session }: CrewRoundModeProps) {
   const [allPlayersFinished, _setAllPlayersFinished] = useState<boolean>(false);
   const [showFinalSummary, setShowFinalSummary] = useState<boolean>(false);
   const [showCrewLeaderboard, setShowCrewLeaderboard] = useState<boolean>(false);
+  const [leaderboardSegment, setLeaderboardSegment] = useState<'score' | 'leaderboard'>('score');
   const [showDataPlayerPicker, setShowDataPlayerPicker] = useState<boolean>(false);
   const [selectedDataPlayer, setSelectedDataPlayer] = useState<string | null>(null);
 
@@ -275,7 +276,28 @@ function CrewRoundContent({ session }: CrewRoundModeProps) {
         />
       );
       case 'wind': return <WindTab externalDistance={gpsDistance} externalAdjustedDistance={gpsAdjustedDistance} />;
-      case 'data': return <DataTab />;
+      case 'data': return (
+        <DataTab
+          hideQuitButton
+          bottomOverride={
+            <TouchableOpacity
+              style={styles.playerSelectButton}
+              onPress={() => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setShowDataPlayerPicker(true);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.playerSelectText}>
+                {selectedDataPlayer
+                  ? (allUsers.find((u) => u.id === selectedDataPlayer)?.display_name ||
+                     allUsers.find((u) => u.id === selectedDataPlayer)?.username || 'Player')
+                  : 'You'}
+              </Text>
+            </TouchableOpacity>
+          }
+        />
+      );
     }
   };
 
@@ -349,33 +371,86 @@ function CrewRoundContent({ session }: CrewRoundModeProps) {
             <View style={styles.leaderboardHeader}>
               <View style={styles.leaderboardHeaderLeft}>
                 <Trophy size={18} color="#FFD700" />
-                <Text style={styles.leaderboardTitle}>Crew Leaderboard</Text>
+                <Text style={styles.leaderboardTitle}>
+                  {leaderboardSegment === 'score' ? 'Scoreboard' : 'Leaderboard'}
+                </Text>
               </View>
               <TouchableOpacity onPress={() => setShowCrewLeaderboard(false)}>
                 <X size={22} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {crewStandings.map((player, idx) => (
-                <View key={player.playerId} style={[styles.leaderboardRow, idx === 0 && { backgroundColor: 'rgba(255,215,0,0.06)' }]}>
-                  <Text style={[styles.leaderboardRank, idx === 0 && { color: '#FFD700' }]}>#{idx + 1}</Text>
-                  {player.avatar ? (
-                    <Image source={{ uri: player.avatar }} style={styles.leaderboardAvatar} />
-                  ) : (
-                    <View style={styles.leaderboardAvatarPlaceholder}>
-                      <Text style={styles.leaderboardInitial}>{player.name.charAt(0).toUpperCase()}</Text>
+
+            {leaderboardSegment === 'score' ? (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {crewStandings.map((player, idx) => (
+                  <View key={player.playerId} style={[styles.leaderboardRow, idx === 0 && { backgroundColor: 'rgba(255,215,0,0.06)' }]}>
+                    <Text style={[styles.leaderboardRank, idx === 0 && { color: '#FFD700' }]}>#{idx + 1}</Text>
+                    {player.avatar ? (
+                      <Image source={{ uri: player.avatar }} style={styles.leaderboardAvatar} />
+                    ) : (
+                      <View style={styles.leaderboardAvatarPlaceholder}>
+                        <Text style={styles.leaderboardInitial}>{player.name.charAt(0).toUpperCase()}</Text>
+                      </View>
+                    )}
+                    <Text style={styles.leaderboardName} numberOfLines={1}>{player.name}</Text>
+                    <View style={styles.leaderboardScoreCol}>
+                      <Text style={[styles.leaderboardRelative, player.relativeScore <= 0 && { color: '#34C759' }]}>
+                        {formatRelative(player.relativeScore)}
+                      </Text>
+                      <Text style={styles.leaderboardStrokes}>{player.totalStrokes}</Text>
                     </View>
-                  )}
-                  <Text style={styles.leaderboardName} numberOfLines={1}>{player.name}</Text>
-                  <View style={styles.leaderboardScoreCol}>
-                    <Text style={[styles.leaderboardRelative, player.relativeScore <= 0 && { color: '#34C759' }]}>
+                  </View>
+                ))}
+              </ScrollView>
+            ) : (
+              <ScrollView showsVerticalScrollIndicator={false} style={styles.lbListScroll}>
+                {crewStandings.map((player, idx) => (
+                  <View key={player.playerId} style={styles.lbSimpleRow}>
+                    <View style={[
+                      styles.lbPlaceBadge,
+                      idx === 0 && { backgroundColor: '#FFD700' },
+                      idx === 1 && { backgroundColor: '#C0C0C0' },
+                      idx === 2 && { backgroundColor: '#CD7F32' },
+                    ]}>
+                      <Text style={[styles.lbPlaceText, idx < 3 && { color: '#0A0A0A' }]}>{idx + 1}</Text>
+                    </View>
+                    <Text style={styles.lbPlayerName} numberOfLines={1}>{player.name}</Text>
+                    <Text style={[
+                      styles.lbPlayerScore,
+                      player.relativeScore < 0 && { color: '#34C759' },
+                      player.relativeScore > 0 && { color: '#FF6B6B' },
+                    ]}>
                       {formatRelative(player.relativeScore)}
                     </Text>
-                    <Text style={styles.leaderboardStrokes}>{player.totalStrokes}</Text>
                   </View>
-                </View>
-              ))}
-            </ScrollView>
+                ))}
+              </ScrollView>
+            )}
+
+            <View style={styles.lbSegmentContainer}>
+              <View style={styles.lbSegmentBar}>
+                <TouchableOpacity
+                  style={[styles.lbSegmentBtn, leaderboardSegment === 'score' && styles.lbSegmentBtnActive]}
+                  onPress={() => {
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setLeaderboardSegment('score');
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.lbSegmentText, leaderboardSegment === 'score' && styles.lbSegmentTextActive]}>Score</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.lbSegmentBtn, leaderboardSegment === 'leaderboard' && styles.lbSegmentBtnActive]}
+                  onPress={() => {
+                    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setLeaderboardSegment('leaderboard');
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.lbSegmentText, leaderboardSegment === 'leaderboard' && styles.lbSegmentTextActive]}>Leaderboard</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
         </View>
       </Modal>
@@ -639,4 +714,88 @@ const styles = StyleSheet.create({
   },
   pickerAvatarInitial: { fontSize: 13, fontWeight: '700' as const, color: 'rgba(255,255,255,0.5)' },
   pickerRowText: { flex: 1, fontSize: 15, fontWeight: '600' as const, color: '#FFFFFF' },
+  playerSelectButton: {
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center' as const,
+    marginTop: 12,
+    marginHorizontal: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.18)',
+  },
+  playerSelectText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600' as const,
+  },
+  lbListScroll: {
+    flex: 1,
+  },
+  lbSimpleRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
+    gap: 12,
+  },
+  lbPlaceBadge: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  lbPlaceText: {
+    fontSize: 13,
+    fontWeight: '800' as const,
+    color: 'rgba(255,255,255,0.5)',
+  },
+  lbPlayerName: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: '#FFFFFF',
+  },
+  lbPlayerScore: {
+    fontSize: 18,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
+  },
+  lbSegmentContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.08)',
+  },
+  lbSegmentBar: {
+    flexDirection: 'row' as const,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 10,
+    padding: 3,
+  },
+  lbSegmentBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center' as const,
+  },
+  lbSegmentBtnActive: {
+    backgroundColor: '#3D954D',
+  },
+  lbSegmentText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: 'rgba(255,255,255,0.45)',
+  },
+  lbSegmentTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700' as const,
+  },
 });
