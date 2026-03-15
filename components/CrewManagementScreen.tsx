@@ -80,15 +80,23 @@ export default function CrewManagementScreen({ onClose }: CrewManagementScreenPr
   const toggleUser = useCallback((userId: string) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (pickerMode === 'players') {
+      if (selectedManagers.includes(userId)) {
+        Alert.alert('Already a Manager', 'This user is already added as a manager. Remove them from managers first.');
+        return;
+      }
       setSelectedPlayers((prev) =>
         prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
       );
     } else if (pickerMode === 'managers') {
+      if (selectedPlayers.includes(userId)) {
+        Alert.alert('Already a Player', 'This user is already added as a player. Remove them from players first.');
+        return;
+      }
       setSelectedManagers((prev) =>
         prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
       );
     }
-  }, [pickerMode]);
+  }, [pickerMode, selectedManagers, selectedPlayers]);
 
   const selectedSet = pickerMode === 'players' ? selectedPlayers : selectedManagers;
 

@@ -66,7 +66,7 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
   } = useProfile();
   const bgColor = crewColor || '#FFFFFF';
   const isDark = bgColor !== '#FFFFFF';
-  const [activeTab, setActiveTab] = useState<Tab>('Schedule');
+  const [activeTab, setActiveTab] = useState<Tab>(crewRole === 'player' ? 'Storage' : 'Schedule');
   const indicatorAnim = useRef(new Animated.Value(0)).current;
 
   const [drillDetailVisible, setDrillDetailVisible] = useState<CrewDrill | null>(null);
@@ -682,39 +682,41 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
           <View style={{ width: 40 }} />
         </View>
 
-        <View style={styles.segmentContainer}>
-          <View style={styles.segmentRow}>
-            {TABS.map((tab) => (
-              <TouchableOpacity
-                key={tab}
-                onPress={() => handleTabPress(tab)}
-                style={styles.segmentTab}
-                activeOpacity={0.7}
-                testID={`crew-schedule-tab-${tab.toLowerCase()}`}
-              >
-                <Text
-                  style={[
-                    styles.segmentLabel,
-                    isDark && { color: 'rgba(255,255,255,0.5)' },
-                    activeTab === tab && styles.segmentLabelActive,
-                    activeTab === tab && isDark && { color: '#FFFFFF' },
-                  ]}
+        {crewRole !== 'player' && (
+          <View style={styles.segmentContainer}>
+            <View style={styles.segmentRow}>
+              {TABS.map((tab) => (
+                <TouchableOpacity
+                  key={tab}
+                  onPress={() => handleTabPress(tab)}
+                  style={styles.segmentTab}
+                  activeOpacity={0.7}
+                  testID={`crew-schedule-tab-${tab.toLowerCase()}`}
                 >
-                  {tab}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text
+                    style={[
+                      styles.segmentLabel,
+                      isDark && { color: 'rgba(255,255,255,0.5)' },
+                      activeTab === tab && styles.segmentLabelActive,
+                      activeTab === tab && isDark && { color: '#FFFFFF' },
+                    ]}
+                  >
+                    {tab}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View style={[styles.segmentTrack, isDark && { backgroundColor: 'rgba(255,255,255,0.1)' }]}>
+              <Animated.View
+                style={[
+                  styles.segmentIndicator,
+                  isDark && { backgroundColor: '#FFFFFF' },
+                  { width: tabWidth, transform: [{ translateX: indicatorTranslateX }] },
+                ]}
+              />
+            </View>
           </View>
-          <View style={[styles.segmentTrack, isDark && { backgroundColor: 'rgba(255,255,255,0.1)' }]}>
-            <Animated.View
-              style={[
-                styles.segmentIndicator,
-                isDark && { backgroundColor: '#FFFFFF' },
-                { width: tabWidth, transform: [{ translateX: indicatorTranslateX }] },
-              ]}
-            />
-          </View>
-        </View>
+        )}
       </View>
 
       <ScrollView

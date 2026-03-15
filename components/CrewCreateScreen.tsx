@@ -308,20 +308,12 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
     try {
       await saveCrewRound(round);
       console.log('[CrewCreate] Round saved:', round.name);
-      Alert.alert('Round Saved', `"${round.name}" has been saved to Storage.`);
-      setRoundName('');
-      setRoundGroups([{ id: '1', players: [null, null, null, null] }]);
-      setRoundCourseName('');
-      setRoundCourseClubName('');
-      setRoundCourseCity('');
-      setRoundCourseCountry('');
-      setRoundHoleOption('18');
-      setRoundInfo('');
+      onClose();
     } catch (err: any) {
       console.log('[CrewCreate] Save round error:', err.message);
       Alert.alert('Error', 'Failed to save round.');
     }
-  }, [roundName, roundGroups, roundCourseName, roundCourseClubName, roundCourseCity, roundCourseCountry, roundHoleOption, roundInfo, saveCrewRound]);
+  }, [roundName, roundGroups, roundCourseName, roundCourseClubName, roundCourseCity, roundCourseCountry, roundHoleOption, roundInfo, saveCrewRound, onClose]);
 
   const getPlayerName = useCallback((playerId: string) => {
     const user = allUsers.find((u) => u.id === playerId);
@@ -523,18 +515,12 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
     try {
       await saveCrewDrill(drill);
       console.log('[CrewCreate] Drill saved:', drill.name);
-      Alert.alert('Drill Saved', `"${drill.name}" has been saved to Storage.`);
-      setDrillName('');
-      setSelectedCategory('Putting');
-      setSelectedRounds(3);
-      setSelectedShots(10);
-      setAcceptedDistances(['', '', '']);
-      setDrillInfo('');
+      onClose();
     } catch (err: any) {
       console.log('[CrewCreate] Save drill error:', err.message);
       Alert.alert('Error', 'Failed to save drill.');
     }
-  }, [drillName, selectedCategory, selectedRounds, selectedShots, totalShots, acceptedDistances, drillInfo, saveCrewDrill]);
+  }, [drillName, selectedCategory, selectedRounds, selectedShots, totalShots, acceptedDistances, drillInfo, saveCrewDrill, onClose]);
 
   const renderDrillContent = () => {
     return (
@@ -1187,21 +1173,12 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
     try {
       await saveCrewTournament(tournament);
       console.log('[CrewCreate] Tournament saved:', tournament.name);
-      Alert.alert('Tournament Saved', `"${tournament.name}" has been saved to Storage.`);
-      setTournamentName('');
-      setTournamentInfo('');
-      setTournamentCourseName('');
-      setTournamentCourseClubName('');
-      setTournamentCourseCity('');
-      setTournamentCourseCountry('');
-      setTournamentHoleOption('18');
-      setTournamentFormat('');
-      setTournamentGroups([{ id: '1', players: [null, null, null, null] }]);
+      onClose();
     } catch (err: any) {
       console.log('[CrewCreate] Save tournament error:', err.message);
       Alert.alert('Error', 'Failed to save tournament.');
     }
-  }, [tournamentName, tournamentInfo, tournamentCourseName, tournamentCourseClubName, tournamentCourseCity, tournamentCourseCountry, tournamentHoleOption, tournamentFormat, tournamentGroups, saveCrewTournament]);
+  }, [tournamentName, tournamentInfo, tournamentCourseName, tournamentCourseClubName, tournamentCourseCity, tournamentCourseCountry, tournamentHoleOption, tournamentFormat, tournamentGroups, saveCrewTournament, onClose]);
 
   const renderTournamentContent = () => {
     return (
