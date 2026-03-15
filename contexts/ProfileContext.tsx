@@ -47,21 +47,25 @@ function resolveProfileAvatar(profile: UserProfile): UserProfile {
   return { ...profile, avatar_url: resolveAvatarUrl(profile.avatar_url) };
 }
 
-const BG_IMAGE_KEY = 'profile_background_image';
-const COACH_MODE_KEY = 'coach_mode_activated';
-const CREW_NAME_KEY = 'crew_name';
-const CREW_COLOR_KEY = 'crew_color';
-const CREW_LOGO_KEY = 'crew_logo';
-const CREW_PLAYERS_KEY = 'crew_players';
-const CREW_MANAGERS_KEY = 'crew_managers';
-const CREW_DRILLS_KEY = 'crew_drills';
-const CREW_SCHEDULED_KEY = 'crew_scheduled';
-const CREW_ROUNDS_KEY = 'crew_rounds';
-const CREW_SCHEDULED_ROUNDS_KEY = 'crew_scheduled_rounds';
-const CREW_TOURNAMENTS_KEY = 'crew_tournaments';
-const CREW_SCHEDULED_TOURNAMENTS_KEY = 'crew_scheduled_tournaments';
-const CREW_INVITES_KEY = 'crew_invites';
-const CREW_MEMBERSHIP_KEY = 'crew_membership';
+const BG_IMAGE_KEY_PREFIX = 'profile_background_image';
+const COACH_MODE_KEY_PREFIX = 'coach_mode_activated';
+const CREW_NAME_KEY_PREFIX = 'crew_name';
+const CREW_COLOR_KEY_PREFIX = 'crew_color';
+const CREW_LOGO_KEY_PREFIX = 'crew_logo';
+const CREW_PLAYERS_KEY_PREFIX = 'crew_players';
+const CREW_MANAGERS_KEY_PREFIX = 'crew_managers';
+const CREW_DRILLS_KEY_PREFIX = 'crew_drills';
+const CREW_SCHEDULED_KEY_PREFIX = 'crew_scheduled';
+const CREW_ROUNDS_KEY_PREFIX = 'crew_rounds';
+const CREW_SCHEDULED_ROUNDS_KEY_PREFIX = 'crew_scheduled_rounds';
+const CREW_TOURNAMENTS_KEY_PREFIX = 'crew_tournaments';
+const CREW_SCHEDULED_TOURNAMENTS_KEY_PREFIX = 'crew_scheduled_tournaments';
+const CREW_INVITES_KEY_PREFIX = 'crew_invites';
+const CREW_MEMBERSHIP_KEY_PREFIX = 'crew_membership';
+
+function userKey(prefix: string, uid: string | null): string {
+  return uid ? `${prefix}_${uid}` : prefix;
+}
 
 export type CrewRole = 'leader' | 'manager' | 'player' | null;
 
@@ -191,61 +195,86 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
   const [crewMembershipRole, setCrewMembershipRoleState] = useState<CrewRole>(null);
 
   useEffect(() => {
-    AsyncStorage.getItem(BG_IMAGE_KEY).then((val) => {
+    if (!userId) {
+      setBackgroundImageUriState(null);
+      setIsCoachModeState(false);
+      setCrewNameState('');
+      setCrewColorState('#1A1A1A');
+      setCrewLogoState(null);
+      setCrewPlayersState([]);
+      setCrewManagersState([]);
+      setCrewDrillsState([]);
+      setCrewScheduledState([]);
+      setCrewRoundsState([]);
+      setCrewScheduledRoundsState([]);
+      setCrewTournamentsState([]);
+      setCrewScheduledTournamentsState([]);
+      setCrewInvitesState([]);
+      setCrewMembershipRoleState(null);
+      return;
+    }
+    console.log('[ProfileContext] Loading user-scoped storage for:', userId);
+    AsyncStorage.getItem(userKey(BG_IMAGE_KEY_PREFIX, userId)).then((val) => {
       if (val) {
         console.log('[ProfileContext] Loaded background image from storage');
         setBackgroundImageUriState(val);
+      } else {
+        setBackgroundImageUriState(null);
       }
     }).catch(() => {});
-    AsyncStorage.getItem(COACH_MODE_KEY).then((val) => {
+    AsyncStorage.getItem(userKey(COACH_MODE_KEY_PREFIX, userId)).then((val) => {
       if (val === 'true') {
         console.log('[ProfileContext] Coach mode loaded from storage');
         setIsCoachModeState(true);
+      } else {
+        setIsCoachModeState(false);
       }
     }).catch(() => {});
-    AsyncStorage.getItem(CREW_NAME_KEY).then((val) => {
-      if (val) setCrewNameState(val);
+    AsyncStorage.getItem(userKey(CREW_NAME_KEY_PREFIX, userId)).then((val) => {
+      setCrewNameState(val || '');
     }).catch(() => {});
-    AsyncStorage.getItem(CREW_COLOR_KEY).then((val) => {
-      if (val) setCrewColorState(val);
+    AsyncStorage.getItem(userKey(CREW_COLOR_KEY_PREFIX, userId)).then((val) => {
+      setCrewColorState(val || '#1A1A1A');
     }).catch(() => {});
-    AsyncStorage.getItem(CREW_LOGO_KEY).then((val) => {
-      if (val) setCrewLogoState(val);
+    AsyncStorage.getItem(userKey(CREW_LOGO_KEY_PREFIX, userId)).then((val) => {
+      setCrewLogoState(val || null);
     }).catch(() => {});
-    AsyncStorage.getItem(CREW_PLAYERS_KEY).then((val) => {
-      if (val) setCrewPlayersState(JSON.parse(val));
+    AsyncStorage.getItem(userKey(CREW_PLAYERS_KEY_PREFIX, userId)).then((val) => {
+      setCrewPlayersState(val ? JSON.parse(val) : []);
     }).catch(() => {});
-    AsyncStorage.getItem(CREW_MANAGERS_KEY).then((val) => {
-      if (val) setCrewManagersState(JSON.parse(val));
+    AsyncStorage.getItem(userKey(CREW_MANAGERS_KEY_PREFIX, userId)).then((val) => {
+      setCrewManagersState(val ? JSON.parse(val) : []);
     }).catch(() => {});
-    AsyncStorage.getItem(CREW_DRILLS_KEY).then((val) => {
-      if (val) setCrewDrillsState(JSON.parse(val));
+    AsyncStorage.getItem(userKey(CREW_DRILLS_KEY_PREFIX, userId)).then((val) => {
+      setCrewDrillsState(val ? JSON.parse(val) : []);
     }).catch(() => {});
-    AsyncStorage.getItem(CREW_SCHEDULED_KEY).then((val) => {
-      if (val) setCrewScheduledState(JSON.parse(val));
+    AsyncStorage.getItem(userKey(CREW_SCHEDULED_KEY_PREFIX, userId)).then((val) => {
+      setCrewScheduledState(val ? JSON.parse(val) : []);
     }).catch(() => {});
-    AsyncStorage.getItem(CREW_ROUNDS_KEY).then((val) => {
-      if (val) setCrewRoundsState(JSON.parse(val));
+    AsyncStorage.getItem(userKey(CREW_ROUNDS_KEY_PREFIX, userId)).then((val) => {
+      setCrewRoundsState(val ? JSON.parse(val) : []);
     }).catch(() => {});
-    AsyncStorage.getItem(CREW_SCHEDULED_ROUNDS_KEY).then((val) => {
-      if (val) setCrewScheduledRoundsState(JSON.parse(val));
+    AsyncStorage.getItem(userKey(CREW_SCHEDULED_ROUNDS_KEY_PREFIX, userId)).then((val) => {
+      setCrewScheduledRoundsState(val ? JSON.parse(val) : []);
     }).catch(() => {});
-    AsyncStorage.getItem(CREW_TOURNAMENTS_KEY).then((val) => {
-      if (val) setCrewTournamentsState(JSON.parse(val));
+    AsyncStorage.getItem(userKey(CREW_TOURNAMENTS_KEY_PREFIX, userId)).then((val) => {
+      setCrewTournamentsState(val ? JSON.parse(val) : []);
     }).catch(() => {});
-    AsyncStorage.getItem(CREW_SCHEDULED_TOURNAMENTS_KEY).then((val) => {
-      if (val) setCrewScheduledTournamentsState(JSON.parse(val));
+    AsyncStorage.getItem(userKey(CREW_SCHEDULED_TOURNAMENTS_KEY_PREFIX, userId)).then((val) => {
+      setCrewScheduledTournamentsState(val ? JSON.parse(val) : []);
     }).catch(() => {});
-    AsyncStorage.getItem(CREW_INVITES_KEY).then((val) => {
-      if (val) setCrewInvitesState(JSON.parse(val));
+    AsyncStorage.getItem(userKey(CREW_INVITES_KEY_PREFIX, userId)).then((val) => {
+      setCrewInvitesState(val ? JSON.parse(val) : []);
     }).catch(() => {});
-    AsyncStorage.getItem(CREW_MEMBERSHIP_KEY).then((val) => {
+    AsyncStorage.getItem(userKey(CREW_MEMBERSHIP_KEY_PREFIX, userId)).then((val) => {
       if (val) {
         console.log('[ProfileContext] Loaded crew membership role:', val);
         setCrewMembershipRoleState(val as CrewRole);
+      } else {
+        setCrewMembershipRoleState(null);
       }
     }).catch(() => {});
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data: { session } }) => {
@@ -405,107 +434,107 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     console.log('[ProfileContext] Setting background image:', uri ? 'has image' : 'cleared');
     setBackgroundImageUriState(uri);
     if (uri) {
-      await AsyncStorage.setItem(BG_IMAGE_KEY, uri);
+      await AsyncStorage.setItem(userKey(BG_IMAGE_KEY_PREFIX, userId), uri);
     } else {
-      await AsyncStorage.removeItem(BG_IMAGE_KEY);
+      await AsyncStorage.removeItem(userKey(BG_IMAGE_KEY_PREFIX, userId));
     }
-  }, []);
+  }, [userId]);
 
   const activateCoachMode = useCallback(async () => {
     console.log('[ProfileContext] Activating coach mode');
     setIsCoachModeState(true);
-    await AsyncStorage.setItem(COACH_MODE_KEY, 'true');
-  }, []);
+    await AsyncStorage.setItem(userKey(COACH_MODE_KEY_PREFIX, userId), 'true');
+  }, [userId]);
 
   const deactivateCoachMode = useCallback(async () => {
     console.log('[ProfileContext] Deactivating coach mode');
     setIsCoachModeState(false);
-    await AsyncStorage.removeItem(COACH_MODE_KEY);
-  }, []);
+    await AsyncStorage.removeItem(userKey(COACH_MODE_KEY_PREFIX, userId));
+  }, [userId]);
 
   const saveCrewDrill = useCallback(async (drill: CrewDrill) => {
     console.log('[ProfileContext] Saving crew drill:', drill.name);
     const updated = [...crewDrills, drill];
     setCrewDrillsState(updated);
-    await AsyncStorage.setItem(CREW_DRILLS_KEY, JSON.stringify(updated));
-  }, [crewDrills]);
+    await AsyncStorage.setItem(userKey(CREW_DRILLS_KEY_PREFIX, userId), JSON.stringify(updated));
+  }, [crewDrills, userId]);
 
   const deleteCrewDrill = useCallback(async (drillId: string) => {
     console.log('[ProfileContext] Deleting crew drill:', drillId);
     const updated = crewDrills.filter((d) => d.id !== drillId);
     setCrewDrillsState(updated);
-    await AsyncStorage.setItem(CREW_DRILLS_KEY, JSON.stringify(updated));
-  }, [crewDrills]);
+    await AsyncStorage.setItem(userKey(CREW_DRILLS_KEY_PREFIX, userId), JSON.stringify(updated));
+  }, [crewDrills, userId]);
 
   const saveScheduledDrill = useCallback(async (scheduled: ScheduledDrill) => {
     console.log('[ProfileContext] Saving scheduled drill:', scheduled.drillName);
     const updated = [...crewScheduled, scheduled];
     setCrewScheduledState(updated);
-    await AsyncStorage.setItem(CREW_SCHEDULED_KEY, JSON.stringify(updated));
-  }, [crewScheduled]);
+    await AsyncStorage.setItem(userKey(CREW_SCHEDULED_KEY_PREFIX, userId), JSON.stringify(updated));
+  }, [crewScheduled, userId]);
 
   const deleteScheduledDrill = useCallback(async (scheduledId: string) => {
     console.log('[ProfileContext] Deleting scheduled drill:', scheduledId);
     const updated = crewScheduled.filter((s) => s.id !== scheduledId);
     setCrewScheduledState(updated);
-    await AsyncStorage.setItem(CREW_SCHEDULED_KEY, JSON.stringify(updated));
-  }, [crewScheduled]);
+    await AsyncStorage.setItem(userKey(CREW_SCHEDULED_KEY_PREFIX, userId), JSON.stringify(updated));
+  }, [crewScheduled, userId]);
 
   const saveCrewRound = useCallback(async (round: CrewRound) => {
     console.log('[ProfileContext] Saving crew round:', round.name);
     const updated = [...crewRounds, round];
     setCrewRoundsState(updated);
-    await AsyncStorage.setItem(CREW_ROUNDS_KEY, JSON.stringify(updated));
-  }, [crewRounds]);
+    await AsyncStorage.setItem(userKey(CREW_ROUNDS_KEY_PREFIX, userId), JSON.stringify(updated));
+  }, [crewRounds, userId]);
 
   const deleteCrewRound = useCallback(async (roundId: string) => {
     console.log('[ProfileContext] Deleting crew round:', roundId);
     const updated = crewRounds.filter((r) => r.id !== roundId);
     setCrewRoundsState(updated);
-    await AsyncStorage.setItem(CREW_ROUNDS_KEY, JSON.stringify(updated));
-  }, [crewRounds]);
+    await AsyncStorage.setItem(userKey(CREW_ROUNDS_KEY_PREFIX, userId), JSON.stringify(updated));
+  }, [crewRounds, userId]);
 
   const saveScheduledRound = useCallback(async (scheduled: ScheduledRound) => {
     console.log('[ProfileContext] Saving scheduled round:', scheduled.roundName);
     const updated = [...crewScheduledRounds, scheduled];
     setCrewScheduledRoundsState(updated);
-    await AsyncStorage.setItem(CREW_SCHEDULED_ROUNDS_KEY, JSON.stringify(updated));
-  }, [crewScheduledRounds]);
+    await AsyncStorage.setItem(userKey(CREW_SCHEDULED_ROUNDS_KEY_PREFIX, userId), JSON.stringify(updated));
+  }, [crewScheduledRounds, userId]);
 
   const deleteScheduledRound = useCallback(async (scheduledId: string) => {
     console.log('[ProfileContext] Deleting scheduled round:', scheduledId);
     const updated = crewScheduledRounds.filter((s) => s.id !== scheduledId);
     setCrewScheduledRoundsState(updated);
-    await AsyncStorage.setItem(CREW_SCHEDULED_ROUNDS_KEY, JSON.stringify(updated));
-  }, [crewScheduledRounds]);
+    await AsyncStorage.setItem(userKey(CREW_SCHEDULED_ROUNDS_KEY_PREFIX, userId), JSON.stringify(updated));
+  }, [crewScheduledRounds, userId]);
 
   const saveCrewTournament = useCallback(async (tournament: CrewTournament) => {
     console.log('[ProfileContext] Saving crew tournament:', tournament.name);
     const updated = [...crewTournaments, tournament];
     setCrewTournamentsState(updated);
-    await AsyncStorage.setItem(CREW_TOURNAMENTS_KEY, JSON.stringify(updated));
-  }, [crewTournaments]);
+    await AsyncStorage.setItem(userKey(CREW_TOURNAMENTS_KEY_PREFIX, userId), JSON.stringify(updated));
+  }, [crewTournaments, userId]);
 
   const deleteCrewTournament = useCallback(async (tournamentId: string) => {
     console.log('[ProfileContext] Deleting crew tournament:', tournamentId);
     const updated = crewTournaments.filter((t) => t.id !== tournamentId);
     setCrewTournamentsState(updated);
-    await AsyncStorage.setItem(CREW_TOURNAMENTS_KEY, JSON.stringify(updated));
-  }, [crewTournaments]);
+    await AsyncStorage.setItem(userKey(CREW_TOURNAMENTS_KEY_PREFIX, userId), JSON.stringify(updated));
+  }, [crewTournaments, userId]);
 
   const saveScheduledTournament = useCallback(async (scheduled: ScheduledTournament) => {
     console.log('[ProfileContext] Saving scheduled tournament:', scheduled.tournamentName);
     const updated = [...crewScheduledTournaments, scheduled];
     setCrewScheduledTournamentsState(updated);
-    await AsyncStorage.setItem(CREW_SCHEDULED_TOURNAMENTS_KEY, JSON.stringify(updated));
-  }, [crewScheduledTournaments]);
+    await AsyncStorage.setItem(userKey(CREW_SCHEDULED_TOURNAMENTS_KEY_PREFIX, userId), JSON.stringify(updated));
+  }, [crewScheduledTournaments, userId]);
 
   const deleteScheduledTournament = useCallback(async (scheduledId: string) => {
     console.log('[ProfileContext] Deleting scheduled tournament:', scheduledId);
     const updated = crewScheduledTournaments.filter((s) => s.id !== scheduledId);
     setCrewScheduledTournamentsState(updated);
-    await AsyncStorage.setItem(CREW_SCHEDULED_TOURNAMENTS_KEY, JSON.stringify(updated));
-  }, [crewScheduledTournaments]);
+    await AsyncStorage.setItem(userKey(CREW_SCHEDULED_TOURNAMENTS_KEY_PREFIX, userId), JSON.stringify(updated));
+  }, [crewScheduledTournaments, userId]);
 
   const saveCrewSettings = useCallback(async (settings: CrewSettings) => {
     console.log('[ProfileContext] Saving crew settings:', settings.name, settings.color);
@@ -554,7 +583,7 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     if (newInvites.length > 0) {
       const updatedInvites = [...crewInvites, ...newInvites];
       setCrewInvitesState(updatedInvites);
-      await AsyncStorage.setItem(CREW_INVITES_KEY, JSON.stringify(updatedInvites));
+      await AsyncStorage.setItem(userKey(CREW_INVITES_KEY_PREFIX, userId), JSON.stringify(updatedInvites));
       console.log('[ProfileContext] Created', newInvites.length, 'crew invites');
     }
 
@@ -568,49 +597,49 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
     setCrewLogoState(settings.logo);
     setCrewPlayersState(confirmedPlayers);
     setCrewManagersState(confirmedManagers);
-    await AsyncStorage.setItem(CREW_NAME_KEY, settings.name);
-    await AsyncStorage.setItem(CREW_COLOR_KEY, settings.color);
+    await AsyncStorage.setItem(userKey(CREW_NAME_KEY_PREFIX, userId), settings.name);
+    await AsyncStorage.setItem(userKey(CREW_COLOR_KEY_PREFIX, userId), settings.color);
     if (settings.logo) {
-      await AsyncStorage.setItem(CREW_LOGO_KEY, settings.logo);
+      await AsyncStorage.setItem(userKey(CREW_LOGO_KEY_PREFIX, userId), settings.logo);
     } else {
-      await AsyncStorage.removeItem(CREW_LOGO_KEY);
+      await AsyncStorage.removeItem(userKey(CREW_LOGO_KEY_PREFIX, userId));
     }
-    await AsyncStorage.setItem(CREW_PLAYERS_KEY, JSON.stringify(confirmedPlayers));
-    await AsyncStorage.setItem(CREW_MANAGERS_KEY, JSON.stringify(confirmedManagers));
-  }, [crewPlayers, crewManagers, crewInvites, allUsersQuery.data]);
+    await AsyncStorage.setItem(userKey(CREW_PLAYERS_KEY_PREFIX, userId), JSON.stringify(confirmedPlayers));
+    await AsyncStorage.setItem(userKey(CREW_MANAGERS_KEY_PREFIX, userId), JSON.stringify(confirmedManagers));
+  }, [crewPlayers, crewManagers, crewInvites, allUsersQuery.data, userId]);
 
   const acceptCrewInvite = useCallback(async (inviteId: string) => {
     console.log('[ProfileContext] Accepting crew invite:', inviteId);
     const updated = crewInvites.map((i) => i.id === inviteId ? { ...i, status: 'accepted' as const } : i);
     setCrewInvitesState(updated);
-    await AsyncStorage.setItem(CREW_INVITES_KEY, JSON.stringify(updated));
+    await AsyncStorage.setItem(userKey(CREW_INVITES_KEY_PREFIX, userId), JSON.stringify(updated));
 
     const invite = updated.find((i) => i.id === inviteId);
     if (invite) {
       if (invite.role === 'player') {
         const newPlayers = [...crewPlayers, invite.userId].filter((v, i, a) => a.indexOf(v) === i);
         setCrewPlayersState(newPlayers);
-        await AsyncStorage.setItem(CREW_PLAYERS_KEY, JSON.stringify(newPlayers));
+        await AsyncStorage.setItem(userKey(CREW_PLAYERS_KEY_PREFIX, userId), JSON.stringify(newPlayers));
         setCrewMembershipRoleState('player');
-        await AsyncStorage.setItem(CREW_MEMBERSHIP_KEY, 'player');
+        await AsyncStorage.setItem(userKey(CREW_MEMBERSHIP_KEY_PREFIX, userId), 'player');
         console.log('[ProfileContext] User accepted as player, crew membership set');
       } else {
         const newManagers = [...crewManagers, invite.userId].filter((v, i, a) => a.indexOf(v) === i);
         setCrewManagersState(newManagers);
-        await AsyncStorage.setItem(CREW_MANAGERS_KEY, JSON.stringify(newManagers));
+        await AsyncStorage.setItem(userKey(CREW_MANAGERS_KEY_PREFIX, userId), JSON.stringify(newManagers));
         setCrewMembershipRoleState('manager');
-        await AsyncStorage.setItem(CREW_MEMBERSHIP_KEY, 'manager');
+        await AsyncStorage.setItem(userKey(CREW_MEMBERSHIP_KEY_PREFIX, userId), 'manager');
         console.log('[ProfileContext] User accepted as manager, crew membership set');
       }
     }
-  }, [crewInvites, crewPlayers, crewManagers]);
+  }, [crewInvites, crewPlayers, crewManagers, userId]);
 
   const declineCrewInvite = useCallback(async (inviteId: string) => {
     console.log('[ProfileContext] Declining crew invite:', inviteId);
     const updated = crewInvites.map((i) => i.id === inviteId ? { ...i, status: 'declined' as const } : i);
     setCrewInvitesState(updated);
-    await AsyncStorage.setItem(CREW_INVITES_KEY, JSON.stringify(updated));
-  }, [crewInvites]);
+    await AsyncStorage.setItem(userKey(CREW_INVITES_KEY_PREFIX, userId), JSON.stringify(updated));
+  }, [crewInvites, userId]);
 
   const pendingCrewInvites = useMemo(() => {
     return crewInvites.filter((i) => i.status === 'pending');
