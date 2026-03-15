@@ -90,6 +90,9 @@ export interface CrewRound {
   name: string;
   groups: CrewRoundGroup[];
   courseName: string;
+  courseClubName?: string;
+  courseCity?: string;
+  courseCountry?: string;
   holeOption: string;
   info: string;
   createdAt: number;
@@ -99,6 +102,13 @@ export interface ScheduledRound {
   id: string;
   roundId: string;
   roundName: string;
+  courseName?: string;
+  courseClubName?: string;
+  courseCity?: string;
+  courseCountry?: string;
+  holeOption?: string;
+  groups?: CrewRoundGroup[];
+  info?: string;
   date: string;
   time: string;
   createdAt: number;

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,12 +13,39 @@ import {
   Alert,
   Modal,
   Image,
+  FlatList,
+  ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronLeft, Plus, Trash2, X } from 'lucide-react-native';
+import { ChevronLeft, Plus, Trash2, X, Search, MapPin, Star, ChevronRight } from 'lucide-react-native';
 import { CircleCheck } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { useProfile, CrewDrill, CrewRound } from '@/contexts/ProfileContext';
+import TabCourse, { CourseTab } from '@/components/PlaSta/TabCourse';
+import {
+  searchGolfCourses,
+  getGolfCourseDetail,
+  searchNearbyCourses,
+  getDistanceKm,
+} from '@/services/golfCourseApi';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const STORAGE_KEY_FAVORITES = 'play_setup_favorite_courses';
+
+interface DisplayCourse {
+  id: string;
+  apiId: number;
+  name: string;
+  clubName: string;
+  city: string;
+  country: string;
+  holes: number;
+  par: number;
+  latitude?: number;
+  longitude?: number;
+  distanceKm?: number;
+}
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -67,12 +94,28 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
     { id: '1', players: [null, null, null, null] },
   ]);
   const [roundCourseName, setRoundCourseName] = useState<string>('');
+  const [roundCourseClubName, setRoundCourseClubName] = useState<string>('');
+  const [roundCourseCity, setRoundCourseCity] = useState<string>('');
+  const [roundCourseCountry, setRoundCourseCountry] = useState<string>('');
   const [roundHoleOption, setRoundHoleOption] = useState<HoleOption>('18');
   const [roundInfo, setRoundInfo] = useState<string>('');
   const [deleteGroupMode, setDeleteGroupMode] = useState<boolean>(false);
   const [selectedGroupsToDelete, setSelectedGroupsToDelete] = useState<string[]>([]);
   const [playerPickerVisible, setPlayerPickerVisible] = useState<boolean>(false);
   const [playerPickerTarget, setPlayerPickerTarget] = useState<{ groupId: string; slotIndex: number } | null>(null);
+
+  const [courseModalVisible, setCourseModalVisible] = useState<boolean>(false);
+  const [courseSearchQuery, setCourseSearchQuery] = useState<string>('');
+  const [courseActiveTab, setCourseActiveTab] = useState<CourseTab>('nearby');
+  const [courseFavorites, setCourseFavorites] = useState<string[]>([]);
+  const [courseNearbyCourses, setCourseNearbyCourses] = useState<DisplayCourse[]>([]);
+  const [courseSearchResults, setCourseSearchResults] = useState<DisplayCourse[]>([]);
+  const [courseIsSearching, setCourseIsSearching] = useState<boolean>(false);
+  const [courseIsSelecting, setCourseIsSelecting] = useState<boolean>(false);
+  const [courseHasSearched, setCourseHasSearched] = useState<boolean>(false);
+  const [courseNearbyLoading, setCourseNearbyLoading] = useState<boolean>(true);
+  const [courseUserLocation, setCourseUserLocation] = useState<{ lat: number; lon: number } | null>(null);
+  const [courseNearbyLoaded, setCourseNearbyLoaded] = useState<boolean>(false);
 
   const segmentWidth = (SCREEN_WIDTH - 40 - 48) / SEGMENT_KEYS.length;
   const underlineWidth = 40;
@@ -191,6 +234,9 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
         players: g.players.filter((p): p is string => p !== null),
       })),
       courseName: roundCourseName.trim(),
+      courseClubName: roundCourseClubName.trim(),
+      courseCity: roundCourseCity.trim(),
+      courseCountry: roundCourseCountry.trim(),
       holeOption: roundHoleOption,
       info: roundInfo.trim(),
       createdAt: Date.now(),
@@ -202,13 +248,16 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
       setRoundName('');
       setRoundGroups([{ id: '1', players: [null, null, null, null] }]);
       setRoundCourseName('');
+      setRoundCourseClubName('');
+      setRoundCourseCity('');
+      setRoundCourseCountry('');
       setRoundHoleOption('18');
       setRoundInfo('');
     } catch (err: any) {
       console.log('[CrewCreate] Save round error:', err.message);
       Alert.alert('Error', 'Failed to save round.');
     }
-  }, [roundName, roundGroups, roundCourseName, roundHoleOption, roundInfo, saveCrewRound]);
+  }, [roundName, roundGroups, roundCourseName, roundCourseClubName, roundCourseCity, roundCourseCountry, roundHoleOption, roundInfo, saveCrewRound]);
 
   const getPlayerName = useCallback((playerId: string) => {
     const user = allUsers.find((u) => u.id === playerId);
@@ -221,6 +270,158 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
   }, [allUsers]);
 
   const allAssignedPlayers = roundGroups.flatMap((g) => g.players.filter((p): p is string => p !== null));
+
+  const loadCourseFavorites = useCallback(async () => {
+    try {
+      const stored = await AsyncStorage.getItem(STORAGE_KEY_FAVORITES);
+      if (stored) setCourseFavorites(JSON.parse(stored));
+    } catch (e) {
+      console.log('[CrewCreate] Error loading favorites:', e);
+    }
+  }, []);
+
+  const loadNearbyCourses = useCallback(async () => {
+    setCourseNearbyLoading(true);
+    try {
+      let lat = 0;
+      let lon = 0;
+      if (Platform.OS !== 'web') {
+        const Loc = require('expo-location');
+        const { status } = await Loc.requestForegroundPermissionsAsync();
+        if (status === 'granted') {
+          const loc = await Loc.getCurrentPositionAsync({ accuracy: Loc.Accuracy.Balanced });
+          lat = loc.coords.latitude;
+          lon = loc.coords.longitude;
+        }
+      } else if (typeof navigator !== 'undefined' && navigator.geolocation) {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 });
+        });
+        lat = position.coords.latitude;
+        lon = position.coords.longitude;
+      }
+      if (lat !== 0 && lon !== 0) {
+        console.log('[CrewCreate] User location:', lat, lon);
+        setCourseUserLocation({ lat, lon });
+        const results = await searchNearbyCourses(lat, lon);
+        const mapped: DisplayCourse[] = results.map((r) => {
+          const distKm = getDistanceKm(lat, lon, r.location?.latitude ?? 0, r.location?.longitude ?? 0);
+          return {
+            id: `api-${r.id}`,
+            apiId: r.id,
+            name: r.course_name,
+            clubName: r.club_name,
+            city: r.location?.city ?? '',
+            country: r.location?.country ?? '',
+            holes: 18,
+            par: 72,
+            latitude: r.location?.latitude,
+            longitude: r.location?.longitude,
+            distanceKm: distKm,
+          };
+        });
+        setCourseNearbyCourses(mapped);
+        console.log('[CrewCreate] Nearby courses loaded:', mapped.length);
+      }
+    } catch (e) {
+      console.log('[CrewCreate] Error loading nearby:', e);
+    } finally {
+      setCourseNearbyLoading(false);
+    }
+  }, []);
+
+  const handleOpenCourseModal = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setCourseModalVisible(true);
+    if (!courseNearbyLoaded) {
+      void loadCourseFavorites();
+      void loadNearbyCourses();
+      setCourseNearbyLoaded(true);
+    }
+  }, [courseNearbyLoaded, loadCourseFavorites, loadNearbyCourses]);
+
+  const handleCourseSearch = useCallback(async () => {
+    if (!courseSearchQuery.trim()) return;
+    setCourseIsSearching(true);
+    setCourseHasSearched(true);
+    try {
+      const results = await searchGolfCourses(courseSearchQuery.trim());
+      const mapped: DisplayCourse[] = results.map((r) => {
+        const distKm = courseUserLocation
+          ? getDistanceKm(courseUserLocation.lat, courseUserLocation.lon, r.location?.latitude ?? 0, r.location?.longitude ?? 0)
+          : undefined;
+        return {
+          id: `api-${r.id}`,
+          apiId: r.id,
+          name: r.course_name,
+          clubName: r.club_name,
+          city: r.location?.city ?? '',
+          country: r.location?.country ?? '',
+          holes: 18,
+          par: 72,
+          latitude: r.location?.latitude,
+          longitude: r.location?.longitude,
+          distanceKm: distKm,
+        };
+      });
+      setCourseSearchResults(mapped);
+      console.log('[CrewCreate] Course search found:', mapped.length);
+    } catch (e) {
+      console.log('[CrewCreate] Course search error:', e);
+    } finally {
+      setCourseIsSearching(false);
+    }
+  }, [courseSearchQuery, courseUserLocation]);
+
+  const handleSelectCourse = useCallback(async (course: DisplayCourse) => {
+    setCourseIsSelecting(true);
+    try {
+      const detail = await getGolfCourseDetail(course.apiId);
+      if (detail) {
+        setRoundCourseName(detail.course_name);
+        setRoundCourseClubName(detail.club_name);
+        setRoundCourseCity(detail.location?.city ?? '');
+        setRoundCourseCountry(detail.location?.country ?? '');
+        console.log('[CrewCreate] Selected course:', detail.course_name);
+      } else {
+        setRoundCourseName(course.name);
+        setRoundCourseClubName(course.clubName);
+        setRoundCourseCity(course.city);
+        setRoundCourseCountry(course.country);
+      }
+    } catch (e) {
+      console.log('[CrewCreate] Course select error:', e);
+      setRoundCourseName(course.name);
+      setRoundCourseClubName(course.clubName);
+      setRoundCourseCity(course.city);
+      setRoundCourseCountry(course.country);
+    } finally {
+      setCourseIsSelecting(false);
+      setCourseModalVisible(false);
+    }
+  }, []);
+
+  const toggleCourseFavorite = useCallback(async (courseId: string) => {
+    setCourseFavorites((prev) => {
+      const updated = prev.includes(courseId)
+        ? prev.filter((id) => id !== courseId)
+        : [...prev, courseId];
+      AsyncStorage.setItem(STORAGE_KEY_FAVORITES, JSON.stringify(updated)).catch(() => {});
+      return updated;
+    });
+  }, []);
+
+  const displayCourses = useMemo(() => {
+    if (courseActiveTab === 'favorite') {
+      const allCourses = [...courseNearbyCourses, ...courseSearchResults];
+      const unique = allCourses.filter((c, i, arr) => arr.findIndex((x) => x.id === c.id) === i);
+      return unique.filter((c) => courseFavorites.includes(c.id));
+    }
+    if (courseHasSearched && courseSearchResults.length > 0) {
+      return courseSearchResults;
+    }
+    return courseNearbyCourses;
+  }, [courseActiveTab, courseNearbyCourses, courseSearchResults, courseFavorites, courseHasSearched]);
 
   const handleSaveDrill = useCallback(async () => {
     if (!drillName.trim()) {
@@ -547,27 +748,46 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
           </View>
 
           <Text style={[styles.sectionLabel, isDark && { color: '#FFFFFF' }]}>SELECT COURSE</Text>
-          <View style={[styles.roundCourseBanner, isDark && { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.12)' }]}>
+          <TouchableOpacity
+            style={[styles.roundCourseBanner, isDark && { backgroundColor: 'rgba(255,255,255,0.08)', borderColor: 'rgba(255,255,255,0.12)' }]}
+            onPress={roundCourseName ? undefined : handleOpenCourseModal}
+            activeOpacity={roundCourseName ? 1 : 0.8}
+          >
             <View style={styles.roundCourseInner}>
               {roundCourseName ? (
                 <View style={styles.roundCourseSelected}>
-                  <Text style={[styles.roundCourseName, isDark && { color: '#FFFFFF' }]}>{roundCourseName}</Text>
-                  <TouchableOpacity onPress={() => setRoundCourseName('')}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.roundCourseName, isDark && { color: '#FFFFFF' }]}>{roundCourseName}</Text>
+                    {roundCourseClubName ? (
+                      <Text style={[styles.roundCourseClub, isDark && { color: 'rgba(255,255,255,0.5)' }]}>{roundCourseClubName}</Text>
+                    ) : null}
+                    {(roundCourseCity || roundCourseCountry) ? (
+                      <Text style={[styles.roundCourseLocation, isDark && { color: 'rgba(255,255,255,0.4)' }]}>
+                        {[roundCourseCity, roundCourseCountry].filter(Boolean).join(', ')}
+                      </Text>
+                    ) : null}
+                  </View>
+                  <TouchableOpacity onPress={() => {
+                    setRoundCourseName('');
+                    setRoundCourseClubName('');
+                    setRoundCourseCity('');
+                    setRoundCourseCountry('');
+                  }}>
                     <X size={18} color={isDark ? 'rgba(255,255,255,0.5)' : '#999'} />
                   </TouchableOpacity>
                 </View>
               ) : (
-                <TextInput
-                  style={[styles.roundCourseInput, isDark && { color: '#FFFFFF' }]}
-                  placeholder="Type course name..."
-                  placeholderTextColor={isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.3)'}
-                  value={roundCourseName}
-                  onChangeText={setRoundCourseName}
-                  returnKeyType="done"
-                />
+                <View style={styles.roundCourseSearchRow}>
+                  <Search size={18} color={isDark ? 'rgba(255,255,255,0.5)' : '#999'} />
+                  <Text style={[styles.roundCourseSearchText, isDark && { color: 'rgba(255,255,255,0.5)' }]}>Sök banor</Text>
+                  <View style={{ flex: 1 }} />
+                  <View style={[styles.roundCourseArrow, isDark && { backgroundColor: 'rgba(255,255,255,0.12)' }]}>
+                    <ChevronRight size={18} color={isDark ? '#FFFFFF' : '#999'} />
+                  </View>
+                </View>
               )}
             </View>
-          </View>
+          </TouchableOpacity>
 
           <Text style={[styles.sectionLabel, isDark && { color: '#FFFFFF' }]}>SELECT HOLES</Text>
           <View style={styles.holeOptionsContainer}>
@@ -633,6 +853,158 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
             </View>
           </TouchableOpacity>
         </ScrollView>
+
+        <Modal
+          visible={courseModalVisible}
+          animationType="slide"
+          presentationStyle="fullScreen"
+          onRequestClose={() => setCourseModalVisible(false)}
+        >
+          <LinearGradient
+            colors={['#4BA35B', '#3D954D', '#2D803D']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.courseModalContainer}
+          >
+            <View style={[styles.courseModalHeader, { paddingTop: insets.top + 10 }]}> 
+              <TouchableOpacity
+                onPress={() => {
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setCourseModalVisible(false);
+                }}
+                style={styles.courseModalBackBtn}
+                activeOpacity={0.7}
+              >
+                <ChevronLeft size={22} color="#FFFFFF" />
+              </TouchableOpacity>
+              <Text style={styles.courseModalTitle}>BANOR</Text>
+              <View style={{ width: 40 }} />
+            </View>
+
+            <View style={styles.courseModalSearchSection}>
+              <View style={styles.courseModalSearchBar}>
+                <Search size={18} color="rgba(255,255,255,0.6)" />
+                <TextInput
+                  style={styles.courseModalSearchInput}
+                  placeholder="Search golf courses..."
+                  placeholderTextColor="rgba(255,255,255,0.5)"
+                  value={courseSearchQuery}
+                  onChangeText={setCourseSearchQuery}
+                  onSubmitEditing={handleCourseSearch}
+                  returnKeyType="search"
+                />
+                {courseSearchQuery.length > 0 && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setCourseSearchQuery('');
+                      setCourseSearchResults([]);
+                      setCourseHasSearched(false);
+                    }}
+                  >
+                    <X size={16} color="rgba(255,255,255,0.5)" />
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  style={styles.courseModalSearchBtn}
+                  onPress={handleCourseSearch}
+                  activeOpacity={0.7}
+                  disabled={courseIsSearching}
+                >
+                  {courseIsSearching ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.courseModalSearchBtnText}>Sök</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+              <View style={styles.courseModalTabRow}>
+                <TabCourse
+                  activeTab={courseActiveTab}
+                  onTabChange={setCourseActiveTab}
+                  playedCount={0}
+                />
+              </View>
+            </View>
+
+            {courseIsSelecting && (
+              <View style={styles.courseModalSelectingOverlay}>
+                <ActivityIndicator size="large" color="#FFFFFF" />
+                <Text style={styles.courseModalSelectingText}>Loading course data...</Text>
+              </View>
+            )}
+
+            <FlatList
+              data={displayCourses}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }: { item: DisplayCourse }) => {
+                const isFav = courseFavorites.includes(item.id);
+                return (
+                  <TouchableOpacity
+                    style={styles.courseModalRow}
+                    onPress={() => handleSelectCourse(item)}
+                    activeOpacity={0.6}
+                    disabled={courseIsSelecting}
+                  >
+                    <View style={styles.courseModalInfo}>
+                      <Text style={styles.courseModalName}>{item.name}</Text>
+                      <View style={styles.courseModalSubRow}>
+                        <Text style={styles.courseModalClub}>{item.clubName}</Text>
+                        <MapPin size={12} color="rgba(255,255,255,0.5)" />
+                      </View>
+                      <View style={styles.courseModalMetaRow}>
+                        {(item.city || item.country) ? (
+                          <Text style={styles.courseModalCity}>
+                            {[item.city, item.country].filter(Boolean).join(', ')}
+                          </Text>
+                        ) : null}
+                        {item.distanceKm !== undefined && (
+                          <Text style={styles.courseModalDistance}>
+                            {item.distanceKm < 1
+                              ? `${Math.round(item.distanceKm * 1000)} m`
+                              : `${item.distanceKm.toFixed(1)} km`}
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.courseModalFavBtn}
+                      onPress={() => toggleCourseFavorite(item.id)}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <Star
+                        size={20}
+                        color={isFav ? '#FFB74D' : 'rgba(255,255,255,0.4)'}
+                        fill={isFav ? '#FFB74D' : 'transparent'}
+                      />
+                    </TouchableOpacity>
+                  </TouchableOpacity>
+                );
+              }}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.courseModalListContent}
+              ListEmptyComponent={
+                <View style={styles.courseModalEmpty}>
+                  {(courseNearbyLoading && !courseHasSearched) || courseIsSearching ? (
+                    <>
+                      <ActivityIndicator size="large" color="rgba(255,255,255,0.5)" />
+                      <Text style={styles.courseModalEmptyText}>
+                        {courseNearbyLoading && !courseHasSearched ? 'Finding nearby courses...' : 'Searching...'}
+                      </Text>
+                    </>
+                  ) : (
+                    <Text style={styles.courseModalEmptyText}>
+                      {courseActiveTab === 'favorite'
+                        ? 'No favorite courses yet'
+                        : courseHasSearched
+                        ? 'No courses found. Try a different search.'
+                        : 'No nearby courses found. Try searching by name.'}
+                    </Text>
+                  )}
+                </View>
+              }
+            />
+          </LinearGradient>
+        </Modal>
 
         <Modal
           visible={playerPickerVisible}
@@ -1171,11 +1543,174 @@ const styles = StyleSheet.create({
     color: '#1A1A1A',
     flex: 1,
   },
-  roundCourseInput: {
+  roundCourseClub: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: '#888',
+    marginTop: 2,
+  },
+  roundCourseLocation: {
+    fontSize: 12,
+    color: '#BBB',
+    marginTop: 1,
+  },
+  roundCourseSearchRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 10,
+  },
+  roundCourseSearchText: {
     fontSize: 16,
     fontWeight: '500' as const,
-    color: '#1A1A1A',
+    color: '#999',
+  },
+  roundCourseArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0,0,0,0.06)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  courseModalContainer: {
+    flex: 1,
+  },
+  courseModalHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    paddingHorizontal: 12,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.12)',
+  },
+  courseModalBackBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  courseModalTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+    letterSpacing: 0.5,
+  },
+  courseModalSearchSection: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  courseModalSearchBar: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 6,
+    marginBottom: 10,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    gap: 8,
+  },
+  courseModalSearchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: '#FFFFFF',
     padding: 0,
+  },
+  courseModalSearchBtn: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  courseModalSearchBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600' as const,
+  },
+  courseModalTabRow: {
+    marginBottom: 8,
+  },
+  courseModalRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
+  },
+  courseModalInfo: {
+    flex: 1,
+  },
+  courseModalName: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+  },
+  courseModalSubRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 4,
+    marginTop: 2,
+  },
+  courseModalClub: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.7)',
+  },
+  courseModalMetaRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+    marginTop: 2,
+  },
+  courseModalCity: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.5)',
+  },
+  courseModalDistance: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#34C759',
+  },
+  courseModalFavBtn: {
+    padding: 8,
+  },
+  courseModalListContent: {
+    paddingBottom: 40,
+  },
+  courseModalEmpty: {
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    paddingTop: 60,
+    gap: 12,
+  },
+  courseModalEmptyText: {
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center' as const,
+    paddingHorizontal: 32,
+  },
+  courseModalSelectingOverlay: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 100,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 12,
+  },
+  courseModalSelectingText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600' as const,
   },
   holeOptionsContainer: {
     gap: 10,

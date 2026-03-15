@@ -70,6 +70,7 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
 
   const [drillDetailVisible, setDrillDetailVisible] = useState<CrewDrill | null>(null);
   const [roundDetailVisible, setRoundDetailVisible] = useState<CrewRound | null>(null);
+  const [scheduledDetailVisible, setScheduledDetailVisible] = useState<{ itemType: 'drill' | 'round'; id: string; date: string; time: string; [key: string]: any } | null>(null);
   const [schedulePickerVisible, setSchedulePickerVisible] = useState<boolean>(false);
   const [scheduleType, setScheduleType] = useState<ScheduleType>('drill');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -188,6 +189,13 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
             id: Date.now().toString() + '_' + roundId,
             roundId: round.id,
             roundName: round.name,
+            courseName: round.courseName || undefined,
+            courseClubName: round.courseClubName || undefined,
+            courseCity: round.courseCity || undefined,
+            courseCountry: round.courseCountry || undefined,
+            holeOption: round.holeOption || undefined,
+            groups: round.groups || undefined,
+            info: round.info || undefined,
             date: selectedDateString,
             time: scheduleTime.trim(),
             createdAt: Date.now(),
@@ -256,8 +264,17 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
         {allScheduledItems.map((item) => {
           const name = item.itemType === 'drill' ? (item as any).drillName : (item as any).roundName;
           const deleteType = item.itemType === 'drill' ? 'scheduled_drill' as const : 'scheduled_round' as const;
+          const scheduledRound = item.itemType === 'round' ? item as (ScheduledRound & { itemType: 'round' }) : null;
           return (
-            <View key={item.id} style={[styles.scheduleCard, isDark && { backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.1)' }]}>
+            <TouchableOpacity
+              key={item.id}
+              style={[styles.scheduleCard, isDark && { backgroundColor: 'rgba(255,255,255,0.1)', borderColor: 'rgba(255,255,255,0.1)' }]}
+              onPress={() => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setScheduledDetailVisible(item);
+              }}
+              activeOpacity={0.7}
+            >
               <View style={styles.scheduleCardTop}>
                 <View style={styles.scheduleCardNameRow}>
                   <View style={[styles.scheduleTypeBadge, item.itemType === 'round' ? { backgroundColor: '#3B82F6' } : { backgroundColor: '#2E7D32' }]}>
@@ -275,6 +292,14 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
                   <Trash2 size={14} color="#FF3B30" />
                 </TouchableOpacity>
               </View>
+              {scheduledRound?.courseName ? (
+                <View style={styles.scheduleCardCourse}>
+                  <MapPin size={12} color={isDark ? 'rgba(255,255,255,0.5)' : '#888'} />
+                  <Text style={[styles.scheduleCardCourseText, isDark && { color: 'rgba(255,255,255,0.6)' }]} numberOfLines={1}>
+                    {scheduledRound.courseName}
+                  </Text>
+                </View>
+              ) : null}
               <View style={styles.scheduleCardMeta}>
                 <View style={styles.metaItem}>
                   <Calendar size={13} color={isDark ? 'rgba(255,255,255,0.5)' : '#888'} />
@@ -285,7 +310,7 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
                   <Text style={[styles.metaText, isDark && { color: 'rgba(255,255,255,0.6)' }]}>{item.time}</Text>
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
           );
         })}
       </View>
@@ -656,10 +681,26 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
             </View>
             <View style={styles.detailDivider} />
             {roundDetailVisible?.courseName ? (
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Course</Text>
-                <Text style={styles.detailValue}>{roundDetailVisible.courseName}</Text>
-              </View>
+              <>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Course</Text>
+                  <Text style={styles.detailValue}>{roundDetailVisible.courseName}</Text>
+                </View>
+                {roundDetailVisible.courseClubName ? (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Club</Text>
+                    <Text style={styles.detailValue}>{roundDetailVisible.courseClubName}</Text>
+                  </View>
+                ) : null}
+                {(roundDetailVisible.courseCity || roundDetailVisible.courseCountry) ? (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Location</Text>
+                    <Text style={styles.detailValue}>
+                      {[roundDetailVisible.courseCity, roundDetailVisible.courseCountry].filter(Boolean).join(', ')}
+                    </Text>
+                  </View>
+                ) : null}
+              </>
             ) : null}
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Holes</Text>
@@ -794,6 +835,134 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
                 <Text style={styles.schedulePickerSaveText}>Save Schedule</Text>
               </LinearGradient>
             </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Scheduled Item Detail Modal */}
+      <Modal
+        visible={scheduledDetailVisible !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setScheduledDetailVisible(null)}
+      >
+        <View style={styles.detailOverlay}>
+          <ScrollView contentContainerStyle={styles.detailScrollContent} showsVerticalScrollIndicator={false}>
+            <View style={[styles.detailCard, isDark && { backgroundColor: bgColor }]}>
+              <View style={styles.detailHeader}>
+                <Text style={styles.detailTitle}>
+                  {scheduledDetailVisible?.itemType === 'drill'
+                    ? scheduledDetailVisible?.drillName
+                    : scheduledDetailVisible?.roundName}
+                </Text>
+                <TouchableOpacity onPress={() => setScheduledDetailVisible(null)}>
+                  <X size={22} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.detailDivider} />
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Type</Text>
+                <Text style={styles.detailValue}>
+                  {scheduledDetailVisible?.itemType === 'drill' ? 'Drill' : 'Round'}
+                </Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Date</Text>
+                <Text style={styles.detailValue}>{scheduledDetailVisible?.date}</Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Time</Text>
+                <Text style={styles.detailValue}>{scheduledDetailVisible?.time}</Text>
+              </View>
+              {scheduledDetailVisible?.itemType === 'round' && scheduledDetailVisible?.courseName ? (
+                <>
+                  <View style={styles.detailDivider} />
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Course</Text>
+                    <Text style={styles.detailValue}>{scheduledDetailVisible.courseName}</Text>
+                  </View>
+                  {scheduledDetailVisible.courseClubName ? (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>Club</Text>
+                      <Text style={styles.detailValue}>{scheduledDetailVisible.courseClubName}</Text>
+                    </View>
+                  ) : null}
+                  {(scheduledDetailVisible.courseCity || scheduledDetailVisible.courseCountry) ? (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>Location</Text>
+                      <Text style={styles.detailValue}>
+                        {[scheduledDetailVisible.courseCity, scheduledDetailVisible.courseCountry].filter(Boolean).join(', ')}
+                      </Text>
+                    </View>
+                  ) : null}
+                </>
+              ) : null}
+              {scheduledDetailVisible?.itemType === 'round' && scheduledDetailVisible?.holeOption ? (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Holes</Text>
+                  <Text style={styles.detailValue}>{getHoleLabel(scheduledDetailVisible.holeOption)}</Text>
+                </View>
+              ) : null}
+              {scheduledDetailVisible?.itemType === 'round' && scheduledDetailVisible?.groups?.length > 0 ? (
+                scheduledDetailVisible.groups.map((group: any, gIdx: number) => (
+                  <View key={group.id || gIdx}>
+                    <View style={styles.detailDivider} />
+                    <Text style={styles.detailSubheader}>Group {gIdx + 1}</Text>
+                    {group.players.length === 0 ? (
+                      <Text style={styles.detailInfo}>No players assigned</Text>
+                    ) : (
+                      group.players.map((pid: string, pIdx: number) => (
+                        <View key={pIdx} style={styles.detailRow}>
+                          <Text style={styles.detailLabel}>Player {pIdx + 1}</Text>
+                          <Text style={styles.detailValue}>{getPlayerName(pid)}</Text>
+                        </View>
+                      ))
+                    )}
+                  </View>
+                ))
+              ) : null}
+              {scheduledDetailVisible?.itemType === 'round' && scheduledDetailVisible?.info ? (
+                <>
+                  <View style={styles.detailDivider} />
+                  <Text style={styles.detailSubheader}>Info</Text>
+                  <Text style={styles.detailInfo}>{scheduledDetailVisible.info}</Text>
+                </>
+              ) : null}
+              {scheduledDetailVisible?.itemType === 'drill' ? (
+                (() => {
+                  const drill = crewDrills.find((d) => d.id === scheduledDetailVisible?.drillId);
+                  if (!drill) return null;
+                  return (
+                    <>
+                      <View style={styles.detailDivider} />
+                      <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Category</Text>
+                        <Text style={styles.detailValue}>{drill.category}</Text>
+                      </View>
+                      <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Rounds</Text>
+                        <Text style={styles.detailValue}>{drill.rounds}</Text>
+                      </View>
+                      <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Shots Per Round</Text>
+                        <Text style={styles.detailValue}>{drill.shotsPerRound}</Text>
+                      </View>
+                      <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Total Shots</Text>
+                        <Text style={styles.detailValue}>{drill.totalShots}</Text>
+                      </View>
+                      {drill.info ? (
+                        <>
+                          <View style={styles.detailDivider} />
+                          <Text style={styles.detailSubheader}>Info</Text>
+                          <Text style={styles.detailInfo}>{drill.info}</Text>
+                        </>
+                      ) : null}
+                    </>
+                  );
+                })()
+              ) : null}
+            </View>
           </ScrollView>
         </View>
       </Modal>
@@ -1370,5 +1539,21 @@ const styles = StyleSheet.create({
   },
   calendarDayTextMuted: {
     color: '#D0D0D0',
+  },
+  scheduleCardCourse: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 5,
+    marginBottom: 8,
+  },
+  scheduleCardCourseText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: '#888',
+  },
+  detailScrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center' as const,
+    paddingHorizontal: 24,
   },
 });
