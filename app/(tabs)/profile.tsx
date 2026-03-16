@@ -847,7 +847,7 @@ export default function ProfileScreen() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingTop: insets.top + PROFILE_HEADER_HEIGHT }} onScroll={onHeaderScroll} scrollEventThrottle={16}>
         <Animated.View style={[styles.contentOuter, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
 
-          <View style={[styles.imageScrollArea, backgroundImageUri ? { marginTop: -(insets.top + PROFILE_HEADER_HEIGHT), paddingTop: insets.top + PROFILE_HEADER_HEIGHT } : undefined]}>
+          <View style={[styles.imageScrollArea, backgroundImageUri ? { marginTop: -(insets.top + PROFILE_HEADER_HEIGHT), paddingTop: insets.top + PROFILE_HEADER_HEIGHT, paddingBottom: 50 } : undefined]}>
             {backgroundImageUri ? (
               <Image source={{ uri: backgroundImageUri }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
             ) : null}
@@ -992,7 +992,7 @@ export default function ProfileScreen() {
 
           </View>
 
-          <View style={styles.liveDividerArea}>
+          <View style={[styles.liveDividerArea, backgroundImageUri ? { marginTop: -50 } : undefined]}>
             <View style={styles.liveDividerCurvedWhite}>
               <View style={styles.liveDividerCurvedWhiteInner} />
             </View>
@@ -1897,7 +1897,7 @@ const styles = StyleSheet.create({
   },
 
   liveDividerArea: {
-    height: 40,
+    height: 50,
     position: 'relative' as const,
     backgroundColor: 'transparent',
     overflow: 'visible' as const,
@@ -1907,6 +1907,7 @@ const styles = StyleSheet.create({
   whiteContentBelow: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
+    marginTop: -1,
   },
   liveDividerCurvedWhite: {
     position: 'absolute' as const,
@@ -1921,11 +1922,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 6,
   },
   liveSection: {
     marginBottom: 32,
