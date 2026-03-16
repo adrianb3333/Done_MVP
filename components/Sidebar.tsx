@@ -9,7 +9,7 @@ import {
   Dimensions,
   Image,
 } from 'react-native';
-import { X } from 'lucide-react-native';
+import { ArrowRight } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppNavigation, AppSection } from '@/contexts/AppNavigationContext';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -117,8 +117,8 @@ export default function Sidebar() {
         >
           <View style={styles.sidebarHeader}>
             <Image source={require('@/assets/images/golferscrib-logo.png')} style={styles.sidebarLogo} resizeMode="contain" />
-            <TouchableOpacity onPress={closeSidebar} style={styles.closeBtn} activeOpacity={0.7}>
-              <X size={22} color="#999999" />
+            <TouchableOpacity onPress={closeSidebar} style={styles.glassCloseBtn} activeOpacity={0.7}>
+              <ArrowRight size={20} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
 
@@ -219,8 +219,15 @@ const styles = StyleSheet.create({
     width: 140,
     height: 36,
   },
-  closeBtn: {
-    padding: 6,
+  glassCloseBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
   },
   sectionsList: {
     flex: 1,

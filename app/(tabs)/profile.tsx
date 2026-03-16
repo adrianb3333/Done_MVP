@@ -14,7 +14,7 @@ import {
   TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { HelpCircle, X, User, Newspaper, Bluetooth, QrCode, Swords, Clock, Target, Zap, Hash, Menu, ChevronRight, Settings, Camera, Bell, ArrowRight, ChevronLeft, Search, Backpack, CheckCircle } from 'lucide-react-native';
+import { HelpCircle, X, User, Newspaper, Bluetooth, QrCode, Swords, Clock, Target, Zap, Hash, Menu, ChevronRight, Settings, Camera, Bell, ArrowRight, ChevronLeft, Search, Backpack, CheckCircle, Crosshair } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -767,7 +767,7 @@ export default function ProfileScreen() {
               activeOpacity={0.7}
               testID="weekly-summary-button"
             >
-              <Text style={styles.coachEmojiIcon}>🎯</Text>
+              <Crosshair size={20} color="#FFFFFF" />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={toggleHelpMenu}
