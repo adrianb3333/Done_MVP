@@ -42,13 +42,29 @@ function AppContent() {
   const { currentSection } = useAppNavigation();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [showLoginSplash, setShowLoginSplash] = useState<boolean>(false);
+  const [showLoadingSplash, setShowLoadingSplash] = useState<boolean>(true);
   const splashOpacity = useRef(new Animated.Value(1)).current;
   const prevSessionRef = useRef<Session | null>(null);
   const isInitialLoadRef = useRef<boolean>(true);
-  const hasShownSplashRef = useRef<boolean>(false);
   const router = useRouter();
   const segments = useSegments();
+
+  useEffect(() => {
+    console.log('App loading, showing splash for 7 seconds');
+    splashOpacity.setValue(1);
+    const splashTimer = setTimeout(() => {
+      Animated.timing(splashOpacity, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }).start(() => {
+        setShowLoadingSplash(false);
+      });
+    }, 6400);
+
+    return () => clearTimeout(splashTimer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -75,25 +91,8 @@ function AppContent() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
       console.log('Auth state changed:', !!newSession);
-      const wasLoggedOut = !prevSessionRef.current;
       prevSessionRef.current = newSession;
       setSession(newSession);
-
-      if (newSession && wasLoggedOut && !hasShownSplashRef.current) {
-        console.log('User just logged in, showing splash');
-        hasShownSplashRef.current = true;
-        setShowLoginSplash(true);
-        splashOpacity.setValue(1);
-        setTimeout(() => {
-          Animated.timing(splashOpacity, {
-            toValue: 0,
-            duration: 600,
-            useNativeDriver: true,
-          }).start(() => {
-            setShowLoginSplash(false);
-          });
-        }, 6400);
-      }
     });
 
     return () => {
@@ -104,22 +103,22 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
-    if (loading) return;
+    if (loading || showLoadingSplash) return;
 
     const inAuthGroup = segments[0] === 'auth';
 
-    if (!session && !inAuthGroup) {
-      router.replace('/auth');
-    } else if (session && inAuthGroup) {
-      router.replace('/(tabs)');
+    try {
+      if (!session && !inAuthGroup) {
+        router.replace('/auth');
+      } else if (session && inAuthGroup) {
+        router.replace('/(tabs)');
+      }
+    } catch (e) {
+      console.log('Navigation error (safe to ignore):', e);
     }
-  }, [session, segments, loading, router]);
+  }, [session, segments, loading, showLoadingSplash, router]);
 
-  if (loading) {
-    return <View style={styles.container} />;
-  }
-
-  if (showLoginSplash) {
+  if (showLoadingSplash) {
     return (
       <Animated.View style={[styles.splashContainer, { opacity: splashOpacity }]}>
         <Image
@@ -136,6 +135,10 @@ function AppContent() {
         </View>
       </Animated.View>
     );
+  }
+
+  if (loading) {
+    return <View style={styles.container} />;
   }
 
   if (showPracticeSummary) {
