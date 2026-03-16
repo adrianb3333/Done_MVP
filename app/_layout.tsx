@@ -11,6 +11,7 @@ import { UserDataProvider } from "@/hooks/useUserData";
 import { SensorProvider } from "@/contexts/SensorContext";
 import { ChatProvider } from "@/contexts/ChatContext";
 import { BattleProvider } from "@/contexts/BattleContext";
+import { BagProvider } from "@/contexts/BagContext";
 import BattleInviteBanner from "@/components/BattleInviteBanner";
 import PlaySessionTabs from "@/app/play-session/PlaySessionTabs";
 import PracticeSessionTabs from "@/app/practice-session/PracticeSessionTabs";
@@ -277,6 +278,14 @@ function AppContent() {
           }} 
         />
         <Stack.Screen 
+          name="modals/my-bag-build-modal" 
+          options={{ 
+            presentation: "fullScreenModal",
+            headerShown: false,
+            animation: "slide_from_bottom"
+          }} 
+        />
+        <Stack.Screen 
           name="modals/handicap-modal" 
           options={{ 
             presentation: "fullScreenModal",
@@ -397,13 +406,15 @@ export default function RootLayout() {
           <SensorProvider>
             <ProfileProvider>
               <AppNavigationProvider>
-                <BattleProvider>
-                  <ChatProvider>
-                    <UserDataProvider>
-                      <RootLayoutNav />
-                    </UserDataProvider>
-                  </ChatProvider>
-                </BattleProvider>
+                <BagProvider>
+                  <BattleProvider>
+                    <ChatProvider>
+                      <UserDataProvider>
+                        <RootLayoutNav />
+                      </UserDataProvider>
+                    </ChatProvider>
+                  </BattleProvider>
+                </BagProvider>
               </AppNavigationProvider>
             </ProfileProvider>
           </SensorProvider>

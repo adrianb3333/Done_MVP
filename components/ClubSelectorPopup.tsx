@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
 import { ChevronDown } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { saveClubSelection, getCurrentGpsPosition } from '@/services/clubSelectionService';
+import { useBag } from '@/contexts/BagContext';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -20,7 +21,7 @@ interface ClubCategory {
   clubs: string[];
 }
 
-const CLUB_CATEGORIES: ClubCategory[] = [
+const DEFAULT_CLUB_CATEGORIES: ClubCategory[] = [
   {
     name: 'Woods',
     clubs: ['Dr', '3w', '5w', '7w'],
@@ -43,6 +44,39 @@ const CLUB_CATEGORIES: ClubCategory[] = [
   },
 ];
 
+function categorizeBagClubs(bagClubs: string[]): ClubCategory[] {
+  const categories: Record<string, string[]> = {
+    Woods: [],
+    Hybrids: [],
+    Irons: [],
+    Wedges: [],
+    Putter: [],
+  };
+
+  for (const club of bagClubs) {
+    if (club === 'Pu') {
+      categories['Putter'].push(club);
+    } else if (club === 'Dr' || club.endsWith('w')) {
+      if (['Pw', 'Sw', 'Aw', 'Gw', 'Lw', 'Uw'].includes(club) || club.endsWith('°')) {
+        categories['Wedges'].push(club);
+      } else {
+        categories['Woods'].push(club);
+      }
+    } else if (club.endsWith('h')) {
+      categories['Hybrids'].push(club);
+    } else if (club.endsWith('i')) {
+      categories['Irons'].push(club);
+    } else if (club.endsWith('°')) {
+      categories['Wedges'].push(club);
+    }
+  }
+
+  const order = ['Woods', 'Hybrids', 'Irons', 'Wedges', 'Putter'];
+  return order
+    .filter((name) => categories[name].length > 0)
+    .map((name) => ({ name, clubs: categories[name] }));
+}
+
 interface ShotMarker {
   clubId: string;
   latitude: number;
@@ -63,6 +97,16 @@ export default function ClubSelectorPopup({ visible, onClose, onClubSelected, se
   const [selectedClub, setSelectedClub] = useState<string | null>(null);
   const [saving, setSaving] = useState<boolean>(false);
   const [showContent, setShowContent] = useState<boolean>(false);
+  const { bagClubs, hasBag, getOrderedBagClubs } = useBag();
+
+  const clubCategories = useMemo(() => {
+    if (hasBag && bagClubs.length > 0) {
+      const ordered = getOrderedBagClubs();
+      console.log('[ClubSelector] Using bag clubs:', ordered.length);
+      return categorizeBagClubs(ordered);
+    }
+    return DEFAULT_CLUB_CATEGORIES;
+  }, [hasBag, bagClubs, getOrderedBagClubs]);
 
   useEffect(() => {
     if (visible) {
@@ -165,7 +209,7 @@ export default function ClubSelectorPopup({ visible, onClose, onClubSelected, se
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {CLUB_CATEGORIES.map((category) => (
+          {clubCategories.map((category) => (
             <View key={category.name} style={styles.categoryBlock}>
               <View style={styles.categoryRow}>
                 <View style={styles.categoryIconRow}>

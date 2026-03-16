@@ -14,7 +14,7 @@ import {
   TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { HelpCircle, X, User, Newspaper, Bluetooth, QrCode, Swords, Clock, Target, Zap, Hash, Menu, BarChart2, ChevronRight, Settings, Camera, Bell, ArrowRight, ChevronLeft, Search } from 'lucide-react-native';
+import { HelpCircle, X, User, Newspaper, Bluetooth, QrCode, Swords, Clock, Target, Zap, Hash, Menu, BarChart2, ChevronRight, Settings, Camera, Bell, ArrowRight, ChevronLeft, Search, Backpack } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -28,6 +28,7 @@ import { useScrollHeader } from '@/hooks/useScrollHeader';
 import ProfileCard from '@/components/ProfileCard';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { supabase } from '@/lib/supabase';
+import { useBag } from '@/contexts/BagContext';
 import { useChat } from '@/contexts/ChatContext';
 
 
@@ -562,6 +563,7 @@ export default function ProfileScreen() {
   const [newsRead, setNewsRead] = useState<boolean>(false);
   const [notificationsRead, setNotificationsRead] = useState<boolean>(false);
 
+  const { hasBag } = useBag();
   const { hasUnreadChats } = useChat();
   const hasPendingCrewInvites = pendingCrewInvites.length > 0;
   const hasUnreadNotifications = (followers.length > 0 && !notificationsRead) || hasUnreadChats || hasPendingCrewInvites;
@@ -798,6 +800,21 @@ export default function ProfileScreen() {
               <Newspaper size={18} color="#B0B0B0" />
               <Text style={styles.helpMenuText}>Information</Text>
               {hasNewNews && <View style={styles.helpMenuRedDot} />}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.helpMenuItem}
+              onPress={() => {
+                toggleHelpMenu();
+                if (hasBag) {
+                  router.push('/modals/my-bag-modal' as any);
+                } else {
+                  router.push('/modals/my-bag-build-modal' as any);
+                }
+              }}
+              activeOpacity={0.7}
+            >
+              <Backpack size={18} color="#B0B0B0" />
+              <Text style={styles.helpMenuText}>My Bag</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.helpMenuItem}

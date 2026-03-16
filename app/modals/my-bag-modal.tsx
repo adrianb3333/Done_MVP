@@ -7,11 +7,12 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { ChevronLeft, Plus } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import MaskedView from '@react-native-masked-view/masked-view';
+import { useBag } from '@/contexts/BagContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -77,25 +78,40 @@ function getClubDisplayName(club: string): string {
 
 export default function MyBagModal() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ clubs: string }>();
-  const clubs: string[] = params.clubs ? JSON.parse(params.clubs) : [];
+  const { getOrderedBagClubs } = useBag();
+  const clubs = getOrderedBagClubs();
   const categorized = categorizeClubs(clubs);
 
-  const handleExit = useCallback(() => {
+  const handleBack = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.back();
+  }, [router]);
+
+  const handleEditBag = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.dismiss(3);
+    console.log('[MyBag] Opening edit bag');
+    router.push('/modals/my-bag-build-modal' as any);
   }, [router]);
 
   return (
     <LinearGradient
-      colors={['#4BA35B', '#3D954D', '#2D803D']}
+      colors={['#0059B2', '#1075E3', '#1C8CFF']}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
       style={styles.container}
     >
       <SafeAreaView edges={['top']} style={styles.safeTop}>
         <View style={styles.header}>
+          <TouchableOpacity
+            onPress={handleBack}
+            style={styles.backBtn}
+            activeOpacity={0.7}
+            testID="my-bag-back"
+          >
+            <ChevronLeft size={22} color="#fff" strokeWidth={2.5} />
+          </TouchableOpacity>
           <Text style={styles.headerTitle}>My Bag</Text>
+          <View style={styles.headerSpacer} />
         </View>
       </SafeAreaView>
 
@@ -104,47 +120,43 @@ export default function MyBagModal() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {categorized.map((category) => (
-          <View key={category.name} style={styles.categoryBlock}>
-            <Text style={styles.categoryName}>{category.name}</Text>
-            <View style={styles.clubsRow}>
-              {category.clubs.map((club) => (
-                <View key={club} style={styles.clubCard}>
-                  <LinearGradient
-                    colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0.08)']}
-                    style={styles.clubCircle}
-                  >
-                    <Text style={styles.clubCircleText}>{club}</Text>
-                  </LinearGradient>
-                  <Text style={styles.clubLabel}>{getClubDisplayName(club)}</Text>
-                </View>
-              ))}
+        {categorized.length > 0 ? (
+          categorized.map((category) => (
+            <View key={category.name} style={styles.categoryBlock}>
+              <Text style={styles.categoryName}>{category.name}</Text>
+              <View style={styles.clubsRow}>
+                {category.clubs.map((club) => (
+                  <View key={club} style={styles.clubCard}>
+                    <LinearGradient
+                      colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0.08)']}
+                      style={styles.clubCircle}
+                    >
+                      <Text style={styles.clubCircleText}>{club}</Text>
+                    </LinearGradient>
+                    <Text style={styles.clubLabel}>{getClubDisplayName(club)}</Text>
+                  </View>
+                ))}
+              </View>
             </View>
+          ))
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>No clubs in your bag yet</Text>
+            <Text style={styles.emptySubtext}>Tap Edit Bag to build your bag</Text>
           </View>
-        ))}
+        )}
       </ScrollView>
 
       <SafeAreaView edges={['bottom']} style={styles.safeBottom}>
         <View style={styles.footer}>
           <TouchableOpacity
-            style={styles.exitBtn}
-            onPress={handleExit}
+            style={styles.editBagBtn}
+            onPress={handleEditBag}
             activeOpacity={0.8}
-            testID="my-bag-exit-button"
+            testID="edit-bag-button"
           >
-            <MaskedView
-              maskElement={
-                <Text style={styles.exitTextMask}>EXIT</Text>
-              }
-            >
-              <LinearGradient
-                colors={['#4BA35B', '#3D954D', '#2D803D']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <Text style={[styles.exitTextMask, { opacity: 0 }]}>EXIT</Text>
-              </LinearGradient>
-            </MaskedView>
+            <Plus size={20} color="#0059B2" strokeWidth={2.5} />
+            <Text style={styles.editBagBtnText}>Edit Bag</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -156,18 +168,35 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  safeTop: {},
+  safeTop: {
+    backgroundColor: 'transparent',
+  },
   safeBottom: {},
   header: {
+    flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    paddingVertical: 18,
+    justifyContent: 'space-between' as const,
     paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: '800' as const,
     color: '#fff',
     letterSpacing: 0.3,
+  },
+  headerSpacer: {
+    width: 40,
   },
   scrollArea: {
     flex: 1,
@@ -218,22 +247,37 @@ const styles = StyleSheet.create({
     marginTop: 6,
     textAlign: 'center' as const,
   },
+  emptyState: {
+    paddingVertical: 60,
+    alignItems: 'center' as const,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: 'rgba(255,255,255,0.8)',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.5)',
+  },
   footer: {
     paddingHorizontal: 24,
     paddingTop: 12,
     paddingBottom: 8,
   },
-  exitBtn: {
+  editBagBtn: {
     backgroundColor: '#fff',
     borderRadius: 16,
     paddingVertical: 16,
+    flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
+    gap: 8,
   },
-  exitTextMask: {
+  editBagBtnText: {
     fontSize: 17,
-    fontWeight: '800' as const,
-    color: '#000',
-    letterSpacing: 1.5,
+    fontWeight: '700' as const,
+    color: '#0059B2',
   },
 });
