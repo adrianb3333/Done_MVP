@@ -990,58 +990,18 @@ export default function ProfileScreen() {
 
             </View>
 
+          </View>
+
+          <View style={styles.liveDividerArea}>
+            <View style={styles.liveDividerCurvedWhite}>
+              <View style={styles.liveDividerCurvedWhiteInner} />
+            </View>
+          </View>
+
+          <View style={styles.whiteContentBelow}>
             {hasCrewAccess && (
               <View style={styles.crewSection}>
-                <View style={styles.crewTitleRow}>
-                  {'CREW'.split('').map((letter, idx) => {
-                    const strokeColor = (crewColor && crewColor !== '#1A1A1A') ? crewColor : '#1A1A1A';
-                    const offset = 0.8;
-                    return (
-                      <View key={idx} style={styles.crewLetterContainer}>
-                        <Text style={[
-                          styles.crewLetterStroke,
-                          { textShadowColor: strokeColor, textShadowOffset: { width: offset, height: 0 }, textShadowRadius: 0.3 },
-                        ]}>{letter}</Text>
-                        <Text style={[
-                          styles.crewLetterStroke,
-                          styles.crewLetterStrokeAbsolute,
-                          { textShadowColor: strokeColor, textShadowOffset: { width: -offset, height: 0 }, textShadowRadius: 0.3 },
-                        ]}>{letter}</Text>
-                        <Text style={[
-                          styles.crewLetterStroke,
-                          styles.crewLetterStrokeAbsolute,
-                          { textShadowColor: strokeColor, textShadowOffset: { width: 0, height: offset }, textShadowRadius: 0.3 },
-                        ]}>{letter}</Text>
-                        <Text style={[
-                          styles.crewLetterStroke,
-                          styles.crewLetterStrokeAbsolute,
-                          { textShadowColor: strokeColor, textShadowOffset: { width: 0, height: -offset }, textShadowRadius: 0.3 },
-                        ]}>{letter}</Text>
-                        <Text style={[
-                          styles.crewLetterStroke,
-                          styles.crewLetterStrokeAbsolute,
-                          { textShadowColor: strokeColor, textShadowOffset: { width: offset, height: offset }, textShadowRadius: 0.3 },
-                        ]}>{letter}</Text>
-                        <Text style={[
-                          styles.crewLetterStroke,
-                          styles.crewLetterStrokeAbsolute,
-                          { textShadowColor: strokeColor, textShadowOffset: { width: -offset, height: -offset }, textShadowRadius: 0.3 },
-                        ]}>{letter}</Text>
-                        <Text style={[
-                          styles.crewLetterStroke,
-                          styles.crewLetterStrokeAbsolute,
-                          { textShadowColor: strokeColor, textShadowOffset: { width: offset, height: -offset }, textShadowRadius: 0.3 },
-                        ]}>{letter}</Text>
-                        <Text style={[
-                          styles.crewLetterStroke,
-                          styles.crewLetterStrokeAbsolute,
-                          { textShadowColor: strokeColor, textShadowOffset: { width: -offset, height: offset }, textShadowRadius: 0.3 },
-                        ]}>{letter}</Text>
-                        <Text style={[styles.crewLetterText]}>{letter}</Text>
-                      </View>
-                    );
-                  })}
-                </View>
+                <Text style={styles.crewSectionTitleBlack}>CREW</Text>
                 <TouchableOpacity
                   style={[styles.crewCard, crewColor && crewColor !== '#1A1A1A' && { backgroundColor: crewColor }]}
                   onPress={() => {
@@ -1064,15 +1024,6 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
               </View>
             )}
-          </View>
-
-          <View style={styles.liveDividerArea}>
-            <View style={styles.liveDividerCurvedWhite}>
-              <View style={styles.liveDividerCurvedWhiteInner} />
-            </View>
-          </View>
-
-          <View style={styles.whiteContentBelow}>
             <View style={styles.liveSection}>
             <Text style={styles.liveSectionTitle}>LIVE</Text>
             <View style={styles.liveCard}>
@@ -1682,6 +1633,7 @@ const styles = StyleSheet.create({
   imageScrollArea: {
     position: 'relative' as const,
     overflow: 'hidden' as const,
+    zIndex: 1,
   },
   imageScrollContent: {
     paddingHorizontal: 20,
@@ -1949,6 +1901,8 @@ const styles = StyleSheet.create({
     position: 'relative' as const,
     backgroundColor: 'transparent',
     overflow: 'visible' as const,
+    zIndex: 2,
+    marginTop: -1,
   },
   whiteContentBelow: {
     backgroundColor: '#FFFFFF',
@@ -2774,45 +2728,15 @@ const styles = StyleSheet.create({
     right: 10,
   },
   crewSection: {
-    marginTop: 16,
-    paddingBottom: 24,
-    paddingHorizontal: 16,
+    marginBottom: 28,
+    paddingHorizontal: 0,
+    paddingTop: 6,
   },
-  crewSectionTitle: {
+  crewSectionTitleBlack: {
     fontSize: 20,
     fontWeight: '800' as const,
     color: '#1A1A1A',
-    letterSpacing: 1,
     marginBottom: 10,
-  },
-  crewTitleRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 4,
-    marginBottom: 10,
-  },
-  crewLetterContainer: {
-    position: 'relative' as const,
-  },
-  crewLetterStroke: {
-    fontSize: 20,
-    fontWeight: '900' as const,
-    color: 'transparent',
-    letterSpacing: 0.5,
-  },
-  crewLetterStrokeAbsolute: {
-    position: 'absolute' as const,
-    top: 0,
-    left: 0,
-  },
-  crewLetterText: {
-    fontSize: 20,
-    fontWeight: '900' as const,
-    color: '#1A1A1A',
-    letterSpacing: 0.5,
-    position: 'absolute' as const,
-    top: 0,
-    left: 0,
   },
   crewCard: {
     backgroundColor: '#FFFFFF',
