@@ -17,7 +17,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronLeft, Plus, Trash2, X, Search, MapPin, Star, ChevronRight } from 'lucide-react-native';
+import { ChevronLeft, Plus, Trash2, X, Search, MapPin, Star, ChevronRight, Navigation } from 'lucide-react-native';
 import { CircleCheck } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -133,6 +133,8 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
   const [courseNearbyLoading, setCourseNearbyLoading] = useState<boolean>(true);
   const [courseUserLocation, setCourseUserLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [courseNearbyLoaded, setCourseNearbyLoaded] = useState<boolean>(false);
+  const [courseShowMap, setCourseShowMap] = useState<boolean>(false);
+  const courseMapRef = useRef<any>(null);
 
   const segmentWidth = (SCREEN_WIDTH - 40 - 48) / SEGMENT_KEYS.length;
   const underlineWidth = 40;
@@ -926,159 +928,7 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
         </ScrollView>
 
         <Modal
-          visible={courseModalVisible}
-          animationType="slide"
-          presentationStyle="fullScreen"
-          onRequestClose={() => setCourseModalVisible(false)}
-        >
-          <LinearGradient
-            colors={['#4BA35B', '#3D954D', '#2D803D']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={styles.courseModalContainer}
-          >
-            <View style={[styles.courseModalHeader, { paddingTop: insets.top + 10 }]}> 
-              <TouchableOpacity
-                onPress={() => {
-                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setCourseModalVisible(false);
-                }}
-                style={styles.courseModalBackBtn}
-                activeOpacity={0.7}
-              >
-                <ChevronLeft size={22} color="#FFFFFF" />
-              </TouchableOpacity>
-              <Text style={styles.courseModalTitle}>BANOR</Text>
-              <View style={{ width: 40 }} />
-            </View>
-
-            <View style={styles.courseModalSearchSection}>
-              <View style={styles.courseModalSearchBar}>
-                <Search size={18} color="rgba(255,255,255,0.6)" />
-                <TextInput
-                  style={styles.courseModalSearchInput}
-                  placeholder="Search golf courses..."
-                  placeholderTextColor="rgba(255,255,255,0.5)"
-                  value={courseSearchQuery}
-                  onChangeText={setCourseSearchQuery}
-                  onSubmitEditing={handleCourseSearch}
-                  returnKeyType="search"
-                />
-                {courseSearchQuery.length > 0 && (
-                  <TouchableOpacity
-                    onPress={() => {
-                      setCourseSearchQuery('');
-                      setCourseSearchResults([]);
-                      setCourseHasSearched(false);
-                    }}
-                  >
-                    <X size={16} color="rgba(255,255,255,0.5)" />
-                  </TouchableOpacity>
-                )}
-                <TouchableOpacity
-                  style={styles.courseModalSearchBtn}
-                  onPress={handleCourseSearch}
-                  activeOpacity={0.7}
-                  disabled={courseIsSearching}
-                >
-                  {courseIsSearching ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <Text style={styles.courseModalSearchBtnText}>Sök</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-              <View style={styles.courseModalTabRow}>
-                <TabCourse
-                  activeTab={courseActiveTab}
-                  onTabChange={setCourseActiveTab}
-                  playedCount={0}
-                />
-              </View>
-            </View>
-
-            {courseIsSelecting && (
-              <View style={styles.courseModalSelectingOverlay}>
-                <ActivityIndicator size="large" color="#FFFFFF" />
-                <Text style={styles.courseModalSelectingText}>Loading course data...</Text>
-              </View>
-            )}
-
-            <FlatList
-              data={displayCourses}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }: { item: DisplayCourse }) => {
-                const isFav = courseFavorites.includes(item.id);
-                return (
-                  <TouchableOpacity
-                    style={styles.courseModalRow}
-                    onPress={() => handleSelectCourse(item)}
-                    activeOpacity={0.6}
-                    disabled={courseIsSelecting}
-                  >
-                    <View style={styles.courseModalInfo}>
-                      <Text style={styles.courseModalName}>{item.name}</Text>
-                      <View style={styles.courseModalSubRow}>
-                        <Text style={styles.courseModalClub}>{item.clubName}</Text>
-                        <MapPin size={12} color="rgba(255,255,255,0.5)" />
-                      </View>
-                      <View style={styles.courseModalMetaRow}>
-                        {(item.city || item.country) ? (
-                          <Text style={styles.courseModalCity}>
-                            {[item.city, item.country].filter(Boolean).join(', ')}
-                          </Text>
-                        ) : null}
-                        {item.distanceKm !== undefined && (
-                          <Text style={styles.courseModalDistance}>
-                            {item.distanceKm < 1
-                              ? `${Math.round(item.distanceKm * 1000)} m`
-                              : `${item.distanceKm.toFixed(1)} km`}
-                          </Text>
-                        )}
-                      </View>
-                    </View>
-                    <TouchableOpacity
-                      style={styles.courseModalFavBtn}
-                      onPress={() => toggleCourseFavorite(item.id)}
-                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    >
-                      <Star
-                        size={20}
-                        color={isFav ? '#FFB74D' : 'rgba(255,255,255,0.4)'}
-                        fill={isFav ? '#FFB74D' : 'transparent'}
-                      />
-                    </TouchableOpacity>
-                  </TouchableOpacity>
-                );
-              }}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.courseModalListContent}
-              ListEmptyComponent={
-                <View style={styles.courseModalEmpty}>
-                  {(courseNearbyLoading && !courseHasSearched) || courseIsSearching ? (
-                    <>
-                      <ActivityIndicator size="large" color="rgba(255,255,255,0.5)" />
-                      <Text style={styles.courseModalEmptyText}>
-                        {courseNearbyLoading && !courseHasSearched ? 'Finding nearby courses...' : 'Searching...'}
-                      </Text>
-                    </>
-                  ) : (
-                    <Text style={styles.courseModalEmptyText}>
-                      {courseActiveTab === 'favorite'
-                        ? 'No favorite courses yet'
-                        : courseHasSearched
-                        ? 'No courses found. Try a different search.'
-                        : 'No nearby courses found. Try searching by name.'}
-                    </Text>
-                  )}
-                </View>
-              }
-            />
-          </LinearGradient>
-        </Modal>
-
-        <Modal
-          visible={playerPickerVisible}
+          visible={playerPickerVisible && playerPickerSource === 'round'}
           transparent
           animationType="slide"
           onRequestClose={() => setPlayerPickerVisible(false)}
@@ -1669,6 +1519,262 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
       {activeSegment === 0 && renderDrillContent()}
       {activeSegment === 1 && renderRoundContent()}
       {activeSegment === 2 && renderTournamentContent()}
+
+      <Modal
+        visible={courseModalVisible}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => { setCourseModalVisible(false); setCourseShowMap(false); }}
+      >
+        <View style={[styles.courseModalContainer, { backgroundColor: courseSelectTarget === 'tournament' ? bgColor : '#3D954D' }]}>
+          <LinearGradient
+            colors={courseSelectTarget === 'tournament' && isDark
+              ? [bgColor, bgColor, bgColor]
+              : ['#4BA35B', '#3D954D', '#2D803D']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={styles.courseModalContainer}
+          >
+            <View style={[styles.courseModalHeader, { paddingTop: insets.top + 10 }]}>
+              <TouchableOpacity
+                onPress={() => {
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setCourseModalVisible(false);
+                  setCourseShowMap(false);
+                }}
+                style={styles.courseModalBackBtn}
+                activeOpacity={0.7}
+              >
+                <ChevronLeft size={22} color="#FFFFFF" />
+              </TouchableOpacity>
+              <Text style={styles.courseModalTitle}>BANOR</Text>
+              <TouchableOpacity
+                style={styles.courseModalMapBtn}
+                onPress={() => {
+                  if (courseUserLocation) {
+                    setCourseShowMap(true);
+                  }
+                }}
+                activeOpacity={0.7}
+                disabled={!courseUserLocation}
+              >
+                <MapPin
+                  size={22}
+                  color={courseUserLocation ? '#FFFFFF' : 'rgba(255,255,255,0.4)'}
+                />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.courseModalSearchSection}>
+              <View style={styles.courseModalSearchBar}>
+                <Search size={18} color="rgba(255,255,255,0.6)" />
+                <TextInput
+                  style={styles.courseModalSearchInput}
+                  placeholder="Search golf courses..."
+                  placeholderTextColor="rgba(255,255,255,0.5)"
+                  value={courseSearchQuery}
+                  onChangeText={setCourseSearchQuery}
+                  onSubmitEditing={handleCourseSearch}
+                  returnKeyType="search"
+                />
+                {courseSearchQuery.length > 0 && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setCourseSearchQuery('');
+                      setCourseSearchResults([]);
+                      setCourseHasSearched(false);
+                    }}
+                  >
+                    <X size={16} color="rgba(255,255,255,0.5)" />
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                  style={styles.courseModalSearchBtn}
+                  onPress={handleCourseSearch}
+                  activeOpacity={0.7}
+                  disabled={courseIsSearching}
+                >
+                  {courseIsSearching ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.courseModalSearchBtnText}>Sök</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+              <View style={styles.courseModalTabRow}>
+                <TabCourse
+                  activeTab={courseActiveTab}
+                  onTabChange={setCourseActiveTab}
+                  playedCount={0}
+                />
+              </View>
+            </View>
+
+            {courseIsSelecting && (
+              <View style={styles.courseModalSelectingOverlay}>
+                <ActivityIndicator size="large" color="#FFFFFF" />
+                <Text style={styles.courseModalSelectingText}>Loading course data...</Text>
+              </View>
+            )}
+
+            <FlatList
+              data={displayCourses}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }: { item: DisplayCourse }) => {
+                const isFav = courseFavorites.includes(item.id);
+                return (
+                  <TouchableOpacity
+                    style={styles.courseModalRow}
+                    onPress={() => handleSelectCourse(item)}
+                    activeOpacity={0.6}
+                    disabled={courseIsSelecting}
+                  >
+                    <View style={styles.courseModalInfo}>
+                      <Text style={styles.courseModalName}>{item.name}</Text>
+                      <View style={styles.courseModalSubRow}>
+                        <Text style={styles.courseModalClub}>{item.clubName}</Text>
+                        <MapPin size={12} color="rgba(255,255,255,0.5)" />
+                      </View>
+                      <View style={styles.courseModalMetaRow}>
+                        {(item.city || item.country) ? (
+                          <Text style={styles.courseModalCity}>
+                            {[item.city, item.country].filter(Boolean).join(', ')}
+                          </Text>
+                        ) : null}
+                        {item.distanceKm !== undefined && (
+                          <Text style={styles.courseModalDistance}>
+                            {item.distanceKm < 1
+                              ? `${Math.round(item.distanceKm * 1000)} m`
+                              : `${item.distanceKm.toFixed(1)} km`}
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.courseModalFavBtn}
+                      onPress={() => toggleCourseFavorite(item.id)}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    >
+                      <Star
+                        size={20}
+                        color={isFav ? '#FFB74D' : 'rgba(255,255,255,0.4)'}
+                        fill={isFav ? '#FFB74D' : 'transparent'}
+                      />
+                    </TouchableOpacity>
+                  </TouchableOpacity>
+                );
+              }}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.courseModalListContent}
+              ListEmptyComponent={
+                <View style={styles.courseModalEmpty}>
+                  {(courseNearbyLoading && !courseHasSearched) || courseIsSearching ? (
+                    <>
+                      <ActivityIndicator size="large" color="rgba(255,255,255,0.5)" />
+                      <Text style={styles.courseModalEmptyText}>
+                        {courseNearbyLoading && !courseHasSearched ? 'Finding nearby courses...' : 'Searching...'}
+                      </Text>
+                    </>
+                  ) : (
+                    <Text style={styles.courseModalEmptyText}>
+                      {courseActiveTab === 'favorite'
+                        ? 'No favorite courses yet'
+                        : courseHasSearched
+                        ? 'No courses found. Try a different search.'
+                        : 'No nearby courses found. Try searching by name.'}
+                    </Text>
+                  )}
+                </View>
+              }
+            />
+
+            {courseShowMap && courseUserLocation && Platform.OS !== 'web' && (() => {
+              const MapView = require('react-native-maps').default;
+              const { Marker, Callout } = require('react-native-maps');
+              const allCoursesForMap = [...courseNearbyCourses, ...courseSearchResults].filter(
+                (c, i, arr) => arr.findIndex((x) => x.id === c.id) === i
+              );
+              const markersWithCoords = allCoursesForMap.filter((c) => c.latitude && c.longitude);
+              return (
+                <View style={styles.courseMapOverlay}>
+                  <MapView
+                    ref={courseMapRef}
+                    style={StyleSheet.absoluteFillObject}
+                    initialRegion={{
+                      latitude: courseUserLocation.lat,
+                      longitude: courseUserLocation.lon,
+                      latitudeDelta: 0.5,
+                      longitudeDelta: 0.5,
+                    }}
+                    showsUserLocation
+                    showsMyLocationButton={false}
+                    mapType="standard"
+                  >
+                    {markersWithCoords.map((course) => (
+                      <Marker
+                        key={course.id}
+                        coordinate={{
+                          latitude: course.latitude!,
+                          longitude: course.longitude!,
+                        }}
+                        title={course.name}
+                        description={`${course.clubName} • ${course.city}`}
+                        pinColor="#3D954D"
+                        onCalloutPress={() => handleSelectCourse(course)}
+                      >
+                        <View style={styles.courseMapPinContainer}>
+                          <View style={styles.courseMapPinDot} />
+                        </View>
+                        <Callout tooltip>
+                          <View style={styles.courseMapCallout}>
+                            <Text style={styles.courseMapCalloutTitle} numberOfLines={1}>{course.name}</Text>
+                            <Text style={styles.courseMapCalloutSub} numberOfLines={1}>{course.clubName}</Text>
+                            {course.distanceKm !== undefined && (
+                              <Text style={styles.courseMapCalloutDist}>
+                                {course.distanceKm < 1
+                                  ? `${Math.round(course.distanceKm * 1000)} m`
+                                  : `${course.distanceKm.toFixed(1)} km`}
+                              </Text>
+                            )}
+                            <Text style={styles.courseMapCalloutTap}>Tap to select</Text>
+                          </View>
+                        </Callout>
+                      </Marker>
+                    ))}
+                  </MapView>
+                  <View style={styles.courseMapHeaderSafe}>
+                    <View style={[styles.courseMapHeader, { paddingTop: insets.top + 10 }]}>
+                      <TouchableOpacity
+                        style={styles.courseMapCloseBtn}
+                        onPress={() => setCourseShowMap(false)}
+                        activeOpacity={0.7}
+                      >
+                        <X size={20} color="#FFFFFF" />
+                      </TouchableOpacity>
+                      <Text style={styles.courseMapHeaderTitle}>Banor på kartan</Text>
+                      <View style={{ width: 36 }} />
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.courseMapMyLocationBtn}
+                    onPress={() => {
+                      courseMapRef.current?.animateToRegion({
+                        latitude: courseUserLocation.lat,
+                        longitude: courseUserLocation.lon,
+                        latitudeDelta: 0.15,
+                        longitudeDelta: 0.15,
+                      }, 600);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Navigation size={18} color="#3D954D" />
+                  </TouchableOpacity>
+                </View>
+              );
+            })()}
+          </LinearGradient>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -2391,5 +2497,104 @@ const styles = StyleSheet.create({
   },
   totalRoundTextSelected: {
     color: '#FFFFFF',
+  },
+  courseModalMapBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  courseMapOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 200,
+    backgroundColor: '#000',
+  },
+  courseMapPinContainer: {
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  courseMapPinDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#3D954D',
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+  },
+  courseMapCallout: {
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    borderRadius: 10,
+    padding: 10,
+    minWidth: 160,
+    maxWidth: 240,
+  },
+  courseMapCalloutTitle: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700' as const,
+  },
+  courseMapCalloutSub: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  courseMapCalloutDist: {
+    color: '#34C759',
+    fontSize: 12,
+    fontWeight: '600' as const,
+    marginTop: 3,
+  },
+  courseMapCalloutTap: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 10,
+    fontStyle: 'italic' as const,
+    marginTop: 4,
+  },
+  courseMapHeaderSafe: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+  },
+  courseMapHeader: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+  },
+  courseMapCloseBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  courseMapHeaderTitle: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '700' as const,
+  },
+  courseMapMyLocationBtn: {
+    position: 'absolute' as const,
+    bottom: 40,
+    right: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
   },
 });
