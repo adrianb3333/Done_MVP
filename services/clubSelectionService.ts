@@ -6,6 +6,7 @@ interface ClubSelectionData {
   latitude: number;
   longitude: number;
   sessionId?: string;
+  distanceMeters?: number;
 }
 
 export async function saveClubSelection(data: ClubSelectionData): Promise<boolean> {
@@ -34,6 +35,7 @@ export async function saveClubSelection(data: ClubSelectionData): Promise<boolea
       latitude: data.latitude,
       longitude: data.longitude,
       session_id: data.sessionId ?? null,
+      distance_meters: data.distanceMeters ?? null,
     });
 
     if (error) {

@@ -123,6 +123,7 @@ interface ShotMarker {
   clubId: string;
   latitude: number;
   longitude: number;
+  distanceYards?: number;
 }
 
 interface GPSTabProps {
@@ -157,9 +158,39 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
     console.log('[GPSTab] Shot marker added:', marker.clubId, marker.latitude, marker.longitude, 'hole:', currentGpsHoleIndex);
     setShotMarkersMap(prev => {
       const existing = prev[currentGpsHoleIndex] ?? [];
+      let distanceYards: number | undefined;
+      if (existing.length > 0) {
+        const prevMarker = existing[existing.length - 1];
+        const distMeters = haversineDistance(
+          { latitude: prevMarker.latitude, longitude: prevMarker.longitude },
+          { latitude: marker.latitude, longitude: marker.longitude }
+        );
+        distanceYards = Math.round(distMeters * 1.09361);
+        console.log('[GPSTab] Distance from previous shot:', distanceYards, 'yds /', Math.round(distMeters), 'm');
+
+        const updatedExisting = [...existing];
+        updatedExisting[updatedExisting.length - 1] = {
+          ...prevMarker,
+          distanceYards,
+        };
+
+        void import('@/services/clubSelectionService').then(({ saveClubSelection }) => {
+          saveClubSelection({
+            clubId: prevMarker.clubId,
+            latitude: prevMarker.latitude,
+            longitude: prevMarker.longitude,
+            distanceMeters: Math.round(distMeters),
+          });
+        });
+
+        return {
+          ...prev,
+          [currentGpsHoleIndex]: [...updatedExisting, { ...marker }],
+        };
+      }
       return {
         ...prev,
-        [currentGpsHoleIndex]: [...existing, marker],
+        [currentGpsHoleIndex]: [...existing, { ...marker }],
       };
     });
   }, [currentGpsHoleIndex]);
@@ -548,8 +579,15 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
                   <View style={styles.shotMarkerDot}>
                     <View style={styles.shotMarkerInner} />
                   </View>
-                  <View style={styles.shotLabelBubble}>
-                    <Text style={styles.shotLabelText}>{marker.clubId}</Text>
+                  <View style={styles.shotLabelRow}>
+                    <View style={styles.shotLabelBubble}>
+                      <Text style={styles.shotLabelText}>{marker.clubId}</Text>
+                    </View>
+                    {marker.distanceYards != null && marker.distanceYards > 0 && (
+                      <View style={styles.shotDistanceBubble}>
+                        <Text style={styles.shotDistanceText}>{marker.distanceYards} yds</Text>
+                      </View>
+                    )}
                   </View>
                 </View>
               </Marker>
@@ -1013,8 +1051,13 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: '#34C759',
   },
-  shotLabelBubble: {
+  shotLabelRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     marginTop: 3,
+    gap: 4,
+  },
+  shotLabelBubble: {
     backgroundColor: 'rgba(20,20,20,0.9)',
     borderRadius: 8,
     paddingHorizontal: 8,
@@ -1027,5 +1070,19 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800' as const,
     letterSpacing: -0.3,
+  },
+  shotDistanceBubble: {
+    backgroundColor: 'rgba(20,20,20,0.9)',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+  },
+  shotDistanceText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700' as const,
+    letterSpacing: -0.2,
   },
 });
