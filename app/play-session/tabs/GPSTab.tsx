@@ -123,7 +123,7 @@ interface ShotMarker {
   clubId: string;
   latitude: number;
   longitude: number;
-  distanceYards?: number;
+  distanceMeters?: number;
 }
 
 interface GPSTabProps {
@@ -158,29 +158,30 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
     console.log('[GPSTab] Shot marker added:', marker.clubId, marker.latitude, marker.longitude, 'hole:', currentGpsHoleIndex);
     setShotMarkersMap(prev => {
       const existing = prev[currentGpsHoleIndex] ?? [];
-      let distanceYards: number | undefined;
+      let distanceMeters: number | undefined;
       if (existing.length > 0) {
         const prevMarker = existing[existing.length - 1];
-        const distMeters = haversineDistance(
+        const distM = haversineDistance(
           { latitude: prevMarker.latitude, longitude: prevMarker.longitude },
           { latitude: marker.latitude, longitude: marker.longitude }
         );
-        distanceYards = Math.round(distMeters * 1.09361);
-        console.log('[GPSTab] Distance from previous shot:', distanceYards, 'yds /', Math.round(distMeters), 'm');
+        distanceMeters = Math.round(distM);
+        console.log('[GPSTab] Distance from previous shot:', distanceMeters, 'm');
 
         const updatedExisting = [...existing];
         updatedExisting[updatedExisting.length - 1] = {
           ...prevMarker,
-          distanceYards,
+          distanceMeters,
         };
 
-        void import('@/services/clubSelectionService').then(({ saveClubSelection }) => {
-          saveClubSelection({
-            clubId: prevMarker.clubId,
-            latitude: prevMarker.latitude,
-            longitude: prevMarker.longitude,
-            distanceMeters: Math.round(distMeters),
-          });
+        void import('@/services/clubSelectionService').then(async ({ updateClubSelectionDistance }) => {
+          const ok = await updateClubSelectionDistance(
+            prevMarker.clubId,
+            prevMarker.latitude,
+            prevMarker.longitude,
+            distanceMeters!,
+          );
+          console.log('[GPSTab] Distance update to DB result:', ok);
         });
 
         return {
@@ -583,9 +584,9 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
                     <View style={styles.shotLabelBubble}>
                       <Text style={styles.shotLabelText}>{marker.clubId}</Text>
                     </View>
-                    {marker.distanceYards != null && marker.distanceYards > 0 && (
+                    {marker.distanceMeters != null && marker.distanceMeters > 0 && (
                       <View style={styles.shotDistanceBubble}>
-                        <Text style={styles.shotDistanceText}>{marker.distanceYards} yds</Text>
+                        <Text style={styles.shotDistanceText}>{marker.distanceMeters} m</Text>
                       </View>
                     )}
                   </View>

@@ -51,6 +51,76 @@ export async function saveClubSelection(data: ClubSelectionData): Promise<boolea
   }
 }
 
+export async function updateClubSelectionDistance(
+  clubId: string,
+  latitude: number,
+  longitude: number,
+  distanceMeters: number
+): Promise<boolean> {
+  try {
+    const { data: authData } = await supabase.auth.getUser();
+    const userId = authData?.user?.id;
+
+    if (!userId) {
+      console.warn('[ClubSelection] No authenticated user, skipping distance update');
+      return false;
+    }
+
+    console.log('[ClubSelection] Updating distance for club:', clubId, 'distance:', distanceMeters, 'm');
+
+    const { data: rows, error: fetchError } = await supabase
+      .from('club_selections')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('club_id', clubId)
+      .eq('latitude', latitude)
+      .eq('longitude', longitude)
+      .is('distance_meters', null)
+      .order('selected_at', { ascending: false })
+      .limit(1);
+
+    if (fetchError) {
+      console.error('[ClubSelection] Error finding row to update:', fetchError.message);
+      return false;
+    }
+
+    if (!rows || rows.length === 0) {
+      console.warn('[ClubSelection] No matching row found to update distance, inserting fallback');
+      const { error: insertError } = await supabase.from('club_selections').insert({
+        user_id: userId,
+        club_id: clubId,
+        selected_at: new Date().toISOString(),
+        latitude,
+        longitude,
+        distance_meters: distanceMeters,
+      });
+      if (insertError) {
+        console.error('[ClubSelection] Fallback insert error:', insertError.message);
+        return false;
+      }
+      console.log('[ClubSelection] Fallback insert succeeded');
+      return true;
+    }
+
+    const rowId = rows[0].id;
+    const { error: updateError } = await supabase
+      .from('club_selections')
+      .update({ distance_meters: distanceMeters })
+      .eq('id', rowId);
+
+    if (updateError) {
+      console.error('[ClubSelection] Update error:', updateError.message);
+      return false;
+    }
+
+    console.log('[ClubSelection] Successfully updated distance_meters for row:', rowId);
+    return true;
+  } catch (err) {
+    console.error('[ClubSelection] Unexpected error updating distance:', err);
+    return false;
+  }
+}
+
 export async function getCurrentGpsPosition(): Promise<{ latitude: number; longitude: number } | null> {
   if (Platform.OS === 'web') {
     return new Promise((resolve) => {
