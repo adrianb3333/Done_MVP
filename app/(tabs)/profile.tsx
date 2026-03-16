@@ -1306,6 +1306,11 @@ export default function ProfileScreen() {
                   <Text style={styles.avatarStatNumber}>{battleResults?.length ?? 0}</Text>
                   <Text style={styles.avatarStatLabel}>Battles</Text>
                 </View>
+                <View style={styles.avatarStatDivider} />
+                <View style={styles.avatarStatItem}>
+                  <Text style={styles.avatarStatNumber}>{drillCount}</Text>
+                  <Text style={styles.avatarStatLabel}>Drills</Text>
+                </View>
               </View>
             </View>
           </View>
