@@ -14,7 +14,7 @@ import {
   TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { HelpCircle, X, User, Newspaper, Bluetooth, QrCode, Swords, Clock, Target, Zap, Hash, Menu, ChevronRight, Settings, Camera, Bell, ArrowRight, ChevronLeft, Search, Backpack, CheckCircle, Crosshair } from 'lucide-react-native';
+import { HelpCircle, X, User, Newspaper, Bluetooth, Swords, Clock, Target, Zap, Hash, Menu, ChevronRight, Settings, Camera, Bell, ArrowRight, ChevronLeft, Search, Backpack, CheckCircle, Crosshair } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -935,7 +935,7 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.gridBtn}
+                  style={styles.qrImageBtn}
                   onPress={() => {
                     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     router.push('/modals/qr-modal' as any);
@@ -943,7 +943,11 @@ export default function ProfileScreen() {
                   activeOpacity={0.8}
                   testID="qr-button"
                 >
-                  <QrCode size={20} color="#EFEFEF" />
+                  <Image
+                    source={require('@/assets/images/qr-icon.png')}
+                    style={styles.qrIconImage}
+                    resizeMode="contain"
+                  />
                 </TouchableOpacity>
               </View>
               <View style={styles.actionGridRow}>
@@ -2796,5 +2800,20 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '700' as const,
     color: '#1075E3',
+  },
+  qrImageBtn: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    overflow: 'hidden' as const,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    borderWidth: 1,
+    borderColor: '#E8E8E8',
+  },
+  qrIconImage: {
+    width: 40,
+    height: 40,
   },
 });

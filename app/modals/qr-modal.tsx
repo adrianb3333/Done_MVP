@@ -16,7 +16,8 @@ import {
 import { useRouter } from 'expo-router';
 import { QrCode, Share2, Users, Target, BarChart3 } from 'lucide-react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import * as Sharing from 'expo-sharing';
 import { File, Paths } from 'expo-file-system';
@@ -117,42 +118,47 @@ export default function QrModal() {
     }
   }, [username, userHandle, qrValue, qrImageUrl]);
 
-  return (
-    <View style={styles.container}>
-      <SafeAreaView edges={['top']} style={styles.safeTop}>
-        <View style={styles.header}>
-          <GlassBackButton onPress={() => router.back()} />
-          <Text style={styles.headerTitle}>{username}</Text>
-          <View style={styles.headerRight}>
-            <TouchableOpacity
-              onPress={handleShare}
-              style={styles.headerIconBtn}
-              activeOpacity={0.7}
-              disabled={isSharing}
-              testID="qr-header-share"
-            >
-              {isSharing ? (
-                <ActivityIndicator size="small" color="#1A1A1A" />
-              ) : (
-                <Share2 size={18} color="#1A1A1A" />
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={scrollToQR}
-              style={styles.headerIconBtn}
-              activeOpacity={0.7}
-              testID="qr-header-mini-qr"
-            >
-              <QrCode size={18} color="#1A1A1A" />
-            </TouchableOpacity>
-          </View>
-        </View>
+  const insets = useSafeAreaInsets();
 
-        <View style={styles.dotsRow}>
-          <View style={[styles.dot, currentPage === 0 && styles.dotActive]} />
-          <View style={[styles.dot, currentPage === 1 && styles.dotActive]} />
+  return (
+    <LinearGradient
+      colors={['#BFF3FF', '#3FB8E8', '#0F6FAF']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.container}
+    >
+      <View style={[styles.floatingHeader, { paddingTop: insets.top + 8 }]}>
+        <GlassBackButton onPress={() => router.back()} />
+        <Text style={styles.headerTitle}>{username}</Text>
+        <View style={styles.headerRight}>
+          <TouchableOpacity
+            onPress={handleShare}
+            style={styles.headerIconBtn}
+            activeOpacity={0.7}
+            disabled={isSharing}
+            testID="qr-header-share"
+          >
+            {isSharing ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Share2 size={18} color="#FFFFFF" />
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={scrollToQR}
+            style={styles.headerIconBtn}
+            activeOpacity={0.7}
+            testID="qr-header-mini-qr"
+          >
+            <QrCode size={18} color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
+
+      <View style={styles.dotsRow}>
+        <View style={[styles.dot, currentPage === 0 && styles.dotActive]} />
+        <View style={[styles.dot, currentPage === 1 && styles.dotActive]} />
+      </View>
 
       <ScrollView
         ref={scrollRef}
@@ -235,27 +241,25 @@ export default function QrModal() {
           </View>
         </View>
       </ScrollView>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
-  safeTop: {},
-  header: {
+  floatingHeader: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'space-between' as const,
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingBottom: 14,
   },
   headerTitle: {
     fontSize: 17,
     fontWeight: '700' as const,
-    color: '#1A1A1A',
+    color: '#FFFFFF',
     letterSpacing: 0.3,
   },
   headerRight: {
@@ -267,11 +271,11 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(0,0,0,0.06)',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   dotsRow: {
     flexDirection: 'row' as const,
@@ -284,10 +288,10 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#D0D0D0',
+    backgroundColor: 'rgba(255,255,255,0.35)',
   },
   dotActive: {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#FFFFFF',
     width: 24,
     borderRadius: 4,
   },
@@ -300,12 +304,12 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   qrCard: {
-    backgroundColor: 'rgba(0,0,0,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.18)',
     borderRadius: 24,
     padding: 32,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
+    borderColor: 'rgba(255,255,255,0.25)',
   },
   qrImageWrapper: {
     width: QR_SIZE,
@@ -336,12 +340,12 @@ const styles = StyleSheet.create({
   qrUsername: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#1A1A1A',
+    color: '#FFFFFF',
     marginBottom: 6,
   },
   qrHint: {
     fontSize: 13,
-    color: '#888',
+    color: 'rgba(255,255,255,0.6)',
   },
   gridRow: {
     flexDirection: 'row' as const,
@@ -350,14 +354,14 @@ const styles = StyleSheet.create({
   },
   gridBtn: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    backgroundColor: 'rgba(0,0,0,0.2)',
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     gap: 8,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   gridBtnText: {
     fontSize: 13,
@@ -365,18 +369,18 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   scanCard: {
-    backgroundColor: 'rgba(0,0,0,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.18)',
     borderRadius: 24,
     padding: 32,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
+    borderColor: 'rgba(255,255,255,0.25)',
   },
   scanIconCircle: {
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: 'rgba(0,0,0,0.06)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     marginBottom: 20,
@@ -384,12 +388,12 @@ const styles = StyleSheet.create({
   scanTitle: {
     fontSize: 22,
     fontWeight: '800' as const,
-    color: '#1A1A1A',
+    color: '#FFFFFF',
     marginBottom: 10,
   },
   scanDescription: {
     fontSize: 14,
-    color: '#666',
+    color: 'rgba(255,255,255,0.7)',
     textAlign: 'center' as const,
     lineHeight: 22,
     marginBottom: 24,
@@ -403,7 +407,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   scanBtnText: {
     fontSize: 16,
@@ -416,19 +420,19 @@ const styles = StyleSheet.create({
   recentTitle: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#1A1A1A',
+    color: '#FFFFFF',
     marginBottom: 12,
   },
   emptyScans: {
-    backgroundColor: 'rgba(0,0,0,0.06)',
+    backgroundColor: 'rgba(0,0,0,0.2)',
     borderRadius: 14,
     padding: 20,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
+    borderColor: 'rgba(255,255,255,0.12)',
   },
   emptyScansText: {
     fontSize: 14,
-    color: '#888',
+    color: 'rgba(255,255,255,0.6)',
   },
 });
