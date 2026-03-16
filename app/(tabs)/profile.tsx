@@ -14,7 +14,7 @@ import {
   TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { HelpCircle, X, User, Newspaper, Bluetooth, QrCode, Swords, Clock, Target, Zap, Hash, Menu, ChevronRight, Settings, Camera, Bell, ArrowRight, ChevronLeft, Search, Backpack } from 'lucide-react-native';
+import { HelpCircle, X, User, Newspaper, Bluetooth, QrCode, Swords, Clock, Target, Zap, Hash, Menu, ChevronRight, Settings, Camera, Bell, ArrowRight, ChevronLeft, Search, Backpack, CheckCircle } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -24,6 +24,8 @@ import { useProfile, UserProfile } from '@/contexts/ProfileContext';
 import { useSession } from '@/contexts/SessionContext';
 import { useAppNavigation } from '@/contexts/AppNavigationContext';
 import { useScrollHeader } from '@/hooks/useScrollHeader';
+import { useSensor } from '@/contexts/SensorContext';
+import { useBattle } from '@/contexts/BattleContext';
 
 import ProfileCard from '@/components/ProfileCard';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
@@ -566,6 +568,9 @@ export default function ProfileScreen() {
 
   const { hasBag } = useBag();
   const { hasUnreadChats } = useChat();
+  const { isPaired: hasSensors } = useSensor();
+  const { battleResults } = useBattle();
+  const { drillCount } = usePracticeCardData();
   const hasPendingCrewInvites = pendingCrewInvites.length > 0;
   const hasUnreadNotifications = (followers.length > 0 && !notificationsRead) || hasUnreadChats || hasPendingCrewInvites;
   const hasNewNews = !newsRead;
@@ -741,11 +746,11 @@ export default function ProfileScreen() {
           <View style={styles.headerRow} pointerEvents="box-none">
           <TouchableOpacity
             onPress={openSidebar}
-            style={styles.hamburgerBtn}
+            style={styles.glassIconCircle}
             activeOpacity={0.7}
             testID="hamburger-menu"
           >
-            <Menu size={24} color={backgroundImageUri ? '#FFFFFF' : '#1A1A1A'} />
+            <Menu size={22} color="#FFFFFF" />
           </TouchableOpacity>
           <Image
             source={require('@/assets/images/golferscrib-header-logo.png')}
@@ -758,7 +763,7 @@ export default function ProfileScreen() {
                 void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 router.push('/modals/recap-modal' as any);
               }}
-              style={styles.headerIconBtnLarge}
+              style={styles.glassIconCircle}
               activeOpacity={0.7}
               testID="weekly-summary-button"
             >
@@ -766,11 +771,11 @@ export default function ProfileScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               onPress={toggleHelpMenu}
-              style={styles.headerIconBtnLarge}
+              style={styles.glassIconCircle}
               activeOpacity={0.7}
               testID="help-menu-button"
             >
-              <HelpCircle size={26} color={backgroundImageUri ? '#FFFFFF' : '#888'} />
+              <HelpCircle size={22} color="#FFFFFF" />
               {(hasUnreadNotifications || hasNewNews) && <View style={styles.helpIconRedDot} />}
             </TouchableOpacity>
           </View>
@@ -1253,23 +1258,57 @@ export default function ProfileScreen() {
       >
         <View style={styles.avatarPreviewOverlay}>
           <TouchableOpacity
+            style={StyleSheet.absoluteFill}
+            onPress={() => setAvatarPreviewVisible(false)}
+            activeOpacity={1}
+          />
+          <TouchableOpacity
             style={styles.avatarPreviewClose}
             onPress={() => setAvatarPreviewVisible(false)}
             activeOpacity={0.7}
           >
             <X size={26} color="#fff" />
           </TouchableOpacity>
-          {profile?.avatar_url ? (
-            <Image
-              source={{ uri: profile.avatar_url }}
-              style={styles.avatarPreviewImage}
-              resizeMode="contain"
-            />
-          ) : (
-            <View style={styles.avatarPreviewPlaceholder}>
-              <Text style={styles.avatarPreviewInitials}>{initials}</Text>
+
+          <View style={styles.avatarPreviewContent}>
+            <View style={styles.avatarPreviewImageWrap}>
+              {profile?.avatar_url ? (
+                <Image
+                  source={{ uri: profile.avatar_url }}
+                  style={styles.avatarPreviewImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={styles.avatarPreviewPlaceholder}>
+                  <Text style={styles.avatarPreviewInitials}>{initials}</Text>
+                </View>
+              )}
             </View>
-          )}
+
+            <View style={styles.avatarStatsCard}>
+              {hasSensors && (
+                <View style={styles.sensorCheckBadge}>
+                  <CheckCircle size={20} color="#5AC8FA" fill="#5AC8FA" />
+                </View>
+              )}
+              <View style={styles.avatarStatsRow}>
+                <View style={styles.avatarStatItem}>
+                  <Text style={styles.avatarStatNumber}>{drillCount}</Text>
+                  <Text style={styles.avatarStatLabel}>Shots</Text>
+                </View>
+                <View style={styles.avatarStatDivider} />
+                <View style={styles.avatarStatItem}>
+                  <Text style={styles.avatarStatNumber}>{lastRound ? 1 : 0}</Text>
+                  <Text style={styles.avatarStatLabel}>Rounds</Text>
+                </View>
+                <View style={styles.avatarStatDivider} />
+                <View style={styles.avatarStatItem}>
+                  <Text style={styles.avatarStatNumber}>{battleResults?.length ?? 0}</Text>
+                  <Text style={styles.avatarStatLabel}>Battles</Text>
+                </View>
+              </View>
+            </View>
+          </View>
         </View>
       </Modal>
 
@@ -1599,6 +1638,16 @@ const styles = StyleSheet.create({
   hamburgerBtn: {
     width: 40,
     height: 40,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  glassIconCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
@@ -2231,9 +2280,9 @@ const styles = StyleSheet.create({
 
   avatarPreviewOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.92)',
-    justifyContent: 'center' as const,
+    backgroundColor: 'rgba(0,0,0,0.88)',
     alignItems: 'center' as const,
+    paddingTop: 120,
   },
   avatarPreviewClose: {
     position: 'absolute' as const,
@@ -2242,23 +2291,97 @@ const styles = StyleSheet.create({
     zIndex: 10,
     padding: 8,
   },
+  avatarPreviewContent: {
+    alignItems: 'center' as const,
+    zIndex: 5,
+  },
+  avatarPreviewImageWrap: {
+    width: SCREEN_WIDTH * 0.45,
+    height: SCREEN_WIDTH * 0.45,
+    borderRadius: SCREEN_WIDTH * 0.225,
+    overflow: 'hidden' as const,
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.2)',
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 12,
+  },
   avatarPreviewImage: {
-    width: SCREEN_WIDTH * 0.8,
-    height: SCREEN_WIDTH * 0.8,
-    borderRadius: SCREEN_WIDTH * 0.4,
+    width: '100%' as const,
+    height: '100%' as const,
   },
   avatarPreviewPlaceholder: {
-    width: SCREEN_WIDTH * 0.6,
-    height: SCREEN_WIDTH * 0.6,
-    borderRadius: SCREEN_WIDTH * 0.3,
+    width: '100%' as const,
+    height: '100%' as const,
     backgroundColor: '#1E1E1E',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
   },
   avatarPreviewInitials: {
-    fontSize: 72,
+    fontSize: 52,
     fontWeight: '700' as const,
     color: '#1DB954',
+  },
+  avatarStatsCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingVertical: 24,
+    paddingHorizontal: 32,
+    width: SCREEN_WIDTH * 0.8,
+    position: 'relative' as const,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  sensorCheckBadge: {
+    position: 'absolute' as const,
+    top: -8,
+    right: -8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    shadowColor: '#5AC8FA',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+    borderWidth: 2,
+    borderColor: '#E8F7FF',
+  },
+  avatarStatsRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-around' as const,
+  },
+  avatarStatItem: {
+    alignItems: 'center' as const,
+    flex: 1,
+  },
+  avatarStatNumber: {
+    fontSize: 26,
+    fontWeight: '800' as const,
+    color: '#1A1A1A',
+    marginBottom: 4,
+  },
+  avatarStatLabel: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#999',
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.5,
+  },
+  avatarStatDivider: {
+    width: 1,
+    height: 36,
+    backgroundColor: '#E8E8E8',
   },
 
   followsGradient: {
