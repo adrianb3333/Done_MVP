@@ -1469,6 +1469,10 @@ export default function ProfileScreen() {
               </View>
             )}
 
+            <View style={{ height: 40 }} />
+          </ScrollView>
+
+          <View style={[styles.lrFooter, { paddingBottom: insets.bottom > 0 ? insets.bottom : 24 }]}>
             <TouchableOpacity
               style={styles.lrStatsButton}
               onPress={() => {
@@ -1482,9 +1486,7 @@ export default function ProfileScreen() {
               <Text style={styles.lrStatsButtonText}>Round Stats</Text>
               <ArrowRight size={20} color="#3D954D" />
             </TouchableOpacity>
-
-            <View style={{ height: 40 }} />
-          </ScrollView>
+          </View>
         </LinearGradient>
       </Modal>
 
@@ -2640,6 +2642,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: 'rgba(255,255,255,0.6)',
   },
+  lrFooter: {
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+  },
   lrStatsButton: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
@@ -2648,7 +2656,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 18,
     paddingHorizontal: 24,
-    marginTop: 8,
     gap: 10,
   },
   lrStatsButtonText: {

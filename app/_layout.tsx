@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState, useRef } from "react";
-import { View, StyleSheet, Platform } from "react-native";
+import { View, StyleSheet, Platform, Image, Animated, Dimensions } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SessionProvider, useSession } from "@/contexts/SessionContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
@@ -42,8 +42,11 @@ function AppContent() {
   const { currentSection } = useAppNavigation();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [showLoginSplash, setShowLoginSplash] = useState<boolean>(false);
+  const splashOpacity = useRef(new Animated.Value(1)).current;
   const prevSessionRef = useRef<Session | null>(null);
   const isInitialLoadRef = useRef<boolean>(true);
+  const hasShownSplashRef = useRef<boolean>(false);
   const router = useRouter();
   const segments = useSegments();
 
@@ -70,19 +73,34 @@ function AppContent() {
         setLoading(false);
       });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log('Auth state changed:', !!session);
-      if (session && !prevSessionRef.current && isInitialLoadRef.current) {
-        console.log('User just logged in');
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      console.log('Auth state changed:', !!newSession);
+      const wasLoggedOut = !prevSessionRef.current;
+      prevSessionRef.current = newSession;
+      setSession(newSession);
+
+      if (newSession && wasLoggedOut && !hasShownSplashRef.current) {
+        console.log('User just logged in, showing splash');
+        hasShownSplashRef.current = true;
+        setShowLoginSplash(true);
+        splashOpacity.setValue(1);
+        setTimeout(() => {
+          Animated.timing(splashOpacity, {
+            toValue: 0,
+            duration: 600,
+            useNativeDriver: true,
+          }).start(() => {
+            setShowLoginSplash(false);
+          });
+        }, 3400);
       }
-      prevSessionRef.current = session;
-      setSession(session);
     });
 
     return () => {
       clearTimeout(timeout);
       subscription.unsubscribe();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -99,6 +117,18 @@ function AppContent() {
 
   if (loading) {
     return <View style={styles.container} />;
+  }
+
+  if (showLoginSplash) {
+    return (
+      <Animated.View style={[styles.splashContainer, { opacity: splashOpacity }]}>
+        <Image
+          source={require('@/assets/images/splash-login.png')}
+          style={styles.splashImage}
+          resizeMode="cover"
+        />
+      </Animated.View>
+    );
   }
 
   if (showPracticeSummary) {
@@ -431,5 +461,13 @@ const styles = StyleSheet.create({
   },
   profileContainer: {
     flex: 1,
+  },
+  splashContainer: {
+    flex: 1,
+    backgroundColor: '#0B3D0B',
+  },
+  splashImage: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height,
   },
 });
