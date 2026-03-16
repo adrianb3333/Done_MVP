@@ -14,7 +14,7 @@ import {
   TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { HelpCircle, X, User, Newspaper, Bluetooth, QrCode, Swords, Clock, Target, Zap, Hash, Menu, BarChart2, ChevronRight, Settings, Camera, Bell, ArrowRight, ChevronLeft, Search, Backpack } from 'lucide-react-native';
+import { HelpCircle, X, User, Newspaper, Bluetooth, QrCode, Swords, Clock, Target, Zap, Hash, Menu, ChevronRight, Settings, Camera, Bell, ArrowRight, ChevronLeft, Search, Backpack } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -191,16 +191,16 @@ function PracticePopupContent() {
 
   if (loading) {
     return (
-      <View style={practiceStyles.centered}>
-        <ActivityIndicator size="small" color="#1DB954" />
+      <View style={lpStyles.centered}>
+        <ActivityIndicator size="small" color="#FFFFFF" />
       </View>
     );
   }
 
   if (drills.length === 0) {
     return (
-      <View style={practiceStyles.centered}>
-        <Text style={practiceStyles.emptyText}>No practice sessions recorded yet</Text>
+      <View style={lpStyles.centered}>
+        <Text style={lpStyles.emptyText}>No practice sessions recorded yet</Text>
       </View>
     );
   }
@@ -242,80 +242,80 @@ function PracticePopupContent() {
   }
 
   return (
-    <View style={practiceStyles.wrapper}>
-      <View style={practiceStyles.overviewCard}>
-        <Text style={practiceStyles.overviewDate}>{formatDate(latestDrill.created_at)}</Text>
-        <Text style={practiceStyles.overviewTime}>Started {formatTime(sessionDrills[sessionDrills.length - 1]?.created_at || latestDrill.created_at)}</Text>
+    <View style={lpStyles.wrapper}>
+      <View style={lpStyles.overviewCard}>
+        <Text style={lpStyles.overviewDate}>{formatDate(latestDrill.created_at)}</Text>
+        <Text style={lpStyles.overviewTime}>Started {formatTime(sessionDrills[sessionDrills.length - 1]?.created_at || latestDrill.created_at)}</Text>
       </View>
 
-      <View style={practiceStyles.statsGrid}>
-        <View style={practiceStyles.statBox}>
-          <Clock size={16} color="#1DB954" />
-          <Text style={practiceStyles.statValue}>{durationStr}</Text>
-          <Text style={practiceStyles.statLabel}>Duration</Text>
+      <View style={lpStyles.statsGrid}>
+        <View style={lpStyles.statBox}>
+          <Clock size={16} color="#FFFFFF" />
+          <Text style={lpStyles.statValue}>{durationStr}</Text>
+          <Text style={lpStyles.statLabel}>Duration</Text>
         </View>
-        <View style={practiceStyles.statBox}>
-          <Hash size={16} color="#4FC3F7" />
-          <Text style={practiceStyles.statValue}>{sessionDrills.length}</Text>
-          <Text style={practiceStyles.statLabel}>Drills</Text>
+        <View style={lpStyles.statBox}>
+          <Hash size={16} color="#FFFFFF" />
+          <Text style={lpStyles.statValue}>{sessionDrills.length}</Text>
+          <Text style={lpStyles.statLabel}>Drills</Text>
         </View>
-        <View style={practiceStyles.statBox}>
+        <View style={lpStyles.statBox}>
           <Target size={16} color="#FFB74D" />
-          <Text style={practiceStyles.statValue}>{avgScore}</Text>
-          <Text style={practiceStyles.statLabel}>Avg Score</Text>
+          <Text style={lpStyles.statValue}>{avgScore}</Text>
+          <Text style={lpStyles.statLabel}>Avg Score</Text>
         </View>
-        <View style={practiceStyles.statBox}>
-          <Zap size={16} color="#E040FB" />
-          <Text style={practiceStyles.statValue}>{uniqueDrillNames.length}</Text>
-          <Text style={practiceStyles.statLabel}>Drill Types</Text>
+        <View style={lpStyles.statBox}>
+          <Zap size={16} color="#FFFFFF" />
+          <Text style={lpStyles.statValue}>{uniqueDrillNames.length}</Text>
+          <Text style={lpStyles.statLabel}>Drill Types</Text>
         </View>
       </View>
 
       {bestScore !== null && (
-        <View style={practiceStyles.highlightsRow}>
-          <View style={[practiceStyles.highlightBox, { borderColor: '#1DB95430' }]}>
-            <Text style={practiceStyles.highlightLabel}>Best</Text>
-            <Text style={[practiceStyles.highlightValue, { color: '#1DB954' }]}>{bestScore}</Text>
+        <View style={lpStyles.highlightsRow}>
+          <View style={lpStyles.highlightBox}>
+            <Text style={lpStyles.highlightLabel}>Best</Text>
+            <Text style={[lpStyles.highlightValue, { color: '#A4FF6B' }]}>{bestScore}</Text>
           </View>
-          <View style={[practiceStyles.highlightBox, { borderColor: '#FF525230' }]}>
-            <Text style={practiceStyles.highlightLabel}>Worst</Text>
-            <Text style={[practiceStyles.highlightValue, { color: '#FF5252' }]}>{worstScore}</Text>
+          <View style={lpStyles.highlightBox}>
+            <Text style={lpStyles.highlightLabel}>Worst</Text>
+            <Text style={[lpStyles.highlightValue, { color: '#FF6B6B' }]}>{worstScore}</Text>
           </View>
         </View>
       )}
 
-      <View style={practiceStyles.drillTypesSection}>
-        <Text style={practiceStyles.sectionTitle}>Drill Types Performed</Text>
+      <View style={lpStyles.drillTypesSection}>
+        <Text style={lpStyles.sectionTitle}>Drill Types Performed</Text>
         {uniqueDrillNames.map((name, idx) => {
           const drillsOfType = sessionDrills.filter((d) => d.drill_name === name);
           const typeScores = drillsOfType.filter((d) => d.score !== null).map((d) => d.score as number);
           const typeAvg = typeScores.length > 0 ? (typeScores.reduce((a, b) => a + b, 0) / typeScores.length).toFixed(1) : '-';
           return (
-            <View key={idx} style={practiceStyles.drillTypeRow}>
-              <View style={practiceStyles.drillTypeDot} />
-              <View style={practiceStyles.drillTypeInfo}>
-                <Text style={practiceStyles.drillTypeName}>{name}</Text>
-                <Text style={practiceStyles.drillTypeMeta}>{drillsOfType.length} reps · avg {typeAvg}</Text>
+            <View key={idx} style={lpStyles.drillTypeRow}>
+              <View style={lpStyles.drillTypeDot} />
+              <View style={lpStyles.drillTypeInfo}>
+                <Text style={lpStyles.drillTypeName}>{name}</Text>
+                <Text style={lpStyles.drillTypeMeta}>{drillsOfType.length} reps · avg {typeAvg}</Text>
               </View>
               {typeScores.length > 0 && (
-                <Text style={practiceStyles.drillTypeBest}>{Math.max(...typeScores)}</Text>
+                <Text style={lpStyles.drillTypeBest}>{Math.max(...typeScores)}</Text>
               )}
             </View>
           );
         })}
       </View>
 
-      <View style={practiceStyles.allDrillsSection}>
-        <Text style={practiceStyles.sectionTitle}>All Drills ({sessionDrills.length})</Text>
+      <View style={lpStyles.allDrillsSection}>
+        <Text style={lpStyles.sectionTitle}>All Drills ({sessionDrills.length})</Text>
         {sessionDrills.map((drill, idx) => (
-          <View key={drill.id || idx} style={practiceStyles.drillRow}>
-            <View style={practiceStyles.drillRowLeft}>
-              <Text style={practiceStyles.drillRowName}>{drill.drill_name}</Text>
-              <Text style={practiceStyles.drillRowTime}>{formatTime(drill.created_at)}</Text>
+          <View key={drill.id || idx} style={lpStyles.drillRow}>
+            <View style={lpStyles.drillRowLeft}>
+              <Text style={lpStyles.drillRowName}>{drill.drill_name}</Text>
+              <Text style={lpStyles.drillRowTime}>{formatTime(drill.created_at)}</Text>
             </View>
             <Text style={[
-              practiceStyles.drillRowScore,
-              drill.score !== null && drill.score === bestScore && { color: '#1DB954' },
+              lpStyles.drillRowScore,
+              drill.score !== null && drill.score === bestScore && { color: '#A4FF6B' },
             ]}>
               {drill.score ?? '-'}
             </Text>
@@ -323,15 +323,15 @@ function PracticePopupContent() {
         ))}
       </View>
 
-      <View style={practiceStyles.totalSection}>
-        <Text style={practiceStyles.totalLabel}>Total Drills Recorded</Text>
-        <Text style={practiceStyles.totalValue}>{totalCount}</Text>
+      <View style={lpStyles.totalSection}>
+        <Text style={lpStyles.totalLabel}>Total Drills Recorded</Text>
+        <Text style={lpStyles.totalValue}>{totalCount}</Text>
       </View>
     </View>
   );
 }
 
-const practiceStyles = StyleSheet.create({
+const lpStyles = StyleSheet.create({
   wrapper: {
     paddingBottom: 30,
   },
@@ -341,24 +341,24 @@ const practiceStyles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 15,
-    color: '#555',
+    color: 'rgba(255,255,255,0.6)',
   },
   overviewCard: {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 14,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   overviewDate: {
     fontSize: 18,
     fontWeight: '800' as const,
-    color: '#EFEFEF',
+    color: '#FFFFFF',
   },
   overviewTime: {
     fontSize: 13,
-    color: '#666',
+    color: 'rgba(255,255,255,0.6)',
     marginTop: 4,
   },
   statsGrid: {
@@ -369,22 +369,22 @@ const practiceStyles = StyleSheet.create({
   },
   statBox: {
     width: '47%' as any,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 14,
     padding: 14,
     alignItems: 'center' as const,
     gap: 6,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   statValue: {
     fontSize: 20,
     fontWeight: '800' as const,
-    color: '#EFEFEF',
+    color: '#FFFFFF',
   },
   statLabel: {
     fontSize: 11,
-    color: '#666',
+    color: 'rgba(255,255,255,0.6)',
   },
   highlightsRow: {
     flexDirection: 'row' as const,
@@ -393,15 +393,16 @@ const practiceStyles = StyleSheet.create({
   },
   highlightBox: {
     flex: 1,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 14,
     padding: 14,
     alignItems: 'center' as const,
     borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   highlightLabel: {
     fontSize: 12,
-    color: '#888',
+    color: 'rgba(255,255,255,0.6)',
     marginBottom: 4,
   },
   highlightValue: {
@@ -414,24 +415,24 @@ const practiceStyles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#EFEFEF',
+    color: '#FFFFFF',
     marginBottom: 12,
   },
   drillTypeRow: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 12,
     padding: 14,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   drillTypeDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#1DB954',
+    backgroundColor: '#FFFFFF',
     marginRight: 12,
   },
   drillTypeInfo: {
@@ -440,17 +441,17 @@ const practiceStyles = StyleSheet.create({
   drillTypeName: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: '#EFEFEF',
+    color: '#FFFFFF',
   },
   drillTypeMeta: {
     fontSize: 12,
-    color: '#666',
+    color: 'rgba(255,255,255,0.6)',
     marginTop: 2,
   },
   drillTypeBest: {
     fontSize: 18,
     fontWeight: '800' as const,
-    color: '#D4AF37',
+    color: '#FFD700',
   },
   allDrillsSection: {
     marginBottom: 20,
@@ -462,7 +463,7 @@ const practiceStyles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 4,
     borderBottomWidth: 1,
-    borderBottomColor: '#1A1A1A',
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   drillRowLeft: {
     flex: 1,
@@ -470,35 +471,35 @@ const practiceStyles = StyleSheet.create({
   drillRowName: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#EFEFEF',
+    color: '#FFFFFF',
   },
   drillRowTime: {
     fontSize: 11,
-    color: '#555',
+    color: 'rgba(255,255,255,0.5)',
     marginTop: 2,
   },
   drillRowScore: {
     fontSize: 18,
     fontWeight: '800' as const,
-    color: '#EFEFEF',
+    color: '#FFFFFF',
   },
   totalSection: {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'rgba(0,0,0,0.25)',
     borderRadius: 14,
     padding: 16,
     alignItems: 'center' as const,
     borderWidth: 1,
-    borderColor: '#1DB95420',
+    borderColor: 'rgba(255,255,255,0.15)',
   },
   totalLabel: {
     fontSize: 12,
-    color: '#666',
+    color: 'rgba(255,255,255,0.6)',
     marginBottom: 4,
   },
   totalValue: {
     fontSize: 28,
     fontWeight: '900' as const,
-    color: '#1DB954',
+    color: '#FFFFFF',
   },
 });
 
@@ -1492,43 +1493,45 @@ export default function ProfileScreen() {
         </LinearGradient>
       </Modal>
 
-      {/* Last Practice Popup */}
+      {/* Last Practice Popup - Full Screen Blue Gradient */}
       <Modal
         visible={lastPracticePopupVisible}
         animationType="slide"
-        transparent
+        transparent={false}
         onRequestClose={() => setLastPracticePopupVisible(false)}
       >
-        <View style={styles.popupOverlay}>
-          <View style={styles.popupSheet}>
-            <View style={styles.popupHeader}>
-              <TouchableOpacity
-                onPress={() => setLastPracticePopupVisible(false)}
-                style={styles.popupCloseBtn}
-                activeOpacity={0.7}
-              >
-                <X size={22} color="#999" />
-              </TouchableOpacity>
-              <Text style={styles.popupTitle}>Last Practice</Text>
-              <TouchableOpacity
-                style={styles.popupStatsBtn}
-                onPress={() => {
-                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setLastPracticePopupVisible(false);
-                  navigateTo('data-overview', { initialTab: 'stats', initialStatsSegment: 'practice' });
-                }}
-                activeOpacity={0.7}
-                testID="practice-stats-button"
-              >
-                <BarChart2 size={14} color="#4FC3F7" />
-                <Text style={styles.popupStatsBtnText}>Practice Stats</Text>
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.popupScroll} showsVerticalScrollIndicator={false}>
-              <PracticePopupContent />
-            </ScrollView>
+        <LinearGradient
+          colors={['#0059B2', '#1075E3', '#1C8CFF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.lrGradientContainer}
+        >
+          <View style={[styles.lrHeader, { paddingTop: insets.top + 12 }]}>
+            <GlassBackButton onPress={() => setLastPracticePopupVisible(false)} />
+            <Text style={styles.lrHeaderTitle}>Last Practice</Text>
+            <View style={{ width: 44 }} />
           </View>
-        </View>
+
+          <ScrollView style={styles.lrScroll} showsVerticalScrollIndicator={false} contentContainerStyle={styles.lrScrollContent}>
+            <PracticePopupContent />
+          </ScrollView>
+
+          <View style={[styles.lpFooter, { paddingBottom: insets.bottom > 0 ? insets.bottom : 24 }]}>
+            <TouchableOpacity
+              style={styles.lpStatsButton}
+              onPress={() => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setLastPracticePopupVisible(false);
+                navigateTo('data-overview', { initialTab: 'stats', initialStatsSegment: 'practice' });
+              }}
+              activeOpacity={0.8}
+              testID="practice-stats-button"
+            >
+              <Text style={styles.lpStatsButtonText}>Practice Stats</Text>
+              <ArrowRight size={20} color="#1075E3" />
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
       </Modal>
 
       {/* Profile Card for viewing other users */}
@@ -2729,5 +2732,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF3B30',
     borderWidth: 1.5,
     borderColor: '#FFFFFF',
+  },
+  lpFooter: {
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+  },
+  lpStatsButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 24,
+    gap: 10,
+  },
+  lpStatsButtonText: {
+    fontSize: 17,
+    fontWeight: '700' as const,
+    color: '#1075E3',
   },
 });
