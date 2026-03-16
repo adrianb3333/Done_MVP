@@ -12,7 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronLeft, Clock, Calendar, Trash2, Check, X, ChevronRight, MapPin, Users } from 'lucide-react-native';
+import { ChevronLeft, Clock, Calendar, Trash2, Check, X, ChevronRight, MapPin, Users, Play } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { useProfile, CrewDrill, CrewRound, CrewTournament, ScheduledDrill, ScheduledRound, ScheduledTournament } from '@/contexts/ProfileContext';
@@ -78,6 +78,7 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [scheduleTime, setScheduleTime] = useState<string>('');
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string; type: 'drill' | 'round' | 'tournament' | 'scheduled_drill' | 'scheduled_round' | 'scheduled_tournament' } | null>(null);
+  const [startNowConfirm, setStartNowConfirm] = useState<{ id: string; name: string; type: 'drill' | 'round' | 'tournament' } | null>(null);
 
   const now = new Date();
   const [calendarYear, setCalendarYear] = useState<number>(now.getFullYear());
@@ -154,6 +155,78 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
     }
     setDeleteConfirm(null);
   }, [deleteConfirm, deleteCrewDrill, deleteCrewRound, deleteCrewTournament, deleteScheduledDrill, deleteScheduledRound, deleteScheduledTournament]);
+
+  const handleStartNow = useCallback(() => {
+    if (!startNowConfirm) return;
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    try {
+      if (startNowConfirm.type === 'drill') {
+        const drill = crewDrills.find((d) => d.id === startNowConfirm.id);
+        if (drill) {
+          const scheduled: ScheduledDrill = {
+            id: Date.now().toString() + '_now_' + drill.id,
+            drillId: drill.id,
+            drillName: drill.name,
+            date: dateStr,
+            time: timeStr,
+            createdAt: Date.now(),
+          };
+          void saveScheduledDrill(scheduled);
+        }
+      } else if (startNowConfirm.type === 'round') {
+        const round = crewRounds.find((r) => r.id === startNowConfirm.id);
+        if (round) {
+          const scheduled: ScheduledRound = {
+            id: Date.now().toString() + '_now_' + round.id,
+            roundId: round.id,
+            roundName: round.name,
+            courseName: round.courseName || undefined,
+            courseClubName: round.courseClubName || undefined,
+            courseCity: round.courseCity || undefined,
+            courseCountry: round.courseCountry || undefined,
+            holeOption: round.holeOption || undefined,
+            groups: round.groups || undefined,
+            info: round.info || undefined,
+            date: dateStr,
+            time: timeStr,
+            createdAt: Date.now(),
+          };
+          void saveScheduledRound(scheduled);
+        }
+      } else {
+        const tournament = crewTournaments.find((t) => t.id === startNowConfirm.id);
+        if (tournament) {
+          const scheduled: ScheduledTournament = {
+            id: Date.now().toString() + '_now_' + tournament.id,
+            tournamentId: tournament.id,
+            tournamentName: tournament.name,
+            courseName: tournament.courseName || undefined,
+            courseClubName: tournament.courseClubName || undefined,
+            courseCity: tournament.courseCity || undefined,
+            courseCountry: tournament.courseCountry || undefined,
+            holeOption: tournament.holeOption || undefined,
+            format: tournament.format || undefined,
+            totalRounds: tournament.totalRounds || undefined,
+            groups: tournament.groups || undefined,
+            info: tournament.info || undefined,
+            date: dateStr,
+            time: timeStr,
+            createdAt: Date.now(),
+          };
+          void saveScheduledTournament(scheduled);
+        }
+      }
+      console.log('[CrewSchedule] Started now:', startNowConfirm.name, startNowConfirm.type);
+      Alert.alert('Started!', `"${startNowConfirm.name}" has been started. Invitations sent to all players.`);
+    } catch (err: any) {
+      console.log('[CrewSchedule] Start now error:', err.message);
+      Alert.alert('Error', 'Failed to start the event.');
+    }
+    setStartNowConfirm(null);
+  }, [startNowConfirm, crewDrills, crewRounds, crewTournaments, saveScheduledDrill, saveScheduledRound, saveScheduledTournament]);
 
   const toggleSelection = useCallback((id: string) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -411,6 +484,27 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
             <Text style={[styles.drillCardDate, isDark && { color: 'rgba(255,255,255,0.3)' }]}>
               Created {formatDate(drill.createdAt)}
             </Text>
+            {crewRole !== 'player' && (
+              <TouchableOpacity
+                onPress={(e) => {
+                  e.stopPropagation();
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  setStartNowConfirm({ id: drill.id, name: drill.name, type: 'drill' });
+                }}
+                activeOpacity={0.8}
+                style={styles.startNowBtnOuter}
+              >
+                <LinearGradient
+                  colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.startNowBtn}
+                >
+                  <Play size={14} color="#FFFFFF" fill="#FFFFFF" />
+                  <Text style={styles.startNowBtnText}>Start Now</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
           </TouchableOpacity>
         ))}
 
@@ -464,6 +558,27 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
             <Text style={[styles.drillCardDate, isDark && { color: 'rgba(255,255,255,0.3)' }]}>
               Created {formatDate(round.createdAt)}
             </Text>
+            {crewRole !== 'player' && (
+              <TouchableOpacity
+                onPress={(e) => {
+                  e.stopPropagation();
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  setStartNowConfirm({ id: round.id, name: round.name, type: 'round' });
+                }}
+                activeOpacity={0.8}
+                style={styles.startNowBtnOuter}
+              >
+                <LinearGradient
+                  colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.startNowBtn}
+                >
+                  <Play size={14} color="#FFFFFF" fill="#FFFFFF" />
+                  <Text style={styles.startNowBtnText}>Start Now</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
           </TouchableOpacity>
         ))}
 
@@ -516,6 +631,27 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
             <Text style={[styles.drillCardDate, isDark && { color: 'rgba(255,255,255,0.3)' }]}>
               Created {formatDate(tournament.createdAt)}
             </Text>
+            {crewRole !== 'player' && (
+              <TouchableOpacity
+                onPress={(e) => {
+                  e.stopPropagation();
+                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  setStartNowConfirm({ id: tournament.id, name: tournament.name, type: 'tournament' });
+                }}
+                activeOpacity={0.8}
+                style={styles.startNowBtnOuter}
+              >
+                <LinearGradient
+                  colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.startNowBtn}
+                >
+                  <Play size={14} color="#FFFFFF" fill="#FFFFFF" />
+                  <Text style={styles.startNowBtnText}>Start Now</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
           </TouchableOpacity>
         ))}
 
@@ -1195,6 +1331,44 @@ export default function CrewScheduleScreen({ onClose }: CrewScheduleScreenProps)
         </View>
       </Modal>
 
+      {/* Start Now Confirmation Modal */}
+      <Modal
+        visible={startNowConfirm !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setStartNowConfirm(null)}
+      >
+        <View style={styles.confirmOverlay}>
+          <View style={[styles.confirmCard, { backgroundColor: isDark ? bgColor : '#1A1A1A' }]}>
+            <Text style={styles.confirmTitle}>Are you sure?</Text>
+            <Text style={styles.confirmMessage}>Start "{startNowConfirm?.name}" right now?{"\n"}Invitations will be sent to all players immediately.</Text>
+            <View style={styles.confirmButtons}>
+              <TouchableOpacity
+                style={styles.confirmNoBtn}
+                onPress={() => setStartNowConfirm(null)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.confirmNoBtnText}>No</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleStartNow}
+                activeOpacity={0.7}
+                style={styles.confirmYesBtnOuter}
+              >
+                <LinearGradient
+                  colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.confirmYesBtn}
+                >
+                  <Text style={styles.confirmYesBtnText}>Yes</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* Delete Confirmation Modal */}
       <Modal
         visible={deleteConfirm !== null}
@@ -1778,6 +1952,24 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600' as const,
     color: '#888',
+  },
+  startNowBtnOuter: {
+    marginTop: 10,
+    borderRadius: 12,
+    overflow: 'hidden' as const,
+  },
+  startNowBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  startNowBtnText: {
+    fontSize: 14,
+    fontWeight: '800' as const,
+    color: '#FFFFFF',
   },
   detailScrollContent: {
     flexGrow: 1,
