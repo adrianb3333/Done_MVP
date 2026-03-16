@@ -124,6 +124,7 @@ interface ShotMarker {
   latitude: number;
   longitude: number;
   distanceMeters?: number;
+  rowId?: string;
 }
 
 interface GPSTabProps {
@@ -155,11 +156,11 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
   }, [shotMarkersMap, currentGpsHoleIndex]);
 
   const handleClubSelected = useCallback(async (marker: ShotMarker) => {
-    console.log('[GPSTab] Shot marker added:', marker.clubId, marker.latitude, marker.longitude, 'hole:', currentGpsHoleIndex);
+    console.log('[GPSTab] Shot marker added:', marker.clubId, 'lat:', marker.latitude, 'lon:', marker.longitude, 'hole:', currentGpsHoleIndex, 'rowId:', marker.rowId);
 
     const currentMarkers = shotMarkersMap[currentGpsHoleIndex] ?? [];
     let distanceMeters: number | undefined;
-    let prevClubId: string | undefined;
+    let prevRowId: string | undefined;
 
     if (currentMarkers.length > 0) {
       const prevMarker = currentMarkers[currentMarkers.length - 1];
@@ -168,8 +169,8 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
         { latitude: marker.latitude, longitude: marker.longitude }
       );
       distanceMeters = Math.round(distM);
-      prevClubId = prevMarker.clubId;
-      console.log('[GPSTab] Distance from previous shot:', distanceMeters, 'm, prevClub:', prevClubId);
+      prevRowId = prevMarker.rowId;
+      console.log('[GPSTab] Distance from previous shot:', distanceMeters, 'm, prevRowId:', prevRowId);
 
       const updatedMarkers = [...currentMarkers];
       updatedMarkers[updatedMarkers.length - 1] = {
@@ -188,15 +189,20 @@ function NativeMap({ onDistanceChange, onAdjustedDistanceChange, externalHoleInd
       }));
     }
 
-    if (distanceMeters != null && prevClubId != null) {
+    if (distanceMeters != null && prevRowId != null) {
       try {
-        const { updateClubSelectionDistance } = await import('@/services/clubSelectionService');
-        console.log('[GPSTab] Calling updateClubSelectionDistance:', prevClubId, distanceMeters, 'm');
-        const ok = await updateClubSelectionDistance(prevClubId, distanceMeters);
+        const { updateClubSelectionDistanceById } = await import('@/services/clubSelectionService');
+        console.log('[GPSTab] Calling updateClubSelectionDistanceById, rowId:', prevRowId, 'distance:', distanceMeters, 'm');
+        const ok = await updateClubSelectionDistanceById(prevRowId, distanceMeters);
         console.log('[GPSTab] Distance update to DB result:', ok);
+        if (!ok) {
+          console.error('[GPSTab] FAILED to update distance in DB for rowId:', prevRowId);
+        }
       } catch (err) {
         console.error('[GPSTab] Failed to save distance to DB:', err);
       }
+    } else {
+      console.log('[GPSTab] No distance update needed (first shot on hole or missing rowId)');
     }
   }, [currentGpsHoleIndex, shotMarkersMap]);
   const [teePosition, setTeePosition] = useState<Coordinate | null>(null);

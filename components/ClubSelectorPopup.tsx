@@ -47,6 +47,7 @@ interface ShotMarker {
   clubId: string;
   latitude: number;
   longitude: number;
+  rowId?: string;
 }
 
 interface ClubSelectorPopupProps {
@@ -116,17 +117,20 @@ export default function ClubSelectorPopup({ visible, onClose, onClubSelected, se
       console.warn('[ClubSelector] Could not get GPS position, saving with 0,0');
     }
 
-    await saveClubSelection({
+    const rowId = await saveClubSelection({
       clubId,
       latitude: lat,
       longitude: lon,
       sessionId,
     });
 
+    console.log('[ClubSelector] Saved to DB, rowId:', rowId);
+
     onClubSelected?.({
       clubId,
       latitude: lat,
       longitude: lon,
+      rowId: rowId ?? undefined,
     });
 
     setSaving(false);
