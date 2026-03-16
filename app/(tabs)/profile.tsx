@@ -1262,13 +1262,9 @@ export default function ProfileScreen() {
             onPress={() => setAvatarPreviewVisible(false)}
             activeOpacity={1}
           />
-          <TouchableOpacity
-            style={styles.avatarPreviewClose}
-            onPress={() => setAvatarPreviewVisible(false)}
-            activeOpacity={0.7}
-          >
-            <X size={26} color="#fff" />
-          </TouchableOpacity>
+          <View style={[styles.avatarPreviewHeader, { paddingTop: insets.top + 8 }]}>
+            <GlassBackButton onPress={() => setAvatarPreviewVisible(false)} />
+          </View>
 
           <View style={styles.avatarPreviewContent}>
             <View style={styles.avatarPreviewImageWrap}>
@@ -2289,12 +2285,11 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     paddingTop: 120,
   },
-  avatarPreviewClose: {
+  avatarPreviewHeader: {
     position: 'absolute' as const,
-    top: 60,
-    right: 24,
+    top: 0,
+    left: 16,
     zIndex: 10,
-    padding: 8,
   },
   avatarPreviewContent: {
     alignItems: 'center' as const,

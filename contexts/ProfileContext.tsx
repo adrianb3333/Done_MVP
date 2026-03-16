@@ -1,8 +1,10 @@
 import createContextHook from '@nkzw/create-context-hook';
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Platform } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system/legacy';
 
 export interface UserProfile {
   id: string;
@@ -660,15 +662,32 @@ export const [ProfileProvider, useProfile] = createContextHook(() => {
 
   const uploadAvatar = useCallback(async (uri: string) => {
     if (!userId) throw new Error('Not authenticated');
-    console.log('[ProfileContext] Uploading avatar from:', uri);
+    console.log('[ProfileContext] Uploading avatar from:', uri, 'platform:', Platform.OS);
     const fileName = `${userId}/profile.jpg`;
 
-    const response = await fetch(uri);
-    const blob = await response.blob();
+    let uploadBody: ArrayBuffer | Blob;
+
+    if (Platform.OS === 'web') {
+      const response = await fetch(uri);
+      uploadBody = await response.blob();
+      console.log('[ProfileContext] Web blob ready, size:', (uploadBody as Blob).size);
+    } else {
+      const base64 = await FileSystem.readAsStringAsync(uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      console.log('[ProfileContext] Read base64, length:', base64.length);
+      const binaryString = atob(base64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      uploadBody = bytes.buffer as ArrayBuffer;
+      console.log('[ProfileContext] Converted to ArrayBuffer, byteLength:', uploadBody.byteLength);
+    }
 
     const { data, error: uploadError } = await supabase.storage
       .from('avatars')
-      .upload(fileName, blob, { upsert: true, contentType: 'image/jpeg' });
+      .upload(fileName, uploadBody, { upsert: true, contentType: 'image/jpeg' });
 
     if (uploadError) {
       console.error('[ProfileContext] Upload error:', uploadError.message);
