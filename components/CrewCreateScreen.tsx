@@ -290,6 +290,10 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
       Alert.alert('Missing Name', 'Please enter a round name.');
       return;
     }
+    if (!roundCourseName.trim()) {
+      Alert.alert('Select a Course', 'Please select a course before saving the round.');
+      return;
+    }
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     const round: CrewRound = {
       id: Date.now().toString(),
@@ -1152,6 +1156,10 @@ export default function CrewCreateScreen({ onClose }: CrewCreateScreenProps) {
   const handleSaveTournament = useCallback(async () => {
     if (!tournamentName.trim()) {
       Alert.alert('Missing Name', 'Please enter a tournament name.');
+      return;
+    }
+    if (!tournamentCourseName.trim()) {
+      Alert.alert('Select a Course', 'Please select a course before saving the tournament.');
       return;
     }
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

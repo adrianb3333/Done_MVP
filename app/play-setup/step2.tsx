@@ -1,14 +1,16 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Animated,
+  Alert,
 } from 'react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import HorizontalPager from '@/components/HorizontalPager';
 import Step2Page1 from './screens/Step2Page1';
@@ -17,6 +19,15 @@ export default function PlayStep2Screen() {
   const insets = useSafeAreaInsets();
   const pages = [<Step2Page1 key="1" />];
   const pulseAnim = useRef(new Animated.Value(1)).current;
+  const [hasCourse, setHasCourse] = useState<boolean>(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      void AsyncStorage.getItem('play_setup_selected_course').then((val) => {
+        setHasCourse(val !== null && val !== '');
+      });
+    }, [])
+  );
 
   useEffect(() => {
     const pulse = Animated.loop(
@@ -35,6 +46,10 @@ export default function PlayStep2Screen() {
   };
 
   const handleNext = () => {
+    if (!hasCourse) {
+      Alert.alert('Select a Course', 'Please select a course before continuing.');
+      return;
+    }
     router.push('/play-setup/step3');
   };
 
@@ -60,11 +75,11 @@ export default function PlayStep2Screen() {
       <View style={[styles.footer, { paddingBottom: insets.bottom > 0 ? insets.bottom : 24 }]}>
         <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
           <TouchableOpacity
-            style={styles.nextButton}
+            style={[styles.nextButton, !hasCourse && styles.nextButtonDisabled]}
             onPress={handleNext}
             activeOpacity={0.8}
           >
-            <Text style={styles.nextButtonText}>Next</Text>
+            <Text style={[styles.nextButtonText, !hasCourse && styles.nextButtonTextDisabled]}>{hasCourse ? 'Next' : 'Select a Course'}</Text>
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -118,5 +133,12 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 17,
     fontWeight: '700' as const,
+  },
+  nextButtonDisabled: {
+    backgroundColor: 'rgba(0,0,0,0.12)',
+    borderColor: 'rgba(255,255,255,0.06)',
+  },
+  nextButtonTextDisabled: {
+    color: 'rgba(255,255,255,0.4)',
   },
 });
