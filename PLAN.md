@@ -1,24 +1,16 @@
-# Add shot distance labels between GPS dots and save to Supabase
+# Fix distance not saving to Supabase
 
-## Supabase Setup (you do this manually)
-- Add a `distance_meters` column (type: `NUMERIC`, default: `NULL`) to your existing `club_selections` table
-- Add an UPDATE RLS policy so authenticated users can update their own rows
+**Problem:**  
+The shot distance in meters is calculated correctly in the app UI but never actually arrives in your Supabase database.
 
-## Features
-- After each club selection, the distance from the **previous** shot dot to the new dot is calculated using GPS coordinates
-- The distance (in meters) is displayed as a label next to the **first dot** of each pair, right beside the club name badge (e.g. "Dr 255 m", "7i 143 m")
-- The distance is saved to Supabase in the `distance_meters` column of the `club_selections` row for the **first** shot (the one that was hit)
-- The first dot on each hole has no distance label (no previous shot to measure from)
+**Root causes:**
+1. The database save is triggered inside an unreliable place (a state update function), which can silently fail or run multiple times
+2. The database lookup to find the correct row uses exact GPS coordinate matching — tiny decimal differences cause it to miss the row entirely
+3. Errors are swallowed and never surfaced
 
-## Design
-- Each shot dot marker now shows: club abbreviation + distance in meters (e.g. **"Dr  255 m"**)
-- The distance label appears in a dark pill badge next to the club label, styled with green accent — matching the existing shot label look
-- Clean, readable text that doesn't clutter the map
+**Fix:**
+- Move the database save out of the state update and into a proper reliable location that runs exactly once after each club selection
+- Change the row lookup to use the most recent club selection by time instead of matching exact GPS coordinates
+- Add better error logging so issues are visible in the console
 
-## Changes
-- [x] Update the shot marker data to include a calculated distance from the previous shot
-- [x] Update the shot marker rendering on the map to show the distance label next to each dot
-- [x] Update the club selection service to accept and save `distance_meters` to Supabase
-- [x] Calculate distance using the existing `haversineDistance` function already in the GPS tab, in meters
-- [x] Add `updateClubSelectionDistance` function to update existing rows instead of inserting duplicates
-- [x] Display distance in meters (not yards) in the UI
+**No changes needed on your Supabase side** — the table structure is fine. This is purely a code-side fix for how the app talks to the database.

@@ -53,8 +53,6 @@ export async function saveClubSelection(data: ClubSelectionData): Promise<boolea
 
 export async function updateClubSelectionDistance(
   clubId: string,
-  latitude: number,
-  longitude: number,
   distanceMeters: number
 ): Promise<boolean> {
   try {
@@ -73,16 +71,16 @@ export async function updateClubSelectionDistance(
       .select('id')
       .eq('user_id', userId)
       .eq('club_id', clubId)
-      .eq('latitude', latitude)
-      .eq('longitude', longitude)
       .is('distance_meters', null)
       .order('selected_at', { ascending: false })
       .limit(1);
 
     if (fetchError) {
-      console.error('[ClubSelection] Error finding row to update:', fetchError.message);
+      console.error('[ClubSelection] Error finding row to update:', fetchError.message, fetchError);
       return false;
     }
+
+    console.log('[ClubSelection] Found rows to update:', rows?.length ?? 0);
 
     if (!rows || rows.length === 0) {
       console.warn('[ClubSelection] No matching row found to update distance, inserting fallback');
@@ -90,30 +88,31 @@ export async function updateClubSelectionDistance(
         user_id: userId,
         club_id: clubId,
         selected_at: new Date().toISOString(),
-        latitude,
-        longitude,
+        latitude: 0,
+        longitude: 0,
         distance_meters: distanceMeters,
       });
       if (insertError) {
-        console.error('[ClubSelection] Fallback insert error:', insertError.message);
+        console.error('[ClubSelection] Fallback insert error:', insertError.message, insertError);
         return false;
       }
-      console.log('[ClubSelection] Fallback insert succeeded');
+      console.log('[ClubSelection] Fallback insert succeeded with distance:', distanceMeters);
       return true;
     }
 
     const rowId = rows[0].id;
+    console.log('[ClubSelection] Updating row id:', rowId, 'with distance:', distanceMeters);
     const { error: updateError } = await supabase
       .from('club_selections')
       .update({ distance_meters: distanceMeters })
       .eq('id', rowId);
 
     if (updateError) {
-      console.error('[ClubSelection] Update error:', updateError.message);
+      console.error('[ClubSelection] Update error:', updateError.message, updateError);
       return false;
     }
 
-    console.log('[ClubSelection] Successfully updated distance_meters for row:', rowId);
+    console.log('[ClubSelection] Successfully updated distance_meters for row:', rowId, 'distance:', distanceMeters);
     return true;
   } catch (err) {
     console.error('[ClubSelection] Unexpected error updating distance:', err);
