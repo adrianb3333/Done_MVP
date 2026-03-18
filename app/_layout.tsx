@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState, useRef } from "react";
-import { View, StyleSheet, Platform, Animated, Dimensions, Text } from "react-native";
+import { View, StyleSheet, Platform, Animated, Image, useWindowDimensions } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SessionProvider, useSession } from "@/contexts/SessionContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
@@ -36,6 +36,8 @@ if (Platform.OS !== 'web') {
 }
 
 const queryClient = new QueryClient();
+const LOADING_REFERENCE_IMAGE = { width: 1024, height: 1536 };
+const LOADING_REFERENCE_SCREEN = { x: 201, y: 123, width: 623, height: 1315 };
 
 function AppContent() {
   const { sessionState, sessionType, showPracticeSummary, crewSession, crewSessionActive } = useSession();
@@ -48,6 +50,17 @@ function AppContent() {
   const isInitialLoadRef = useRef<boolean>(true);
   const router = useRouter();
   const segments = useSegments();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const splashImageScale = Math.max(
+    windowWidth / LOADING_REFERENCE_SCREEN.width,
+    windowHeight / LOADING_REFERENCE_SCREEN.height,
+  );
+  const splashImageWidth = LOADING_REFERENCE_IMAGE.width * splashImageScale;
+  const splashImageHeight = LOADING_REFERENCE_IMAGE.height * splashImageScale;
+  const splashCropWidth = LOADING_REFERENCE_SCREEN.width * splashImageScale;
+  const splashCropHeight = LOADING_REFERENCE_SCREEN.height * splashImageScale;
+  const splashImageLeft = (-LOADING_REFERENCE_SCREEN.x * splashImageScale) - ((splashCropWidth - windowWidth) / 2);
+  const splashImageTop = (-LOADING_REFERENCE_SCREEN.y * splashImageScale) - ((splashCropHeight - windowHeight) / 2);
 
   useEffect(() => {
     console.log('App loading, showing splash for 7 seconds');
@@ -119,13 +132,22 @@ function AppContent() {
   }, [session, segments, loading, showLoadingSplash, router]);
 
   if (showLoadingSplash) {
+    console.log('Rendering exact loading splash reference');
     return (
-      <Animated.View style={[styles.splashContainer, { opacity: splashOpacity }]}>
-        <View style={styles.splashLogoWrap}>
-          <Text style={styles.splashText}>GolfersCrib</Text>
-          <Text style={styles.splashReg}>®</Text>
-        </View>
-        <View style={styles.splashSwoosh} />
+      <Animated.View style={[styles.splashContainer, { opacity: splashOpacity }]} testID="loading-splash-screen">
+        <Image
+          source={require('@/assets/images/loading-reference-phone.png')}
+          style={[
+            styles.splashReferenceImage,
+            {
+              width: splashImageWidth,
+              height: splashImageHeight,
+              left: splashImageLeft,
+              top: splashImageTop,
+            },
+          ]}
+          testID="loading-splash-image"
+        />
       </Animated.View>
     );
   }
@@ -549,33 +571,10 @@ const styles = StyleSheet.create({
   },
   splashContainer: {
     flex: 1,
-    backgroundColor: '#bcc8e0',
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+    backgroundColor: '#d9e4fb',
+    overflow: 'hidden' as const,
   },
-  splashLogoWrap: {
-    flexDirection: 'row' as const,
-    alignItems: 'flex-start' as const,
-  },
-  splashText: {
-    fontSize: 46,
-    fontWeight: 'bold' as const,
-    fontStyle: 'italic' as const,
-    color: '#FFFFFF',
-    letterSpacing: -0.5,
-  },
-  splashReg: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-    color: '#FFFFFF',
-    marginTop: 4,
-    marginLeft: 1,
-  },
-  splashSwoosh: {
-    width: Dimensions.get('window').width * 0.58,
-    height: 2.5,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 2,
-    marginTop: -4,
+  splashReferenceImage: {
+    position: 'absolute' as const,
   },
 });
