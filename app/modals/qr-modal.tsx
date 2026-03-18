@@ -11,9 +11,12 @@ import {
   Alert,
   Image,
   ActivityIndicator,
+  Modal,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { QrCode, Share2, Users, Target, BarChart3 } from 'lucide-react-native';
+import { QrCode, Share2, Users, Target, BarChart3, X, Zap } from 'lucide-react-native';
+import { CameraView, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -44,6 +47,10 @@ export default function QrModal() {
   const [shareCardVisible, setShareCardVisible] = useState<boolean>(false);
   const [shareCardType, setShareCardType] = useState<ShareCardType>('lastRound');
   const [lastPractice, setLastPractice] = useState<DrillResultRow | null>(null);
+  const [scannerOpen, setScannerOpen] = useState<boolean>(false);
+  const [permission, requestPermission] = useCameraPermissions();
+  const [scanned, setScanned] = useState<boolean>(false);
+  const [torchOn, setTorchOn] = useState<boolean>(false);
 
   const qrValue = `golfapp://profile/${userHandle}`;
   const qrImageUrl = getQrImageUrl(qrValue, 400);
@@ -99,6 +106,61 @@ export default function QrModal() {
   const handleAffiliate = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     Alert.alert('Coming Soon', 'Affiliate sharing will be available soon.');
+  }, []);
+
+  const handleOpenScanner = useCallback(async () => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    console.log('[QR] Opening scanner...');
+    if (Platform.OS === 'web') {
+      setScannerOpen(true);
+      return;
+    }
+    if (!permission?.granted) {
+      console.log('[QR] Requesting camera permission...');
+      const result = await requestPermission();
+      if (!result.granted) {
+        Alert.alert('Camera Permission', 'Camera access is required to scan QR codes. Please enable it in your device settings.');
+        return;
+      }
+    }
+    setScanned(false);
+    setTorchOn(false);
+    setScannerOpen(true);
+  }, [permission, requestPermission]);
+
+  const handleBarcodeScanned = useCallback((result: BarcodeScanningResult) => {
+    setScanned(true);
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    console.log('[QR] Scanned barcode:', result.type, result.data);
+    const data = result.data;
+    if (data.startsWith('golfapp://profile/')) {
+      const scannedUser = data.replace('golfapp://profile/', '');
+      Alert.alert(
+        'Friend Found!',
+        `Add @${scannedUser} as a friend?`,
+        [
+          { text: 'Cancel', style: 'cancel', onPress: () => setScanned(false) },
+          {
+            text: 'Add Friend',
+            onPress: () => {
+              console.log('[QR] Adding friend:', scannedUser);
+              setScannerOpen(false);
+              setScanned(false);
+              setTorchOn(false);
+              Alert.alert('Success', `Friend request sent to @${scannedUser}`);
+            },
+          },
+        ]
+      );
+    } else {
+      Alert.alert(
+        'QR Code Scanned',
+        data,
+        [
+          { text: 'OK', onPress: () => setScanned(false) },
+        ]
+      );
+    }
   }, []);
 
   const insets = useSafeAreaInsets();
@@ -225,7 +287,7 @@ export default function QrModal() {
               Point your camera at another player&apos;s QR code to instantly add them as a friend and start tracking rounds together.
             </Text>
 
-            <TouchableOpacity style={styles.scanBtn} activeOpacity={0.8}>
+            <TouchableOpacity style={styles.scanBtn} activeOpacity={0.8} onPress={handleOpenScanner}>
               <QrCode size={20} color="#FFFFFF" />
               <Text style={styles.scanBtnText}>Open Scanner</Text>
             </TouchableOpacity>
@@ -239,6 +301,78 @@ export default function QrModal() {
           </View>
         </View>
       </ScrollView>
+
+      <Modal
+        visible={scannerOpen}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={() => setScannerOpen(false)}
+      >
+        <View style={styles.scannerContainer}>
+          {Platform.OS === 'web' ? (
+            <View style={styles.scannerWebFallback}>
+              <QrCode size={64} color="#FFFFFF" />
+              <Text style={styles.scannerWebText}>QR scanning is not supported on web.{"\n"}Please use a mobile device.</Text>
+              <TouchableOpacity style={styles.scannerCloseBtn} onPress={() => setScannerOpen(false)}>
+                <Text style={styles.scannerCloseBtnText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <CameraView
+                style={StyleSheet.absoluteFill}
+                facing="back"
+                enableTorch={torchOn}
+                barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+                onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
+              />
+              <View style={styles.scannerOverlay}>
+                <View style={styles.scannerTopBar}>
+                  <TouchableOpacity
+                    style={styles.scannerHeaderBtn}
+                    onPress={() => { setScannerOpen(false); setScanned(false); setTorchOn(false); }}
+                    activeOpacity={0.7}
+                  >
+                    <X size={22} color="#FFFFFF" />
+                  </TouchableOpacity>
+                  <Text style={styles.scannerTitle}>Scan QR Code</Text>
+                  <TouchableOpacity
+                    style={[styles.scannerHeaderBtn, torchOn && styles.scannerHeaderBtnActive]}
+                    onPress={() => setTorchOn(prev => !prev)}
+                    activeOpacity={0.7}
+                  >
+                    <Zap size={20} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.scannerMiddle}>
+                  <View style={styles.scannerFrame}>
+                    <View style={[styles.scannerCorner, styles.cornerTL]} />
+                    <View style={[styles.scannerCorner, styles.cornerTR]} />
+                    <View style={[styles.scannerCorner, styles.cornerBL]} />
+                    <View style={[styles.scannerCorner, styles.cornerBR]} />
+                  </View>
+                </View>
+
+                <View style={styles.scannerBottom}>
+                  <Text style={styles.scannerHint}>
+                    {scanned ? 'QR Code detected!' : 'Align the QR code within the frame'}
+                  </Text>
+                  {scanned && (
+                    <TouchableOpacity
+                      style={styles.scanAgainBtn}
+                      onPress={() => setScanned(false)}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.scanAgainText}>Scan Again</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            </>
+          )}
+        </View>
+      </Modal>
 
       <ShareCardModal
         visible={shareCardVisible}
@@ -444,5 +578,137 @@ const styles = StyleSheet.create({
   emptyScansText: {
     fontSize: 14,
     color: 'rgba(255,255,255,0.6)',
+  },
+  scannerContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  scannerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'space-between' as const,
+  },
+  scannerTopBar: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  scannerHeaderBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  scannerHeaderBtnActive: {
+    backgroundColor: 'rgba(255,200,0,0.5)',
+    borderColor: 'rgba(255,200,0,0.6)',
+  },
+  scannerTitle: {
+    fontSize: 17,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
+  },
+  scannerMiddle: {
+    flex: 1,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  scannerFrame: {
+    width: 250,
+    height: 250,
+    position: 'relative' as const,
+  },
+  scannerCorner: {
+    position: 'absolute' as const,
+    width: 36,
+    height: 36,
+    borderColor: '#FFFFFF',
+  },
+  cornerTL: {
+    top: 0,
+    left: 0,
+    borderTopWidth: 3,
+    borderLeftWidth: 3,
+    borderTopLeftRadius: 12,
+  },
+  cornerTR: {
+    top: 0,
+    right: 0,
+    borderTopWidth: 3,
+    borderRightWidth: 3,
+    borderTopRightRadius: 12,
+  },
+  cornerBL: {
+    bottom: 0,
+    left: 0,
+    borderBottomWidth: 3,
+    borderLeftWidth: 3,
+    borderBottomLeftRadius: 12,
+  },
+  cornerBR: {
+    bottom: 0,
+    right: 0,
+    borderBottomWidth: 3,
+    borderRightWidth: 3,
+    borderBottomRightRadius: 12,
+  },
+  scannerBottom: {
+    alignItems: 'center' as const,
+    paddingBottom: 80,
+    gap: 16,
+  },
+  scannerHint: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: '#FFFFFF',
+    textAlign: 'center' as const,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  scanAgainBtn: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+  },
+  scanAgainText: {
+    fontSize: 15,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+  },
+  scannerWebFallback: {
+    flex: 1,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    gap: 20,
+    paddingHorizontal: 40,
+  },
+  scannerWebText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    textAlign: 'center' as const,
+    lineHeight: 24,
+  },
+  scannerCloseBtn: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 14,
+    marginTop: 12,
+  },
+  scannerCloseBtnText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
   },
 });
