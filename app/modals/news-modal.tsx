@@ -50,7 +50,7 @@ function NewsDetailModal({ post, visible, onClose }: { post: SanityPost | null; 
             end={{ x: 0, y: 1 }}
             style={styles.modalBodyGradient}
           >
-            <ScrollView style={styles.modalBodyScroll} contentContainerStyle={styles.modalBody} bounces={false}>
+            <ScrollView style={styles.modalBodyScroll} contentContainerStyle={styles.modalBody} showsVerticalScrollIndicator={true} bounces={true}>
               <Text style={styles.modalTitle}>{post.title}</Text>
               {post.caption ? (
                 <Text style={styles.modalCaption}>{post.caption}</Text>
@@ -58,7 +58,7 @@ function NewsDetailModal({ post, visible, onClose }: { post: SanityPost | null; 
               <Text style={styles.modalDate}>
                 {new Date(post._createdAt).toLocaleDateString('en-US', {
                   year: 'numeric',
-                  month: 'long',
+                  month: 'short',
                   day: 'numeric',
                 })}
               </Text>
@@ -503,6 +503,7 @@ const styles = StyleSheet.create({
     color: 'rgba(0,0,0,0.55)',
     lineHeight: 19,
   },
+
   newsCardDate: {
     fontSize: 11,
     color: 'rgba(0,0,0,0.35)',
@@ -547,7 +548,8 @@ const styles = StyleSheet.create({
     height: 240,
   },
   modalBodyScroll: {
-    maxHeight: 300,
+    flexGrow: 0,
+    flexShrink: 1,
   },
   modalBody: {
     padding: 20,
@@ -565,8 +567,11 @@ const styles = StyleSheet.create({
   },
   modalDate: {
     fontSize: 12,
-    color: '#000000',
-    marginTop: 4,
+    color: 'rgba(0,0,0,0.45)',
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(0,0,0,0.1)',
   },
   onboardingContainer: {
     paddingHorizontal: 24,
