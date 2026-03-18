@@ -122,17 +122,10 @@ function AppContent() {
     return (
       <Animated.View style={[styles.splashContainer, { opacity: splashOpacity }]}>
         <Image
-          source={require('@/assets/images/loading-bg.png')}
+          source={require('@/assets/images/splash-bg.png')}
           style={styles.splashImage}
           resizeMode="cover"
         />
-        <View style={styles.splashLogoContainer}>
-          <Image
-            source={require('@/assets/images/loading-logo.png')}
-            style={styles.splashLogo}
-            resizeMode="contain"
-          />
-        </View>
       </Animated.View>
     );
   }
@@ -556,7 +549,7 @@ const styles = StyleSheet.create({
   },
   splashContainer: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#b8c8e8',
   },
   splashImage: {
     width: Dimensions.get('window').width,
@@ -564,14 +557,5 @@ const styles = StyleSheet.create({
     position: 'absolute' as const,
     top: 0,
     left: 0,
-  },
-  splashLogoContainer: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
-  },
-  splashLogo: {
-    width: 220,
-    height: 80,
   },
 });
