@@ -44,13 +44,13 @@ function NewsDetailModal({ post, visible, onClose }: { post: SanityPost | null; 
           {imageUrl ? (
             <Image source={{ uri: imageUrl }} style={styles.modalImage} resizeMode="cover" />
           ) : null}
-          <LinearGradient
-            colors={['#EBF4FF', '#D6EAFF', '#C2DFFF', '#EBF4FF']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={styles.modalBodyGradient}
-          >
-            <ScrollView style={styles.modalBodyScroll} contentContainerStyle={styles.modalBody} showsVerticalScrollIndicator={true} bounces={true}>
+          <ScrollView style={styles.modalBodyScroll} contentContainerStyle={styles.modalBodyContent} showsVerticalScrollIndicator={true} bounces={true} nestedScrollEnabled={true}>
+            <LinearGradient
+              colors={['#EBF4FF', '#D6EAFF', '#C2DFFF', '#EBF4FF']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={styles.modalBodyGradient}
+            >
               <Text style={styles.modalTitle}>{post.title}</Text>
               {post.caption ? (
                 <Text style={styles.modalCaption}>{post.caption}</Text>
@@ -62,8 +62,8 @@ function NewsDetailModal({ post, visible, onClose }: { post: SanityPost | null; 
                   day: 'numeric',
                 })}
               </Text>
-            </ScrollView>
-          </LinearGradient>
+            </LinearGradient>
+          </ScrollView>
         </Pressable>
       </Pressable>
     </Modal>
@@ -521,6 +521,7 @@ const styles = StyleSheet.create({
     width: '100%' as const,
     maxHeight: '85%' as const,
     overflow: 'hidden' as const,
+    flexShrink: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
@@ -528,9 +529,7 @@ const styles = StyleSheet.create({
     elevation: 12,
     backgroundColor: '#D6EAFF',
   },
-  modalBodyGradient: {
-    width: '100%' as const,
-  },
+
   modalCloseButton: {
     position: 'absolute' as const,
     top: 12,
@@ -548,10 +547,12 @@ const styles = StyleSheet.create({
     height: 240,
   },
   modalBodyScroll: {
-    flexGrow: 0,
-    flexShrink: 1,
+    flex: 1,
   },
-  modalBody: {
+  modalBodyContent: {
+    flexGrow: 1,
+  },
+  modalBodyGradient: {
     padding: 20,
     gap: 10,
   },
