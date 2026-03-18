@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState, useRef } from "react";
-import { View, StyleSheet, Platform, Image, Animated, Dimensions } from "react-native";
+import { View, StyleSheet, Platform, Animated, Dimensions, Text } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SessionProvider, useSession } from "@/contexts/SessionContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
@@ -121,11 +121,11 @@ function AppContent() {
   if (showLoadingSplash) {
     return (
       <Animated.View style={[styles.splashContainer, { opacity: splashOpacity }]}>
-        <Image
-          source={require('@/assets/images/golferscrib-logo-clean.png')}
-          style={styles.splashLogo}
-          resizeMode="contain"
-        />
+        <View style={styles.splashLogoWrap}>
+          <Text style={styles.splashText}>GolfersCrib</Text>
+          <Text style={styles.splashReg}>®</Text>
+        </View>
+        <View style={styles.splashSwoosh} />
       </Animated.View>
     );
   }
@@ -553,8 +553,29 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
-  splashLogo: {
-    width: Dimensions.get('window').width * 0.65,
-    height: Dimensions.get('window').width * 0.25,
+  splashLogoWrap: {
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start' as const,
+  },
+  splashText: {
+    fontSize: 46,
+    fontWeight: 'bold' as const,
+    fontStyle: 'italic' as const,
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
+  },
+  splashReg: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#FFFFFF',
+    marginTop: 4,
+    marginLeft: 1,
+  },
+  splashSwoosh: {
+    width: Dimensions.get('window').width * 0.58,
+    height: 2.5,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 2,
+    marginTop: -4,
   },
 });
