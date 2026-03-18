@@ -44,13 +44,40 @@ export default function RecapModal() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const hasCheckedRef = useRef<boolean>(false);
   const [summaries, setSummaries] = useState<CoachSummary[]>([]);
+  const summariesRef = useRef<CoachSummary[]>([]);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [lastCheckedRoundId, setLastCheckedRoundId] = useState<string>('');
   const [lastCheckedDrillId, setLastCheckedDrillId] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [userId, setUserId] = useState<string | null>(null);
 
   const currentHandicap = 14.2;
   const yearStartHandicap = 16.8;
   const yearProgress = currentHandicap - yearStartHandicap;
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError) {
+          console.log('[Coach] Auth error:', authError.message);
+          setErrorMessage('Could not verify your account. Please try again.');
+          return;
+        }
+        if (!user) {
+          console.log('[Coach] No authenticated user found');
+          setErrorMessage('Please log in to see your coach analysis.');
+          return;
+        }
+        console.log('[Coach] Authenticated user:', user.id);
+        setUserId(user.id);
+      } catch (e: any) {
+        console.log('[Coach] Init error:', e.message);
+        setErrorMessage('Connection error. Please check your internet.');
+      }
+    };
+    void init();
+  }, []);
 
   useEffect(() => {
     const loadGoal = async () => {
@@ -89,6 +116,10 @@ export default function RecapModal() {
     };
     void loadSummaries();
   }, []);
+
+  useEffect(() => {
+    summariesRef.current = summaries;
+  }, [summaries]);
 
   const generateRoundSummary = useCallback(async (roundId: string, courseName: string, scores: { hole: number; par: number; score: number; putts: number; fairway: string; gir: boolean }[]) => {
     const goalText = savedGoal ? `The player's handicap goal is ${savedGoal}.` : 'No handicap goal is set.';
@@ -132,30 +163,41 @@ export default function RecapModal() {
 
   const saveSummary = useCallback(async (summary: CoachSummary) => {
     try {
-      const updated = [summary, ...summaries].slice(0, 20);
+      const current = summariesRef.current;
+      const updated = [summary, ...current].slice(0, 20);
       setSummaries(updated);
+      summariesRef.current = updated;
       await AsyncStorage.setItem(COACH_SUMMARIES_KEY, JSON.stringify(updated));
       console.log('[Coach] Summary saved, total:', updated.length);
     } catch (e: any) {
       console.log('[Coach] Error saving summary:', e.message);
     }
-  }, [summaries]);
+  }, []);
 
   const checkForNewActivity = useCallback(async () => {
     if (isGenerating) return;
+    if (!userId) {
+      console.log('[Coach] No user ID available, skipping activity check');
+      return;
+    }
     setIsGenerating(true);
-    console.log('[Coach] Checking for new activity...');
+    setErrorMessage('');
+    console.log('[Coach] Checking for new activity for user:', userId);
 
     try {
       const { data: latestRound, error: roundErr } = await supabase
         .from('rounds')
         .select('id, course_name, is_completed, created_at')
+        .eq('user_id', userId)
         .eq('is_completed', true)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      if (roundErr) console.log('[Coach] Round fetch error:', roundErr.message);
+      if (roundErr) {
+        console.log('[Coach] Round fetch error:', roundErr.message, roundErr.details, roundErr.hint);
+        setErrorMessage('Could not load your rounds. Please try again.');
+      }
 
       if (latestRound && latestRound.id !== lastCheckedRoundId) {
         console.log('[Coach] New completed round found:', latestRound.id);
@@ -195,11 +237,15 @@ export default function RecapModal() {
       const { data: latestDrill, error: drillErr } = await supabase
         .from('drill_results')
         .select('id, drill_name, percentage, category, total_hits, total_shots, completed_at')
+        .eq('user_id', userId)
         .order('completed_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      if (drillErr) console.log('[Coach] Drill fetch error:', drillErr.message);
+      if (drillErr) {
+        console.log('[Coach] Drill fetch error:', drillErr.message, drillErr.details, drillErr.hint);
+        setErrorMessage(prev => prev || 'Could not load your drills. Please try again.');
+      }
 
       if (latestDrill && latestDrill.id !== lastCheckedDrillId) {
         console.log('[Coach] New drill found:', latestDrill.id);
@@ -207,7 +253,8 @@ export default function RecapModal() {
 
         const { count } = await supabase
           .from('drill_results')
-          .select('*', { count: 'exact', head: true });
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', userId);
 
         const text = await generateDrillSummary(latestDrill.drill_name, latestDrill.percentage, count || 0);
         if (text) {
@@ -226,19 +273,22 @@ export default function RecapModal() {
       }
     } catch (e: any) {
       console.log('[Coach] Error checking activity:', e.message);
+      setErrorMessage('Something went wrong. Please try again.');
     } finally {
       setIsGenerating(false);
     }
-  }, [isGenerating, lastCheckedRoundId, lastCheckedDrillId, generateRoundSummary, generateDrillSummary, saveSummary]);
+  }, [isGenerating, userId, lastCheckedRoundId, lastCheckedDrillId, generateRoundSummary, generateDrillSummary, saveSummary]);
 
   useEffect(() => {
+    if (!userId) return;
     if (hasCheckedRef.current) return;
     hasCheckedRef.current = true;
+    console.log('[Coach] Starting initial activity check for user:', userId);
     const timer = setTimeout(() => {
       void checkForNewActivity();
     }, 800);
     return () => clearTimeout(timer);
-  }, [checkForNewActivity]);
+  }, [userId, checkForNewActivity]);
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -359,11 +409,27 @@ export default function RecapModal() {
           </View>
         )}
 
-        {summaries.length === 0 && !isGenerating && (
+        {errorMessage ? (
+          <View style={styles.emptySummaries}>
+            <Text style={styles.errorText}>{errorMessage}</Text>
+            <TouchableOpacity
+              style={styles.retryBtn}
+              onPress={() => {
+                hasCheckedRef.current = false;
+                setErrorMessage('');
+                void checkForNewActivity();
+              }}
+              activeOpacity={0.7}
+            >
+              <RefreshCw size={14} color="#FFFFFF" />
+              <Text style={styles.retryBtnText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : summaries.length === 0 && !isGenerating ? (
           <View style={styles.emptySummaries}>
             <Text style={styles.emptySummariesText}>Complete a round or drill to get your first coach analysis</Text>
           </View>
-        )}
+        ) : null}
 
         {summaries.map((summary) => {
           const dateStr = new Date(summary.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -755,6 +821,28 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.7)',
     textAlign: 'center' as const,
     lineHeight: 20,
+  },
+  errorText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#FFD6D6',
+    textAlign: 'center' as const,
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  retryBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  retryBtnText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: '#FFFFFF',
   },
   summaryCard: {
     backgroundColor: 'rgba(0,0,0,0.25)',

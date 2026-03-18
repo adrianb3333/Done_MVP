@@ -1,16 +1,10 @@
-# Fix distance not saving to Supabase
+# Fix Coach screen to show AI-generated analysis text
 
-**Problem:**  
-The shot distance in meters is calculated correctly in the app UI but never actually arrives in your Supabase database.
+**Problem**
+The Coach screen queries the database for rounds and drills but doesn't identify which user is logged in. The database security rules block these unfiltered requests, so no data comes back — meaning the AI text generation never triggers.
 
-**Root causes:**
-1. The database save is triggered inside an unreliable place (a state update function), which can silently fail or run multiple times
-2. The database lookup to find the correct row uses exact GPS coordinate matching — tiny decimal differences cause it to miss the row entirely
-3. Errors are swallowed and never surfaced
-
-**Fix:**
-- Move the database save out of the state update and into a proper reliable location that runs exactly once after each club selection
-- Change the row lookup to use the most recent club selection by time instead of matching exact GPS coordinates
-- Add better error logging so issues are visible in the console
-
-**No changes needed on your Supabase side** — the table structure is fine. This is purely a code-side fix for how the app talks to the database.
+**Fixes**
+- Get the logged-in user's ID and use it when fetching rounds and drill results from the database
+- Fix a bug where generating two summaries at once could cause one to be lost
+- Add better error logging so you can see in the console exactly what's happening if something still fails
+- Show a user-friendly message if the connection to the database fails instead of just showing nothing
