@@ -122,9 +122,9 @@ function AppContent() {
     return (
       <Animated.View style={[styles.splashContainer, { opacity: splashOpacity }]}>
         <Image
-          source={require('@/assets/images/splash-bg.png')}
-          style={styles.splashImage}
-          resizeMode="cover"
+          source={require('@/assets/images/golferscrib-logo-clean.png')}
+          style={styles.splashLogo}
+          resizeMode="contain"
         />
       </Animated.View>
     );
@@ -549,13 +549,12 @@ const styles = StyleSheet.create({
   },
   splashContainer: {
     flex: 1,
-    backgroundColor: '#b8c8e8',
+    backgroundColor: '#bcc8e0',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
   },
-  splashImage: {
-    width: Dimensions.get('window').width,
-    height: Dimensions.get('window').height,
-    position: 'absolute' as const,
-    top: 0,
-    left: 0,
+  splashLogo: {
+    width: Dimensions.get('window').width * 0.65,
+    height: Dimensions.get('window').width * 0.25,
   },
 });
