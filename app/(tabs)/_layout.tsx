@@ -2,22 +2,13 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Tabs } from 'expo-router';
 import { User } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useSession } from '@/contexts/SessionContext';
 
 function PlayTabIcon() {
   return (
-    <View style={tabStyles.outerRing}>
-      <View style={tabStyles.circleWrapper}>
-        <LinearGradient
-          colors={['#3A9E4A', '#2D803D', '#1B6B2D', '#145222']}
-          start={{ x: 0.2, y: 0 }}
-          end={{ x: 0.8, y: 1 }}
-          style={tabStyles.circleGradient}
-        >
-          <View style={tabStyles.innerHighlight} />
-          <Text style={tabStyles.circleText}>PLAY</Text>
-        </LinearGradient>
+    <View style={tabStyles.flatCircle}>
+      <View style={[tabStyles.flatCircleInner, { backgroundColor: '#2E9E4B' }]}> 
+        <Text style={tabStyles.flatCircleText}>PLAY</Text>
       </View>
     </View>
   );
@@ -25,17 +16,9 @@ function PlayTabIcon() {
 
 function PracticeTabIcon() {
   return (
-    <View style={tabStyles.outerRing}>
-      <View style={tabStyles.circleWrapper}>
-        <LinearGradient
-          colors={['#1A8CE6', '#0A6FC2', '#004A99', '#003366']}
-          start={{ x: 0.2, y: 0 }}
-          end={{ x: 0.8, y: 1 }}
-          style={tabStyles.circleGradient}
-        >
-          <View style={tabStyles.innerHighlight} />
-          <Text style={tabStyles.circleText}>PRACTICE</Text>
-        </LinearGradient>
+    <View style={tabStyles.flatCircle}>
+      <View style={[tabStyles.flatCircleInner, { backgroundColor: '#1A7FD4' }]}> 
+        <Text style={tabStyles.flatCircleText}>PRACTICE</Text>
       </View>
     </View>
   );
@@ -115,53 +98,30 @@ export default function TabLayout() {
 }
 
 const tabStyles = StyleSheet.create({
-  outerRing: {
-    width: 86,
-    height: 86,
-    borderRadius: 43,
+  flatCircle: {
+    width: 78,
+    height: 78,
+    borderRadius: 39,
     marginTop: -14,
-    backgroundColor: '#E8E8E8',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  flatCircleInner: {
+    width: 78,
+    height: 78,
+    borderRadius: 39,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
     shadowRadius: 6,
-    elevation: 8,
+    elevation: 6,
   },
-  circleWrapper: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    overflow: 'hidden' as const,
-    borderWidth: 1.5,
-    borderTopColor: 'rgba(255,255,255,0.35)',
-    borderLeftColor: 'rgba(255,255,255,0.2)',
-    borderRightColor: 'rgba(0,0,0,0.08)',
-    borderBottomColor: 'rgba(0,0,0,0.15)',
-  },
-  circleGradient: {
-    flex: 1,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    borderRadius: 38,
-  },
-  innerHighlight: {
-    position: 'absolute' as const,
-    top: 3,
-    left: 8,
-    right: 8,
-    height: 28,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-  },
-  circleText: {
-    fontSize: 12,
-    fontWeight: '900' as const,
+  flatCircleText: {
+    fontSize: 13,
+    fontWeight: '800' as const,
     color: '#FFFFFF',
-    letterSpacing: 1,
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 0, height: 1.5 },
-    textShadowRadius: 3,
+    letterSpacing: 0.8,
   },
 });
