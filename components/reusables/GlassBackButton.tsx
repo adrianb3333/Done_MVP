@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { TouchableOpacity, StyleSheet } from 'react-native';
 import { ChevronLeft } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 
 interface GlassBackButtonProps {
   onPress: () => void;
@@ -9,9 +10,14 @@ interface GlassBackButtonProps {
 }
 
 export default function GlassBackButton({ onPress, size = 44, iconSize = 24 }: GlassBackButtonProps) {
+  const handlePress = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPress();
+  }, [onPress]);
+
   return (
     <TouchableOpacity
-      onPress={onPress}
+      onPress={handlePress}
       style={[styles.button, { width: size, height: size, borderRadius: size / 2 }]}
       activeOpacity={0.7}
     >

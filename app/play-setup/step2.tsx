@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { router, useFocusEffect } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -50,6 +51,7 @@ export default function PlayStep2Screen() {
       Alert.alert('Select a Course', 'Please select a course before continuing.');
       return;
     }
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push('/play-setup/step3');
   };
 

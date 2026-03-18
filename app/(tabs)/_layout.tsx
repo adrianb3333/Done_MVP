@@ -4,6 +4,7 @@ import { Tabs } from 'expo-router';
 import { User } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSession } from '@/contexts/SessionContext';
+import * as Haptics from 'expo-haptics';
 
 function PlayTabIcon() {
   return (
@@ -81,6 +82,7 @@ export default function TabLayout() {
         listeners={{
           tabPress: (e) => {
             e.preventDefault();
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             startSetup('play');
           },
         }}
@@ -104,6 +106,7 @@ export default function TabLayout() {
         listeners={{
           tabPress: (e) => {
             e.preventDefault();
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             startSetup('practice');
           },
         }}

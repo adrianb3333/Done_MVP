@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { router } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import HorizontalPager from '@/components/HorizontalPager';
@@ -55,6 +56,7 @@ export default function PlayStep3Screen() {
   };
 
   const handleStart = async () => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     await AsyncStorage.setItem('play_round_private', JSON.stringify(isPrivate));
     await AsyncStorage.setItem('play_setup_advanced_data', JSON.stringify(advancedData));
     startSession(roundName, today);

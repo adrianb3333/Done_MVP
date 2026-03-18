@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { router } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import HorizontalPager from '@/components/HorizontalPager';
@@ -43,9 +44,15 @@ export default function PlayStep1Screen() {
 
   const handleBack = () => {
     finishSession();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)');
+    }
   };
 
   const handleNext = () => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push('/play-setup/step2');
   };
 

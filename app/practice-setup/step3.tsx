@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { router } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import HorizontalPager from '@/components/HorizontalPager';
@@ -38,6 +39,7 @@ export default function PracticeStep3Screen() {
   };
 
   const handleStart = () => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     startSession();
   };
 
