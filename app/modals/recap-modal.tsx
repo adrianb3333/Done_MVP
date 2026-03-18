@@ -20,6 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateText } from '@rork-ai/toolkit-sdk';
 import { supabase } from '@/lib/supabase';
+import { useUserData } from '@/hooks/useUserData';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -51,9 +52,10 @@ export default function RecapModal() {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [userId, setUserId] = useState<string | null>(null);
 
-  const currentHandicap = 14.2;
-  const yearStartHandicap = 16.8;
-  const yearProgress = currentHandicap - yearStartHandicap;
+  const { userData } = useUserData();
+  const currentHandicap = userData.profile.handicap ? parseFloat(userData.profile.handicap) : 0;
+  const goalHandicap = userData.profile.goal1 ? parseFloat(userData.profile.goal1) : 0;
+  const yearProgress = goalHandicap && currentHandicap ? currentHandicap - goalHandicap : 0;
 
   useEffect(() => {
     const init = async () => {

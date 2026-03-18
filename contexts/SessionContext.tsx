@@ -170,7 +170,6 @@ export const [SessionProvider, useSession] = createContextHook<SessionContextVal
     setRoundName('');
     setRoundDate('');
     setIsPrivate(false);
-    router.replace('/(tabs)/profile' as any);
   }, []);
 
   const finishRoundWithData = useCallback((data: LastRoundData) => {
@@ -186,7 +185,6 @@ export const [SessionProvider, useSession] = createContextHook<SessionContextVal
     setRoundName('');
     setRoundDate('');
     setIsPrivate(false);
-    router.replace('/(tabs)/profile' as any);
   }, []);
 
   const quitSession = useCallback(() => {
@@ -204,7 +202,6 @@ export const [SessionProvider, useSession] = createContextHook<SessionContextVal
       setShowPracticeSummary(true);
     } else {
       setSensorsEnabled(false);
-      router.replace('/(tabs)/profile' as any);
     }
   }, [sensorsEnabled, sessionType]);
 
@@ -212,7 +209,6 @@ export const [SessionProvider, useSession] = createContextHook<SessionContextVal
     console.log('Dismissing practice summary');
     setShowPracticeSummary(false);
     setSensorsEnabled(false);
-    router.replace('/(tabs)/profile' as any);
   }, []);
 
   const startCrewSession = useCallback((data: CrewSessionData) => {

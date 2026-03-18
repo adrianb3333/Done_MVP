@@ -216,7 +216,9 @@ function AppContent() {
       <Stack 
         screenOptions={{ 
           headerShown: false,
-          contentStyle: { backgroundColor: '#020d12' }
+          contentStyle: { backgroundColor: '#020d12' },
+          gestureEnabled: true,
+          gestureDirection: 'horizontal',
         }}
       >
         <Stack.Screen name="auth" options={{ headerShown: false }} />
@@ -226,167 +228,190 @@ function AppContent() {
         <Stack.Screen 
           name="modals/club-modal" 
           options={{ 
-            presentation: "fullScreenModal",
+            presentation: "card",
             headerShown: false,
-            animation: "slide_from_bottom"
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="modals/swing-thoughts-modal" 
           options={{ 
-            presentation: "fullScreenModal",
-            headerShown: false
+            presentation: "card",
+            headerShown: false,
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="modals/mental-game-modal" 
           options={{ 
-            presentation: "fullScreenModal",
-            headerShown: false
+            presentation: "card",
+            headerShown: false,
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="modals/vid-modal" 
           options={{ 
-            presentation: "fullScreenModal",
+            presentation: "card",
             headerShown: false,
-            animation: "slide_from_bottom"
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="modals/friends-modal" 
           options={{ 
-            presentation: "fullScreenModal",
+            presentation: "card",
             headerShown: false,
-            animation: "slide_from_bottom"
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="modals/course-modal" 
           options={{ 
-            presentation: "fullScreenModal",
+            presentation: "card",
             headerShown: false,
-            animation: "slide_from_bottom"
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="modals/news-modal" 
           options={{ 
-            presentation: "fullScreenModal",
+            presentation: "card",
             headerShown: false,
-            animation: "slide_from_bottom"
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="modals/recap-modal" 
           options={{ 
-            presentation: "fullScreenModal",
+            presentation: "card",
             headerShown: false,
-            animation: "slide_from_bottom"
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="modals/roundsum-modal" 
           options={{ 
-            presentation: "fullScreenModal",
+            presentation: "card",
             headerShown: false,
-            animation: "slide_from_bottom"
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="modals/pair-impact-modal" 
           options={{ 
-            presentation: "fullScreenModal",
+            presentation: "card",
             headerShown: false,
-            animation: "slide_from_bottom"
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="modals/pairing-process-modal" 
           options={{ 
-            presentation: "fullScreenModal",
+            presentation: "card",
             headerShown: false,
-            animation: "slide_from_bottom"
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="modals/my-bag-modal" 
           options={{ 
-            presentation: "fullScreenModal",
+            presentation: "card",
             headerShown: false,
-            animation: "slide_from_bottom"
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="modals/my-bag-build-modal" 
           options={{ 
-            presentation: "fullScreenModal",
+            presentation: "card",
             headerShown: false,
-            animation: "slide_from_bottom"
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="modals/handicap-modal" 
           options={{ 
-            presentation: "fullScreenModal",
+            presentation: "card",
             headerShown: false,
-            animation: "slide_from_bottom"
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="modals/rounds-history-modal" 
           options={{ 
-            presentation: "fullScreenModal",
+            presentation: "card",
             headerShown: false,
-            animation: "slide_from_bottom"
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="modals/qr-modal" 
           options={{ 
-            presentation: "fullScreenModal",
+            presentation: "card",
             headerShown: false,
-            animation: "slide_from_bottom"
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="modals/past-summaries-modal" 
           options={{ 
-            presentation: "fullScreenModal",
+            presentation: "card",
             headerShown: false,
-            animation: "slide_from_bottom"
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="modals/compare-modal" 
           options={{ 
-            presentation: "fullScreenModal",
+            presentation: "card",
             headerShown: false,
-            animation: "slide_from_bottom"
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="modals/notifications-modal" 
           options={{ 
-            presentation: "fullScreenModal",
+            presentation: "card",
             headerShown: false,
-            animation: "slide_from_bottom"
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="modals/chat-list-modal" 
           options={{ 
-            presentation: "fullScreenModal",
+            presentation: "card",
             headerShown: false,
-            animation: "slide_from_bottom"
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="modals/chat-conversation-modal" 
           options={{ 
-            presentation: "fullScreenModal",
+            presentation: "card",
             headerShown: false,
-            animation: "slide_from_right"
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         {/* End Modals */}
@@ -395,24 +420,27 @@ function AppContent() {
           name="play-setup" 
           options={{ 
             headerShown: false, 
-            presentation: "fullScreenModal",
-            animation: "slide_from_bottom"
+            presentation: "card",
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="practice-setup" 
           options={{ 
             headerShown: false, 
-            presentation: "fullScreenModal",
-            animation: "slide_from_bottom"
+            presentation: "card",
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen 
           name="settings" 
           options={{ 
             headerShown: false, 
-            presentation: "fullScreenModal",
-            animation: "slide_from_right"
+            presentation: "card",
+            animation: "slide_from_right",
+            gestureEnabled: true,
           }} 
         />
         <Stack.Screen name="+not-found" />
