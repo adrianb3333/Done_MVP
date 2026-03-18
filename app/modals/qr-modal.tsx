@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,6 @@ import {
   Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
-  Platform,
   Alert,
   Image,
   ActivityIndicator,
@@ -19,9 +18,10 @@ import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import * as Sharing from 'expo-sharing';
-import { File, Paths } from 'expo-file-system';
 import { useProfile } from '@/contexts/ProfileContext';
+import { useSession } from '@/contexts/SessionContext';
+import { fetchDrillHistory, DrillResultRow } from '@/services/drillResultsService';
+import ShareCardModal, { ShareCardType } from '@/components/ShareCardModal';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -35,15 +35,32 @@ function getQrImageUrl(value: string, size: number = 400): string {
 export default function QrModal() {
   const router = useRouter();
   const { profile } = useProfile();
+  const { lastRound } = useSession();
   const username = profile?.display_name || profile?.username || 'User';
   const userHandle = profile?.username || 'user';
   const scrollRef = useRef<ScrollView>(null);
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [qrLoaded, setQrLoaded] = useState<boolean>(false);
-  const [isSharing, setIsSharing] = useState<boolean>(false);
+  const [shareCardVisible, setShareCardVisible] = useState<boolean>(false);
+  const [shareCardType, setShareCardType] = useState<ShareCardType>('lastRound');
+  const [lastPractice, setLastPractice] = useState<DrillResultRow | null>(null);
 
   const qrValue = `golfapp://profile/${userHandle}`;
   const qrImageUrl = getQrImageUrl(qrValue, 400);
+
+  useEffect(() => {
+    console.log('[QR] Fetching last practice drill...');
+    fetchDrillHistory().then((results) => {
+      if (results.length > 0) {
+        setLastPractice(results[0]);
+        console.log('[QR] Last practice loaded:', results[0].drill_name);
+      } else {
+        console.log('[QR] No practice history found');
+      }
+    }).catch((err) => {
+      console.log('[QR] Error fetching drill history:', err);
+    });
+  }, []);
 
   const handleScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetX = e.nativeEvent.contentOffset.x;
@@ -60,63 +77,29 @@ export default function QrModal() {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   }, []);
 
-  const handleShare = useCallback(async () => {
+  const openShareCard = useCallback((type: ShareCardType) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    console.log('[QR] Opening share card:', type);
+    setShareCardType(type);
+    setShareCardVisible(true);
+  }, []);
+
+  const handleShareQR = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    console.log('[QR] Opening QR share card');
+    setShareCardType('qrCode');
+    setShareCardVisible(true);
+  }, []);
+
+  const handleShotOverview = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    console.log('[QR] Share button pressed');
+    Alert.alert('Coming Soon', 'Shot Overview sharing will be available soon.');
+  }, []);
 
-    if (Platform.OS === 'web') {
-      try {
-        if (navigator.share) {
-          await navigator.share({
-            title: `${username}'s Golf Profile`,
-            text: `Check out @${userHandle} on Golf App!`,
-            url: qrValue,
-          });
-          console.log('[QR] Web share completed');
-        } else {
-          await navigator.clipboard.writeText(qrValue);
-          Alert.alert('Copied!', 'Profile link copied to clipboard');
-          console.log('[QR] Copied to clipboard (web)');
-        }
-      } catch (err: any) {
-        if (err.name !== 'AbortError') {
-          console.log('[QR] Web share error:', err.message);
-        }
-      }
-      return;
-    }
-
-    setIsSharing(true);
-    try {
-      const isAvailable = await Sharing.isAvailableAsync();
-      if (!isAvailable) {
-        Alert.alert('Sharing not available', 'Sharing is not supported on this device.');
-        console.log('[QR] Sharing not available');
-        setIsSharing(false);
-        return;
-      }
-
-      console.log('[QR] Downloading QR image for sharing');
-      const output = await File.downloadFileAsync(qrImageUrl, new File(Paths.cache, `qr_${userHandle}.png`));
-      console.log('[QR] Download complete, exists:', output.exists);
-
-      if (output.exists) {
-        await Sharing.shareAsync(output.uri, {
-          mimeType: 'image/png',
-          dialogTitle: `Share @${userHandle}'s QR Code`,
-        });
-        console.log('[QR] Share dialog opened');
-      } else {
-        Alert.alert('Error', 'Could not download QR code for sharing.');
-        console.log('[QR] Download failed');
-      }
-    } catch (err: any) {
-      console.log('[QR] Share error:', err.message);
-      Alert.alert('Error', 'Something went wrong while sharing.');
-    } finally {
-      setIsSharing(false);
-    }
-  }, [username, userHandle, qrValue, qrImageUrl]);
+  const handleAffiliate = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Alert.alert('Coming Soon', 'Affiliate sharing will be available soon.');
+  }, []);
 
   const insets = useSafeAreaInsets();
 
@@ -132,17 +115,12 @@ export default function QrModal() {
         <Text style={styles.headerTitle}>{username}</Text>
         <View style={styles.headerRight}>
           <TouchableOpacity
-            onPress={handleShare}
+            onPress={handleShareQR}
             style={styles.headerIconBtn}
             activeOpacity={0.7}
-            disabled={isSharing}
             testID="qr-header-share"
           >
-            {isSharing ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Share2 size={18} color="#FFFFFF" />
-            )}
+            <Share2 size={18} color="#FFFFFF" />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={scrollToQR}
@@ -196,21 +174,41 @@ export default function QrModal() {
           </View>
 
           <View style={styles.gridRow}>
-            <TouchableOpacity style={styles.gridBtn} activeOpacity={0.7} testID="qr-last-round">
+            <TouchableOpacity
+              style={styles.gridBtn}
+              activeOpacity={0.7}
+              onPress={() => openShareCard('lastRound')}
+              testID="qr-last-round"
+            >
               <BarChart3 size={22} color="#FFFFFF" />
               <Text style={styles.gridBtnText}>Last Round</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.gridBtn} activeOpacity={0.7} testID="qr-last-practice">
+            <TouchableOpacity
+              style={styles.gridBtn}
+              activeOpacity={0.7}
+              onPress={() => openShareCard('lastPractice')}
+              testID="qr-last-practice"
+            >
               <Target size={22} color="#FFFFFF" />
               <Text style={styles.gridBtnText}>Last Practice</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.gridRow}>
-            <TouchableOpacity style={styles.gridBtn} activeOpacity={0.7} testID="qr-shot-overview">
+            <TouchableOpacity
+              style={styles.gridBtn}
+              activeOpacity={0.7}
+              onPress={handleShotOverview}
+              testID="qr-shot-overview"
+            >
               <BarChart3 size={22} color="#FFFFFF" />
               <Text style={styles.gridBtnText}>Shot Overview</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.gridBtn} activeOpacity={0.7} testID="qr-affiliate">
+            <TouchableOpacity
+              style={styles.gridBtn}
+              activeOpacity={0.7}
+              onPress={handleAffiliate}
+              testID="qr-affiliate"
+            >
               <Share2 size={22} color="#FFFFFF" />
               <Text style={styles.gridBtnText}>Affiliate</Text>
             </TouchableOpacity>
@@ -241,6 +239,18 @@ export default function QrModal() {
           </View>
         </View>
       </ScrollView>
+
+      <ShareCardModal
+        visible={shareCardVisible}
+        onClose={() => setShareCardVisible(false)}
+        type={shareCardType}
+        lastRound={lastRound}
+        lastPractice={lastPractice}
+        qrImageUrl={qrImageUrl}
+        username={username}
+        userHandle={userHandle}
+        displayName={profile?.display_name || username}
+      />
     </LinearGradient>
   );
 }
