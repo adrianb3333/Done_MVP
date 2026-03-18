@@ -36,7 +36,7 @@ const MOCK_TOUR_DATA: TourData = {
 interface ProfileCardProps {
   visible: boolean;
   onClose: () => void;
-  onNavigateAway?: () => void;
+  _onNavigateAway?: () => void;
   user: UserProfile | null;
   isFollowingUser?: boolean;
   onToggleFollow?: () => void;
@@ -103,7 +103,7 @@ function useUserSocialCounts(userId: string | null, visible: boolean) {
 export default function ProfileCard({
   visible,
   onClose,
-  onNavigateAway,
+  _onNavigateAway,
   user,
   isFollowingUser = false,
   onToggleFollow,
@@ -115,41 +115,19 @@ export default function ProfileCard({
     visible
   );
 
-  const pendingChatRef = React.useRef<{ id: string; username: string; avatar: string } | null>(null);
-
-  useEffect(() => {
-    if (!visible && pendingChatRef.current) {
-      const chatData = pendingChatRef.current;
-      pendingChatRef.current = null;
-      console.log('[ProfileCard] Modal closed, navigating to chat with:', chatData.username);
-      const timer = setTimeout(() => {
-        router.push({
-          pathname: '/modals/chat-conversation-modal',
-          params: {
-            otherUserId: chatData.id,
-            otherUsername: chatData.username,
-            otherAvatar: chatData.avatar,
-          },
-        });
-      }, 350);
-      return () => clearTimeout(timer);
-    }
-  }, [visible, router]);
-
   const handleOpenChat = useCallback(() => {
     if (!user) return;
-    console.log('[ProfileCard] Opening chat with:', user.username);
+    console.log('[ProfileCard] Opening chat directly (keeping modal open underneath)');
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    pendingChatRef.current = {
-      id: user.id,
-      username: user.username || user.display_name || 'User',
-      avatar: user.avatar_url || '',
-    };
-    if (onNavigateAway) {
-      onNavigateAway();
-    }
-    onClose();
-  }, [user, onClose, onNavigateAway]);
+    router.push({
+      pathname: '/modals/chat-conversation-modal',
+      params: {
+        otherUserId: user.id,
+        otherUsername: user.username || user.display_name || 'User',
+        otherAvatar: user.avatar_url || '',
+      },
+    });
+  }, [user, router]);
 
   if (!user) return null;
 

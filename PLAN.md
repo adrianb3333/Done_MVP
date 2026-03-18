@@ -1,21 +1,12 @@
-# Fix ScrollView in news detail & chat navigation from profile card
+# Navigate directly to chat from Profile Card without closing it
 
-## Fix 1: Smooth ScrollView in News Detail Popup
+**What changes:**
 
-**Problem:** When pressing a news card, the detail popup's scroll doesn't work smoothly because touch events get intercepted by overlay pressables.
+- When you tap the "Text" button on someone's profile card, the app will immediately open the chat screen on top of everything — no closing of the profile card or any other screen first
+- Pressing the back button from the chat screen will take you right back to the profile card, exactly where you left off
+- The profile card and any screen behind it stay open in the background while you're chatting
 
-**Changes:**
-- Restructure the news detail modal so the ScrollView gets full, uninterrupted touch handling
-- Remove the nested Pressable wrappers that steal gestures from the ScrollView
-- Use a proper close button instead of tap-outside-to-dismiss (which conflicts with scrolling)
-- Give the ScrollView proper flex layout so it fills available space and scrolls naturally
-- Add `scrollEventThrottle` and proper bounce settings for buttery smooth scrolling on iOS
+**How it works now vs. after:**
 
-## Fix 2: Chat navigation from another user's profile card
-
-**Problem:** When pressing "Text" on someone's profile card, it doesn't reliably navigate to the chat conversation screen. The fullScreen modal closing and the new screen push create a timing conflict.
-
-**Changes:**
-- Increase the navigation delay after the profile card modal closes, giving the system enough time to finish the modal dismissal animation
-- Use a callback-based approach so navigation only fires after the modal is truly closed
-- Ensure the correct parameters (user ID, username, avatar) are passed through to the chat conversation screen
+- **Now:** Tapping "Text" closes the profile card, waits for it to finish closing, then opens the chat screen — feels slow and disjointed
+- **After:** Tapping "Text" instantly pushes the chat screen on top, keeping the profile card underneath — smooth and seamless
