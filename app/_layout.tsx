@@ -28,6 +28,7 @@ import PracticeSummary from "@/components/PracticeSummary";
 import CrewEventBanner from "@/components/CrewEventBanner";
 import CrewDrillMode from "@/components/CrewDrillMode";
 import CrewRoundMode from "@/components/CrewRoundMode";
+import InfoPopup from "@/components/InfoPopup";
 
 if (Platform.OS !== 'web') {
   SplashScreen.preventAutoHideAsync().catch(() => {
@@ -525,6 +526,7 @@ function RootLayoutNav() {
       <AppContent />
       <BattleInviteBanner />
       <CrewEventBanner />
+      <InfoPopup />
     </>
   );
 }

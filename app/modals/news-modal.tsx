@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, Image, ActivityIndicator, Modal, Pressable } from 'react-native';
 import { ArrowLeft } from 'lucide-react-native';
 import { Newspaper, Play } from 'lucide-react-native';
@@ -6,6 +6,7 @@ import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { sanityFetch, sanityImageUrl } from '@/lib/sanity';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -71,13 +72,43 @@ function NewsDetailModal({ post, visible, onClose }: { post: SanityPost | null; 
 
 function NewsContent() {
   const [selectedPost, setSelectedPost] = useState<SanityPost | null>(null);
-  const { data: posts, isLoading, isError, refetch } = useQuery<SanityPost[]>({
+  const [acknowledgedIds, setAcknowledgedIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    AsyncStorage.getItem('acknowledged_info_post_ids')
+      .then((raw) => {
+        if (raw) {
+          setAcknowledgedIds(JSON.parse(raw));
+          console.log('[NewsContent] Loaded acknowledged info IDs:', JSON.parse(raw));
+        }
+      })
+      .catch(() => console.log('[NewsContent] Failed to load acknowledged IDs'));
+  }, []);
+
+  const { data: newsPosts, isLoading: newsLoading, isError: newsError, refetch: newsRefetch } = useQuery<SanityPost[]>({
     queryKey: ['sanity-news-posts'],
     queryFn: () =>
       sanityFetch<SanityPost[]>(
         `*[_type == "post" && tabLocation == "news"] | order(_createdAt desc) { _id, title, caption, mainImage, _createdAt }`
       ),
   });
+
+  const { data: infoPosts } = useQuery<SanityPost[]>({
+    queryKey: ['sanity-info-posts'],
+    queryFn: () =>
+      sanityFetch<SanityPost[]>(
+        `*[_type == "post" && tabLocation == "info"] | order(_createdAt desc) { _id, title, caption, mainImage, _createdAt }`
+      ),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const acknowledgedInfoPosts = (infoPosts ?? []).filter((p) => acknowledgedIds.includes(p._id));
+  const posts = [...(newsPosts ?? []), ...acknowledgedInfoPosts].sort(
+    (a, b) => new Date(b._createdAt).getTime() - new Date(a._createdAt).getTime()
+  );
+  const isLoading = newsLoading;
+  const isError = newsError;
+  const refetch = newsRefetch;
 
   if (isLoading) {
     return (
