@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, Image, ActivityIndicator, Modal, Pressable } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, Image, ActivityIndicator, Modal } from 'react-native';
 import { ArrowLeft } from 'lucide-react-native';
 import { Newspaper, Play } from 'lucide-react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
@@ -36,12 +36,17 @@ function NewsDetailModal({ post, visible, onClose }: { post: SanityPost | null; 
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.modalOverlay} onPress={onClose}>
-        <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
-          <TouchableOpacity style={styles.modalCloseButton} onPress={onClose} activeOpacity={0.7}>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <TouchableOpacity style={styles.modalCloseButton} onPress={onClose} activeOpacity={0.7} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <ArrowLeft size={18} color="#FFFFFF" />
           </TouchableOpacity>
-          <ScrollView showsVerticalScrollIndicator={true} bounces={true} nestedScrollEnabled={true}>
+          <ScrollView
+            showsVerticalScrollIndicator={true}
+            bounces={true}
+            scrollEventThrottle={16}
+            contentContainerStyle={styles.modalScrollContent}
+          >
             {imageUrl ? (
               <Image source={{ uri: imageUrl }} style={styles.modalImage} resizeMode="cover" />
             ) : null}
@@ -59,8 +64,8 @@ function NewsDetailModal({ post, visible, onClose }: { post: SanityPost | null; 
               </Text>
             </View>
           </ScrollView>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }
@@ -516,13 +521,15 @@ const styles = StyleSheet.create({
     width: '100%' as const,
     maxHeight: '85%' as const,
     overflow: 'hidden' as const,
-    flexShrink: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
     shadowRadius: 24,
     elevation: 12,
     backgroundColor: '#D6EAFF',
+  },
+  modalScrollContent: {
+    flexGrow: 1,
   },
 
   modalCloseButton: {

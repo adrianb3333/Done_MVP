@@ -115,25 +115,41 @@ export default function ProfileCard({
     visible
   );
 
+  const pendingChatRef = React.useRef<{ id: string; username: string; avatar: string } | null>(null);
+
+  useEffect(() => {
+    if (!visible && pendingChatRef.current) {
+      const chatData = pendingChatRef.current;
+      pendingChatRef.current = null;
+      console.log('[ProfileCard] Modal closed, navigating to chat with:', chatData.username);
+      const timer = setTimeout(() => {
+        router.push({
+          pathname: '/modals/chat-conversation-modal',
+          params: {
+            otherUserId: chatData.id,
+            otherUsername: chatData.username,
+            otherAvatar: chatData.avatar,
+          },
+        });
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+  }, [visible, router]);
+
   const handleOpenChat = useCallback(() => {
     if (!user) return;
     console.log('[ProfileCard] Opening chat with:', user.username);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    onClose();
+    pendingChatRef.current = {
+      id: user.id,
+      username: user.username || user.display_name || 'User',
+      avatar: user.avatar_url || '',
+    };
     if (onNavigateAway) {
       onNavigateAway();
     }
-    setTimeout(() => {
-      router.push({
-        pathname: '/modals/chat-conversation-modal',
-        params: {
-          otherUserId: user.id,
-          otherUsername: user.username || user.display_name || 'User',
-          otherAvatar: user.avatar_url || '',
-        },
-      });
-    }, 100);
-  }, [user, onClose, onNavigateAway, router]);
+    onClose();
+  }, [user, onClose, onNavigateAway]);
 
   if (!user) return null;
 
