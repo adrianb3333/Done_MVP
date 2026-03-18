@@ -41,16 +41,11 @@ function NewsDetailModal({ post, visible, onClose }: { post: SanityPost | null; 
           <TouchableOpacity style={styles.modalCloseButton} onPress={onClose} activeOpacity={0.7}>
             <ArrowLeft size={18} color="#FFFFFF" />
           </TouchableOpacity>
-          {imageUrl ? (
-            <Image source={{ uri: imageUrl }} style={styles.modalImage} resizeMode="cover" />
-          ) : null}
-          <ScrollView style={styles.modalBodyScroll} contentContainerStyle={styles.modalBodyContent} showsVerticalScrollIndicator={true} bounces={true} nestedScrollEnabled={true}>
-            <LinearGradient
-              colors={['#EBF4FF', '#D6EAFF', '#C2DFFF', '#EBF4FF']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={styles.modalBodyGradient}
-            >
+          <ScrollView showsVerticalScrollIndicator={true} bounces={true} nestedScrollEnabled={true}>
+            {imageUrl ? (
+              <Image source={{ uri: imageUrl }} style={styles.modalImage} resizeMode="cover" />
+            ) : null}
+            <View style={styles.modalBodyGradient}>
               <Text style={styles.modalTitle}>{post.title}</Text>
               {post.caption ? (
                 <Text style={styles.modalCaption}>{post.caption}</Text>
@@ -62,7 +57,7 @@ function NewsDetailModal({ post, visible, onClose }: { post: SanityPost | null; 
                   day: 'numeric',
                 })}
               </Text>
-            </LinearGradient>
+            </View>
           </ScrollView>
         </Pressable>
       </Pressable>
@@ -546,15 +541,11 @@ const styles = StyleSheet.create({
     width: '100%' as const,
     height: 240,
   },
-  modalBodyScroll: {
-    flex: 1,
-  },
-  modalBodyContent: {
-    flexGrow: 1,
-  },
   modalBodyGradient: {
     padding: 20,
+    paddingBottom: 24,
     gap: 10,
+    backgroundColor: '#D6EAFF',
   },
   modalTitle: {
     fontSize: 20,

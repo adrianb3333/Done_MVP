@@ -1,14 +1,10 @@
-# Fix News card text rendering & delay Info Popup until after loading
+# Fix news detail popup to show text and date below the image
 
-## Changes
+**Problem**
+- When pressing a news card, the detail popup only shows the image — the title, caption text, and date are missing.
 
-**1. Fix text rendering in News segment cards**
-- Remove the line limit on captions in the news card list so all text is visible
-- Ensure the detail modal also shows all text without cutting off
-
-**2. Delay the Info Popup until after loading screen**
-- The important info popup will only appear once:
-  - The loading splash screen has fully faded away
-  - The user has landed on the main profile screen
-- This prevents the popup from appearing over the splash/loading screen
-- The popup logic and design stays exactly the same otherwise
+**Fix**
+- Remove the gradient wrapper inside the scroll area that's causing the text to collapse
+- Change the scroll view layout so it properly sizes to fit the text content below the image
+- Ensure the title, full caption text, and posted date all render correctly beneath the image
+- Keep the scrolling behavior so long text can be scrolled through
