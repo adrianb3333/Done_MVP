@@ -7,30 +7,36 @@ import { useSession } from '@/contexts/SessionContext';
 
 function PlayTabIcon() {
   return (
-    <View style={tabStyles.circleWrapper}>
-      <LinearGradient
-        colors={['#4BA35B', '#3D954D', '#2D803D']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={tabStyles.circleGradient}
-      >
-        <Text style={tabStyles.circleText}>PLAY</Text>
-      </LinearGradient>
+    <View style={tabStyles.outerRing}>
+      <View style={tabStyles.circleWrapper}>
+        <LinearGradient
+          colors={['#6BD97A', '#4BA35B', '#2D803D', '#1B6B2D']}
+          start={{ x: 0.2, y: 0 }}
+          end={{ x: 0.8, y: 1 }}
+          style={tabStyles.circleGradient}
+        >
+          <View style={tabStyles.innerHighlight} />
+          <Text style={tabStyles.circleText}>PLAY</Text>
+        </LinearGradient>
+      </View>
     </View>
   );
 }
 
 function PracticeTabIcon() {
   return (
-    <View style={tabStyles.circleWrapper}>
-      <LinearGradient
-        colors={['#1C8CFF', '#1075E3', '#0059B2']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={tabStyles.circleGradient}
-      >
-        <Text style={tabStyles.circleText}>PRACTICE</Text>
-      </LinearGradient>
+    <View style={tabStyles.outerRing}>
+      <View style={tabStyles.circleWrapper}>
+        <LinearGradient
+          colors={['#4DB8FF', '#1C8CFF', '#0059B2', '#003D80']}
+          start={{ x: 0.2, y: 0 }}
+          end={{ x: 0.8, y: 1 }}
+          style={tabStyles.circleGradient}
+        >
+          <View style={tabStyles.innerHighlight} />
+          <Text style={tabStyles.circleText}>PRACTICE</Text>
+        </LinearGradient>
+      </View>
     </View>
   );
 }
@@ -109,26 +115,53 @@ export default function TabLayout() {
 }
 
 const tabStyles = StyleSheet.create({
-  circleWrapper: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    overflow: 'hidden' as const,
+  outerRing: {
+    width: 86,
+    height: 86,
+    borderRadius: 43,
     marginTop: -14,
+    backgroundColor: '#E8E8E8',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  circleWrapper: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    overflow: 'hidden' as const,
+    borderWidth: 1.5,
+    borderTopColor: 'rgba(255,255,255,0.5)',
+    borderLeftColor: 'rgba(255,255,255,0.3)',
+    borderRightColor: 'rgba(0,0,0,0.08)',
+    borderBottomColor: 'rgba(0,0,0,0.15)',
   },
   circleGradient: {
     flex: 1,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    borderRadius: 40,
+    borderRadius: 38,
+  },
+  innerHighlight: {
+    position: 'absolute' as const,
+    top: 3,
+    left: 8,
+    right: 8,
+    height: 28,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.25)',
   },
   circleText: {
     fontSize: 12,
     fontWeight: '900' as const,
     color: '#FFFFFF',
     letterSpacing: 1,
-    textShadowColor: 'rgba(0, 0, 0, 0.4)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 1.5 },
+    textShadowRadius: 3,
   },
 });
