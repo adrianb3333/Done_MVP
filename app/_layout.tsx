@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { View, StyleSheet, Platform, Animated, Image, useWindowDimensions } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SessionProvider, useSession } from "@/contexts/SessionContext";
@@ -40,7 +40,7 @@ const queryClient = new QueryClient();
 const LOADING_REFERENCE_IMAGE = { width: 1024, height: 1536 };
 const LOADING_REFERENCE_SCREEN = { x: 201, y: 123, width: 623, height: 1315 };
 
-function AppContent() {
+function AppContent({ onSplashComplete }: { onSplashComplete: () => void }) {
   const { sessionState, sessionType, showPracticeSummary, crewSession, crewSessionActive } = useSession();
   const { currentSection } = useAppNavigation();
   const [session, setSession] = useState<Session | null>(null);
@@ -79,6 +79,13 @@ function AppContent() {
     return () => clearTimeout(splashTimer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!showLoadingSplash && !loading) {
+      console.log('[AppContent] Splash complete and auth loaded, notifying parent');
+      onSplashComplete();
+    }
+  }, [showLoadingSplash, loading, onSplashComplete]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -521,12 +528,17 @@ function AppContent() {
 }
 
 function RootLayoutNav() {
+  const [appReady, setAppReady] = useState<boolean>(false);
+  const handleSplashComplete = useCallback(() => {
+    setAppReady(true);
+  }, []);
+
   return (
     <>
-      <AppContent />
+      <AppContent onSplashComplete={handleSplashComplete} />
       <BattleInviteBanner />
       <CrewEventBanner />
-      <InfoPopup />
+      <InfoPopup ready={appReady} />
     </>
   );
 }

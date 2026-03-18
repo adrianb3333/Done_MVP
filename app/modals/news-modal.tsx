@@ -167,9 +167,9 @@ function NewsContent() {
                 <Image source={{ uri: imageUrl }} style={styles.newsCardImage} resizeMode="cover" />
               ) : null}
               <View style={styles.newsCardBody}>
-                <Text style={styles.newsCardTitle} numberOfLines={2}>{post.title}</Text>
+                <Text style={styles.newsCardTitle}>{post.title}</Text>
                 {post.caption ? (
-                  <Text style={styles.newsCardCaption} numberOfLines={3}>{post.caption}</Text>
+                  <Text style={styles.newsCardCaption}>{post.caption}</Text>
                 ) : null}
                 <Text style={styles.newsCardDate}>
                   {new Date(post._createdAt).toLocaleDateString('en-US', {

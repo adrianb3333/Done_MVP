@@ -55,7 +55,7 @@ async function saveAcknowledgedId(id: string): Promise<void> {
   }
 }
 
-export default function InfoPopup() {
+export default function InfoPopup({ ready = true }: { ready?: boolean }) {
   const [visible, setVisible] = useState<boolean>(false);
   const [pendingPost, setPendingPost] = useState<SanityInfoPost | null>(null);
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -72,6 +72,10 @@ export default function InfoPopup() {
   });
 
   useEffect(() => {
+    if (!ready) {
+      console.log('[InfoPopup] Not ready yet, waiting...');
+      return;
+    }
     if (!infoPosts || infoPosts.length === 0) return;
 
     const latestPost = infoPosts[0];
@@ -99,7 +103,7 @@ export default function InfoPopup() {
         console.log('[InfoPopup] Post already acknowledged');
       }
     });
-  }, [infoPosts, fadeAnim, scaleAnim]);
+  }, [infoPosts, fadeAnim, scaleAnim, ready]);
 
   const closeModal = useCallback(() => {
     Animated.parallel([
