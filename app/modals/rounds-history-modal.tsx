@@ -18,7 +18,12 @@ export default function RoundsHistoryModal() {
   const [showInfoModal, setShowInfoModal] = useState<boolean>(false);
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={['#4BA35B', '#3D954D', '#2D803D']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0, y: 1 }}
+      style={styles.container}
+    >
       <SafeAreaView edges={['top']} style={styles.safeTop}>
         <View style={styles.header}>
           <GlassBackButton onPress={() => router.back()} />
@@ -89,14 +94,13 @@ export default function RoundsHistoryModal() {
           </View>
         </View>
       </Modal>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#5BBF7F',
   },
   safeTop: {},
   header: {

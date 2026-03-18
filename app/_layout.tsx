@@ -414,6 +414,60 @@ function AppContent() {
             gestureEnabled: true,
           }} 
         />
+        <Stack.Screen 
+          name="modals/distances-modal" 
+          options={{ 
+            presentation: "card",
+            headerShown: false,
+            animation: "slide_from_right",
+            gestureEnabled: true,
+          }} 
+        />
+        <Stack.Screen 
+          name="modals/general-modal" 
+          options={{ 
+            presentation: "card",
+            headerShown: false,
+            animation: "slide_from_right",
+            gestureEnabled: true,
+          }} 
+        />
+        <Stack.Screen 
+          name="modals/golf-iq-modal" 
+          options={{ 
+            presentation: "card",
+            headerShown: false,
+            animation: "slide_from_right",
+            gestureEnabled: true,
+          }} 
+        />
+        <Stack.Screen 
+          name="modals/pre-round-modal" 
+          options={{ 
+            presentation: "card",
+            headerShown: false,
+            animation: "slide_from_right",
+            gestureEnabled: true,
+          }} 
+        />
+        <Stack.Screen 
+          name="modals/shortgame-modal" 
+          options={{ 
+            presentation: "card",
+            headerShown: false,
+            animation: "slide_from_right",
+            gestureEnabled: true,
+          }} 
+        />
+        <Stack.Screen 
+          name="modals/strokesgained-modal" 
+          options={{ 
+            presentation: "card",
+            headerShown: false,
+            animation: "slide_from_right",
+            gestureEnabled: true,
+          }} 
+        />
         {/* End Modals */}
 
         <Stack.Screen 

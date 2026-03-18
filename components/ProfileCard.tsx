@@ -235,7 +235,7 @@ export default function ProfileCard({
 
           <View style={styles.badgeRow}>
             <LinearGradient
-              colors={['#86D9A5', '#5BBF7F', '#3A8E56']}
+              colors={['#4BA35B', '#3D954D', '#2D803D']}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
               style={styles.handicapCard}
