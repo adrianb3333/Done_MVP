@@ -15,7 +15,7 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { QrCode, Share2, Users, Target, BarChart3, X, Zap } from 'lucide-react-native';
+import { QrCode, Share2, Users, Target, BarChart3, ChevronDown, Zap } from 'lucide-react-native';
 import { CameraView, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -333,7 +333,7 @@ export default function QrModal() {
                     onPress={() => { setScannerOpen(false); setScanned(false); setTorchOn(false); }}
                     activeOpacity={0.7}
                   >
-                    <X size={22} color="#FFFFFF" />
+                    <ChevronDown size={22} color="#FFFFFF" />
                   </TouchableOpacity>
                   <Text style={styles.scannerTitle}>Scan QR Code</Text>
                   <TouchableOpacity
