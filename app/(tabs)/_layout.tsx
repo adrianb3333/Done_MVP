@@ -10,7 +10,7 @@ function PlayTabIcon() {
     <View style={tabStyles.outerRing}>
       <View style={tabStyles.circleWrapper}>
         <LinearGradient
-          colors={['#6BD97A', '#4BA35B', '#2D803D', '#1B6B2D']}
+          colors={['#3A9E4A', '#2D803D', '#1B6B2D', '#145222']}
           start={{ x: 0.2, y: 0 }}
           end={{ x: 0.8, y: 1 }}
           style={tabStyles.circleGradient}
@@ -28,7 +28,7 @@ function PracticeTabIcon() {
     <View style={tabStyles.outerRing}>
       <View style={tabStyles.circleWrapper}>
         <LinearGradient
-          colors={['#4DB8FF', '#1C8CFF', '#0059B2', '#003D80']}
+          colors={['#1A8CE6', '#0A6FC2', '#004A99', '#003366']}
           start={{ x: 0.2, y: 0 }}
           end={{ x: 0.8, y: 1 }}
           style={tabStyles.circleGradient}
@@ -135,8 +135,8 @@ const tabStyles = StyleSheet.create({
     borderRadius: 38,
     overflow: 'hidden' as const,
     borderWidth: 1.5,
-    borderTopColor: 'rgba(255,255,255,0.5)',
-    borderLeftColor: 'rgba(255,255,255,0.3)',
+    borderTopColor: 'rgba(255,255,255,0.35)',
+    borderLeftColor: 'rgba(255,255,255,0.2)',
     borderRightColor: 'rgba(0,0,0,0.08)',
     borderBottomColor: 'rgba(0,0,0,0.15)',
   },
@@ -153,7 +153,7 @@ const tabStyles = StyleSheet.create({
     right: 8,
     height: 28,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
   },
   circleText: {
     fontSize: 12,
