@@ -10,7 +10,7 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronLeft, Plus } from 'lucide-react-native';
+import { Plus } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useBag } from '@/contexts/BagContext';
 
@@ -108,7 +108,7 @@ export default function MyBagModal() {
             activeOpacity={0.7}
             testID="my-bag-back"
           >
-            <ChevronLeft size={22} color="#fff" strokeWidth={2.5} />
+            <Text style={styles.backBtnText}>Done</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>My Bag</Text>
           <View style={styles.headerSpacer} />
@@ -180,14 +180,17 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
+  },
+  backBtnText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#fff',
   },
   headerTitle: {
     fontSize: 20,
