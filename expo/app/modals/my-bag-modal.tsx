@@ -84,7 +84,10 @@ export default function MyBagModal() {
 
   const handleBack = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.back();
+    while (router.canGoBack()) {
+      router.back();
+    }
+    router.replace('/(tabs)/profile' as any);
   }, [router]);
 
   const handleEditBag = useCallback(() => {

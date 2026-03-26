@@ -111,15 +111,13 @@ export default function PairingProcessModal() {
         tension: 60,
         useNativeDriver: true,
       }).start();
-
-      const timer = setTimeout(() => {
-        while (router.canGoBack()) {
-          router.back();
-        }
-      }, 2500);
-      return () => clearTimeout(timer);
     }
-  }, [allDone, checkScaleAnim, router, params.clubs, markPaired, clubs]);
+  }, [allDone, checkScaleAnim, markPaired, clubs]);
+
+  const handleDone = useCallback(() => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    router.replace('/modals/my-bag-modal' as any);
+  }, [router]);
 
   const getClubDisplayName = useCallback((club: string): string => {
     if (club === 'Pu') return 'Putter';
@@ -148,13 +146,25 @@ export default function PairingProcessModal() {
         style={styles.container}
       >
         <SafeAreaView edges={['top', 'bottom']} style={styles.doneContainer}>
-          <Animated.View style={[styles.checkCircle, { transform: [{ scale: checkScaleAnim }] }]}>
-            <Check size={64} color="#fff" strokeWidth={3} />
-          </Animated.View>
-          <Text style={styles.doneTitle}>All Clubs Paired!</Text>
-          <Text style={styles.doneSubtitle}>
-            {clubs.length} clubs successfully paired
-          </Text>
+          <View style={styles.doneContentCenter}>
+            <Animated.View style={[styles.checkCircle, { transform: [{ scale: checkScaleAnim }] }]}>
+              <Check size={64} color="#fff" strokeWidth={3} />
+            </Animated.View>
+            <Text style={styles.doneTitle}>All Clubs Paired!</Text>
+            <Text style={styles.doneSubtitle}>
+              {clubs.length} clubs successfully paired
+            </Text>
+          </View>
+          <View style={styles.doneFooter}>
+            <TouchableOpacity
+              style={styles.doneBtn}
+              onPress={handleDone}
+              activeOpacity={0.8}
+              testID="pairing-done-button"
+            >
+              <Text style={styles.doneBtnText}>Done</Text>
+            </TouchableOpacity>
+          </View>
         </SafeAreaView>
       </LinearGradient>
     );
@@ -352,8 +362,27 @@ const styles = StyleSheet.create({
   },
   doneContainer: {
     flex: 1,
+  },
+  doneContentCenter: {
+    flex: 1,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
+  },
+  doneFooter: {
+    paddingHorizontal: 24,
+    paddingBottom: 16,
+  },
+  doneBtn: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  doneBtnText: {
+    fontSize: 17,
+    fontWeight: '700' as const,
+    color: '#3D954D',
   },
   checkCircle: {
     width: 120,
