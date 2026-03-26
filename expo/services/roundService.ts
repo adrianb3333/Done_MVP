@@ -25,7 +25,6 @@ export async function createRound(
         is_completed: false,
         status: 'active',
         hole_option: options?.holeOption ?? '18',
-        sensors_active: options?.sensorsActive ?? false,
       })
       .select('id')
       .single();
