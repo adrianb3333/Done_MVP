@@ -12,6 +12,7 @@ import { SensorProvider } from "@/contexts/SensorContext";
 import { ChatProvider } from "@/contexts/ChatContext";
 import { BattleProvider } from "@/contexts/BattleContext";
 import { BagProvider } from "@/contexts/BagContext";
+import { LiveRoundProvider } from "@/contexts/LiveRoundContext";
 import BattleInviteBanner from "@/components/BattleInviteBanner";
 import PlaySessionTabs from "@/app/play-session/PlaySessionTabs";
 import PracticeSessionTabs from "@/app/practice-session/PracticeSessionTabs";
@@ -560,9 +561,11 @@ export default function RootLayout() {
                 <BagProvider>
                   <BattleProvider>
                     <ChatProvider>
-                      <UserDataProvider>
-                        <RootLayoutNav />
-                      </UserDataProvider>
+                      <LiveRoundProvider>
+                        <UserDataProvider>
+                          <RootLayoutNav />
+                        </UserDataProvider>
+                      </LiveRoundProvider>
                     </ChatProvider>
                   </BattleProvider>
                 </BagProvider>

@@ -32,6 +32,9 @@ import GlassBackButton from '@/components/reusables/GlassBackButton';
 import { supabase } from '@/lib/supabase';
 import { useBag } from '@/contexts/BagContext';
 import { useChat } from '@/contexts/ChatContext';
+import { useLiveRound } from '@/contexts/LiveRoundContext';
+import LiveRoundScreen from '@/components/LiveRoundScreen';
+
 
 
 const SCREEN_WIDTH = getScreenWidth();
@@ -570,6 +573,8 @@ export default function ProfileScreen() {
   const { hasUnreadChats } = useChat();
   const { isPaired: hasSensors } = useSensor();
   const { battleResults } = useBattle();
+  const { liveRounds, selectRound, selectedRound } = useLiveRound();
+  const [liveRoundModalVisible, setLiveRoundModalVisible] = useState<boolean>(false);
   const { drillCount } = usePracticeCardData();
   const hasPendingCrewInvites = pendingCrewInvites.length > 0;
   const hasUnreadNotifications = (followers.length > 0 && !notificationsRead) || hasUnreadChats || hasPendingCrewInvites;
@@ -1030,12 +1035,50 @@ export default function ProfileScreen() {
             )}
             <View style={styles.liveSection}>
             <Text style={styles.liveSectionTitle}>LIVE</Text>
-            <View style={styles.liveCard}>
-              <View style={styles.liveEmptyState}>
-                <View style={styles.liveDot} />
-                <Text style={styles.liveEmptyText}>No friends playing right now</Text>
+            {liveRounds.length > 0 ? (
+              <View style={styles.liveCardsList}>
+                {liveRounds.map((lr) => {
+                  const mainPlayer = lr.players[0];
+                  const toPar = mainPlayer ? (() => {
+                    const diff = mainPlayer.totalScore - mainPlayer.totalPar;
+                    if (mainPlayer.holesPlayed === 0) return 'E';
+                    if (diff === 0) return 'E';
+                    return diff > 0 ? `+${diff}` : `${diff}`;
+                  })() : 'E';
+                  return (
+                    <TouchableOpacity
+                      key={lr.id}
+                      style={styles.liveRoundCard}
+                      onPress={() => {
+                        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        selectRound(lr);
+                        setLiveRoundModalVisible(true);
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.liveRoundCardLeft}>
+                        <View style={styles.livePulse} />
+                        <View style={styles.liveRoundInfo}>
+                          <Text style={styles.liveRoundFriend} numberOfLines={1}>{lr.friendName}</Text>
+                          <Text style={styles.liveRoundCourse} numberOfLines={1}>{lr.courseName}</Text>
+                        </View>
+                      </View>
+                      <View style={styles.liveRoundCardRight}>
+                        <Text style={styles.liveRoundHoles}>{mainPlayer?.holesPlayed ?? 0} holes</Text>
+                        <Text style={styles.liveRoundToPar}>{toPar}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
-            </View>
+            ) : (
+              <View style={styles.liveCard}>
+                <View style={styles.liveEmptyState}>
+                  <View style={styles.liveDot} />
+                  <Text style={styles.liveEmptyText}>No friends playing right now</Text>
+                </View>
+              </View>
+            )}
           </View>
 
           <View style={styles.cardsColumn}>
@@ -1531,6 +1574,27 @@ export default function ProfileScreen() {
         </LinearGradient>
       </Modal>
 
+      {/* Live Round Full Screen */}
+      <Modal
+        visible={liveRoundModalVisible}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={() => {
+          setLiveRoundModalVisible(false);
+          selectRound(null);
+        }}
+      >
+        {selectedRound ? (
+          <LiveRoundScreen
+            round={selectedRound}
+            onClose={() => {
+              setLiveRoundModalVisible(false);
+              selectRound(null);
+            }}
+          />
+        ) : null}
+      </Modal>
+
       {/* Profile Card for viewing other users */}
       <ProfileCard
         visible={profileCardVisible}
@@ -1970,6 +2034,61 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#999',
     fontWeight: '500' as const,
+  },
+  liveCardsList: {
+    gap: 8,
+  },
+  liveRoundCard: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  liveRoundCardLeft: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    flex: 1,
+    gap: 10,
+  },
+  livePulse: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#FF3B30',
+  },
+  liveRoundInfo: {
+    flex: 1,
+  },
+  liveRoundFriend: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: '#1A1A1A',
+  },
+  liveRoundCourse: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 2,
+  },
+  liveRoundCardRight: {
+    alignItems: 'flex-end' as const,
+    marginLeft: 10,
+  },
+  liveRoundHoles: {
+    fontSize: 11,
+    color: '#888',
+  },
+  liveRoundToPar: {
+    fontSize: 16,
+    fontWeight: '800' as const,
+    color: '#1A1A1A',
+    marginTop: 2,
   },
 
   cardsColumn: {
