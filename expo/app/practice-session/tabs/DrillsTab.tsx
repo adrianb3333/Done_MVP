@@ -914,7 +914,9 @@ export default function DrillsTab({ onDrillActiveChange, onMinimize, onRequestSe
                 style={styles.minimizeBtn}
                 activeOpacity={0.7}
               >
-                <ChevronDown size={26} color="#FFFFFF" strokeWidth={2.5} />
+                <View style={styles.minimizeGlassCircle}>
+                  <ChevronDown size={26} color="#FFFFFF" strokeWidth={2.5} />
+                </View>
               </TouchableOpacity>
             )}
           </View>
@@ -1176,10 +1178,20 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   minimizeBtn: {
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     alignItems: "center" as const,
     justifyContent: "center" as const,
+  },
+  minimizeGlassCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
   },
   drillWrapper: {
     position: "absolute" as const,

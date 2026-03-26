@@ -76,7 +76,9 @@ function PlaySessionContent() {
             onPress={minimizeSession}
             style={[styles.minimizeButton, { top: insets.top + 4 }]}
           >
-            <ChevronDown size={28} color="#FFFFFF" strokeWidth={2.5} />
+            <View style={styles.minimizeGlassCircle}>
+              <ChevronDown size={28} color="#FFFFFF" strokeWidth={2.5} />
+            </View>
           </TouchableOpacity>
           <View style={styles.fullScreenContent}>
             {renderContent()}
@@ -88,7 +90,9 @@ function PlaySessionContent() {
             onPress={minimizeSession}
             style={[styles.minimizeButton, { top: insets.top + 4 }]}
           >
-            <ChevronDown size={28} color="#FFFFFF" strokeWidth={2.5} />
+            <View style={styles.minimizeGlassCircle}>
+              <ChevronDown size={28} color="#FFFFFF" strokeWidth={2.5} />
+            </View>
           </TouchableOpacity>
           <View style={[styles.content, { paddingTop: insets.top + 52, padding: 20 }]}>
             {renderContent()}
@@ -148,6 +152,16 @@ const styles = StyleSheet.create({
     zIndex: 10,
     width: 44,
     height: 44,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  minimizeGlassCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
