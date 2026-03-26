@@ -113,10 +113,9 @@ export default function PairingProcessModal() {
       }).start();
 
       const timer = setTimeout(() => {
-        router.push({
-          pathname: '/modals/my-bag-modal',
-          params: { clubs: params.clubs },
-        });
+        while (router.canGoBack()) {
+          router.back();
+        }
       }, 2500);
       return () => clearTimeout(timer);
     }
