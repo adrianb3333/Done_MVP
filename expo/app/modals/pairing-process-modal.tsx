@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -22,7 +22,7 @@ const PAIR_DURATION = 2000;
 export default function PairingProcessModal() {
   const router = useRouter();
   const params = useLocalSearchParams<{ clubs: string }>();
-  const clubs: string[] = params.clubs ? JSON.parse(params.clubs) : [];
+  const clubs: string[] = useMemo(() => params.clubs ? JSON.parse(params.clubs) : [], [params.clubs]);
   const { markPaired } = useSensor();
 
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -104,7 +104,7 @@ export default function PairingProcessModal() {
   useEffect(() => {
     if (allDone) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      markPaired();
+      markPaired(clubs);
       Animated.spring(checkScaleAnim, {
         toValue: 1,
         friction: 4,
@@ -120,7 +120,7 @@ export default function PairingProcessModal() {
       }, 2500);
       return () => clearTimeout(timer);
     }
-  }, [allDone, checkScaleAnim, router, params.clubs, markPaired]);
+  }, [allDone, checkScaleAnim, router, params.clubs, markPaired, clubs]);
 
   const getClubDisplayName = useCallback((club: string): string => {
     if (club === 'Pu') return 'Putter';
