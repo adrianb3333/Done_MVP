@@ -571,7 +571,7 @@ export default function ProfileScreen() {
 
   const { hasBag } = useBag();
   const { hasUnreadChats } = useChat();
-  const { isPaired: hasSensors } = useSensor();
+  const { isPaired: hasSensors, pairedClubs } = useSensor();
   const { battleResults } = useBattle();
   const { liveRounds, selectRound, selectedRound, pollLiveRounds } = useLiveRound();
   const [liveRoundModalVisible, setLiveRoundModalVisible] = useState<boolean>(false);
@@ -834,7 +834,7 @@ export default function ProfileScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.helpMenuItem}
-              onPress={() => { toggleHelpMenu(); router.push('/modals/pair-impact-modal' as any); }}
+              onPress={() => { toggleHelpMenu(); if (pairedClubs.length > 0) { router.push('/modals/sensor-bag-modal' as any); } else { router.push('/modals/pair-impact-modal' as any); } }}
               activeOpacity={0.7}
             >
               <Bluetooth size={18} color="#B0B0B0" />
