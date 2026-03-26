@@ -105,8 +105,8 @@ export default function SensorBagModal() {
   const arrowLeftAnim = useRef(new Animated.Value(0)).current;
   const arrowRightAnim = useRef(new Animated.Value(0)).current;
 
-  const nonPutterPaired = pairedClubs.filter((c) => c !== 'Pu');
-  const canUnpair = nonPutterPaired.length > 0;
+  const canUnpair = pairedClubs.length > 0;
+  const hasPutter = pairedClubs.includes('Pu');
   const missingSlots = Math.max(0, REQUIRED_SENSOR_COUNT - pairedClubs.length);
 
   useEffect(() => {
@@ -201,9 +201,17 @@ export default function SensorBagModal() {
   }, [flowState, addIndex, addQueue, addPairedClubs, pulseAnim, progressAnim, checkScaleAnim]);
 
   const handleClose = useCallback(() => {
+    if (!hasPutter && pairedClubs.length > 0) {
+      Alert.alert(
+        'Putter Required',
+        'You must have a Putter paired to complete your Sensor Bag. Please add a Putter before closing.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.replace('/(tabs)/profile' as any);
-  }, [router]);
+  }, [router, hasPutter, pairedClubs.length]);
 
   const handleStartUnpairSelect = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -274,6 +282,11 @@ export default function SensorBagModal() {
 
   const handleStartPairingAdd = useCallback(() => {
     if (selectedForAdd.size === 0) return;
+    const willHavePutter = pairedClubs.includes('Pu') || selectedForAdd.has('Pu');
+    if (!willHavePutter) {
+      Alert.alert('Putter Required', 'You must include a Putter in your Sensor Bag. Please select a Putter before pairing.');
+      return;
+    }
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const queue = getOrderedNewClubs(selectedForAdd);
     setAddQueue(queue);
@@ -282,7 +295,7 @@ export default function SensorBagModal() {
     setAddAllDone(false);
     checkScaleAnim.setValue(0);
     setFlowState('adding');
-  }, [selectedForAdd, checkScaleAnim]);
+  }, [selectedForAdd, checkScaleAnim, pairedClubs]);
 
   const handleAddDone = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -390,9 +403,9 @@ export default function SensorBagModal() {
           </View>
         </SafeAreaView>
         <ScrollView style={styles.flex1} contentContainerStyle={styles.scrollPad} showsVerticalScrollIndicator={false}>
-          <Text style={styles.selectHint}>Tap clubs to select for unpairing (putter excluded)</Text>
+          <Text style={styles.selectHint}>Tap clubs to select for unpairing</Text>
           <View style={styles.clubGrid}>
-            {nonPutterPaired.map((club) => {
+            {pairedClubs.map((club) => {
               const selected = selectedForUnpair.has(club);
               return (
                 <TouchableOpacity key={club} onPress={() => toggleUnpairClub(club)} activeOpacity={0.7} style={styles.clubGridItem}>
@@ -430,6 +443,7 @@ export default function SensorBagModal() {
 
   if (flowState === 'select-add') {
     const alreadyPaired = new Set(pairedClubs);
+    const needsPutter = !alreadyPaired.has('Pu');
     return (
       <LinearGradient colors={['#0059B2', '#1075E3', '#1C8CFF']} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={styles.container}>
         <SafeAreaView edges={['top']} style={styles.safeTop}>
@@ -442,7 +456,23 @@ export default function SensorBagModal() {
           </View>
         </SafeAreaView>
         <ScrollView style={styles.flex1} contentContainerStyle={styles.scrollPad} showsVerticalScrollIndicator={false}>
-          <Text style={styles.selectHint}>Select {missingSlots} club{missingSlots > 1 ? 's' : ''} to pair ({selectedForAdd.size}/{missingSlots})</Text>
+          <Text style={styles.selectHint}>Select {missingSlots} club{missingSlots > 1 ? 's' : ''} to pair ({selectedForAdd.size}/{missingSlots}){needsPutter ? ' — Putter required' : ''}</Text>
+          {needsPutter && (
+            <View style={styles.catBlock}>
+              <Text style={styles.catName}>Putter</Text>
+              <View style={styles.clubGrid}>
+                <TouchableOpacity onPress={() => toggleAddClub('Pu')} activeOpacity={0.7} style={styles.clubGridItem}>
+                  <LinearGradient
+                    colors={selectedForAdd.has('Pu') ? ['#4BA35B', '#3D954D', '#2D803D'] : ['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.08)']}
+                    style={[styles.clubGridCircle, selectedForAdd.has('Pu') && styles.clubGridCircleSelectedBlue]}
+                  >
+                    <Text style={styles.clubGridText}>Pu</Text>
+                  </LinearGradient>
+                  <Text style={styles.clubGridLabel}>Putter</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
           {CLUB_CATEGORIES.map((category) => {
             const availableClubs = category.clubs.filter((c) => !alreadyPaired.has(c));
             if (availableClubs.length === 0) return null;
@@ -582,6 +612,13 @@ export default function SensorBagModal() {
             </Text>
           </View>
         )}
+        {!hasPutter && pairedClubs.length > 0 && (
+          <View style={[styles.warningCard, { borderColor: 'rgba(255,100,100,0.4)' }]}>
+            <Text style={styles.warningText}>
+              Putter is required — tap + to add it back
+            </Text>
+          </View>
+        )}
         {categorized.length > 0 ? (
           categorized.map((category) => (
             <View key={category.name} style={styles.catBlock}>
@@ -618,6 +655,7 @@ export default function SensorBagModal() {
 
 function getOrderedNewClubs(selected: Set<string>): string[] {
   const ordered: string[] = [];
+  if (selected.has('Pu')) ordered.push('Pu');
   const categoryOrder = ['Woods', 'Hybrids', 'Irons', 'Wedges'];
   for (const catName of categoryOrder) {
     const cat = CLUB_CATEGORIES.find((c) => c.name === catName);
