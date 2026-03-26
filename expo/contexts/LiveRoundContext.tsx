@@ -60,7 +60,7 @@ export const [LiveRoundProvider, useLiveRound] = createContextHook(() => {
         .from('rounds')
         .select('*')
         .in('user_id', friendIds)
-        .eq('status', 'active')
+        .eq('is_completed', false)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -129,10 +129,10 @@ export const [LiveRoundProvider, useLiveRound] = createContextHook(() => {
           courseName: round.course_name || 'Unknown Course',
           holeOption: round.hole_option || '18',
           startedAt: new Date(round.created_at).getTime(),
-          sensorsActive: round.sensors_active ?? false,
+          sensorsActive: false,
           players: playerScores,
           holes: [],
-          isPrivate: round.is_private ?? false,
+          isPrivate: false,
         });
       }
 

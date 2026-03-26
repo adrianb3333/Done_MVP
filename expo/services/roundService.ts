@@ -23,7 +23,6 @@ export async function createRound(
         user_id: user.id,
         course_name: courseName,
         is_completed: false,
-        status: 'active',
         hole_option: options?.holeOption ?? '18',
       })
       .select('id')
@@ -103,7 +102,7 @@ export async function completeRound(roundId: string): Promise<boolean> {
   try {
     const { error } = await supabase
       .from('rounds')
-      .update({ is_completed: true, status: 'completed' })
+      .update({ is_completed: true })
       .eq('id', roundId);
 
     if (error) {
