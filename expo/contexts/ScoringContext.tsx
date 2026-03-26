@@ -78,10 +78,15 @@ export const [ScoringProvider, useScoring] = createContextHook(() => {
 
   const initSupabaseRound = async () => {
     try {
-      const roundId = await createRound(courseName);
+      const storedSensors = await AsyncStorage.getItem('sensor_paired');
+      const sensorsActive = storedSensors === 'true';
+      const roundId = await createRound(courseName, {
+        holeOption: holeOption,
+        sensorsActive,
+      });
       if (roundId) {
         setSupabaseRoundId(roundId);
-        console.log('[ScoringContext] Supabase round initialized:', roundId);
+        console.log('[ScoringContext] Supabase round initialized:', roundId, 'sensors:', sensorsActive, 'holes:', holeOption);
       }
     } catch (e) {
       console.log('[ScoringContext] Could not create supabase round:', e);

@@ -80,7 +80,7 @@ export const [LiveRoundProvider, useLiveRound] = createContextHook(() => {
         if (!friend) continue;
 
         const { data: holeData } = await supabase
-          .from('round_holes')
+          .from('hole_scores')
           .select('*')
           .eq('round_id', round.id)
           .order('hole_number', { ascending: true });
@@ -107,9 +107,9 @@ export const [LiveRoundProvider, useLiveRound] = createContextHook(() => {
               holeNumber: h.hole_number,
               score: h.score || 0,
               par: h.par || 0,
-              fairway: h.fairway || null,
+              fairway: h.fairway_status || null,
               putts: h.putts || 0,
-              greenMiss: h.green_miss || null,
+              greenMiss: h.gir_miss_direction || null,
               bunkerShots: h.bunker_shots || 0,
               penaltyShots: h.penalty_shots || 0,
               chips: h.chips || 0,
@@ -148,7 +148,7 @@ export const [LiveRoundProvider, useLiveRound] = createContextHook(() => {
     void pollLiveRounds();
     pollingRef.current = setInterval(() => {
       void pollLiveRounds();
-    }, 30000);
+    }, 10000);
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
     };

@@ -3,7 +3,10 @@ import type { HoleScore } from '@/contexts/ScoringContext';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 
-export async function createRound(courseName: string): Promise<string | null> {
+export async function createRound(
+  courseName: string,
+  options?: { holeOption?: string; sensorsActive?: boolean }
+): Promise<string | null> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -20,6 +23,9 @@ export async function createRound(courseName: string): Promise<string | null> {
         user_id: user.id,
         course_name: courseName,
         is_completed: false,
+        status: 'active',
+        hole_option: options?.holeOption ?? '18',
+        sensors_active: options?.sensorsActive ?? false,
       })
       .select('id')
       .single();
@@ -98,7 +104,7 @@ export async function completeRound(roundId: string): Promise<boolean> {
   try {
     const { error } = await supabase
       .from('rounds')
-      .update({ is_completed: true })
+      .update({ is_completed: true, status: 'completed' })
       .eq('id', roundId);
 
     if (error) {

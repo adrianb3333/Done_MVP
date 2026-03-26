@@ -573,7 +573,7 @@ export default function ProfileScreen() {
   const { hasUnreadChats } = useChat();
   const { isPaired: hasSensors } = useSensor();
   const { battleResults } = useBattle();
-  const { liveRounds, selectRound, selectedRound } = useLiveRound();
+  const { liveRounds, selectRound, selectedRound, pollLiveRounds } = useLiveRound();
   const [liveRoundModalVisible, setLiveRoundModalVisible] = useState<boolean>(false);
   const { drillCount } = usePracticeCardData();
   const hasPendingCrewInvites = pendingCrewInvites.length > 0;
@@ -595,6 +595,11 @@ export default function ProfileScreen() {
       }),
     ]).start();
   }, [fadeAnim, scaleAnim]);
+
+  useEffect(() => {
+    console.log('[Profile] Triggering live round poll on mount');
+    void pollLiveRounds();
+  }, [pollLiveRounds]);
 
   const handleAvatarPress = useCallback(() => {
     console.log('[Profile] Opening avatar preview');
