@@ -44,9 +44,10 @@ export default function PracticeStep1Screen() {
 
   const handleBack = () => {
     finishSession();
-    if (router.canGoBack()) {
+    try {
       router.back();
-    } else {
+    } catch (e) {
+      console.log('[PracticeStep1] Nav error, replacing:', e);
       router.replace('/(tabs)');
     }
   };

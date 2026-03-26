@@ -44,9 +44,10 @@ export default function PlayStep1Screen() {
 
   const handleBack = () => {
     finishSession();
-    if (router.canGoBack()) {
+    try {
       router.back();
-    } else {
+    } catch (e) {
+      console.log('[PlayStep1] Nav error, replacing:', e);
       router.replace('/(tabs)');
     }
   };

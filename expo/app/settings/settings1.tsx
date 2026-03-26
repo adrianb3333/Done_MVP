@@ -135,11 +135,7 @@ export default function Settings1Screen() {
         refetchAll();
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         try {
-          if (router.canGoBack()) {
-            router.back();
-          } else {
-            router.replace('/(tabs)');
-          }
+          router.back();
         } catch (e) {
           console.log('[Settings] Nav error after save:', e);
           router.replace('/(tabs)');
@@ -232,11 +228,7 @@ export default function Settings1Screen() {
   const handleGoBack = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
-      if (router.canGoBack()) {
-        router.back();
-      } else {
-        router.replace('/(tabs)');
-      }
+      router.back();
     } catch (e) {
       console.log('[Settings] Navigation error, forcing replace:', e);
       router.replace('/(tabs)');
@@ -542,11 +534,7 @@ export default function Settings1Screen() {
                   await activateCoachMode();
                   setCoachPopupStep('none');
                   try {
-                    if (router.canGoBack()) {
-                      router.back();
-                    } else {
-                      router.replace('/(tabs)');
-                    }
+                    router.back();
                   } catch (e) {
                     console.log('[Settings] Nav error after coach activation:', e);
                     router.replace('/(tabs)');
