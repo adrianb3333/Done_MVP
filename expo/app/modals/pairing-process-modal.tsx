@@ -116,7 +116,7 @@ export default function PairingProcessModal() {
 
   const handleDone = useCallback(() => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.replace('/modals/my-bag-modal' as any);
+    router.replace('/modals/sensor-bag-modal' as any);
   }, [router]);
 
   const getClubDisplayName = useCallback((club: string): string => {

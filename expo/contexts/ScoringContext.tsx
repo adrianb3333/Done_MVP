@@ -78,7 +78,7 @@ export const [ScoringProvider, useScoring] = createContextHook(() => {
 
   const initSupabaseRound = async () => {
     try {
-      const storedSensors = await AsyncStorage.getItem('sensor_paired');
+      const storedSensors = await AsyncStorage.getItem('sensor_is_paired');
       const sensorsActive = storedSensors === 'true';
       const roundId = await createRound(courseName, {
         holeOption: holeOption,

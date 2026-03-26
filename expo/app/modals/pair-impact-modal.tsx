@@ -10,7 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ChevronLeft, Bluetooth, ChevronRight, Zap, BarChart3, Target } from 'lucide-react-native';
+import { ChevronLeft, Bluetooth, ChevronRight, Wifi, Users } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -19,38 +19,37 @@ import { getScreenWidth } from '@/utils/responsive';
 
 const SCREEN_WIDTH = getScreenWidth();
 
-const INFO_PAGES = [
+interface InfoPage {
+  id: number;
+  type: 'ble' | 'install' | 'return' | 'alone';
+  title: string;
+  description: string;
+}
+
+const INFO_PAGES: InfoPage[] = [
   {
     id: 1,
-    icon: Bluetooth,
-    iconColor: '#4A90D9',
-    title: 'What is Impact Pairing?',
-    description: 'Impact sensors connect to your clubs and track every shot you hit — giving you real-time data on your game.',
-    detail: 'Pair your Impact products via Bluetooth to unlock advanced shot tracking, swing analytics, and more.',
+    type: 'ble',
+    title: "Pair your Golfer's Crib Sensors and achieve world class analysis of your game!",
+    description: '',
   },
   {
     id: 2,
-    icon: Zap,
-    iconColor: '#F5A623',
-    title: 'Shot Tracking',
-    description: 'Every shot is automatically detected and recorded with distance, speed, and trajectory data.',
-    detail: 'No more manual input — just play your game and let the sensors do the work.',
+    type: 'install',
+    title: 'Install Sensors',
+    description: 'Twist sensors into all clubs that do not already have a sensor embedded in the grip. Tighten until it fits securely to the end of the grip.',
   },
   {
     id: 3,
-    icon: BarChart3,
-    iconColor: '#1DB954',
-    title: 'Advanced Analytics',
-    description: 'Get deep insights into your game with detailed statistics and performance trends.',
-    detail: 'Compare rounds, identify weaknesses, and track your improvement over time.',
+    type: 'return',
+    title: 'Return Clubs to Bag',
+    description: 'Pair only one club at a time, with all other clubs left in your bag. Return club back to bag after pairing.',
   },
   {
     id: 4,
-    icon: Target,
-    iconColor: '#FF6B6B',
-    title: 'Smart Recommendations',
-    description: 'Receive personalized practice drills and tips based on your real performance data.',
-    detail: 'Our AI analyzes your patterns and suggests the most impactful areas to improve.',
+    type: 'alone',
+    title: 'Pair by yourself',
+    description: 'Do not pair in close proximity to someone else also pairing. You may pair to their sensors by accident.',
   },
 ];
 
@@ -155,6 +154,7 @@ export default function PairImpactModal() {
   }, [selectedClubs, router]);
 
   const isLastPage = currentPage === TOTAL_PAGES - 1;
+  const isLastInfoPage = currentPage === INFO_PAGES.length - 1;
 
   return (
     <LinearGradient
@@ -200,23 +200,82 @@ export default function PairImpactModal() {
         style={styles.pager}
         contentContainerStyle={styles.pagerContent}
       >
-        {INFO_PAGES.map((page) => {
-          const IconComp = page.icon;
-          return (
-            <View key={page.id} style={styles.page}>
-              <View style={styles.pageContent}>
-                <View style={[styles.iconCircle, { backgroundColor: 'rgba(255,255,255,0.12)' }]}>
-                  <IconComp size={48} color="#fff" />
-                </View>
-                <Text style={styles.pageTitle}>{page.title}</Text>
-                <Text style={styles.pageDescription}>{page.description}</Text>
-                <View style={styles.detailCard}>
-                  <Text style={styles.detailText}>{page.detail}</Text>
-                </View>
-              </View>
+        {INFO_PAGES.map((page) => (
+          <View key={page.id} style={styles.page}>
+            <View style={styles.pageContent}>
+              {page.type === 'ble' && (
+                <>
+                  <View style={styles.bleIconCircle}>
+                    <Bluetooth size={64} color="#fff" />
+                  </View>
+                  <Text style={styles.bleTitle}>{page.title}</Text>
+                </>
+              )}
+              {page.type === 'install' && (
+                <>
+                  <View style={styles.sensorIllustration}>
+                    <View style={styles.sensorColumn}>
+                      <View style={styles.sensorCapBlack}>
+                        <View style={styles.sensorCapInnerBlack} />
+                      </View>
+                      <View style={styles.sensorScrewLine} />
+                      <View style={styles.sensorGripTop} />
+                      <Text style={styles.sensorLabel}>BLACK SENSOR</Text>
+                      <Text style={styles.sensorSubLabel}>For Putter Only</Text>
+                    </View>
+                    <View style={styles.sensorColumn}>
+                      <View style={styles.sensorCapGreen}>
+                        <View style={styles.sensorCapInnerGreen} />
+                        <View style={styles.sensorGreenRing} />
+                      </View>
+                      <View style={styles.sensorScrewLine} />
+                      <View style={styles.sensorGripTop} />
+                      <Text style={styles.sensorLabel}>GREEN SENSORS</Text>
+                      <Text style={styles.sensorSubLabel}>All Other Clubs</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.pageTitle}>{page.title}</Text>
+                  <Text style={styles.pageDescription}>{page.description}</Text>
+                </>
+              )}
+              {page.type === 'return' && (
+                <>
+                  <View style={styles.bagIllustration}>
+                    <View style={styles.bagBody}>
+                      <View style={styles.bagClubSticks}>
+                        <View style={styles.clubStick1} />
+                        <View style={styles.clubStick2} />
+                        <View style={styles.clubStick3} />
+                      </View>
+                      <View style={styles.bagOutline}>
+                        <View style={styles.bagPocket} />
+                      </View>
+                    </View>
+                  </View>
+                  <Text style={styles.pageTitle}>{page.title}</Text>
+                  <Text style={styles.pageDescription}>{page.description}</Text>
+                </>
+              )}
+              {page.type === 'alone' && (
+                <>
+                  <View style={styles.aloneIllustration}>
+                    <View style={styles.peopleRow}>
+                      <Users size={80} color="rgba(255,255,255,0.4)" />
+                    </View>
+                    <View style={styles.wifiIconRow}>
+                      <Wifi size={32} color="#4BA35B" />
+                    </View>
+                    <View style={styles.sensorDeviceAlone}>
+                      <View style={styles.sensorDeviceBody} />
+                    </View>
+                  </View>
+                  <Text style={styles.pageTitle}>{page.title}</Text>
+                  <Text style={styles.pageDescription}>{page.description}</Text>
+                </>
+              )}
             </View>
-          );
-        })}
+          </View>
+        ))}
 
         <View style={[styles.page, { paddingHorizontal: 0 }]}>
           <ClubSelectionPage
@@ -257,6 +316,14 @@ export default function PairImpactModal() {
                   <Text style={[styles.startPairingTextMask, { color: '#999' }]}>Start Pairing</Text>
                 )}
               </MaskedView>
+            </TouchableOpacity>
+          ) : isLastInfoPage ? (
+            <TouchableOpacity
+              style={styles.continueToPairingBtn}
+              onPress={() => goToPage(currentPage + 1)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.continueToPairingText}>Continue to Pairing</Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.navRow}>
@@ -544,45 +611,193 @@ const styles = StyleSheet.create({
   pageContent: {
     alignItems: 'center' as const,
     width: '100%' as const,
-    marginTop: -40,
+    marginTop: -20,
   },
-  iconCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+  bleIconCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255,255,255,0.12)',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
-    marginBottom: 32,
+    marginBottom: 40,
   },
-  pageTitle: {
-    fontSize: 26,
+  bleTitle: {
+    fontSize: 24,
     fontWeight: '800' as const,
     color: '#fff',
     textAlign: 'center' as const,
-    marginBottom: 14,
+    lineHeight: 34,
+    paddingHorizontal: 12,
+  },
+  pageTitle: {
+    fontSize: 28,
+    fontWeight: '800' as const,
+    color: '#fff',
+    textAlign: 'center' as const,
+    marginBottom: 16,
     letterSpacing: -0.3,
   },
   pageDescription: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.8)',
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.75)',
     textAlign: 'center' as const,
-    lineHeight: 24,
-    marginBottom: 24,
-    paddingHorizontal: 8,
+    lineHeight: 23,
+    paddingHorizontal: 16,
   },
-  detailCard: {
-    backgroundColor: 'rgba(0,0,0,0.2)',
-    borderRadius: 16,
-    padding: 20,
-    width: '100%' as const,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+  sensorIllustration: {
+    flexDirection: 'row' as const,
+    justifyContent: 'center' as const,
+    gap: 40,
+    marginBottom: 40,
   },
-  detailText: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.65)',
-    lineHeight: 22,
-    textAlign: 'center' as const,
+  sensorColumn: {
+    alignItems: 'center' as const,
+  },
+  sensorCapBlack: {
+    width: 60,
+    height: 30,
+    borderRadius: 30,
+    backgroundColor: '#333',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    borderWidth: 2,
+    borderColor: '#555',
+  },
+  sensorCapInnerBlack: {
+    width: 24,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#111',
+  },
+  sensorCapGreen: {
+    width: 60,
+    height: 30,
+    borderRadius: 30,
+    backgroundColor: '#333',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    borderWidth: 2,
+    borderColor: '#555',
+  },
+  sensorCapInnerGreen: {
+    width: 24,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#111',
+  },
+  sensorGreenRing: {
+    position: 'absolute' as const,
+    bottom: -2,
+    left: 4,
+    right: 4,
+    height: 6,
+    backgroundColor: '#4BA35B',
+    borderRadius: 3,
+  },
+  sensorScrewLine: {
+    width: 2,
+    height: 20,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    marginVertical: 4,
+  },
+  sensorGripTop: {
+    width: 36,
+    height: 44,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
+  },
+  sensorLabel: {
+    fontSize: 11,
+    fontWeight: '700' as const,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 10,
+    letterSpacing: 0.5,
+  },
+  sensorSubLabel: {
+    fontSize: 11,
+    fontWeight: '500' as const,
+    color: 'rgba(255,255,255,0.45)',
+    marginTop: 3,
+  },
+  bagIllustration: {
+    alignItems: 'center' as const,
+    marginBottom: 40,
+    height: 160,
+    justifyContent: 'center' as const,
+  },
+  bagBody: {
+    alignItems: 'center' as const,
+    position: 'relative' as const,
+  },
+  bagClubSticks: {
+    flexDirection: 'row' as const,
+    gap: 4,
+    marginBottom: -10,
+    zIndex: 1,
+  },
+  clubStick1: {
+    width: 2,
+    height: 60,
+    backgroundColor: 'rgba(255,255,255,0.4)',
+    transform: [{ rotate: '-10deg' }],
+  },
+  clubStick2: {
+    width: 2,
+    height: 70,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+  },
+  clubStick3: {
+    width: 2,
+    height: 55,
+    backgroundColor: 'rgba(255,255,255,0.4)',
+    transform: [{ rotate: '10deg' }],
+  },
+  bagOutline: {
+    width: 70,
+    height: 90,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.5)',
+    borderRadius: 12,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    alignItems: 'center' as const,
+    justifyContent: 'flex-end' as const,
+    paddingBottom: 10,
+  },
+  bagPocket: {
+    width: 30,
+    height: 24,
+    borderWidth: 1.5,
+    borderColor: '#4BA35B',
+    borderRadius: 6,
+  },
+  aloneIllustration: {
+    alignItems: 'center' as const,
+    marginBottom: 40,
+    gap: 12,
+  },
+  peopleRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+  },
+  wifiIconRow: {
+    marginTop: 4,
+  },
+  sensorDeviceAlone: {
+    alignItems: 'center' as const,
+    marginTop: 4,
+  },
+  sensorDeviceBody: {
+    width: 28,
+    height: 50,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.5)',
   },
   footer: {
     paddingHorizontal: 24,
@@ -641,5 +856,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#fff',
     fontWeight: '600' as const,
+  },
+  continueToPairingBtn: {
+    backgroundColor: '#4BA35B',
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  continueToPairingText: {
+    fontSize: 17,
+    fontWeight: '700' as const,
+    color: '#fff',
   },
 });

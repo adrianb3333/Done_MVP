@@ -358,6 +358,15 @@ function AppContent({ onSplashComplete }: { onSplashComplete: () => void }) {
           }} 
         />
         <Stack.Screen 
+          name="modals/sensor-bag-modal" 
+          options={{ 
+            presentation: "card",
+            headerShown: false,
+            animation: "slide_from_right",
+            gestureEnabled: true,
+          }} 
+        />
+        <Stack.Screen 
           name="modals/my-bag-build-modal" 
           options={{ 
             presentation: "card",
