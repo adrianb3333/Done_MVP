@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Animated,
-  Dimensions,
   Modal,
   TextInput,
   Alert,
@@ -16,6 +15,7 @@ import { ChevronLeft, Clock, Calendar, Trash2, Check, X, ChevronRight, MapPin, U
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { useProfile, CrewDrill, CrewRound, CrewTournament, ScheduledDrill, ScheduledRound, ScheduledTournament } from '@/contexts/ProfileContext';
+import { getScreenWidth } from '@/utils/responsive';
 
 interface CrewScheduleScreenProps {
   onClose: () => void;
@@ -24,7 +24,7 @@ interface CrewScheduleScreenProps {
 const TABS = ['Schedule', 'Storage'] as const;
 type Tab = typeof TABS[number];
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const SCREEN_WIDTH = getScreenWidth();
 
 const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

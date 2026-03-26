@@ -21,6 +21,7 @@ import { UserProfile } from '@/contexts/ProfileContext';
 import { supabase } from '@/lib/supabase';
 import { useChat, ChatMessage } from '@/contexts/ChatContext';
 import * as Haptics from 'expo-haptics';
+import { wp, fp } from '@/utils/responsive';
 
 interface TourData {
   eventsPlayed: number;
@@ -526,9 +527,9 @@ const chatStyles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center' as const,
   },
-  headerAvatar: { width: 32, height: 32, borderRadius: 16 },
+  headerAvatar: { width: wp(32), height: wp(32), borderRadius: wp(16) },
   headerAvatarPlaceholder: {
-    width: 32, height: 32, borderRadius: 16,
+    width: wp(32), height: wp(32), borderRadius: wp(16),
     backgroundColor: 'rgba(0,0,0,0.08)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
@@ -544,9 +545,9 @@ const chatStyles = StyleSheet.create({
   messageBubbleRow: { flexDirection: 'row' as const, marginBottom: 10, alignItems: 'flex-end' as const },
   messageBubbleRowRight: { justifyContent: 'flex-end' as const },
   messageBubbleRowLeft: { justifyContent: 'flex-start' as const },
-  msgAvatar: { width: 26, height: 26, borderRadius: 13, marginRight: 8 },
+  msgAvatar: { width: wp(26), height: wp(26), borderRadius: wp(13), marginRight: 8 },
   msgAvatarPlaceholder: {
-    width: 26, height: 26, borderRadius: 13,
+    width: wp(26), height: wp(26), borderRadius: wp(13),
     backgroundColor: 'rgba(0,0,0,0.08)',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
@@ -586,7 +587,7 @@ const chatStyles = StyleSheet.create({
     borderColor: 'rgba(0,0,0,0.06)',
   },
   sendButton: {
-    width: 42, height: 42, borderRadius: 21,
+    width: wp(42), height: wp(42), borderRadius: wp(21),
     backgroundColor: '#1A1A1A',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
@@ -628,17 +629,17 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: wp(96),
+    height: wp(96),
+    borderRadius: wp(48),
     borderWidth: 3,
     borderColor: 'rgba(0,0,0,0.08)',
     marginBottom: 12,
   },
   avatarPlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: wp(96),
+    height: wp(96),
+    borderRadius: wp(48),
     backgroundColor: 'rgba(0,0,0,0.08)',
     borderWidth: 3,
     borderColor: 'rgba(0,0,0,0.06)',
@@ -647,12 +648,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   avatarInitials: {
-    fontSize: 36,
+    fontSize: fp(34),
     fontWeight: '800' as const,
     color: '#1A1A1A',
   },
   displayName: {
-    fontSize: 20,
+    fontSize: fp(20),
     fontWeight: '800' as const,
     color: '#1A1A1A',
     marginBottom: 4,
@@ -674,7 +675,7 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
   },
   statNumber: {
-    fontSize: 20,
+    fontSize: fp(20),
     fontWeight: '800' as const,
     color: '#1A1A1A',
   },
@@ -732,9 +733,9 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   handicapSgfIcon: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: wp(26),
+    height: wp(26),
+    borderRadius: wp(13),
   },
   tourCard: {
     flex: 1,

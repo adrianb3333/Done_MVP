@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
-  Dimensions,
   ScrollView,
   Modal,
   Image,
@@ -18,8 +17,9 @@ import { useProfile } from '@/contexts/ProfileContext';
 import CrewManagementScreen from '@/components/CrewManagementScreen';
 import CrewCreateScreen from '@/components/CrewCreateScreen';
 import CrewScheduleScreen from '@/components/CrewScheduleScreen';
+import { getScreenWidth } from '@/utils/responsive';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const SCREEN_WIDTH = getScreenWidth();
 
 const TAB_KEYS = ['crew', 'latest', 'stats'] as const;
 type CrewTab = typeof TAB_KEYS[number];

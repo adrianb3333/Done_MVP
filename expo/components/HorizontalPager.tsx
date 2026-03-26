@@ -3,13 +3,13 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
 import Colors from '@/constants/colors';
+import { getScreenWidth } from '@/utils/responsive';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const SCREEN_WIDTH = getScreenWidth();
 
 interface HorizontalPagerProps {
   pages: React.ReactNode[];

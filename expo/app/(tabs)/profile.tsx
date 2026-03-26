@@ -10,7 +10,6 @@ import {
   Animated,
   Image,
   ScrollView,
-  Dimensions,
   TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -19,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const PROFILE_HEADER_HEIGHT = 56;
+import { wp, hp, fp, getScreenWidth } from '@/utils/responsive';
 import * as Haptics from 'expo-haptics';
 import { useProfile, UserProfile } from '@/contexts/ProfileContext';
 import { useSession } from '@/contexts/SessionContext';
@@ -34,7 +34,7 @@ import { useBag } from '@/contexts/BagContext';
 import { useChat } from '@/contexts/ChatContext';
 
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const SCREEN_WIDTH = getScreenWidth();
 
 interface DrillEntry {
   id: string;
@@ -1368,7 +1368,7 @@ export default function ProfileScreen() {
               setProfileCardVisible(false);
               setProfileCardUser(null);
             }}
-            onNavigateAway={() => {
+            _onNavigateAway={() => {
               setFollowsModalVisible(false);
             }}
             user={profileCardUser}
@@ -1594,15 +1594,15 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   hamburgerBtn: {
-    width: 40,
-    height: 40,
+    width: wp(40),
+    height: wp(40),
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
   },
   glassIconCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: wp(42),
+    height: wp(42),
+    borderRadius: wp(21),
     backgroundColor: 'rgba(0,0,0,0.35)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.12)',
@@ -1610,8 +1610,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center' as const,
   },
   headerLogo: {
-    height: 44,
-    width: 200,
+    height: wp(44),
+    width: wp(180),
   },
   headerIcons: {
     flexDirection: 'row' as const,
@@ -1675,12 +1675,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.18,
     shadowRadius: 10,
     elevation: 8,
-    borderRadius: 48,
+    borderRadius: wp(48),
   },
   avatarClip: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: wp(90),
+    height: wp(90),
+    borderRadius: wp(45),
     overflow: 'hidden' as const,
     borderWidth: 3,
     borderColor: '#E0E0E0',
@@ -1698,7 +1698,7 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
   },
   avatarInitials: {
-    fontSize: 30,
+    fontSize: fp(28),
     fontWeight: '700' as const,
     color: '#3D954D',
   },
@@ -1759,9 +1759,9 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   friendsStackAvatar: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: wp(24),
+    height: wp(24),
+    borderRadius: wp(12),
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     borderWidth: 2,
@@ -1782,8 +1782,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   gridBtn: {
-    width: 56,
-    height: 56,
+    width: wp(52),
+    height: wp(52),
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     gap: 2,
@@ -1797,9 +1797,9 @@ const styles = StyleSheet.create({
     borderColor: '#FFD0D0',
   },
   compareGradientBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
+    width: wp(52),
+    height: wp(52),
+    borderRadius: wp(12),
     overflow: 'hidden' as const,
   },
   compareGradientInner: {
@@ -1809,9 +1809,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   cameraGradientBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
+    width: wp(52),
+    height: wp(52),
+    borderRadius: wp(12),
     overflow: 'hidden' as const,
   },
   cameraGradientInner: {
@@ -1831,9 +1831,9 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   handicapGradientBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
+    width: wp(52),
+    height: wp(52),
+    borderRadius: wp(12),
     overflow: 'hidden' as const,
   },
   handicapGradientInner: {
@@ -1870,9 +1870,9 @@ const styles = StyleSheet.create({
   },
   helpMenu: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 6,
-    width: 200,
+    borderRadius: wp(14),
+    padding: wp(6),
+    width: wp(200),
     borderWidth: 1,
     borderColor: '#E0E0E0',
     shadowColor: '#000',
@@ -2041,7 +2041,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   gradientCardScore: {
-    fontSize: 38,
+    fontSize: fp(34),
     fontWeight: '900' as const,
     color: '#FFFFFF',
   },
@@ -2085,7 +2085,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   cardScore: {
-    fontSize: 36,
+    fontSize: fp(32),
     fontWeight: '900' as const,
     color: '#3D954D',
   },
@@ -2172,9 +2172,9 @@ const styles = StyleSheet.create({
     textAlign: 'center' as const,
   },
   tourCardPhoto: {
-    width: 110,
-    height: 140,
-    borderRadius: 12,
+    width: wp(100),
+    height: wp(130),
+    borderRadius: wp(12),
   },
   tourDataGrid: {
     flexDirection: 'row' as const,
@@ -2252,9 +2252,9 @@ const styles = StyleSheet.create({
     zIndex: 5,
   },
   avatarPreviewImageWrap: {
-    width: SCREEN_WIDTH * 0.45,
-    height: SCREEN_WIDTH * 0.45,
-    borderRadius: SCREEN_WIDTH * 0.225,
+    width: wp(170),
+    height: wp(170),
+    borderRadius: wp(85),
     overflow: 'hidden' as const,
     borderWidth: 3,
     borderColor: 'rgba(255,255,255,0.2)',
@@ -2277,16 +2277,16 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
   },
   avatarPreviewInitials: {
-    fontSize: 52,
+    fontSize: fp(46),
     fontWeight: '700' as const,
     color: '#1DB954',
   },
   avatarStatsCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    paddingVertical: 24,
-    paddingHorizontal: 32,
-    width: SCREEN_WIDTH * 0.8,
+    borderRadius: wp(20),
+    paddingVertical: wp(20),
+    paddingHorizontal: wp(24),
+    width: wp(300),
     position: 'relative' as const,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -2296,11 +2296,11 @@ const styles = StyleSheet.create({
   },
   sensorCheckBadge: {
     position: 'absolute' as const,
-    top: -8,
-    right: -8,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    top: wp(-8),
+    right: wp(-8),
+    width: wp(32),
+    height: wp(32),
+    borderRadius: wp(16),
     backgroundColor: '#FFFFFF',
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
@@ -2322,7 +2322,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   avatarStatNumber: {
-    fontSize: 26,
+    fontSize: fp(24),
     fontWeight: '800' as const,
     color: '#1A1A1A',
     marginBottom: 4,
@@ -2420,14 +2420,14 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   followUserAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: wp(44),
+    height: wp(44),
+    borderRadius: wp(22),
   },
   followUserAvatarPlaceholder: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: wp(44),
+    height: wp(44),
+    borderRadius: wp(22),
     backgroundColor: 'rgba(0,0,0,0.08)',
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
@@ -2490,9 +2490,9 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   lrBackBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: wp(44),
+    height: wp(44),
+    borderRadius: wp(22),
     backgroundColor: 'rgba(0,0,0,0.35)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.12)',
@@ -2554,7 +2554,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   lrScoreValue: {
-    fontSize: 52,
+    fontSize: fp(46),
     fontWeight: '900' as const,
     color: '#FFFFFF',
     marginTop: 2,
@@ -2596,9 +2596,9 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   lrPlayerAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: wp(32),
+    height: wp(32),
+    borderRadius: wp(16),
     backgroundColor: 'rgba(0,0,0,0.2)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
@@ -2673,9 +2673,9 @@ const styles = StyleSheet.create({
   },
   popupSheet: {
     backgroundColor: 'transparent',
-    borderRadius: 24,
+    borderRadius: wp(24),
     width: '100%' as const,
-    maxHeight: SCREEN_HEIGHT * 0.82,
+    maxHeight: hp(670),
     overflow: 'hidden' as const,
   },
   popupHeader: {
@@ -2809,9 +2809,9 @@ const styles = StyleSheet.create({
     color: '#1075E3',
   },
   qrImageBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
+    width: wp(52),
+    height: wp(52),
+    borderRadius: wp(12),
     overflow: 'hidden' as const,
     backgroundColor: '#FFFFFF',
     alignItems: 'center' as const,
@@ -2820,7 +2820,7 @@ const styles = StyleSheet.create({
     borderColor: '#E8E8E8',
   },
   qrIconImage: {
-    width: 40,
-    height: 40,
+    width: wp(36),
+    height: wp(36),
   },
 });

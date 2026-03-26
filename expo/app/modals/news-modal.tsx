@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions, Image, ActivityIndicator, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, Image, ActivityIndicator, Modal } from 'react-native';
 import { ArrowLeft } from 'lucide-react-native';
 import { Newspaper, Play } from 'lucide-react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
@@ -11,9 +11,11 @@ import { sanityFetch, sanityImageUrl } from '@/lib/sanity';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 
+import { getScreenWidth } from '@/utils/responsive';
+
 const SEGMENTS = ['News', 'Onboarding', 'Tutorials'] as const;
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const SCREEN_WIDTH = getScreenWidth();
 
 interface SanityPost {
   _id: string;

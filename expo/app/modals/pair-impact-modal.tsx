@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
   Alert,
@@ -16,8 +15,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import MaskedView from '@react-native-masked-view/masked-view';
+import { getScreenWidth } from '@/utils/responsive';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const SCREEN_WIDTH = getScreenWidth();
 
 const INFO_PAGES = [
   {

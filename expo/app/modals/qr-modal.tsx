@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
   Alert,
@@ -25,10 +24,11 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { useSession } from '@/contexts/SessionContext';
 import { fetchDrillHistory, DrillResultRow } from '@/services/drillResultsService';
 import ShareCardModal, { ShareCardType } from '@/components/ShareCardModal';
+import { getScreenWidth, wp } from '@/utils/responsive';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const SCREEN_WIDTH = getScreenWidth();
 
-const QR_SIZE = 220;
+const QR_SIZE = wp(220);
 
 function getQrImageUrl(value: string, size: number = 400): string {
   const encoded = encodeURIComponent(value);

@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
-  Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
   Animated,
@@ -23,8 +22,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useProfile, UserProfile } from '@/contexts/ProfileContext';
 import { useScrollHeader } from '@/hooks/useScrollHeader';
+import { getScreenWidth } from '@/utils/responsive';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const SCREEN_WIDTH = getScreenWidth();
 
 const TABS = ['Stats', 'Strokes Gained', 'Distance'] as const;
 const FLOATING_HEADER_HEIGHT = 90;

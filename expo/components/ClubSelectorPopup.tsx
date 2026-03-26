@@ -6,15 +6,15 @@ import {
   TouchableOpacity,
   ScrollView,
   Animated,
-  Dimensions,
   Platform,
 } from 'react-native';
 import { ChevronDown } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { saveClubSelection, getCurrentGpsPosition } from '@/services/clubSelectionService';
 import { useBag } from '@/contexts/BagContext';
+import { getScreenHeight } from '@/utils/responsive';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const SCREEN_HEIGHT = getScreenHeight();
 
 interface ClubCategory {
   name: string;

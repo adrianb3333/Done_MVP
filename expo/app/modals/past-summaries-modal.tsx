@@ -7,7 +7,6 @@ import {
   ScrollView,
   Modal,
   FlatList,
-  Dimensions,
 } from 'react-native';
 import { ChevronDown } from 'lucide-react-native';
 import GlassBackButton from '@/components/reusables/GlassBackButton';
@@ -15,9 +14,10 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getScreenWidth, wp } from '@/utils/responsive';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const WEEK_ITEM_WIDTH = 52;
+const SCREEN_WIDTH = getScreenWidth();
+const WEEK_ITEM_WIDTH = wp(52);
 const COACH_SUMMARIES_KEY = 'coach_analysis_summaries';
 
 interface CoachSummary {

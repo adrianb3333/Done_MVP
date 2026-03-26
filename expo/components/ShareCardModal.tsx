@@ -10,7 +10,6 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
-  Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { X, Share2 } from 'lucide-react-native';
@@ -19,9 +18,10 @@ import * as Sharing from 'expo-sharing';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LastRoundData } from '@/contexts/SessionContext';
 import { DrillResultRow } from '@/services/drillResultsService';
+import { getScreenWidth, wp } from '@/utils/responsive';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = SCREEN_WIDTH - 48;
+const SCREEN_WIDTH = getScreenWidth();
+const CARD_WIDTH = SCREEN_WIDTH - wp(48);
 
 export type ShareCardType = 'lastRound' | 'lastPractice' | 'qrCode';
 

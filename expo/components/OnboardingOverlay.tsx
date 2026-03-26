@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
-  Dimensions,
   Image,
   FlatList,
   Modal,
@@ -13,8 +12,9 @@ import {
 import { X, Hand } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ONBOARDING_CARDS } from '@/app/modals/news-modal';
+import { getScreenWidth } from '@/utils/responsive';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const SCREEN_WIDTH = getScreenWidth();
 const CARD_WIDTH = SCREEN_WIDTH * 0.78;
 const CARD_SPACING = 16;
 const SNAP_INTERVAL = CARD_WIDTH + CARD_SPACING;

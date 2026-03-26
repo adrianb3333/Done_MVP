@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
-  Dimensions,
   ScrollView,
   TextInput,
   KeyboardAvoidingView,
@@ -30,6 +29,7 @@ import {
   getDistanceKm,
 } from '@/services/golfCourseApi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getScreenWidth } from '@/utils/responsive';
 
 const STORAGE_KEY_FAVORITES = 'play_setup_favorite_courses';
 
@@ -47,7 +47,7 @@ interface DisplayCourse {
   distanceKm?: number;
 }
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const SCREEN_WIDTH = getScreenWidth();
 
 const SEGMENT_KEYS = ['Drill', 'Round', 'Tournament'] as const;
 type _CreateSegment = typeof SEGMENT_KEYS[number];

@@ -7,7 +7,6 @@ import {
   Modal,
   TextInput,
   Image,
-  Dimensions,
   Animated,
   ScrollView,
   ActivityIndicator,
@@ -21,8 +20,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { generateText } from '@rork-ai/toolkit-sdk';
 import { supabase } from '@/lib/supabase';
 import { useUserData } from '@/hooks/useUserData';
+import { getScreenWidth } from '@/utils/responsive';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const SCREEN_WIDTH = getScreenWidth();
 
 const GOAL_STORAGE_KEY = 'coach_handicap_goal';
 const COACH_SUMMARIES_KEY = 'coach_analysis_summaries';

@@ -6,16 +6,15 @@ import {
   TouchableOpacity,
   Modal,
   Animated,
-  Dimensions,
   Image,
 } from 'react-native';
 import { ArrowRight } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppNavigation, AppSection } from '@/contexts/AppNavigationContext';
 import { useProfile } from '@/contexts/ProfileContext';
+import { wp, fp, getScreenWidth } from '@/utils/responsive';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const SIDEBAR_WIDTH = SCREEN_WIDTH * 0.75;
+const SIDEBAR_WIDTH = getScreenWidth() * 0.75;
 
 interface SidebarItem {
   key: AppSection;
@@ -216,13 +215,13 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   sidebarLogo: {
-    width: 140,
-    height: 36,
+    width: wp(140),
+    height: wp(36),
   },
   glassCloseBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: wp(40),
+    height: wp(40),
+    borderRadius: wp(20),
     backgroundColor: 'rgba(0,0,0,0.35)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.12)',
@@ -257,7 +256,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   sectionLabel: {
-    fontSize: 16,
+    fontSize: fp(16),
     fontWeight: '700' as const,
     color: '#999999',
   },
@@ -266,9 +265,9 @@ const styles = StyleSheet.create({
   },
 
   activeIndicator: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: wp(6),
+    height: wp(6),
+    borderRadius: wp(3),
     backgroundColor: '#1A1A1A',
   },
   sidebarFooter: {
@@ -300,7 +299,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
   },
   weatherLabel: {
-    fontSize: 16,
+    fontSize: fp(16),
     fontWeight: '700' as const,
     color: '#999999',
   },

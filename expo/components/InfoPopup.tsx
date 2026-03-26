@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   Image,
   Animated,
-  Dimensions,
   ScrollView,
 } from 'react-native';
 import { X } from 'lucide-react-native';
@@ -16,9 +15,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { sanityFetch, sanityImageUrl } from '@/lib/sanity';
 import * as Haptics from 'expo-haptics';
+import { getScreenWidth } from '@/utils/responsive';
 
 const STORAGE_KEY = 'acknowledged_info_post_ids';
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const SCREEN_WIDTH = getScreenWidth();
 
 interface SanityInfoPost {
   _id: string;
